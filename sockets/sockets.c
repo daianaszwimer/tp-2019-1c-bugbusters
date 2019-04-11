@@ -1,4 +1,3 @@
-
 #include "sockets.h"
 
 int iniciar_servidor(void)
@@ -74,6 +73,7 @@ void recibir_mensaje(int socket_cliente)
 {
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
+	strcat(buffer, "\0");   // Chequear esto
 	log_info(logger, "Me llego el mensaje %s", buffer);
 	free(buffer);
 }
