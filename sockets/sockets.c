@@ -60,7 +60,7 @@ int recibir_operacion(int socket_cliente)
 
 void* recibir_buffer(int* size, int socket_cliente)
 {
-	void * buffer;
+	void* buffer = "";
 
 	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
 	buffer = malloc(*size);
@@ -72,8 +72,9 @@ void* recibir_buffer(int* size, int socket_cliente)
 void recibir_mensaje(int socket_cliente)
 {
 	int size;
-	char* buffer = recibir_buffer(&size, socket_cliente);
-	strcat(buffer, "\0");   // Chequear esto
+	char* buffer = "";
+	buffer = (char*) recibir_buffer(&size, socket_cliente);
+	//strcat(buffer, "\0");   // Chequear esto
 	log_info(logger, "Me llego el mensaje %s", buffer);
 	free(buffer);
 }
