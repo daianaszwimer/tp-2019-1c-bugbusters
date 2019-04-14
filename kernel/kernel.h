@@ -8,8 +8,7 @@
 #include <commons/string.h>
 #include <commons/config.h>
 #include <readline/readline.h>
-
-#include "../sockets/sockets.h"
+#include <nuestro_lib/nuestro_lib.h>
 
 void iterator(char* value);
 void conectarAMemoria(void);
