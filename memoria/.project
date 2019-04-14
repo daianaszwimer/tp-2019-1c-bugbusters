@@ -3,6 +3,7 @@
 	<name>memoria</name>
 	<comment></comment>
 	<projects>
+		<project>nuestro_lib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

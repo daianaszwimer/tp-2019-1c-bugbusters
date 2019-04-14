@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include <nuestro_lib/nuestro_lib.h>
 
 int main(void) {
 
@@ -10,8 +11,8 @@ int main(void) {
 
 void conectarAMemoria(){
 	void iterator(char* value) {
-					printf("%s\n", value);
-				}
+		printf("%s\n", value);
+	}
 	t_log* logger = iniciar_logger();
 	//log_info(logger, "Soy un log");
 
@@ -33,32 +34,31 @@ void conectarAMemoria(){
 
 	t_list* lista;
 
-	while(1)
-			{
-				int cod_op = recibir_operacion(conexion);
-				switch(cod_op)
-				{
-				case MENSAJE:
-					recibir_mensaje(conexion);
-					break;
-				case PAQUETE:
-					lista = recibir_paquete(conexion);
-					printf("Me llegaron los siguientes valores:\n");
-					list_iterate(lista, (void*) iterator);
-					//char* msg = string_repeat('f', 3);
-					t_paquete* paquete = armar_paquete();
-					enviar_paquete(paquete, conexion);
-					eliminar_paquete(paquete);
-					//enviar_mensaje("123", cliente_fd);
-					break;
-				case -1:
-					log_error(logger, "el cliente se desconecto. Terminando servidor");
-					break;
-				default:
-					log_warning(logger, "Operacion desconocida. No quieras meter la pata");
-					break;
-				}
+	while(1) {
+		int cod_op = recibir_operacion(conexion);
+		switch(cod_op)
+		{
+		case MENSAJE:
+			recibir_mensaje(conexion);
+			break;
+		case PAQUETE:
+			lista = recibir_paquete(conexion);
+			printf("Me llegaron los siguientes valores:\n");
+			list_iterate(lista, (void*) iterator);
+			//char* msg = string_repeat('f', 3);
+			t_paquete* paquete = armar_paquete();
+			enviar_paquete(paquete, conexion);
+			eliminar_paquete(paquete);
+			//enviar_mensaje("123", cliente_fd);
+			break;
+		case -1:
+			log_error(logger, "el cliente se desconecto. Terminando servidor");
+			break;
+		default:
+			log_warning(logger, "Operacion desconocida. No quieras meter la pata");
+			break;
 		}
+	}
 
 	//-----------------------
 
