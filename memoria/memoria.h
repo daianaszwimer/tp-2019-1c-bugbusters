@@ -6,8 +6,6 @@
 #include<string.h>
 #include<commons/log.h>
 #include<commons/string.h>
-
-#include "../nuestrasCommons/nuestrasCommons.h"
-
+#include <nuestro_lib/nuestro_lib.h>
 
 #endif /* MEMORIA_H_ */

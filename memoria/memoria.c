@@ -1,4 +1,5 @@
 #include "memoria.h"
+#include <nuestro_lib/nuestro_lib.h>
 
 int main(void)
 {
@@ -10,7 +11,9 @@ int main(void)
 	int cliente_fd = esperar_cliente(server_fd);
 
 	t_list* lista;
-	while(1)
+	while(1) {
+		int cod_op = recibir_operacion(cliente_fd);
+		switch(cod_op)
 		{
 			int cod_op = recibir_operacion(cliente_fd);
 			switch(cod_op)

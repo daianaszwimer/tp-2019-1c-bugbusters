@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include <nuestro_lib/nuestro_lib.h>
 
 int main(void) {
 
@@ -59,7 +60,6 @@ void conectarAMemoria(){
 //					break;
 //				}
 //		}
-
 	//-----------------------
 
   log_destroy(logger);

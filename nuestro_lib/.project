@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>memoria</name>
+	<name>nuestro_lib</name>
 	<comment></comment>
 	<projects>
-		<project>nuestro_lib</project>
+		<project>so-commons-library</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

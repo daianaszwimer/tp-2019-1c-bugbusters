@@ -8,8 +8,7 @@
 #include <commons/string.h>
 #include <commons/config.h>
 #include <readline/readline.h>
-
-#include "../nuestrasCommons/nuestrasCommons.h"
+#include <nuestro_lib/nuestro_lib.h>
 
 void conectarAMemoria(void);
 
