@@ -7,7 +7,7 @@
 #include<commons/log.h>
 #include<commons/string.h>
 
-#include "../sockets/sockets.h"
+#include "../nuestrasCommons/nuestrasCommons.h"
 
 
 #endif /* MEMORIA_H_ */

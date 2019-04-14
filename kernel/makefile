@@ -1,2 +1,2 @@
-kernel: kernel.c ../sockets/sockets.c
-	gcc kernel.c ../sockets/sockets.c -o Kernel -lcommons -lreadline
+kernel: kernel.c ../nuestrasCommons/nuestrasCommons.c
+	gcc kernel.c ../nuestrasCommons/nuestrasCommons.c -o Kernel -lcommons -lreadline

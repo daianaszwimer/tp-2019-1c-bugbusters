@@ -1,2 +1,2 @@
-memoria: memoria.c ../sockets/sockets.c
-	gcc memoria.c ../sockets/sockets.c -o Memoria -lcommons -lreadline
+memoria: memoria.c ../nuestrasCommons/nuestrasCommons.c
+	gcc memoria.c ../nuestrasCommons/nuestrasCommons.c -o Memoria -lcommons -lreadline

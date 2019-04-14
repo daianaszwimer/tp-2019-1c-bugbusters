@@ -1,16 +1,7 @@
 #include "memoria.h"
 
-t_log* iniciar_logger();
-t_config* leer_config();
-void leer_consola(t_log*);
-t_paquete* armar_paquete();
-void _leer_consola_haciendo(void (*accion)(char*));
-
 int main(void)
 {
-	void iterator(char* value) {
-		printf("%s\n", value);
-	}
 
 	logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG);
 
@@ -24,10 +15,10 @@ int main(void)
 			int cod_op = recibir_operacion(cliente_fd);
 			switch(cod_op)
 			{
-			case MENSAJE:
+			case SELECT:
 				recibir_mensaje(cliente_fd);
 				break;
-			case PAQUETE:
+			case INSERT:
 				lista = recibir_paquete(cliente_fd);
 				printf("Me llegaron los siguientes valores:\n");
 				list_iterate(lista, (void*) iterator);
@@ -48,47 +39,3 @@ int main(void)
 
 	return EXIT_SUCCESS;
 }
-
-
-t_log* iniciar_logger() {
-	return log_create("kernel.log", "KERNEL", 1, LOG_LEVEL_INFO);
-}
-
-t_config* leer_config() {
-	return config_create("kernel.config");
-}
-
-void leer_consola(t_log* logger) {
-	void loggear(char* leido) {
-		log_info(logger, leido);
-	}
-
-	_leer_consola_haciendo((void*) loggear);
-}
-
-t_paquete* armar_paquete() {
-	t_paquete* paquete = crear_paquete();
-
-	void _agregar(char* leido) {
-		// Estamos aprovechando que podemos acceder al paquete
-		// de la funcion exterior y podemos agregarle lineas!
-		agregar_a_paquete(paquete, leido, strlen(leido) + 1);
-	}
-
-	_leer_consola_haciendo((void*) _agregar);
-
-	return paquete;
-}
-//								  requests
-void _leer_consola_haciendo(void (*accion)(char*)) {
-	char* leido = readline(">");
-
-	while (strncmp(leido, "", 1) != 0) {
-		accion(leido);
-		free(leido);
-		leido = readline(">");
-	}
-
-	free(leido);
-}
-
