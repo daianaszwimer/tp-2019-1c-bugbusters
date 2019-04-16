@@ -28,11 +28,12 @@ void conectarAMemoria(){
 	// esta funcion valida que la palabra reservada sea efectivamente una palabra reservada
 	// TODO: Validar que la cantidad de parámetros sea correcta
 	cod_request = validarMensaje(mensaje);
-
-	int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
-
+	//int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
+	int conexion = crearConexion("127.0.0.1","4444");
 	// El paquete tiene el cod_request y UN request completo
 	t_paquete* paquete = armar_paquete(cod_request, mensaje);
+	printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
+	printf("Y este es el msj: %s \n", paquete->request);
 	enviar_paquete(paquete, conexion);
 
 	//eliminar_paquete(paquete);

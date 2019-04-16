@@ -62,10 +62,10 @@ int validarMensaje(char*);
 int obtenerCodRequest(char*);
 
 ////servidor
-//void* recibir_buffer(int*, int);
+void* recibir_buffer(int*, int);
 int iniciar_servidor(void);
 int esperar_cliente(int);
-//t_list* recibir_paquete(int);
+int recibir_paquete(int);
 //void recibir_mensaje(int);
 //int recibir_operacion(int);
 //

@@ -38,6 +38,7 @@ t_paquete* armar_paquete(cod_request palabraReservada, char* mensaje) {
 //}
 //
 //
+
 int iniciar_servidor(void)
 {
 	int socket_servidor;
@@ -48,27 +49,23 @@ int iniciar_servidor(void)
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
-
     getaddrinfo(IP, PUERTO, &hints, &servinfo);
-
     for (p=servinfo; p != NULL; p = p->ai_next)
     {
         if ((socket_servidor = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
             continue;
 
         if (bind(socket_servidor, p->ai_addr, p->ai_addrlen) == -1) {
+        	puts("4");
             close(socket_servidor);
             continue;
         }
         break;
     }
-
 	listen(socket_servidor, SOMAXCONN);
-
     freeaddrinfo(servinfo);
-
-    log_trace(logger, "Listo para escuchar a mi cliente");
-
+    //log_trace(logger, "Listo para escuchar a mi cliente");
+    //puts("2345678");
     return socket_servidor;
 }
 
@@ -79,7 +76,7 @@ int esperar_cliente(int socket_servidor)
 
 	int socket_cliente = accept(socket_servidor, (void*) &dir_cliente, &tam_direccion);
 
-	log_info(logger, "Se conecto un cliente!");
+	//log_info(logger, "Se conecto un cliente!");
 
 	return socket_cliente;
 }
@@ -173,16 +170,16 @@ int obtenerCodRequest(char* request){
 ////	}
 ////}
 //
-//void* recibir_buffer(int* size, int socket_cliente)
-//{
-//	void* buffer = "";
-//
-//	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
-//	buffer = malloc(*size);
-//	recv(socket_cliente, buffer, *size, MSG_WAITALL);
-//
-//	return buffer;
-//}
+void* recibir_buffer(int* size, int socket_cliente)
+{
+	void* buffer = "";
+
+	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
+	buffer = malloc(*size);
+	recv(socket_cliente, buffer, *size, MSG_WAITALL);
+
+	return buffer;
+}
 //
 //void recibir_mensaje(int socket_cliente)
 //{
@@ -195,15 +192,19 @@ int obtenerCodRequest(char* request){
 //}
 //
 ////podemos usar la lista de valores para poder hablar del for y de como recorrer la lista
-//t_list* recibir_paquete(int socket_cliente)
-//{
-//	int size;
+int recibir_paquete(int socket_cliente)
+{
+	t_paquete* buffer;
+	//recv(socket_cliente, buffer, sizeof(buffer), MSG_WAITALL);
+
+	int size;
 //	int desplazamiento = 0;
 //	void * buffer;
 //	t_list* valores = list_create();
 //	int tamanio;
 //
-//	buffer = recibir_buffer(&size, socket_cliente);
+	buffer = recibir_buffer(&size, socket_cliente);
+	return buffer->palabraReservada;
 //	while(desplazamiento < size)
 //	{
 //		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
@@ -216,7 +217,7 @@ int obtenerCodRequest(char* request){
 //	free(buffer);
 //	return valores;
 //	return NULL;
-//}
+}
 //
 //
 //
@@ -299,7 +300,7 @@ int crearConexion(char *ip, char* puerto)
 //
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
-	send(socket_cliente, paquete, sizeof(paquete), 0);
+	send(socket_cliente, paquete, sizeof(t_paquete*), 0);
 	free(paquete);
 }
 
