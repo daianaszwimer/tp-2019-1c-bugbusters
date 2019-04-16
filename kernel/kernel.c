@@ -1,5 +1,4 @@
 #include "kernel.h"
-#include <nuestro_lib/nuestro_lib.h>
 
 int main(void) {
 
@@ -10,26 +9,33 @@ int main(void) {
 }
 
 void conectarAMemoria(){
-	char* mensaje;
-	t_log* logger = iniciar_logger();
-	//log_info(logger, "Soy un log");
 
-	//t_config* config = leer_config();
-	//char* valor = config_get_string_value(config, "CLAVE");
-	//log_info(logger, valor);
+	// Toda esta primera parte (hasta crearConexion exclusive) podriamos modelarla en una funcion leerDeConsola
+	// que va en el main antes de conectarAMemoria
 
-	//leer_consola(logger);
+	char* mensaje;   // es el request completo
+	int cod_request; // es la palabra reservada (ej: SELECT)
+	t_config* config = leer_config("kernel.config");
 
-//	int conexion = crearConexion(
-//			config_get_string_value(config, "IP"),
-//			config_get_string_value(config, "PUERTO")
-//	);
+	// En este while se lee de la consola
+	while(1) {
+		mensaje = readline(">");
+		if (strcmp(mensaje,"\n") != 0) {
+			break;
+		}
+	}
 
-	//t_paquete* paquete = armar_paquete();
-	//enviar_paquete(paquete, conexion);
+	// esta funcion valida que la palabra reservada sea efectivamente una palabra reservada
+	// TODO: Validar que la cantidad de parámetros sea correcta
+	cod_request = validarMensaje(mensaje);
+
+	int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
+
+	// El paquete tiene el cod_request y UN request completo
+	t_paquete* paquete = armar_paquete(cod_request, mensaje);
+	enviar_paquete(paquete, conexion);
+
 	//eliminar_paquete(paquete);
-	scanf("%s", mensaje);
-	validarMensaje(mensaje);
 	//enviar_mensaje(mensaje ,conexion);
 
 //	t_list* lista;
@@ -63,7 +69,8 @@ void conectarAMemoria(){
 	//-----------------------
 
   log_destroy(logger);
+  free(mensaje);
 //	config_destroy(config);		//Preguntar
-//	close(conexion);
+  close(conexion);
 
 }
