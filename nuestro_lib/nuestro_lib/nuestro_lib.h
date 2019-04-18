@@ -57,7 +57,7 @@ void iterator(char*);
 int crearConexion(char*, char*);
 t_config* leer_config(char*);
 //void leer_consola(t_log* logger);
-t_paquete* armar_paquete(cod_request, char*);
+t_paquete* armar_paquete(cod_request, char**);
 //void _leer_consola_haciendo(void(*accion)(char*));
 char** separarString(char*);
 int validarMensaje(char*);
@@ -77,8 +77,8 @@ t_paquete* recibir(int);
 //t_paquete* crear_super_paquete(void);
 //void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar(t_paquete* paquete, int socket_cliente);
-//void liberar_conexion(int socket_cliente);
-//void eliminar_paquete(t_paquete* paquete);
+void liberar_conexion(int socket_cliente);
+void eliminar_paquete(t_paquete* paquete);
 
 
 #endif /* SOCKETS_H_ */

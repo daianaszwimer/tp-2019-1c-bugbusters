@@ -17,12 +17,11 @@ t_config* leer_config(char* nombreArchivo) {
 //}
 //
 
-t_paquete* armar_paquete(cod_request palabraReservada, char* mensaje) {
+t_paquete* armar_paquete(cod_request palabraReservada, char** request) {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->palabraReservada = palabraReservada;
 	paquete->tamanio = sizeof(int);
-	paquete->request = mensaje;
-	//crear_buffer(paquete);
+	paquete->request = request;
 	return paquete;
 }
 ////								  requests
@@ -318,15 +317,15 @@ void enviar(t_paquete* paquete, int socket_cliente)
 	free(buffer);
 }
 
-//
+
 //void eliminar_paquete(t_paquete* paquete)
 //{
 //	free(paquete->buffer->stream);
 //	free(paquete->buffer);
 //	free(paquete);
 //}
-//
-//void liberar_conexion(int socket_cliente)
-//{
-//	close(socket_cliente);
-//}
+
+void liberar_conexion(int socket_cliente)
+{
+	close(socket_cliente);
+}

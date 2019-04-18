@@ -35,12 +35,13 @@ void conectarAMemoria(){
 	//int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
 	int conexion = crearConexion("127.0.0.1","4444");
 	// El paquete tiene el cod_request y UN request completo
-	t_paquete* paquete = armar_paquete(cod_request, mensaje);
+	t_paquete* paquete = armar_paquete(cod_request, request);
 	printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 	printf("Y este es el msj: %s \n", (char*) paquete->request);
 
 	log_info(logger,"Antes de enviar mensaje");
 	enviar(paquete, conexion);
+
 
 	//eliminar_paquete(paquete);
 	//enviar_mensaje(mensaje ,conexion);

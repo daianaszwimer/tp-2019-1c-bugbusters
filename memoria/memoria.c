@@ -10,6 +10,11 @@ int main(void)
 	//t_list* lista;
 	t_paquete* paqueteRecibido = recibir(cliente_fd);
 	int palabraReservada = paqueteRecibido->palabraReservada;
+	char** request = paqueteRecibido->request;
+	//char* primerParametro= request[1];
+	//printf("EL PRIMER PARAMETRO ES: %s \n", request[1]);
+	printf("Y este es el msj: %s \n", (char*) paqueteRecibido->request);
+
 	printf("El codigo que recibi es: %d \n", palabraReservada);
 	switch(palabraReservada) {
 		case SELECT:
