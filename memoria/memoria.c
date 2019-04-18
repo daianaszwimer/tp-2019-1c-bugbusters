@@ -7,23 +7,16 @@ int main(void)
 	log_info(logger, "Servidor listo para recibir al cliente");
 	int cliente_fd = esperar_cliente(server_fd);
 
-	t_list* lista;
-
-	int cod_op = recibir_paquete(cliente_fd);
-	printf("El codigo que recibi es: %d \n", cod_op);
-	switch(cod_op) {
+	//t_list* lista;
+	t_paquete* paqueteRecibido = recibir(cliente_fd);
+	int palabraReservada = paqueteRecibido->palabraReservada;
+	printf("El codigo que recibi es: %d \n", palabraReservada);
+	switch(palabraReservada) {
 		case SELECT:
-			//recibir_mensaje(cliente_fd);
+			log_info(logger, "Me llego un SELECT");
 			break;
 		case INSERT:
-//			lista = recibir_paquete(cliente_fd);
-//			printf("Me llegaron los siguientes valores:\n");
-//			list_iterate(lista, (void*) iterator);
-//			//char* msg = string_repeat('f', 3);
-//			t_paquete* paquete = armar_paquete();
-//			enviar_paquete(paquete, cliente_fd);
-//			eliminar_paquete(paquete);
-//			enviar_mensaje("123", cliente_fd);
+			log_info(logger, "Me llego un INSERT");
 			break;
 		case -1:
 			log_error(logger, "el cliente se desconecto. Terminando servidor");
