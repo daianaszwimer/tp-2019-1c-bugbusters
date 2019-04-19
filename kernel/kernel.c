@@ -15,8 +15,8 @@ void conectarAMemoria(){
 
 	char* mensaje;   // es el request completo
 	int cod_request; // es la palabra reservada (ej: SELECT)
-	t_config* config = leer_config("tp-2019-1c-bugbusters/kernel/kernel.config");
-
+	char** request;
+	t_config* config = leer_config("kernel.config");
 	// En este while se lee de la consola
 	while(1) {
 		mensaje = readline(">");
@@ -25,16 +25,22 @@ void conectarAMemoria(){
 		}
 	}
 
+	request = separarString(mensaje);
 	// esta funcion valida que la palabra reservada sea efectivamente una palabra reservada
 	// TODO: Validar que la cantidad de parámetros sea correcta
-	cod_request = validarMensaje(mensaje);
+	printf("El mensaje es: %s \n", mensaje);
+	cod_request = validarMensaje(request[0]);
+	printf("Y ahora es: %s \n", mensaje);
 	//int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
 	int conexion = crearConexion("127.0.0.1","4444");
 	// El paquete tiene el cod_request y UN request completo
-	t_paquete* paquete = armar_paquete(cod_request, mensaje);
+	t_paquete* paquete = armar_paquete(cod_request, request);
 	printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
-	printf("Y este es el msj: %s \n", paquete->request);
-	enviar_paquete(paquete, conexion);
+	printf("Y este es el msj: %s \n", (char*) paquete->request);
+
+	log_info(logger,"Antes de enviar mensaje");
+	enviar(paquete, conexion);
+
 
 	//eliminar_paquete(paquete);
 	//enviar_mensaje(mensaje ,conexion);

@@ -47,7 +47,8 @@ typedef struct
 typedef struct
 {
 	cod_request palabraReservada;
-	char* request;
+	int tamanio;
+	void* request;
 } t_paquete;
 
 t_log* logger;
@@ -56,16 +57,17 @@ void iterator(char*);
 int crearConexion(char*, char*);
 t_config* leer_config(char*);
 //void leer_consola(t_log* logger);
-t_paquete* armar_paquete(cod_request, char*);
+t_paquete* armar_paquete(cod_request, char**);
 //void _leer_consola_haciendo(void(*accion)(char*));
+char** separarString(char*);
 int validarMensaje(char*);
-int obtenerCodRequest(char*);
+int obtenerCodigoPalabraReservada(char*);
 
 ////servidor
 void* recibir_buffer(int*, int);
 int iniciar_servidor(void);
 int esperar_cliente(int);
-int recibir_paquete(int);
+t_paquete* recibir(int);
 //void recibir_mensaje(int);
 //int recibir_operacion(int);
 //
@@ -74,9 +76,9 @@ int recibir_paquete(int);
 //t_paquete* crear_paquete(void);
 //t_paquete* crear_super_paquete(void);
 //void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
-void enviar_paquete(t_paquete* paquete, int socket_cliente);
-//void liberar_conexion(int socket_cliente);
-//void eliminar_paquete(t_paquete* paquete);
+void enviar(t_paquete* paquete, int socket_cliente);
+void liberar_conexion(int socket_cliente);
+void eliminar_paquete(t_paquete* paquete);
 
 
 #endif /* SOCKETS_H_ */

@@ -17,11 +17,11 @@ t_config* leer_config(char* nombreArchivo) {
 //}
 //
 
-t_paquete* armar_paquete(cod_request palabraReservada, char* mensaje) {
+t_paquete* armar_paquete(cod_request palabraReservada, char** request) {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->palabraReservada = palabraReservada;
-	paquete->request = mensaje;
-	//crear_buffer(paquete);
+	paquete->tamanio = sizeof(int);
+	paquete->request = request;
 	return paquete;
 }
 ////								  requests
@@ -66,13 +66,14 @@ int iniciar_servidor(void)
     freeaddrinfo(servinfo);
     //log_trace(logger, "Listo para escuchar a mi cliente");
     //puts("2345678");
+    puts("Ya se porque es");
     return socket_servidor;
 }
 
 int esperar_cliente(int socket_servidor)
 {
 	struct sockaddr_in dir_cliente;
-	int tam_direccion = sizeof(struct sockaddr_in);
+	unsigned int tam_direccion = sizeof(struct sockaddr_in);
 
 	int socket_cliente = accept(socket_servidor, (void*) &dir_cliente, &tam_direccion);
 
@@ -81,45 +82,46 @@ int esperar_cliente(int socket_servidor)
 	return socket_cliente;
 }
 
-int validarMensaje(char* mensaje){
-	int cod_request;
-	char* request;
-	request = strtok(mensaje, " ");  // Obtiene todos los caracteres hasta el espacio y los guarda en request
-	cod_request = obtenerCodRequest(request);
-	if(cod_request == -1) {
-		log_error(logger, "Debe ingresar un request válido");
-	}
-	return cod_request;
+char** separarString(char* mensaje) {
+	return string_split(mensaje, " ");
 }
 
-int obtenerCodRequest(char* request){
-	if (!strcmp(request, "SELECT")){
+int validarMensaje(char* palabraReservada){
+	int codigoPalabraReservada = obtenerCodigoPalabraReservada(palabraReservada);
+	if(codigoPalabraReservada == -1) {
+		log_error(logger, "Debe ingresar un request válido");
+	}
+	return codigoPalabraReservada;
+}
+
+int obtenerCodigoPalabraReservada(char* palabraReservada){
+	if (!strcmp(palabraReservada, "SELECT")){
 		return 0;
 	}
-	if (!strcmp(request, "INSERT")){
+	if (!strcmp(palabraReservada, "INSERT")){
 			return 1;
-		}
-	if (!strcmp(request, "CREATE")){
+	}
+	if (!strcmp(palabraReservada, "CREATE")){
 			return 2;
-		}
-	if (!strcmp(request, "DESCRIBE")){
+	}
+	if (!strcmp(palabraReservada, "DESCRIBE")){
 			return 3;
-		}
-	if (!strcmp(request, "DROP")){
+	}
+	if (!strcmp(palabraReservada, "DROP")){
 			return 4;
-		}
-	if (!strcmp(request, "JOURNAL")){
+	}
+	if (!strcmp(palabraReservada, "JOURNAL")){
 			return 5;
-		}
-	if (!strcmp(request, "ADD")){
+	}
+	if (!strcmp(palabraReservada, "ADD")){
 			return 6;
-		}
-	if (!strcmp(request, "RUN")){
+	}
+	if (!strcmp(palabraReservada, "RUN")){
 			return 7;
-		}
-	if (!strcmp(request, "METRICS")){
+	}
+	if (!strcmp(palabraReservada, "METRICS")){
 			return 8;
-		}
+	}
 	else {
 		return -1;
 	}
@@ -192,31 +194,29 @@ void* recibir_buffer(int* size, int socket_cliente)
 //}
 //
 ////podemos usar la lista de valores para poder hablar del for y de como recorrer la lista
-int recibir_paquete(int socket_cliente)
-{
-	t_paquete* buffer;
-	//recv(socket_cliente, buffer, sizeof(buffer), MSG_WAITALL);
 
-	int size;
-//	int desplazamiento = 0;
-//	void * buffer;
-//	t_list* valores = list_create();
-//	int tamanio;
-//
-	buffer = recibir_buffer(&size, socket_cliente);
-	return buffer->palabraReservada;
-//	while(desplazamiento < size)
-//	{
-//		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-//		desplazamiento+=sizeof(int);
-//		char* valor = malloc(tamanio);
-//		memcpy(valor, buffer+desplazamiento, tamanio);
-//		desplazamiento+=tamanio;
-//		list_add(valores, valor);
-//	}
-//	free(buffer);
-//	return valores;
-//	return NULL;
+t_paquete* recibir(int socket)
+{
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	int recibido = 0;
+	recibido = recv(socket, &paquete->palabraReservada, sizeof(int), MSG_WAITALL);
+
+	if(recibido == 0) {
+		paquete->palabraReservada = -1;
+		void* requestRecibido = malloc(sizeof(int));
+		paquete->request = requestRecibido;
+		return paquete;
+	}
+
+	recv(socket, &paquete->tamanio, sizeof(int), MSG_WAITALL);
+
+	void* requestRecibido = malloc(paquete->tamanio);
+
+	recv(socket, requestRecibido, paquete->tamanio, MSG_WAITALL);
+
+	paquete->request = requestRecibido;
+
+	return paquete;
 }
 //
 //
@@ -298,21 +298,34 @@ int crearConexion(char *ip, char* puerto)
 //	paquete->buffer->size += tamanio + sizeof(int);
 //}
 //
-void enviar_paquete(t_paquete* paquete, int socket_cliente)
+void enviar(t_paquete* paquete, int socket_cliente)
 {
-	send(socket_cliente, paquete, sizeof(t_paquete*), 0);
-	free(paquete);
+	log_info(logger, "Dentro de enviar");
+	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio; // Preguntar
+	printf("Despues de tamanio: %d \n", tamanioPaquete);
+	void* buffer = malloc(tamanioPaquete);
+	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
+	// destino es un string
+	memcpy(buffer, &paquete->palabraReservada, sizeof(int));
+	printf("Buffer1: %s \n", (char*) buffer);
+	memcpy(buffer + sizeof(int), &paquete->tamanio, sizeof(int));
+	printf("Buffer2: %s \n", (char*) buffer);
+	memcpy(buffer + 2 * sizeof(int), paquete->request, paquete->tamanio);
+	printf("Todo el buffer: %s \n", (char*) buffer);
+	printf("Tamanio: %d \n", tamanioPaquete);
+	send(socket_cliente, buffer, tamanioPaquete, MSG_WAITALL);
+	free(buffer);
 }
 
-//
+
 //void eliminar_paquete(t_paquete* paquete)
 //{
 //	free(paquete->buffer->stream);
 //	free(paquete->buffer);
 //	free(paquete);
 //}
-//
-//void liberar_conexion(int socket_cliente)
-//{
-//	close(socket_cliente);
-//}
+
+void liberar_conexion(int socket_cliente)
+{
+	close(socket_cliente);
+}
