@@ -15,7 +15,7 @@ void conectarAMemoria(){
 
 	char* mensaje;   // es el request completo
 	int cod_request; // es la palabra reservada (ej: SELECT)
-	t_config* config = leer_config("kernel.config");
+	t_config* config = leer_config("tp-2019-1c-bugbusters/kernel/kernel.config");
 
 	// En este while se lee de la consola
 	while(1) {
