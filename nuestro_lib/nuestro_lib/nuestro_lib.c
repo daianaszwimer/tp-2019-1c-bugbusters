@@ -87,45 +87,108 @@ char** separarString(char* mensaje) {
 	return string_split(mensaje, " ");
 }
 
-int validarMensaje(char* palabraReservada){
-	int codigoPalabraReservada = obtenerCodigoPalabraReservada(palabraReservada);
-	if(codigoPalabraReservada == -1) {
-		log_error(logger, "Debe ingresar un request válido");
-	}
-	return codigoPalabraReservada;
-}
+int validarMensaje(char* mensaje, Componente componente) {
+	char** request = string_n_split(mensaje, 2, " ");
+	//char** request = string_split(mensaje, " ");
 
-int obtenerCodigoPalabraReservada(char* palabraReservada){
-	if (!strcmp(palabraReservada, "SELECT")){
-		return 0;
-	}
-	if (!strcmp(palabraReservada, "INSERT")){
-			return 1;
-	}
-	if (!strcmp(palabraReservada, "CREATE")){
-			return 2;
-	}
-	if (!strcmp(palabraReservada, "DESCRIBE")){
-			return 3;
-	}
-	if (!strcmp(palabraReservada, "DROP")){
-			return 4;
-	}
-	if (!strcmp(palabraReservada, "JOURNAL")){
-			return 5;
-	}
-	if (!strcmp(palabraReservada, "ADD")){
-			return 6;
-	}
-	if (!strcmp(palabraReservada, "RUN")){
-			return 7;
-	}
-	if (!strcmp(palabraReservada, "METRICS")){
-			return 8;
+	char** parametros = separarString(request[1]);
+	int palabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
+	int cantidadDeParametros = sizeof(parametros)/sizeof(char*);
+	if(validarPalabraReservada(palabraReservada, componente) ==0 ) {
+		return EXIT_SUCCESS;
 	}
 	else {
+
+		log_error(logger,"NO FUNACAGYFSDHHFLGYIFHDJJLGFJJFGHBCBH");
 		return -1;
 	}
+}
+//&& validarCantidadDeParametros(cantidadDeParametros, request[0],componente)==0
+
+int validarCantidadDeParametros(int cantidadDeParametros, char* palabraReservada, Componente componente) {
+	int retorno;
+	switch(obtenerCodigoPalabraReservada(palabraReservada, componente)) {
+			case SELECT:
+				if(retorno = (cantidadDeParametros == PARAMETROS_SELECT) ){
+					return EXIT_SUCCESS ;
+				}else{
+					log_error(logger,"tiro error aca sdfcgvhbjn");
+					return -1;
+				}
+				break;
+			case INSERT:
+				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : EXIT_FAILURE;
+				break;
+			case CREATE:
+				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : EXIT_FAILURE;
+				break;
+			case DESCRIBE:
+				retorno = (cantidadDeParametros == PARAMETROS_DESCRIBE) ? EXIT_SUCCESS : EXIT_FAILURE;
+				break;
+			case DROP:
+				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : EXIT_FAILURE;
+				break;
+			case JOURNAL:
+				retorno = (cantidadDeParametros == PARAMETROS_JOURNAL) ? EXIT_SUCCESS : EXIT_FAILURE;
+				break;
+			case ADD:
+				retorno = (cantidadDeParametros == PARAMETROS_ADD) ? EXIT_SUCCESS : EXIT_FAILURE;
+				break;
+			case RUN:
+				retorno = (cantidadDeParametros == PARAMETROS_RUN) ? EXIT_SUCCESS : EXIT_FAILURE;
+				break;
+			case METRICS:
+				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
+				break;
+			default:
+				log_warning(logger, "Operacion desconocida. No quieras meter la pata");
+				break;
+	}
+	return retorno;
+}
+
+int validarPalabraReservada(char* palabraReservada, Componente componente){
+	int codigoPalabraReservada = obtenerCodigoPalabraReservada(palabraReservada, componente);
+	if(codigoPalabraReservada == -1) {
+		log_error(logger, "Debe ingresar un request válido");
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
+
+int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente) {
+	int retorno;
+	if (!strcmp(palabraReservada, "SELECT")) {
+		retorno = 0;
+	}
+	else if (!strcmp(palabraReservada, "INSERT")) {
+		retorno = 1;
+	}
+	else if (!strcmp(palabraReservada, "CREATE")) {
+		retorno = 2;
+	}
+	else if (!strcmp(palabraReservada, "DESCRIBE")) {
+		retorno = 3;
+	}
+	else if (!strcmp(palabraReservada, "DROP")) {
+		retorno = 4;
+	}
+	else if (!strcmp(palabraReservada, "JOURNAL")) {
+		retorno = (componente == LFS) ? -1 : 5;
+	}
+	else if (!strcmp(palabraReservada, "ADD")) {
+		retorno = (componente == KERNEL) ? 6 : -1;
+	}
+	else if (!strcmp(palabraReservada, "RUN")) {
+		retorno = (componente == KERNEL) ? 7 : -1;
+	}
+	else if (!strcmp(palabraReservada, "METRICS")) {
+		retorno = (componente == KERNEL) ? 8 : -1;
+	}
+	else {
+		retorno = -1;
+	}
+	return retorno;
 }
 
 //void enviar_mensaje(char* mensaje, int socket_cliente)

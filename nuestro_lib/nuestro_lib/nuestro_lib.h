@@ -19,11 +19,28 @@
 #define IP "127.0.0.1"
 #define PUERTO "4444"
 
+#define PARAMETROS_SELECT 2
+#define PARAMETROS_INSERT 3
+#define PARAMETROS_CREATE 4
+#define PARAMETROS_DESCRIBE 1
+#define PARAMETROS_DROP 1
+#define PARAMETROS_JOURNAL 0
+#define PARAMETROS_ADD 4
+#define PARAMETROS_RUN 1
+#define PARAMETROS_METRICS 0
+
 typedef enum
 {
 	MENSAJE,
 	PAQUETE
 }op_code;
+
+typedef enum
+{
+	KERNEL,
+	MEMORIA,
+	LFS
+} Componente;
 
 typedef enum
 {
@@ -60,8 +77,10 @@ t_config* leer_config(char*);
 t_paquete* armar_paquete(cod_request, char*);
 //void _leer_consola_haciendo(void(*accion)(char*));
 char** separarString(char*);
-int validarMensaje(char*);
-int obtenerCodigoPalabraReservada(char*);
+int validarMensaje(char*, Componente);
+int validarCantidadDeParametros(int,char*,Componente);
+int validarPalabraReservada(char*, Componente);
+int obtenerCodigoPalabraReservada(char*, Componente);
 
 ////servidor
 void* recibir_buffer(int*, int);
