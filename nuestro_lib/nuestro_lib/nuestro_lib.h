@@ -15,6 +15,9 @@
 #include<string.h>
 #include<readline/readline.h>
 
+#define TRUE 0
+#define FALSE 1
+
 //TODO: poner esto en el config de memoria
 #define IP "127.0.0.1"
 #define PUERTO "4444"
@@ -94,6 +97,7 @@ t_paquete* recibir(int);
 void enviar(t_paquete* paquete, int socket_cliente);
 void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
+int longitudDeArrayDeStrings(char*);
 
 
 #endif /* SOCKETS_H_ */

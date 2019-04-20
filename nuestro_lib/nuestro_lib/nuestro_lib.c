@@ -1,5 +1,7 @@
 #include "nuestro_lib.h"
 
+
+
 void iterator(char* value) {
 	printf("%s\n", value);
 }
@@ -25,7 +27,7 @@ t_paquete* armar_paquete(cod_request palabraReservada, char** request) {
 	return paquete;
 }
 ////								  requests
-//void _leer_consola_haciendo(void (*accion)(char*)) {
+//void _leer_consola_haciendo(void (accion)(char)) {
 //	char* leido = readline(">");
 //
 //	while (strncmp(leido, "", 1) != 0) {
@@ -87,30 +89,33 @@ char** separarString(char* mensaje) {
 
 int validarMensaje(char* mensaje, Componente componente) {
 	char** request = string_n_split(mensaje, 2, " ");
-	char** parametros = separarString(request[1]);
 	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
-	int cantidadDeParametros = sizeof(parametros)/sizeof(char*);
-	if(validarPalabraReservada(codPalabraReservada, componente) ==0 ) {
+	if(request[1]==NULL){
+		if(validarCantidadDeParametros(0, request[0],componente)== TRUE){
+			return EXIT_SUCCESS;
+		}else{
+			log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
+			return EXIT_FAILURE;
+		}
+	}
+
+	char** parametros = separarString(request[1]);
+	int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
+
+	if(validarPalabraReservada(codPalabraReservada, componente) == TRUE && validarCantidadDeParametros(cantidadDeParametros, request[0],componente)== TRUE) {
 		return EXIT_SUCCESS;
 	}
 	else {
-
-		log_error(logger,"NO FUNACAGYFSDHHFLGYIFHDJJLGFJJFGHBCBH");
-		return -1;
+		return EXIT_FAILURE;;
 	}
 }
-//&& validarCantidadDeParametros(cantidadDeParametros, request[0],componente)==0
+
 
 int validarCantidadDeParametros(int cantidadDeParametros, char* palabraReservada, Componente componente) {
 	int retorno;
 	switch(obtenerCodigoPalabraReservada(palabraReservada, componente)) {
 			case SELECT:
-				if(cantidadDeParametros == PARAMETROS_SELECT){
-					return EXIT_SUCCESS ;
-				}else{
-					log_error(logger,"tiro error aca sdfcgvhbjn");
-					return -1;
-				}
+				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			case INSERT:
 				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -137,7 +142,7 @@ int validarCantidadDeParametros(int cantidadDeParametros, char* palabraReservada
 				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			default:
-				log_warning(logger, "Operacion desconocida. No quieras meter la pata");
+				log_error(logger, "No has ingresado la cantidad correcta de parametros para la request");
 				break;
 	}
 	return retorno;
@@ -183,7 +188,7 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 		retorno = (componente == KERNEL) ? 8 : -1;
 	}
 	else {
-		retorno = -1;
+		retorno = EXIT_FAILURE;
 	}
 	return retorno;
 }
@@ -300,7 +305,7 @@ t_paquete* recibir(int socket)
 //	return magic;
 //}
 
-int crearConexion(char *ip, char* puerto)
+int crearConexion(char* ip, char* puerto)
 {
 	struct addrinfo hints;
 	struct addrinfo *server_info;
@@ -389,4 +394,13 @@ void enviar(t_paquete* paquete, int socket_cliente)
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
+}
+
+
+int longitudDeArrayDeStrings(char* array){
+	int longitud = 0;
+	while(array[longitud] != '\0'){
+		longitud++;
+	}
+	return longitud/sizeof(char*);
 }
