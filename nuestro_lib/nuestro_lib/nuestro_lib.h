@@ -21,9 +21,10 @@
 
 typedef enum
 {
-	MENSAJE,
-	PAQUETE
-}op_code;
+	KERNEL,
+	MEMORIA,
+	LFS
+} Componente;
 
 typedef enum
 {
@@ -60,8 +61,8 @@ t_config* leer_config(char*);
 t_paquete* armar_paquete(cod_request, char**);
 //void _leer_consola_haciendo(void(*accion)(char*));
 char** separarString(char*);
-int validarMensaje(char*);
-int obtenerCodigoPalabraReservada(char*);
+int validarMensaje(char*, Componente);
+int obtenerCodigoPalabraReservada(char*, Componente);
 
 ////servidor
 void* recibir_buffer(int*, int);

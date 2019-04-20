@@ -1,0 +1,43 @@
+[INFO] 22:45:57:884 Memoria/(4375:4375): Servidor listo para recibir al cliente
+[INFO] 09:49:07:21 Memoria/(5198:5198): Servidor listo para recibir al cliente
+[INFO] 14:11:20:469 Memoria/(10723:10723): Servidor listo para recibir al cliente
+[ERROR] 14:15:45:526 Memoria/(10723:10723): el cliente se desconecto. Terminando servidor
+[INFO] 14:17:08:400 Memoria/(10908:10908): Servidor listo para recibir al cliente
+[ERROR] 14:17:23:943 Memoria/(10908:10908): el cliente se desconecto. Terminando servidor
+[INFO] 14:31:13:335 Memoria/(11046:11046): Servidor listo para recibir al cliente
+[ERROR] 14:32:07:412 Memoria/(11046:11046): el cliente se desconecto. Terminando servidor
+[INFO] 14:42:47:451 Memoria/(11268:11268): Servidor listo para recibir al cliente
+[ERROR] 14:43:30:923 Memoria/(11268:11268): el cliente se desconecto. Terminando servidor
+[INFO] 14:46:34:697 Memoria/(11468:11468): Servidor listo para recibir al cliente
+[ERROR] 14:46:40:254 Memoria/(11468:11468): el cliente se desconecto. Terminando servidor
+[INFO] 14:47:47:532 Memoria/(11553:11553): Servidor listo para recibir al cliente
+[ERROR] 14:48:01:542 Memoria/(11553:11553): el cliente se desconecto. Terminando servidor
+[INFO] 14:48:51:2 Memoria/(11647:11647): Servidor listo para recibir al cliente
+[ERROR] 14:49:08:416 Memoria/(11647:11647): el cliente se desconecto. Terminando servidor
+[INFO] 14:57:42:531 Memoria/(11851:11851): Servidor listo para recibir al cliente
+[INFO] 14:58:02:693 Memoria/(11851:11851): Me llego un SELECT
+[INFO] 14:59:21:86 Memoria/(11974:11974): Servidor listo para recibir al cliente
+[INFO] 14:59:28:478 Memoria/(11974:11974): Me llego un SELECT
+[INFO] 14:59:54:583 Memoria/(12014:12014): Servidor listo para recibir al cliente
+[INFO] 15:00:02:222 Memoria/(12014:12014): Me llego un INSERT
+[INFO] 15:07:34:309 Memoria/(12213:12213): Servidor listo para recibir al cliente
+[INFO] 15:11:30:743 Memoria/(12213:12213): Me llego un SELECT
+[INFO] 15:14:34:917 Memoria/(12358:12358): Servidor listo para recibir al cliente
+[INFO] 15:14:48:156 Memoria/(12358:12358): Me llego un SELECT
+[INFO] 15:20:09:743 Memoria/(12577:12577): Servidor listo para recibir al cliente
+[INFO] 15:20:47:886 Memoria/(12577:12577): Me llego un SELECT
+[INFO] 15:21:58:651 Memoria/(12701:12701): Servidor listo para recibir al cliente
+[INFO] 15:22:17:308 Memoria/(12701:12701): Me llego un SELECT
+[INFO] 16:03:28:681 Memoria/(13720:13720): Servidor listo para recibir al cliente
+[WARNING] 16:03:51:920 Memoria/(13720:13720): Operacion desconocida. No quieras meter la pata
+[INFO] 16:59:11:53 Memoria/(14496:14496): Servidor listo para recibir al cliente
+[INFO] 16:59:59:974 Memoria/(14496:14496): Me llego un SELECT
+[INFO] 17:00:19:25 Memoria/(14519:14519): Servidor listo para recibir al cliente
+[INFO] 17:01:24:164 Memoria/(14519:14519): Me llego un INSERT
+[INFO] 17:52:41:60 Memoria/(4213:4213): Servidor listo para recibir al cliente
+[INFO] 19:01:54:439 Memoria/(8539:8539): Servidor listo para recibir al cliente
+[INFO] 19:01:54:439 Memoria/(8539:8539): Me llego un SELECT
+[INFO] 19:18:44:166 Memoria/(9712:9712): Servidor listo para recibir al cliente
+[INFO] 19:18:44:166 Memoria/(9712:9712): Me llego un SELECT
+[INFO] 19:22:41:993 Memoria/(10226:10226): Servidor listo para recibir al cliente
+[INFO] 19:22:41:994 Memoria/(10226:10226): Me llego un SELECT

@@ -86,45 +86,47 @@ char** separarString(char* mensaje) {
 	return string_split(mensaje, " ");
 }
 
-int validarMensaje(char* palabraReservada){
-	int codigoPalabraReservada = obtenerCodigoPalabraReservada(palabraReservada);
+int validarMensaje(char* palabraReservada, Componente componente){
+	int codigoPalabraReservada = obtenerCodigoPalabraReservada(palabraReservada, componente);
 	if(codigoPalabraReservada == -1) {
 		log_error(logger, "Debe ingresar un request válido");
 	}
 	return codigoPalabraReservada;
 }
 
-int obtenerCodigoPalabraReservada(char* palabraReservada){
+int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente){
+	int retorno;
 	if (!strcmp(palabraReservada, "SELECT")){
-		return 0;
+		retorno = 0;
 	}
-	if (!strcmp(palabraReservada, "INSERT")){
-			return 1;
+	else if (!strcmp(palabraReservada, "INSERT")){
+		retorno = 1;
 	}
-	if (!strcmp(palabraReservada, "CREATE")){
-			return 2;
+	else if (!strcmp(palabraReservada, "CREATE")){
+		retorno = 2;
 	}
-	if (!strcmp(palabraReservada, "DESCRIBE")){
-			return 3;
+	else if (!strcmp(palabraReservada, "DESCRIBE")){
+		retorno = 3;
 	}
-	if (!strcmp(palabraReservada, "DROP")){
-			return 4;
+	else if (!strcmp(palabraReservada, "DROP")){
+		retorno = 4;
 	}
-	if (!strcmp(palabraReservada, "JOURNAL")){
-			return 5;
+	else if (!strcmp(palabraReservada, "JOURNAL")){
+		retorno = (componente == LFS) ? -1 : 5;
 	}
-	if (!strcmp(palabraReservada, "ADD")){
-			return 6;
+	else if (!strcmp(palabraReservada, "ADD")){
+		retorno = (componente == KERNEL) ? 6 : -1;
 	}
-	if (!strcmp(palabraReservada, "RUN")){
-			return 7;
+	else if (!strcmp(palabraReservada, "RUN")){
+		retorno = (componente == KERNEL) ? 7 : -1;
 	}
-	if (!strcmp(palabraReservada, "METRICS")){
-			return 8;
+	else if (!strcmp(palabraReservada, "METRICS")){
+		retorno = (componente == KERNEL) ? 8 : -1;
 	}
 	else {
-		return -1;
+		retorno = -1;
 	}
+	return retorno;
 }
 
 //void enviar_mensaje(char* mensaje, int socket_cliente)
