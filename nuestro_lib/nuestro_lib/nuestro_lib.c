@@ -86,6 +86,7 @@ char** separarString(char* mensaje) {
 	return string_split(mensaje, " ");
 }
 
+<<<<<<< HEAD
 int validarMensaje(char* mensaje, Componente componente) {
 	char** request = string_n_split(mensaje, 2, " ");
 	//char** request = string_split(mensaje, " ");
@@ -147,6 +148,9 @@ int validarCantidadDeParametros(int cantidadDeParametros, char* palabraReservada
 }
 
 int validarPalabraReservada(char* palabraReservada, Componente componente){
+=======
+int validarMensaje(char* palabraReservada, Componente componente){
+>>>>>>> nuevoKernel
 	int codigoPalabraReservada = obtenerCodigoPalabraReservada(palabraReservada, componente);
 	if(codigoPalabraReservada == -1) {
 		log_error(logger, "Debe ingresar un request válido");
@@ -155,6 +159,7 @@ int validarPalabraReservada(char* palabraReservada, Componente componente){
 	return EXIT_SUCCESS;
 }
 
+<<<<<<< HEAD
 int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente) {
 	int retorno;
 	if (!strcmp(palabraReservada, "SELECT")) {
@@ -182,6 +187,35 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 		retorno = (componente == KERNEL) ? 7 : -1;
 	}
 	else if (!strcmp(palabraReservada, "METRICS")) {
+=======
+int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente){
+	int retorno;
+	if (!strcmp(palabraReservada, "SELECT")){
+		retorno = 0;
+	}
+	else if (!strcmp(palabraReservada, "INSERT")){
+		retorno = 1;
+	}
+	else if (!strcmp(palabraReservada, "CREATE")){
+		retorno = 2;
+	}
+	else if (!strcmp(palabraReservada, "DESCRIBE")){
+		retorno = 3;
+	}
+	else if (!strcmp(palabraReservada, "DROP")){
+		retorno = 4;
+	}
+	else if (!strcmp(palabraReservada, "JOURNAL")){
+		retorno = (componente == LFS) ? -1 : 5;
+	}
+	else if (!strcmp(palabraReservada, "ADD")){
+		retorno = (componente == KERNEL) ? 6 : -1;
+	}
+	else if (!strcmp(palabraReservada, "RUN")){
+		retorno = (componente == KERNEL) ? 7 : -1;
+	}
+	else if (!strcmp(palabraReservada, "METRICS")){
+>>>>>>> nuevoKernel
 		retorno = (componente == KERNEL) ? 8 : -1;
 	}
 	else {

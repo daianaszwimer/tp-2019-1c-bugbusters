@@ -12,4 +12,4 @@
 
 void conectarAMemoria(void);
 
-#endif /* KERNEL_H_ */
+#endif /* KERNEL_H_*/
