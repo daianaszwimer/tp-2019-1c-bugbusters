@@ -74,7 +74,7 @@ t_paquete* armar_paquete(cod_request, char**);
 char** separarString(char*);
 int validarMensaje(char*, Componente);
 int validarCantidadDeParametros(int,char*,Componente);
-int validarPalabraReservada(char*, Componente);
+int validarPalabraReservada(int,Componente);
 
 int obtenerCodigoPalabraReservada(char*, Componente);
 

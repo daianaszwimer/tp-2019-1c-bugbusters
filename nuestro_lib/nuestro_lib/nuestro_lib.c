@@ -56,7 +56,6 @@ int iniciar_servidor(void)
             continue;
 
         if (bind(socket_servidor, p->ai_addr, p->ai_addrlen) == -1) {
-        	puts("4");
             close(socket_servidor);
             continue;
         }
@@ -88,12 +87,10 @@ char** separarString(char* mensaje) {
 
 int validarMensaje(char* mensaje, Componente componente) {
 	char** request = string_n_split(mensaje, 2, " ");
-	//char** request = string_split(mensaje, " ");
-
 	char** parametros = separarString(request[1]);
-	int palabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
+	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
 	int cantidadDeParametros = sizeof(parametros)/sizeof(char*);
-	if(validarPalabraReservada(palabraReservada, componente) ==0 ) {
+	if(validarPalabraReservada(codPalabraReservada, componente) ==0 ) {
 		return EXIT_SUCCESS;
 	}
 	else {
@@ -108,7 +105,7 @@ int validarCantidadDeParametros(int cantidadDeParametros, char* palabraReservada
 	int retorno;
 	switch(obtenerCodigoPalabraReservada(palabraReservada, componente)) {
 			case SELECT:
-				if(retorno = (cantidadDeParametros == PARAMETROS_SELECT) ){
+				if(cantidadDeParametros == PARAMETROS_SELECT){
 					return EXIT_SUCCESS ;
 				}else{
 					log_error(logger,"tiro error aca sdfcgvhbjn");
@@ -148,8 +145,7 @@ int validarCantidadDeParametros(int cantidadDeParametros, char* palabraReservada
 
 
 
-int validarPalabraReservada(char* palabraReservada, Componente componente){
-	int codigoPalabraReservada = obtenerCodigoPalabraReservada(palabraReservada, componente);
+int validarPalabraReservada(int codigoPalabraReservada, Componente componente){
 	if(codigoPalabraReservada == -1) {
 		log_error(logger, "Debe ingresar un request válido");
 		return EXIT_FAILURE;
