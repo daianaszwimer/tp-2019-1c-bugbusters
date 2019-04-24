@@ -76,8 +76,9 @@ t_paquete* armar_paquete(cod_request, char**);
 //void _leer_consola_haciendo(void(*accion)(char*));
 char** separarString(char*);
 int validarMensaje(char*, Componente);
-int validarCantidadDeParametros(int,char*,Componente);
+int cantDeParametrosEsCorrecta(int,int);
 int validarPalabraReservada(int,Componente);
+int validadCantDeParametros(int, int);
 
 int obtenerCodigoPalabraReservada(char*, Componente);
 
@@ -97,7 +98,7 @@ t_paquete* recibir(int);
 void enviar(t_paquete* paquete, int socket_cliente);
 void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
-int longitudDeArrayDeStrings(char*);
+int longitudDeArrayDeStrings(char**);
 
 
 #endif /* SOCKETS_H_ */

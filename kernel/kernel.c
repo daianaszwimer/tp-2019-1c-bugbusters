@@ -32,8 +32,9 @@ void conectarAMemoria(){
 
 	printf("El mensaje es: %s \n", mensaje);
 	codValidacion = validarMensaje(mensaje, KERNEL);
+	printf("COD VALIDACION: %d \n", codValidacion);
 	if(codValidacion == EXIT_FAILURE){
-		log_error(logger, "Request invalido");
+		log_error(logger, "Request invalido"); //ANALIZAR SI DEBERIAMOS LANZAR ERROR O SIMPLEMENTE INFORMLO Y VOLVER  UN ETSADO CONSISTENTE
 	}else{
 		printf("cod validacon %d \n", codValidacion);
 		request = separarString(mensaje);

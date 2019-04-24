@@ -67,7 +67,6 @@ int iniciar_servidor(void)
     freeaddrinfo(servinfo);
     //log_trace(logger, "Listo para escuchar a mi cliente");
     //puts("2345678");
-    puts("Ya se porque es");
     return socket_servidor;
 }
 
@@ -87,11 +86,20 @@ char** separarString(char* mensaje) {
 	return string_split(mensaje, " ");
 }
 
+/* validarMensaje()
+ * Parametros:
+ * 	-> mensaje ::  char*
+ * 	-> coponenete :: Componente
+ * Descripcion: Verifica que toda la request ingresada sea correcta, es decir, verifica que:
+ * 				- que la palabra reservada exista y la comprenda el componente a quien se le envio la request
+ * 				- los parametros sean los correctos, en cuanto  su cantidad.
+ * Return: success or failure
+ * 	-> exit :: int */
 int validarMensaje(char* mensaje, Componente componente) {
 	char** request = string_n_split(mensaje, 2, " ");
 	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
 	if(request[1]==NULL){
-		if(validarCantidadDeParametros(0, request[0],componente)== TRUE){
+		if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
 			return EXIT_SUCCESS;
 		}else{
 			log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
@@ -101,8 +109,9 @@ int validarMensaje(char* mensaje, Componente componente) {
 
 	char** parametros = separarString(request[1]);
 	int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
+	printf("CANT PARAMETROS: %d \n", cantidadDeParametros);
 
-	if(validarPalabraReservada(codPalabraReservada, componente) == TRUE && validarCantidadDeParametros(cantidadDeParametros, request[0],componente)== TRUE) {
+	if(validarPalabraReservada(codPalabraReservada, componente) == TRUE && validadCantDeParametros(cantidadDeParametros,codPalabraReservada)== TRUE) {
 		return EXIT_SUCCESS;
 	}
 	else {
@@ -110,10 +119,35 @@ int validarMensaje(char* mensaje, Componente componente) {
 	}
 }
 
+/* validadCantDeParametros()
+ * Parametros:
+ * 	-> cantidadDeParametros ::  int
+ * 	-> codPalabraReservada :: int
+ * Descripcion: evalua que se haya ingresado la cantidad correcta de parametros que requiere la request realizada.
+ * 				 En el caso de no serlo, se informa de ello.
+ * Return: success or failure
+ * 	-> exit :: int */
+int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada){
+	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
+	if(resultadoCantParametros == EXIT_FAILURE){
+		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
+		return EXIT_FAILURE;
+	}else{
+		return EXIT_SUCCESS;
+	}
+}
 
-int validarCantidadDeParametros(int cantidadDeParametros, char* palabraReservada, Componente componente) {
+/* cantDeParametrosEsCorrecta()
+ * Parametros:
+ * 	-> cantidadDeParametros ::  int
+ * 	-> codPalabraReservada :: int
+ * Descripcion: verifica que la cantidad de parametros ingresados en la request sea igual a la
+ * 				cantidad correcta de parametros que requiere la request realizada.
+ * Return: success or failure
+ * 	-> exit :: int */
+int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada) {
 	int retorno;
-	switch(obtenerCodigoPalabraReservada(palabraReservada, componente)) {
+	switch(codPalabraReservada) {
 			case SELECT:
 				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
@@ -142,55 +176,71 @@ int validarCantidadDeParametros(int cantidadDeParametros, char* palabraReservada
 				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			default:
-				log_error(logger, "No has ingresado la cantidad correcta de parametros para la request");
+				retorno = EXIT_FAILURE;
 				break;
 	}
 	return retorno;
 }
 
 
-
+/* validarPalabraReservada()
+ * Parametros:
+ * 	-> codigoPalabraReservada ::  int 
+ * 	-> coponenete :: Componente
+ * Descripcion: evalua que se haya ingresado una request que entienda el componenete.
+ * 				 En el caso de no serlo, se informa de ello.
+ * Return: success or failure
+ * 	-> exit :: int */
 int validarPalabraReservada(int codigoPalabraReservada, Componente componente){
 	if(codigoPalabraReservada == -1) {
-		log_error(logger, "Debe ingresar un request válido");
+		log_info(logger, "Debe ingresar un request válido");
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
+/* obtenerCodigoPalabraReservada()
+ * Parametros:
+ * 	-> palabraReservada ::  char* 
+ * 	-> componente :: Componente
+ * Descripcion: se obtiene el codigo de la palabra reservada de la request.
+ * 				Lo hace verificando si la request realizada a un componente se encuentre
+ * 				dentro de las requests que entiende dicho componente.
+ * Return: 
+ * 	-> codPalabraReservada :: int */
 int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente) {
-	int retorno;
+	int codPalabraReservada;
 	if (!strcmp(palabraReservada, "SELECT")) {
-		retorno = 0;
+		codPalabraReservada = 0;
 	}
 	else if (!strcmp(palabraReservada, "INSERT")) {
-		retorno = 1;
+		codPalabraReservada = 1;
 	}
 	else if (!strcmp(palabraReservada, "CREATE")) {
-		retorno = 2;
+		codPalabraReservada = 2;
 	}
 	else if (!strcmp(palabraReservada, "DESCRIBE")) {
-		retorno = 3;
+		codPalabraReservada = 3;
 	}
 	else if (!strcmp(palabraReservada, "DROP")) {
-		retorno = 4;
+		codPalabraReservada = 4;
 	}
 	else if (!strcmp(palabraReservada, "JOURNAL")) {
-		retorno = (componente == LFS) ? -1 : 5;
+		codPalabraReservada = (componente == LFS) ? -1 : 5;
 	}
 	else if (!strcmp(palabraReservada, "ADD")) {
-		retorno = (componente == KERNEL) ? 6 : -1;
+		codPalabraReservada = (componente == KERNEL) ? 6 : -1;
 	}
 	else if (!strcmp(palabraReservada, "RUN")) {
-		retorno = (componente == KERNEL) ? 7 : -1;
+		codPalabraReservada = (componente == KERNEL) ? 7 : -1;
 	}
 	else if (!strcmp(palabraReservada, "METRICS")) {
-		retorno = (componente == KERNEL) ? 8 : -1;
+		codPalabraReservada = (componente == KERNEL) ? 8 : -1;
 	}
 	else {
-		retorno = EXIT_FAILURE;
+		codPalabraReservada = EXIT_FAILURE;
 	}
-	return retorno;
+	return codPalabraReservada;
 }
 
 //void enviar_mensaje(char* mensaje, int socket_cliente)
@@ -397,10 +447,11 @@ void liberar_conexion(int socket_cliente)
 }
 
 
-int longitudDeArrayDeStrings(char* array){
+int longitudDeArrayDeStrings(char** array){
 	int longitud = 0;
-	while(array[longitud] != '\0'){
+	while(array[longitud] !=NULL){
 		longitud++;
 	}
-	return longitud/sizeof(char*);
+	return longitud;
+//	return longitud/sizeof(char*);
 }
