@@ -135,7 +135,7 @@ int validarMensaje(char* mensaje, Componente componente) {
 		return EXIT_SUCCESS;
 	}
 	else {
-		return EXIT_FAILURE;;
+		return EXIT_FAILURE;
 	}
 }
 
@@ -358,8 +358,6 @@ t_paquete* recibir(int socket)
 //
 //
 ////cliente
-//
-//
 
 int crearConexion(char* ip, char* puerto)
 {
@@ -432,22 +430,23 @@ void enviar(t_paquete* paquete, int socket_cliente)
 }
 
 
+
+/* serializar_paquete()
+ * Parametros:
+ * 	-> t_paquete* ::  paquete
+ * 	-> int :: tamanioPaquete
+ * Descripcion: preara el paquete que luego se enviara como socket
+ * Return:
+ * 	-> buffer :: void*  */
 void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 {
 	void * buffer = malloc(tamanioPaquete);
-	//int desplazamiento = 0;
 
-// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
-// destino es un string
-	//memcpy(buffer + desplazamiento, &paquete->palabraReservada, sizeof(int));
+	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
+	// destino es un string
 	memcpy(buffer, &paquete->palabraReservada, sizeof(int));
-	//desplazamiento+= sizeof(int);
 	memcpy(buffer + sizeof(int), &paquete->tamanio, sizeof(int));
-	//desplazamiento+= 2 * sizeof(int);
-	//memcpy(buffer + desplazamiento, paquete->request, paquete->tamanio);
-	//desplazamiento+= (paquete->tamanio);
 	memcpy(buffer + 2 * sizeof(int), paquete->request, paquete->tamanio);
-	log_info(logger,"serializo todo bien");
 	return buffer;
 }
 
