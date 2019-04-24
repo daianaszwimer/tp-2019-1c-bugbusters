@@ -51,6 +51,6 @@ void conectarAMemoria(){
 	}
 	log_destroy(logger);
 	free(mensaje);
-	//config_destroy(config);		//Preguntar
+	config_destroy(config);
 	close(conexion);
 }
