@@ -1,9 +1,32 @@
 #include "nuestro_lib.h"
 
 
-
 void iterator(char* value) {
 	printf("%s\n", value);
+}
+
+/* separarString()
+ * Parametros:
+ * 	-> mensaje ::  char*
+ * Descripcion: separa un string dado un espacio y va guaradando cada palabra en un array.
+ * Return: array de string
+ * 	-> :: char** */
+char** separarString(char* mensaje) {
+	return string_split(mensaje, " ");
+}
+
+/* longitudDeArrayDeStrings()
+ * Parametros:
+ * 	-> array ::  char**
+ * Descripcion: Cuenta la cantidad de elementos de un array.
+ * Return:
+ * 	-> longitud :: int */
+int longitudDeArrayDeStrings(char** array){
+	int longitud = 0;
+	while(array[longitud] !=NULL){
+		longitud++;
+	}
+	return longitud;
 }
 
 t_config* leer_config(char* nombreArchivo) {
@@ -19,7 +42,7 @@ t_config* leer_config(char* nombreArchivo) {
 //}
 //
 
-t_paquete* armar_paquete(cod_request palabraReservada, char** request) {
+t_paquete* armar_paquete(cod_request palabraReservada, char* request) {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->palabraReservada = palabraReservada;
 	paquete->tamanio = sizeof(int);
@@ -82,9 +105,6 @@ int esperar_cliente(int socket_servidor)
 	return socket_cliente;
 }
 
-char** separarString(char* mensaje) {
-	return string_split(mensaje, " ");
-}
 
 /* validarMensaje()
  * Parametros:
@@ -340,20 +360,6 @@ t_paquete* recibir(int socket)
 ////cliente
 //
 //
-//void* serializar_paquete(t_paquete* paquete, int bytes)
-//{
-//	void * magic = malloc(bytes);
-//	int desplazamiento = 0;
-//
-//	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
-//	desplazamiento+= sizeof(int);
-//	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
-//	desplazamiento+= sizeof(int);
-//	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
-//	desplazamiento+= paquete->buffer->size;
-//
-//	return magic;
-//}
 
 int crearConexion(char* ip, char* puerto)
 {
@@ -414,24 +420,38 @@ int crearConexion(char* ip, char* puerto)
 //	paquete->buffer->size += tamanio + sizeof(int);
 //}
 //
+
 void enviar(t_paquete* paquete, int socket_cliente)
 {
-	log_info(logger, "Dentro de enviar");
-	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio; // Preguntar
-	printf("Despues de tamanio: %d \n", tamanioPaquete);
-	void* buffer = malloc(tamanioPaquete);
-	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
-	// destino es un string
-	memcpy(buffer, &paquete->palabraReservada, sizeof(int));
-	printf("Buffer1: %s \n", (char*) buffer);
-	memcpy(buffer + sizeof(int), &paquete->tamanio, sizeof(int));
-	printf("Buffer2: %s \n", (char*) buffer);
-	memcpy(buffer + 2 * sizeof(int), paquete->request, paquete->tamanio);
-	printf("Todo el buffer: %s \n", (char*) buffer);
-	printf("Tamanio: %d \n", tamanioPaquete);
-	send(socket_cliente, buffer, tamanioPaquete, MSG_WAITALL);
-	free(buffer);
+	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio; // Preguntar en tp0 estaba asi:  paquete->buffer->size
+	void* paqueteAEnviar = serializar_paquete(paquete, tamanioPaquete);
+
+
+	send(socket_cliente, paqueteAEnviar, tamanioPaquete, MSG_WAITALL);
+	free(paqueteAEnviar);
 }
+
+
+void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
+{
+	void * buffer = malloc(tamanioPaquete);
+	//int desplazamiento = 0;
+
+// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
+// destino es un string
+	//memcpy(buffer + desplazamiento, &paquete->palabraReservada, sizeof(int));
+	memcpy(buffer, &paquete->palabraReservada, sizeof(int));
+	//desplazamiento+= sizeof(int);
+	memcpy(buffer + sizeof(int), &paquete->tamanio, sizeof(int));
+	//desplazamiento+= 2 * sizeof(int);
+	//memcpy(buffer + desplazamiento, paquete->request, paquete->tamanio);
+	//desplazamiento+= (paquete->tamanio);
+	memcpy(buffer + 2 * sizeof(int), paquete->request, paquete->tamanio);
+	log_info(logger,"serializo todo bien");
+	return buffer;
+}
+
+
 
 
 //void eliminar_paquete(t_paquete* paquete)
@@ -446,12 +466,3 @@ void liberar_conexion(int socket_cliente)
 	close(socket_cliente);
 }
 
-
-int longitudDeArrayDeStrings(char** array){
-	int longitud = 0;
-	while(array[longitud] !=NULL){
-		longitud++;
-	}
-	return longitud;
-//	return longitud/sizeof(char*);
-}

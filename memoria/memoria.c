@@ -13,8 +13,8 @@ int main(void)
 	//char* primerParametro= request[1];
 	//printf("EL PRIMER PARAMETRO ES: %s \n", request[1]);
 	//printf("Y este es el msj: %s \n", (char*) paqueteRecibido->request);
-	char** request = (char*) paqueteRecibido->request;
-	printf("Este es el 1er parametro: %s \n", request[1]);
+	char* request = (char*) paqueteRecibido->request;
+
 
 	printf("El codigo que recibi es: %d \n", palabraReservada);
 	switch(palabraReservada) {

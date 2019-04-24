@@ -69,12 +69,15 @@ typedef struct
 t_log* logger;
 
 void iterator(char*);
+char** separarString(char*);
+int longitudDeArrayDeStrings(char**);
+
+
 int crearConexion(char*, char*);
 t_config* leer_config(char*);
 //void leer_consola(t_log* logger);
-t_paquete* armar_paquete(cod_request, char**);
+t_paquete* armar_paquete(cod_request, char*);
 //void _leer_consola_haciendo(void(*accion)(char*));
-char** separarString(char*);
 int validarMensaje(char*, Componente);
 int cantDeParametrosEsCorrecta(int,int);
 int validarPalabraReservada(int,Componente);
@@ -95,10 +98,10 @@ t_paquete* recibir(int);
 //t_paquete* crear_paquete(void);
 //t_paquete* crear_super_paquete(void);
 //void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
+void* serializar_paquete(t_paquete* , int);
 void enviar(t_paquete* paquete, int socket_cliente);
 void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
-int longitudDeArrayDeStrings(char**);
 
 
 #endif /* SOCKETS_H_ */
