@@ -29,6 +29,13 @@ int longitudDeArrayDeStrings(char** array){
 	return longitud;
 }
 
+/* leer_config()
+ * Parametros:
+ * 	-> nombreArchivo ::  char*
+ * Descripcion: CREA el archivo de confirguracion asignandole el nombre que se le envia
+ * 				por parametro  la funcion.
+ * Return:
+ * 	-> t_config :: t_config* */
 t_config* leer_config(char* nombreArchivo) {
 	return config_create(nombreArchivo);
 }
@@ -42,6 +49,14 @@ t_config* leer_config(char* nombreArchivo) {
 //}
 //
 
+/* armar_paquete()
+ * Parametros:
+ * 	-> codRequest ::  palabraReservada
+ * 	-> request :: char*
+ * Descripcion: crea un paquete, reservado memoria para el mismo, y guarda en dicha estructura
+ * 				de paquete : la palabra reservada, el tamanio del paquete y toda la reques(string entero)
+ * Return:
+ * 	-> paquete :: t_paquete*  */
 t_paquete* armar_paquete(cod_request palabraReservada, char* request) {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->palabraReservada = palabraReservada;
@@ -93,6 +108,13 @@ int iniciar_servidor(void)
     return socket_servidor;
 }
 
+/* esperar_cliente()
+ * Parametros:
+ * 	-> int ::  socket_servidor
+ * Descripcion: guarda en socket_cliente el resultado de la conexion que recibe (lo hace a traves de la funcion
+ * 				accept)
+ * Return:
+ * 	-> socket_cliente :: int */
 int esperar_cliente(int socket_servidor)
 {
 	struct sockaddr_in dir_cliente;
@@ -419,6 +441,14 @@ int crearConexion(char* ip, char* puerto)
 //}
 //
 
+/* enviar()
+ * Parametros:
+ * 	-> t_paquete* ::  paquete
+ * 	-> int :: socket_cliente
+ * Descripcion: una vez serializado el paquete, hace send del mismo a traves del socket_cliente
+ * 				y finalmente se libera el paquete que se envio.
+ * Return:
+ * 	-> :: void  */
 void enviar(t_paquete* paquete, int socket_cliente)
 {
 	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio; // Preguntar en tp0 estaba asi:  paquete->buffer->size
