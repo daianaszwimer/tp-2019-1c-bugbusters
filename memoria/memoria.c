@@ -24,6 +24,18 @@ int main(void)
 		case INSERT:
 			log_info(logger, "Me llego un INSERT");
 			break;
+		case CREATE:
+			log_info(logger, "Me llego un CREATE");
+			break;
+		case DESCRIBE:
+			log_info(logger, "Me llego un DESCRIBE");
+			break;
+		case DROP:
+			log_info(logger, "Me llego un DROP");
+			break;
+		case JOURNAL:
+			log_info(logger, "Me llego un JOURNAL");
+			break;
 		case -1:
 			log_error(logger, "el cliente se desconecto. Terminando servidor");
 			return EXIT_FAILURE;
