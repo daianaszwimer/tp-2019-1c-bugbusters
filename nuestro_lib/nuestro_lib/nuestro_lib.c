@@ -465,7 +465,7 @@ void enviar(t_paquete* paquete, int socket_cliente)
  * Parametros:
  * 	-> t_paquete* ::  paquete
  * 	-> int :: tamanioPaquete
- * Descripcion: preara el paquete que luego se enviara como socket
+ * Descripcion: prepara el paquete que luego se enviara por socket
  * Return:
  * 	-> buffer :: void*  */
 void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
@@ -493,5 +493,41 @@ void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
+}
+
+/* Funciones de Multiplexacion */
+
+/* eliminarClientesCerrados()
+ * Parametros:
+ * 	-> t_list* :: descriptores
+ * 	-> int* :: numeroDeClientes
+ * Descripcion: elimina de la lista de descriptores, los clientes cerrados (que tengan un -1 en su fd)
+ * Return:
+ * 	-> :: void  */
+void eliminarClientesCerrados(t_list* descriptores, int* numeroDeClientes) {
+	for(int i = 0; i < *numeroDeClientes; i++) {
+		if((int) list_get(descriptores,i) == -1) {
+			int valorRemovido = (int) list_remove(descriptores, i);
+			*numeroDeClientes -= 1;
+		}
+	}
+}
+
+/* maximo()
+ * Parametros:
+ * 	-> t_list* :: descriptores
+ * 	-> int :: descriptorServidor
+ * 	-> int :: numeroDeClientes
+ * Descripcion: devuelve el valor maximo entre todos los fd's de la lista de descriptores y el fd del servidor
+ * Return:
+ * 	-> valorMaximo :: int  */
+int maximo(t_list* descriptores, int descriptorServidor, int numeroDeClientes) {
+	int max = descriptorServidor;
+	for(int i = 0; i < numeroDeClientes; i++) {
+		if((int) list_get(descriptores,i) > max) {
+			max = (int) list_get(descriptores,i);
+		}
+	}
+	return max;
 }
 

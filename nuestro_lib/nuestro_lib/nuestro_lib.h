@@ -103,5 +103,8 @@ void enviar(t_paquete* paquete, int socket_cliente);
 void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 
+/* Multiplexacion */
+void eliminarClientesCerrados(t_list*, int*);
+int maximo(t_list*, int, int);
 
 #endif /* SOCKETS_H_ */

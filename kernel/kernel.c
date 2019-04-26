@@ -8,7 +8,7 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
-void conectarAMemoria(){
+void conectarAMemoria() {
 
 	// Toda esta primera parte (hasta crearConexion exclusive) podriamos modelarla en una funcion leerDeConsola
 	// que va en el main antes de conectarAMemoria
@@ -19,42 +19,44 @@ void conectarAMemoria(){
 	int codValidacion;
 	int conexion;
 
-
 	t_config* config = leer_config("kernel.config");
+	//int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
+	conexion = crearConexion("127.0.0.1", "4444");
 
-	// En este while se lee de la consola
-	while(1) {
-		mensaje = readline(">");
-		if (strcmp(mensaje,"\n") != 0) {
-			break;
+	while (1) {
+
+		// En este while se lee de la consola
+		while (1) {
+			mensaje = readline(">");
+			if (strcmp(mensaje, "\n") != 0) {
+				break;
+			}
 		}
+
+		printf("El mensaje es: %s \n", mensaje);
+		codValidacion = validarMensaje(mensaje, KERNEL);
+		printf("COD VALIDACION: %d \n", codValidacion);
+		if (codValidacion == EXIT_FAILURE) {
+			log_error(logger, "Request invalido"); //ANALIZAR SI DEBERIAMOS LANZAR ERROR O SIMPLEMENTE INFORMLO Y VOLVER  UN ETSADO CONSISTENTE
+		} else {
+			printf("cod validacion %d \n", codValidacion);
+			request = separarString(mensaje);
+			cod_request = obtenerCodigoPalabraReservada(request[0], KERNEL);
+
+			printf("Y ahora es: %s \n", mensaje);
+
+			// El paquete tiene el cod_request y UN request completo
+			t_paquete* paquete = armar_paquete(cod_request, mensaje);
+			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
+			log_info(logger, "Antes de enviar mensaje");
+			enviar(paquete, conexion);
+			log_info(logger, "despues de enviar mensaje");
+		}
+
+		//log_destroy(logger);
+		free(mensaje);
+		//config_destroy(config);
 	}
-
-	printf("El mensaje es: %s \n", mensaje);
-	codValidacion = validarMensaje(mensaje, KERNEL);
-	printf("COD VALIDACION: %d \n", codValidacion);
-	if(codValidacion == EXIT_FAILURE){
-		log_error(logger, "Request invalido"); //ANALIZAR SI DEBERIAMOS LANZAR ERROR O SIMPLEMENTE INFORMLO Y VOLVER  UN ETSADO CONSISTENTE
-	}else{
-		printf("cod validacon %d \n", codValidacion);
-		request = separarString(mensaje);
-		cod_request = obtenerCodigoPalabraReservada(request[0], KERNEL);
-
-		printf("Y ahora es: %s \n", mensaje);
-		//int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
-		conexion = crearConexion("127.0.0.1","4444");
-		// El paquete tiene el cod_request y UN request completo
-		t_paquete* paquete = armar_paquete(cod_request, mensaje);
-		printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
-		log_info(logger,"Antes de enviar mensaje");
-		enviar(paquete, conexion);
-		log_info(logger,"despues de enviar mensaje");
-	}
-
-	//log_destroy(logger);
-	free(mensaje);
-	//config_destroy(config);
-
 	close(conexion);
 
 }
