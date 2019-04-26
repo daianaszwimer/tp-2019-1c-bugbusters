@@ -66,8 +66,6 @@ typedef struct
 	void* request;
 } t_paquete;
 
-t_log* logger;
-
 void iterator(char*);
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
@@ -78,10 +76,10 @@ t_config* leer_config(char*);
 //void leer_consola(t_log* logger);
 t_paquete* armar_paquete(cod_request, char*);
 //void _leer_consola_haciendo(void(*accion)(char*));
-int validarMensaje(char*, Componente);
+int validarMensaje(char*, Componente, t_log*);
 int cantDeParametrosEsCorrecta(int,int);
-int validarPalabraReservada(int,Componente);
-int validadCantDeParametros(int, int);
+int validarPalabraReservada(int,Componente, t_log*);
+int validadCantDeParametros(int, int, t_log*);
 
 int obtenerCodigoPalabraReservada(char*, Componente);
 

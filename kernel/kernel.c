@@ -1,7 +1,6 @@
 #include "kernel.h"
-
+t_log* logger;
 int main(void) {
-
 	logger = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
 	log_info(logger, "----------------INICIO DE KERNEL--------------");
 	conectarAMemoria();
@@ -31,7 +30,7 @@ void conectarAMemoria(){
 	}
 
 	printf("El mensaje es: %s \n", mensaje);
-	codValidacion = validarMensaje(mensaje, KERNEL);
+	codValidacion = validarMensaje(mensaje, KERNEL, logger);
 	printf("COD VALIDACION: %d \n", codValidacion);
 	if(codValidacion == EXIT_FAILURE){
 		log_error(logger, "Request invalido"); //ANALIZAR SI DEBERIAMOS LANZAR ERROR O SIMPLEMENTE INFORMLO Y VOLVER  UN ETSADO CONSISTENTE
@@ -46,12 +45,12 @@ void conectarAMemoria(){
 		// El paquete tiene el cod_request y UN request completo
 		t_paquete* paquete = armar_paquete(cod_request, mensaje);
 		printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
-		log_info(logger,"Antes de enviar mensaje");
+		//log_info(logger,"Antes de enviar mensaje");
 		enviar(paquete, conexion);
-		log_info(logger,"despues de enviar mensaje");
+		//log_info(logger,"despues de enviar mensaje");
 	}
 
-	//log_destroy(logger);
+	log_destroy(logger);
 	free(mensaje);
 	//config_destroy(config);
 

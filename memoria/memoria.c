@@ -44,5 +44,7 @@ int main(void)
 			break;
 	}
 
+	log_destroy(logger);
+
 	return EXIT_SUCCESS;
 }

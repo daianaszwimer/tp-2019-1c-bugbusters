@@ -137,7 +137,7 @@ int esperar_cliente(int socket_servidor)
  * 				- los parametros sean los correctos, en cuanto  su cantidad.
  * Return: success or failure
  * 	-> exit :: int */
-int validarMensaje(char* mensaje, Componente componente) {
+int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 	char** request = string_n_split(mensaje, 2, " ");
 	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
 	if(request[1]==NULL){
@@ -153,7 +153,7 @@ int validarMensaje(char* mensaje, Componente componente) {
 	int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
 	printf("CANT PARAMETROS: %d \n", cantidadDeParametros);
 
-	if(validarPalabraReservada(codPalabraReservada, componente) == TRUE && validadCantDeParametros(cantidadDeParametros,codPalabraReservada)== TRUE) {
+	if(validarPalabraReservada(codPalabraReservada, componente, logger) == TRUE && validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger)== TRUE) {
 		return EXIT_SUCCESS;
 	}
 	else {
@@ -169,7 +169,7 @@ int validarMensaje(char* mensaje, Componente componente) {
  * 				 En el caso de no serlo, se informa de ello.
  * Return: success or failure
  * 	-> exit :: int */
-int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada){
+int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t_log* logger){
 	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
 	if(resultadoCantParametros == EXIT_FAILURE){
 		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
@@ -233,7 +233,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
  * 				 En el caso de no serlo, se informa de ello.
  * Return: success or failure
  * 	-> exit :: int */
-int validarPalabraReservada(int codigoPalabraReservada, Componente componente){
+int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
 	if(codigoPalabraReservada == -1) {
 		log_info(logger, "Debe ingresar un request válido");
 		return EXIT_FAILURE;
