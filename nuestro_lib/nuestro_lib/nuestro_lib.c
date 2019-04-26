@@ -1,6 +1,5 @@
 #include "nuestro_lib.h"
 
-
 void iterator(char* value) {
 	printf("%s\n", value);
 }
@@ -530,4 +529,3 @@ int maximo(t_list* descriptores, int descriptorServidor, int numeroDeClientes) {
 	}
 	return max;
 }
-
