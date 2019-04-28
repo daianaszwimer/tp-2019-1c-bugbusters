@@ -9,9 +9,8 @@ int main(void) {
 	conectarConFileSystem();
 
 	//conectar con kernel
-
 	int descriptorServidor = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
-	log_info(logger_MEMORIA, "Servidor listo para recibir al cliente");
+	log_info(logger_MEMORIA, "Memoria lista para recibir al kernel");
 
 	/* fd = file descriptor (id de Socket)
 	 * fd_set es Set de fd's (una coleccion)*/
@@ -73,7 +72,7 @@ int main(void) {
 		}
 
 		if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
-			int descriptorCliente = 0;//esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
+			int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
 			numeroDeClientes = (int) list_add(descriptoresClientes, (int) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 			numeroDeClientes++;
 		}
@@ -86,7 +85,8 @@ int main(void) {
 }
 
 void conectarConFileSystem() {
-	int conexion = crearConexion(
+	int conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_LFS"),
 			config_get_string_value(config, "PUERTO_LFS"));
+	liberar_conexion(conexionLfs);
 }

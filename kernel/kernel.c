@@ -56,6 +56,6 @@ void conectarAMemoria() {
 		free(mensaje);
 		//config_destroy(config);
 	}
-	close(conexion);
+	liberar_conexion(conexion);
 
 }
