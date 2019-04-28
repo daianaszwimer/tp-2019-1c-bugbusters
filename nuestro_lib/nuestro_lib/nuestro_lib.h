@@ -32,6 +32,8 @@
 #define PARAMETROS_RUN 1
 #define PARAMETROS_METRICS 0
 
+#define QUERY_ERROR -1
+
 typedef enum
 {
 	KERNEL,

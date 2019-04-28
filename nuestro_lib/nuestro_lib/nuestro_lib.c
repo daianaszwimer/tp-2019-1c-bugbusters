@@ -139,21 +139,26 @@ int esperar_cliente(int socket_servidor)
 int validarMensaje(char* mensaje, Componente componente) {
 	char** request = string_n_split(mensaje, 2, " ");
 	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
-	if(request[1]==NULL){
-		if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
+	if(validarPalabraReservada(codPalabraReservada, componente)== TRUE){
+		if(request[1]==NULL){
+			if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
+				return EXIT_SUCCESS;
+			}else{
+				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
+				return EXIT_FAILURE;
+			}
+		}
+
+		char** parametros = separarString(request[1]);
+		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
+		printf("CANT PARAMETROS: %d \n", cantidadDeParametros);
+
+		if( validadCantDeParametros(cantidadDeParametros,codPalabraReservada)== TRUE) {
 			return EXIT_SUCCESS;
-		}else{
-			log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
+		}
+		else {
 			return EXIT_FAILURE;
 		}
-	}
-
-	char** parametros = separarString(request[1]);
-	int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-	printf("CANT PARAMETROS: %d \n", cantidadDeParametros);
-
-	if(validarPalabraReservada(codPalabraReservada, componente) == TRUE && validadCantDeParametros(cantidadDeParametros,codPalabraReservada)== TRUE) {
-		return EXIT_SUCCESS;
 	}
 	else {
 		return EXIT_FAILURE;
@@ -279,7 +284,7 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 		codPalabraReservada = (componente == KERNEL) ? 8 : -1;
 	}
 	else {
-		codPalabraReservada = EXIT_FAILURE;
+		codPalabraReservada = QUERY_ERROR;
 	}
 	return codPalabraReservada;
 }
