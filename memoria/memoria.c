@@ -1,9 +1,11 @@
 #include "memoria.h"
 
 int main(void) {
+	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
+	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
-	logger = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
-	log_info(logger, "Servidor listo para recibir al cliente");
+	//conectar con file system
+	conectarConFileSystem();
 
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
@@ -21,7 +23,7 @@ void leerDeConsola(void){
 		if (!strcmp(mensaje, "\0")) {
 			break;
 		}
-		log_info(logger, mensaje);
+		log_info(logger_MEMORIA, mensaje);
 		free(mensaje);
 	}
 }
@@ -29,7 +31,12 @@ void leerDeConsola(void){
 void escucharMultiplesClientes(){
 	/* fd = file descriptor (id de Socket)
 	 * fd_set es Set de fd's (una coleccion)*/
-	int descriptorServidor = iniciar_servidor();
+
+	//conectar con kernel
+	int descriptorServidor = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
+	log_info(logger_MEMORIA, "Memoria lista para recibir al kernel");
+
+
 	t_list* descriptoresClientes = list_create();	// Lista de descriptores de todos los clientes conectados (podemos conectar infinitos clientes)
 	fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
 	int numeroDeClientes = 0;						// Cantidad de clientes conectados
@@ -56,29 +63,29 @@ void escucharMultiplesClientes(){
 
 				switch(palabraReservada) {
 					case SELECT:
-						log_info(logger, "Me llego un SELECT");
+						log_info(logger_MEMORIA, "Me llego un SELECT");
 						break;
 					case INSERT:
-						log_info(logger, "Me llego un INSERT");
+						log_info(logger_MEMORIA, "Me llego un INSERT");
 						break;
 					case CREATE:
-						log_info(logger, "Me llego un CREATE");
+						log_info(logger_MEMORIA, "Me llego un CREATE");
 						break;
 					case DESCRIBE:
-						log_info(logger, "Me llego un DESCRIBE");
+						log_info(logger_MEMORIA, "Me llego un DESCRIBE");
 						break;
 					case DROP:
-						log_info(logger, "Me llego un DROP");
+						log_info(logger_MEMORIA, "Me llego un DROP");
 						break;
 					case JOURNAL:
-						log_info(logger, "Me llego un JOURNAL");
+						log_info(logger_MEMORIA, "Me llego un JOURNAL");
 						break;
 					case -1:
-						log_error(logger, "el cliente se desconecto. Terminando servidor");
+						log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 						int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd
 						break;
 					default:
-						log_warning(logger, "Operacion desconocida. No quieras meter la pata");
+						log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
 						break;
 				}
 
@@ -92,4 +99,13 @@ void escucharMultiplesClientes(){
 			numeroDeClientes++;
 		}
 	}
+	log_destroy(logger_MEMORIA);
+	config_destroy(config);
+}
+
+void conectarConFileSystem() {
+	int conexionLfs = crearConexion(
+			config_get_string_value(config, "IP_LFS"),
+			config_get_string_value(config, "PUERTO_LFS"));
+	liberar_conexion(conexionLfs);
 }

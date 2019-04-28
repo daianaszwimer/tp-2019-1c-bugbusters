@@ -78,7 +78,7 @@ t_paquete* armar_paquete(cod_request palabraReservada, char* request) {
 //
 //
 
-int iniciar_servidor(void)
+int iniciar_servidor(char* puerto, char* ip)
 {
 	int socket_servidor;
 
@@ -88,7 +88,7 @@ int iniciar_servidor(void)
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
-    getaddrinfo(IP, PUERTO, &hints, &servinfo);
+    getaddrinfo(ip, puerto, &hints, &servinfo);
     for (p=servinfo; p != NULL; p = p->ai_next)
     {
         if ((socket_servidor = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
@@ -136,10 +136,10 @@ int esperar_cliente(int socket_servidor)
  * 				- los parametros sean los correctos, en cuanto  su cantidad.
  * Return: success or failure
  * 	-> exit :: int */
-int validarMensaje(char* mensaje, Componente componente) {
+int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 	char** request = string_n_split(mensaje, 2, " ");
 	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
-	if(validarPalabraReservada(codPalabraReservada, componente)== TRUE){
+	if(validarPalabraReservada(codPalabraReservada, componente, logger)== TRUE){
 		if(request[1]==NULL){
 			if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
 				return EXIT_SUCCESS;
@@ -153,7 +153,7 @@ int validarMensaje(char* mensaje, Componente componente) {
 		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
 		printf("CANT PARAMETROS: %d \n", cantidadDeParametros);
 
-		if( validadCantDeParametros(cantidadDeParametros,codPalabraReservada)== TRUE) {
+		if( validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger)== TRUE) {
 			return EXIT_SUCCESS;
 		}
 		else {
@@ -173,7 +173,7 @@ int validarMensaje(char* mensaje, Componente componente) {
  * 				 En el caso de no serlo, se informa de ello.
  * Return: success or failure
  * 	-> exit :: int */
-int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada){
+int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t_log* logger){
 	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
 	if(resultadoCantParametros == EXIT_FAILURE){
 		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
@@ -237,7 +237,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
  * 				 En el caso de no serlo, se informa de ello.
  * Return: success or failure
  * 	-> exit :: int */
-int validarPalabraReservada(int codigoPalabraReservada, Componente componente){
+int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
 	if(codigoPalabraReservada == -1) {
 		log_info(logger, "Debe ingresar un request válido");
 		return EXIT_FAILURE;

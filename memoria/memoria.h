@@ -23,4 +23,9 @@ char* mensaje;  					// es el request completo
 void leerDeConsola(void);
 void escucharMultiplesClientes(void);
 
+t_log* logger_MEMORIA;
+t_config* config;
+
+void conectarConFileSystem(void);
+
 #endif /* MEMORIA_H_ */

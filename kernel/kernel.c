@@ -1,30 +1,33 @@
 #include "kernel.h"
-
+t_log* logger_KERNEL;
 int main(void) {
 	inicializarVariables();
-	log_info(logger, "----------------INICIO DE KERNEL--------------");
+	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 	sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAMemoria, 0, 0);
 
+
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
+
 
 	enviarMensajeAMemoria();
 
 	pthread_join(hiloLeerDeConsola, NULL);
+
+	log_destroy(logger_KERNEL);
 	return EXIT_SUCCESS;
 }
 
 void inicializarVariables(void){
-	logger = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
-	log_info(logger, "InicializarVariables");
-	t_config* config = leer_config("kernel.config");
-	//int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
-	conexion = crearConexion("127.0.0.1", "4444");
+	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
+	//log_info(logger_KERNEL, "InicializarVariables");
+	t_config* config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
+	conexion = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 }
 
 
 void leerDeConsola(void){
-	//log_info(logger, "LeerDeConsola");
+	//log_info(logger, "leerDeConsola");
 	while (1) {
 		sem_wait(&semLeerDeConsola);
 		mensaje = readline(">");
@@ -48,7 +51,7 @@ void enviarMensajeAMemoria(void) {
 			break;
 		}
 		printf("El mensaje es: %s \n", mensaje);
-		codValidacion = validarMensaje(mensaje, KERNEL);
+		codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 		printf("Codigo de validacion: %d \n", codValidacion);
 		if (codValidacion != EXIT_FAILURE) {
 			request = separarString(mensaje);
@@ -56,17 +59,16 @@ void enviarMensajeAMemoria(void) {
 			// El paquete tiene el cod_request y UN request completo
 			t_paquete* paquete = armar_paquete(cod_request, mensaje);
 			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
-			log_info(logger, "Antes de enviar mensaje");
+			log_info(logger_KERNEL, "Antes de enviar mensaje");
 			enviar(paquete, conexion);
 			free(paquete);
-			log_info(logger, "despues de enviar mensaje");
+			log_info(logger_KERNEL, "despues de enviar mensaje");
 		}
 
-		//log_destroy(logger);
 		free(mensaje);
 		//config_destroy(config);
 		sem_post(&semLeerDeConsola);
 	}
-	close(conexion);
+	liberar_conexion(conexion);
 
 }
