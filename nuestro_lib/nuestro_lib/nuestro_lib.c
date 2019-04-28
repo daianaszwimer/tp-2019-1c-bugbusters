@@ -63,6 +63,7 @@ t_paquete* armar_paquete(cod_request palabraReservada, char* request) {
 	paquete->request = request;
 	return paquete;
 }
+
 ////								  requests
 //void _leer_consola_haciendo(void (accion)(char)) {
 //	char* leido = readline(">");
@@ -106,6 +107,7 @@ int iniciar_servidor(char* puerto, char* ip)
     //puts("2345678");
     return socket_servidor;
 }
+
 
 /* esperar_cliente()
  * Parametros:
@@ -165,6 +167,7 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 	}
 }
 
+
 /* validadCantDeParametros()
  * Parametros:
  * 	-> cantidadDeParametros ::  int
@@ -182,6 +185,7 @@ int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t
 		return EXIT_SUCCESS;
 	}
 }
+
 
 /* cantDeParametrosEsCorrecta()
  * Parametros:
@@ -244,6 +248,7 @@ int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t
 	}
 	return EXIT_SUCCESS;
 }
+
 
 /* obtenerCodigoPalabraReservada()
  * Parametros:
@@ -367,6 +372,7 @@ t_paquete* recibir(int socket)
 		paquete->palabraReservada = -1;
 		void* requestRecibido = malloc(sizeof(int));
 		paquete->request = requestRecibido;
+		free(requestRecibido);
 		return paquete;
 	}
 
@@ -377,6 +383,8 @@ t_paquete* recibir(int socket)
 	recv(socket, requestRecibido, paquete->tamanio, MSG_WAITALL);
 
 	paquete->request = requestRecibido;
+
+	free(requestRecibido);
 
 	return paquete;
 }
@@ -460,9 +468,8 @@ void enviar(t_paquete* paquete, int socket_cliente)
 
 
 	send(socket_cliente, paqueteAEnviar, tamanioPaquete, MSG_WAITALL);
-	free(paqueteAEnviar);
+	eliminar_paquete(paqueteAEnviar);
 }
-
 
 
 /* serializar_paquete()
@@ -485,14 +492,18 @@ void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 }
 
 
+/*eliminar_paquete()
+ * Parametros:
+ * 	-> t_paquete* ::  paquete
+ * Descripcion:
+ * Return:
+ * 	-> :: void */
 
-
-//void eliminar_paquete(t_paquete* paquete)
-//{
-//	free(paquete->buffer->stream);
-//	free(paquete->buffer);
-//	free(paquete);
-//}
+void eliminar_paquete(t_paquete* paquete)
+{
+	free(paquete->request);
+	free(paquete);
+}
 
 void liberar_conexion(int socket_cliente)
 {

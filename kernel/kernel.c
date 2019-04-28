@@ -44,6 +44,7 @@ void enviarMensajeAMemoria(void) {
 	int cod_request; // es la palabra reservada (ej: SELECT)
 	char** request;
 	int codValidacion;
+	t_paquete* paquete;
 
 	while (1) {
 		sem_wait(&semEnviarMensajeAMemoria);
@@ -57,14 +58,13 @@ void enviarMensajeAMemoria(void) {
 			request = separarString(mensaje);
 			cod_request = obtenerCodigoPalabraReservada(request[0], KERNEL);
 			// El paquete tiene el cod_request y UN request completo
-			t_paquete* paquete = armar_paquete(cod_request, mensaje);
+			paquete = armar_paquete(cod_request, mensaje);
 			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 			log_info(logger_KERNEL, "Antes de enviar mensaje");
 			enviar(paquete, conexion);
 			free(paquete);
 			log_info(logger_KERNEL, "despues de enviar mensaje");
 		}
-
 		free(mensaje);
 		//config_destroy(config);
 		sem_post(&semLeerDeConsola);

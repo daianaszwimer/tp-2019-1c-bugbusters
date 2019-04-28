@@ -41,6 +41,7 @@ void escucharMultiplesClientes(){
 	fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
 	int numeroDeClientes = 0;						// Cantidad de clientes conectados
 	int valorMaximo = 0;							// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
+	t_paquete* paqueteRecibido;
 
 	while(1) {
 
@@ -57,7 +58,7 @@ void escucharMultiplesClientes(){
 
 		for(int i=0; i<numeroDeClientes; i++) {
 			if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
-				t_paquete* paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
+				paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
 				int palabraReservada = paqueteRecibido->palabraReservada;
 				printf("El codigo que recibi es: %d \n", palabraReservada);
 
@@ -88,7 +89,7 @@ void escucharMultiplesClientes(){
 						log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
 						break;
 				}
-
+				eliminar_paquete(paqueteRecibido);
 				printf("Del cliente nro: %d \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 			}
 		}
@@ -108,4 +109,6 @@ void conectarConFileSystem() {
 			config_get_string_value(config, "IP_LFS"),
 			config_get_string_value(config, "PUERTO_LFS"));
 	liberar_conexion(conexionLfs);
+
 }
+

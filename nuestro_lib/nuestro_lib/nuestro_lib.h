@@ -95,9 +95,9 @@ t_paquete* recibir(int);
 //t_paquete* crear_super_paquete(void);
 //void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void* serializar_paquete(t_paquete* , int);
-void enviar(t_paquete* paquete, int socket_cliente);
-void liberar_conexion(int socket_cliente);
-void eliminar_paquete(t_paquete* paquete);
+void enviar(t_paquete*, int);
+void eliminar_paquete(t_paquete*);
+void liberar_conexion(int);
 
 /* Multiplexacion */
 void eliminarClientesCerrados(t_list*, int*);
