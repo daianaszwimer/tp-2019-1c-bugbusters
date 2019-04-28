@@ -1,9 +1,9 @@
 #include "kernel.h"
-
+t_log* logger_KERNEL;
 int main(void) {
 
-	logger = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
-	log_info(logger, "----------------INICIO DE KERNEL--------------");
+	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
+	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 	conectarAMemoria();
 	return EXIT_SUCCESS;
 }
@@ -19,9 +19,8 @@ void conectarAMemoria() {
 	int codValidacion;
 	int conexion;
 
-	t_config* config = leer_config("kernel.config");
-	//int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
-	conexion = crearConexion("127.0.0.1", "4444");
+	t_config* config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
+	conexion = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 
 	while (1) {
 
@@ -34,10 +33,10 @@ void conectarAMemoria() {
 		}
 
 		printf("El mensaje es: %s \n", mensaje);
-		codValidacion = validarMensaje(mensaje, KERNEL);
+		codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 		printf("COD VALIDACION: %d \n", codValidacion);
 		if (codValidacion == EXIT_FAILURE) {
-			log_error(logger, "Request invalido"); //ANALIZAR SI DEBERIAMOS LANZAR ERROR O SIMPLEMENTE INFORMLO Y VOLVER  UN ETSADO CONSISTENTE
+			log_error(logger_KERNEL, "Request invalido"); //ANALIZAR SI DEBERIAMOS LANZAR ERROR O SIMPLEMENTE INFORMLO Y VOLVER  UN ETSADO CONSISTENTE
 		} else {
 			printf("cod validacion %d \n", codValidacion);
 			request = separarString(mensaje);
@@ -48,12 +47,12 @@ void conectarAMemoria() {
 			// El paquete tiene el cod_request y UN request completo
 			t_paquete* paquete = armar_paquete(cod_request, mensaje);
 			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
-			log_info(logger, "Antes de enviar mensaje");
+			log_info(logger_KERNEL, "Antes de enviar mensaje");
 			enviar(paquete, conexion);
-			log_info(logger, "despues de enviar mensaje");
+			log_info(logger_KERNEL, "despues de enviar mensaje");
 		}
 
-		//log_destroy(logger);
+		log_destroy(logger_KERNEL);
 		free(mensaje);
 		//config_destroy(config);
 	}

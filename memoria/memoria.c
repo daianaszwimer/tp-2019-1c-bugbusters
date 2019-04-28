@@ -1,10 +1,12 @@
 #include "memoria.h"
-
+t_log* logger_MEMORIA;
 int main(void) {
 
-	t_log* logger = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
-	int descriptorServidor = iniciar_servidor();
-	log_info(logger, "Servidor listo para recibir al cliente");
+	//t_config* config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
+	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
+//config_get_string_value(config, "IP"),config_get_string_value(config, "PUERTO")
+	int descriptorServidor = iniciar_servidor("127.0.0.1", "35002");
+	log_info(logger_MEMORIA, "Servidor listo para recibir al cliente");
 
 	/* fd = file descriptor (id de Socket)
 	 * fd_set es Set de fd's (una coleccion)*/
@@ -35,29 +37,29 @@ int main(void) {
 
 				switch(palabraReservada) {
 					case SELECT:
-						log_info(logger, "Me llego un SELECT");
+						log_info(logger_MEMORIA, "Me llego un SELECT");
 						break;
 					case INSERT:
-						log_info(logger, "Me llego un INSERT");
+						log_info(logger_MEMORIA, "Me llego un INSERT");
 						break;
 					case CREATE:
-						log_info(logger, "Me llego un CREATE");
+						log_info(logger_MEMORIA, "Me llego un CREATE");
 						break;
 					case DESCRIBE:
-						log_info(logger, "Me llego un DESCRIBE");
+						log_info(logger_MEMORIA, "Me llego un DESCRIBE");
 						break;
 					case DROP:
-						log_info(logger, "Me llego un DROP");
+						log_info(logger_MEMORIA, "Me llego un DROP");
 						break;
 					case JOURNAL:
-						log_info(logger, "Me llego un JOURNAL");
+						log_info(logger_MEMORIA, "Me llego un JOURNAL");
 						break;
 					case -1:
-						log_error(logger, "el cliente se desconecto. Terminando servidor");
+						log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 						int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd
 						break;
 					default:
-						log_warning(logger, "Operacion desconocida. No quieras meter la pata");
+						log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
 						break;
 				}
 
@@ -71,6 +73,9 @@ int main(void) {
 			numeroDeClientes++;
 		}
 	}
+
+	log_destroy(logger_MEMORIA);
+	//config_destroy(config);
 
 	return 0;
 }
