@@ -6,9 +6,9 @@ int main(void){
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 
-	int lissandraFS_fd = iniciar_servidor(config_get_string_value(config, "IP"),config_get_string_value(config, "PUERTO"));
+	int lissandraFS_fd = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
 	log_info(logger_LFS, "Lissandra lista para recibir a Memoria");
 
 	int memoria_fd = esperar_cliente(lissandraFS_fd);
-
+	return EXIT_SUCCESS;
 }

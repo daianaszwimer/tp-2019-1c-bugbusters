@@ -13,4 +13,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+t_log* logger_MEMORIA;
+t_config* config;
+
+void conectarConFileSystem(void);
+
 #endif /* MEMORIA_H_ */

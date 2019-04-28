@@ -1,11 +1,16 @@
 #include "memoria.h"
-t_log* logger_MEMORIA;
+
 int main(void) {
 
-	//t_config* config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
+	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
-//config_get_string_value(config, "IP"),config_get_string_value(config, "PUERTO")
-	int descriptorServidor = iniciar_servidor("127.0.0.1", "35002");
+
+	//conectar con file system
+	conectarConFileSystem();
+
+	//conectar con kernel
+
+	int descriptorServidor = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
 	log_info(logger_MEMORIA, "Servidor listo para recibir al cliente");
 
 	/* fd = file descriptor (id de Socket)
@@ -68,14 +73,20 @@ int main(void) {
 		}
 
 		if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
-			int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
+			int descriptorCliente = 0;//esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
 			numeroDeClientes = (int) list_add(descriptoresClientes, (int) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 			numeroDeClientes++;
 		}
 	}
 
 	log_destroy(logger_MEMORIA);
-	//config_destroy(config);
+	config_destroy(config);
 
 	return 0;
+}
+
+void conectarConFileSystem() {
+	int conexion = crearConexion(
+			config_get_string_value(config, "IP_LFS"),
+			config_get_string_value(config, "PUERTO_LFS"));
 }

@@ -10,6 +10,4 @@
 #include <readline/readline.h>
 #include <nuestro_lib/nuestro_lib.h>
 
-
-
 #endif /* LFS_H_ */
