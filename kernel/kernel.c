@@ -1,5 +1,5 @@
 #include "kernel.h"
-t_log* logger_KERNEL;
+
 int main(void) {
 
 	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
@@ -17,10 +17,10 @@ void conectarAMemoria() {
 	int cod_request; // es la palabra reservada (ej: SELECT)
 	char** request;
 	int codValidacion;
-	int conexion;
+	int conexionMemoria;
 
 	t_config* config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
-	conexion = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 
 	while (1) {
 
@@ -38,7 +38,6 @@ void conectarAMemoria() {
 		if (codValidacion == EXIT_FAILURE) {
 			log_error(logger_KERNEL, "Request invalido"); //ANALIZAR SI DEBERIAMOS LANZAR ERROR O SIMPLEMENTE INFORMLO Y VOLVER  UN ETSADO CONSISTENTE
 		} else {
-			printf("cod validacion %d \n", codValidacion);
 			request = separarString(mensaje);
 			cod_request = obtenerCodigoPalabraReservada(request[0], KERNEL);
 
@@ -47,15 +46,14 @@ void conectarAMemoria() {
 			// El paquete tiene el cod_request y UN request completo
 			t_paquete* paquete = armar_paquete(cod_request, mensaje);
 			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
-			log_info(logger_KERNEL, "Antes de enviar mensaje");
-			enviar(paquete, conexion);
-			log_info(logger_KERNEL, "despues de enviar mensaje");
+			enviar(paquete, conexionMemoria);
 		}
 
-		log_destroy(logger_KERNEL);
 		free(mensaje);
-		//config_destroy(config);
 	}
-	liberar_conexion(conexion);
+
+	log_destroy(logger_KERNEL);
+	config_destroy(config);
+	liberar_conexion(conexionMemoria);
 
 }

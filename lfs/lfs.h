@@ -10,4 +10,9 @@
 #include <readline/readline.h>
 #include <nuestro_lib/nuestro_lib.h>
 
+t_log* logger_LFS;
+t_config* config;
+
+void recibirConexionMemoria(void);
+
 #endif /* LFS_H_ */

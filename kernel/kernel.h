@@ -10,6 +10,8 @@
 #include <readline/readline.h>
 #include <nuestro_lib/nuestro_lib.h>
 
+t_log* logger_KERNEL;
+
 void conectarAMemoria(void);
 
 #endif /* KERNEL_H_*/

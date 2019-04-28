@@ -15,7 +15,15 @@
 
 t_log* logger_MEMORIA;
 t_config* config;
+int conexionLfs;
+t_list* descriptoresClientes ;
+bool datoEstaEnCache;
+fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
 
-void conectarConFileSystem(void);
+
+void interpretarRequest(int, char*, int);
+void conectarAFileSystem(void);
+void procesarSelect(cod_request, char*);
+void recibirConexionKernel(void);
 
 #endif /* MEMORIA_H_ */
