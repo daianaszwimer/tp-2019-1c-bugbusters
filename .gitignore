@@ -76,6 +76,9 @@ local.properties
 
 # CDT-specific (C/C++ Development Tooling)
 .cproject
+kernel/.cproject
+memoria/.cproject
+lfs/.cproject
 
 # Eclipse Settings
 kernel/.settings/
