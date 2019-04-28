@@ -4,17 +4,17 @@ int main(void) {
 	inicializarVariables();
 	log_info(logger, "----------------INICIO DE KERNEL--------------");
 	sem_init(&semLeerDeConsola, 0, 1);
-	sem_init(&semEnviarMensaje, 0, 0);
+	sem_init(&semEnviarMensajeAMemoria, 0, 0);
 
-	pthread_create(&hiloLeerConsola, NULL, (void*)leerDeConsola, NULL);
+	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 
 	enviarMensajeAMemoria();
 
-	pthread_join(hiloLeerConsola, NULL);
+	pthread_join(hiloLeerDeConsola, NULL);
 	return EXIT_SUCCESS;
 }
 
-void inicializarVariables(){
+void inicializarVariables(void){
 	logger = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
 	log_info(logger, "InicializarVariables");
 	t_config* config = leer_config("kernel.config");
@@ -23,26 +23,27 @@ void inicializarVariables(){
 }
 
 
-void leerDeConsola(){
-	log_info(logger, "LeerDeConsola");
+void leerDeConsola(void){
+	//log_info(logger, "LeerDeConsola");
 	while (1) {
 		sem_wait(&semLeerDeConsola);
 		mensaje = readline(">");
 		if (!strcmp(mensaje, "\0")) {
-			sem_post(&semEnviarMensaje);
+			sem_post(&semEnviarMensajeAMemoria);
 			break;
 		}
-		sem_post(&semEnviarMensaje);
+		sem_post(&semEnviarMensajeAMemoria);
 	}
 }
 
-void enviarMensajeAMemoria() {
+void enviarMensajeAMemoria(void) {
+	//log_info(logger, "enviarMensajeAMemoria");
 	int cod_request; // es la palabra reservada (ej: SELECT)
 	char** request;
 	int codValidacion;
-	log_info(logger, "enviarMensajeAMemoria");
+
 	while (1) {
-		sem_wait(&semEnviarMensaje);
+		sem_wait(&semEnviarMensajeAMemoria);
 		if (!strcmp(mensaje, "\0")) {
 			break;
 		}
@@ -57,6 +58,7 @@ void enviarMensajeAMemoria() {
 			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 			log_info(logger, "Antes de enviar mensaje");
 			enviar(paquete, conexion);
+			free(paquete);
 			log_info(logger, "despues de enviar mensaje");
 		}
 

@@ -2,13 +2,34 @@
 
 int main(void) {
 
-	t_log* logger = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
-	int descriptorServidor = iniciar_servidor();
+	logger = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 	log_info(logger, "Servidor listo para recibir al cliente");
 
+	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
+	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
+
+	pthread_join(hiloLeerDeConsola, NULL);
+	pthread_join(hiloEscucharMultiplesClientes, NULL);
+
+	return 0;
+}
+
+void leerDeConsola(void){
+	//log_info(logger, "LeerDeConsola");
+	while (1) {
+		mensaje = readline(">");
+		if (!strcmp(mensaje, "\0")) {
+			break;
+		}
+		log_info(logger, mensaje);
+		free(mensaje);
+	}
+}
+
+void escucharMultiplesClientes(){
 	/* fd = file descriptor (id de Socket)
 	 * fd_set es Set de fd's (una coleccion)*/
-
+	int descriptorServidor = iniciar_servidor();
 	t_list* descriptoresClientes = list_create();	// Lista de descriptores de todos los clientes conectados (podemos conectar infinitos clientes)
 	fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
 	int numeroDeClientes = 0;						// Cantidad de clientes conectados
@@ -71,6 +92,4 @@ int main(void) {
 			numeroDeClientes++;
 		}
 	}
-
-	return 0;
 }

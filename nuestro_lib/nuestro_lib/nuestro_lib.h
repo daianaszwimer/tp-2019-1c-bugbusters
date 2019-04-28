@@ -55,12 +55,12 @@ typedef enum
 	METRICS
 } cod_request;
 
-typedef struct
+/*typedef struct
 {
 	int size;
 	void* stream;
 } t_buffer;
-
+*/
 typedef struct
 {
 	cod_request palabraReservada;

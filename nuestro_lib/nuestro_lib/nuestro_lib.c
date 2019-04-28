@@ -161,7 +161,7 @@ int validarMensaje(char* mensaje, Componente componente) {
 		}
 	}
 	else {
-		return EXIT_FAILURE;
+		return QUERY_ERROR;
 	}
 }
 
