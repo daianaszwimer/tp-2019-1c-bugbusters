@@ -3,12 +3,13 @@
 int main(void) {
 	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
+
+	//	SEMAFOROS
 	sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAMemoria, 0, 0);
 
-
+	//HILOS
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
-
 
 	enviarMensajeAMemoria();
 
@@ -28,16 +29,15 @@ void leerDeConsola(void){
 			sem_post(&semEnviarMensajeAMemoria);
 			break;
 		}
+		codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 		sem_post(&semEnviarMensajeAMemoria);
 	}
 }
 
 void enviarMensajeAMemoria(void) {
 	//log_info(logger, "enviarMensajeAMemoria");
-	int cod_request; // es la palabra reservada (ej: SELECT)
+	int codRequest; // es la palabra reservada (ej: SELECT)
 	char** request;
-	int codValidacion;
-
 	t_paquete* paquete;
 	int conexionMemoria;
 
@@ -51,13 +51,12 @@ void enviarMensajeAMemoria(void) {
 			break;
 		}
 		printf("El mensaje es: %s \n", mensaje);
-		codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 		printf("Codigo de validacion: %d \n", codValidacion);
 		if (codValidacion != EXIT_FAILURE && codValidacion != QUERY_ERROR) {
 			request = separarString(mensaje);
-			cod_request = obtenerCodigoPalabraReservada(request[0], KERNEL);
+			codRequest = obtenerCodigoPalabraReservada(request[0], KERNEL);
 			// El paquete tiene el cod_request y UN request completo
-			paquete = armar_paquete(cod_request, mensaje);
+			paquete = armar_paquete(codRequest, mensaje);
 			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 			log_info(logger_KERNEL, "Antes de enviar mensaje");
 			enviar(paquete, conexionMemoria);

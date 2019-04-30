@@ -5,41 +5,43 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 	datoEstaEnCache = FALSE;
 	//conectar con file system
-	//conectarAFileSystem();
+	conectarAFileSystem();
 
+	//	SEMAFOROS
+	sem_init(&semLeerDeConsola, 0, 1);
+	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
+
+	// 	HILOS
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
+	pthread_create(&hiloEnviarMensajeAFileSystem, NULL, (void*)enviarMensajeAFileSystem, NULL);
+
 
 	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
-
-	return 0;
-}
-
-void leerDeConsola(void){
-	//log_info(logger, "LeerDeConsola");
-	while (1) {
-		mensaje = readline(">");
-		if (!strcmp(mensaje, "\0")) {
-			break;
-		}
-		log_info(logger_MEMORIA, mensaje);
-		free(mensaje);
-	}
-}
-
-void escucharMultiplesClientes(){
-	/* fd = file descriptor (id de Socket)
-	 * fd_set es Set de fd's (una coleccion)*/
-
-	//conectar con kernel
-	recibirConexionKernel();
+	pthread_join(hiloEnviarMensajeAFileSystem, NULL);
 
 	liberar_conexion(conexionLfs);
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
+
 	//momentaneamente, asi cerramos todas las conexiones
 	FD_ZERO(&descriptoresDeInteres);
+	return 0;
+}
+
+void leerDeConsola(void){
+	//log_info(logger, "leerDeConsola");
+	while (1) {
+		sem_wait(&semLeerDeConsola);
+		mensaje = readline(">");
+		if (!strcmp(mensaje, "\0")) {
+			sem_post(&semEnviarMensajeAFileSystem);
+			break;
+		}
+		codValidacion = validarMensaje(mensaje, KERNEL, logger_MEMORIA);
+		sem_post(&semEnviarMensajeAFileSystem);
+	}
 }
 
 void conectarAFileSystem() {
@@ -60,10 +62,12 @@ void conectarAFileSystem() {
 	*/
 }
 
-void recibirConexionKernel() {
+void escucharMultiplesClientes() {
 	int descriptorServidor = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
 	log_info(logger_MEMORIA, "Memoria lista para recibir al kernel");
 
+	/* fd = file descriptor (id de Socket)
+	 * fd_set es Set de fd's (una coleccion)*/
 
 	descriptoresClientes = list_create();	// Lista de descriptores de todos los clientes conectados (podemos conectar infinitos clientes)
 	int numeroDeClientes = 0;						// Cantidad de clientes conectados
@@ -89,35 +93,8 @@ void recibirConexionKernel() {
 				int palabraReservada = paqueteRecibido->palabraReservada;
 				char* request = paqueteRecibido->request;
 				printf("El codigo que recibi es: %d \n", palabraReservada);
-				switch(palabraReservada) {
-					case SELECT:
-						log_info(logger_MEMORIA, "Me llego un SELECT");
-						break;
-					case INSERT:
-						log_info(logger_MEMORIA, "Me llego un INSERT");
-						break;
-					case CREATE:
-						log_info(logger_MEMORIA, "Me llego un CREATE");
-						break;
-					case DESCRIBE:
-						log_info(logger_MEMORIA, "Me llego un DESCRIBE");
-						break;
-					case DROP:
-						log_info(logger_MEMORIA, "Me llego un DROP");
-						break;
-					case JOURNAL:
-						log_info(logger_MEMORIA, "Me llego un JOURNAL");
-						break;
-					case -1:
-						log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-						int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd
-						break;
-					default:
-						log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
-						break;
-				}
-				//eliminar_paquete(paqueteRecibido);
 				interpretarRequest(palabraReservada,request, i);
+				//eliminar_paquete(paqueteRecibido);
 				printf("Del cliente nro: %d \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 			}
 		}
@@ -136,7 +113,7 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
 	switch(palabraReservada) {
 		case SELECT:
 			log_info(logger_MEMORIA, "Me llego un SELECT");
-			procesarSelect(palabraReservada, request);
+			//procesarSelect(palabraReservada, request);
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
@@ -161,7 +138,45 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
 			log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
 			break;
 	}
+	log_info(logger_MEMORIA, "(MENSAJE DE KERNEL)");
 }
+
+
+void enviarMensajeAFileSystem(void){
+	int codRequest; // es la palabra reservada (ej: SELECT)
+	char** request;
+	t_paquete* paquete;
+	t_paquete* paqueteRecibido;
+
+	while (1) {
+		sem_wait(&semEnviarMensajeAFileSystem);
+		if (!strcmp(mensaje, "\0")) {
+			break;
+		}
+		printf("El mensaje es: %s \n", mensaje);
+		printf("Codigo de validacion: %d \n", codValidacion);
+		if (codValidacion != EXIT_FAILURE && codValidacion != QUERY_ERROR) {
+			request = separarString(mensaje);
+			codRequest = obtenerCodigoPalabraReservada(request[0], KERNEL);
+			// El paquete tiene el cod_request y UN request completo
+			paquete = armar_paquete(codRequest, mensaje);
+			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
+			log_info(logger_MEMORIA, "Antes de enviar mensaje");
+			enviar(paquete, conexionLfs);
+			free(paquete);
+			log_info(logger_MEMORIA, "despues de enviar mensaje");
+		}
+		free(mensaje);
+		//config_destroy(config);
+		sem_post(&semLeerDeConsola);
+		paqueteRecibido = recibir(conexionLfs);
+		int palabraReservada = paqueteRecibido->palabraReservada;
+		log_info(logger_MEMORIA, "Me respuesta, del SELECT, de LFS");
+		printf("El codigo que recibi de LFS es: %s \n", (char*) paqueteRecibido->request);
+
+	}
+}
+
 
 void procesarSelect(cod_request palabraReservada, char* request) {
 	if(datoEstaEnCache == TRUE) {
@@ -177,6 +192,5 @@ void procesarSelect(cod_request palabraReservada, char* request) {
 		log_info(logger_MEMORIA, "Me respuesta, del SELECT, de LFS");
 		printf("El codigo que recibi de LFS es: %s \n", (char*) paqueteRecibido->request);
 	}
-
 }
 
