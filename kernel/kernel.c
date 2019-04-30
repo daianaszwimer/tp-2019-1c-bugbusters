@@ -15,11 +15,11 @@ void conectarAMemoria() {
 
 	char* mensaje;   // es el request completo
 	int cod_request; // es la palabra reservada (ej: SELECT)
-	char** request;
 	int codValidacion;
+	char** request;
 	int conexion;
 
-	t_config* config = leer_config("kernel.config");
+	t_config* config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 	//int conexion = crearConexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
 	conexion = crearConexion("127.0.0.1", "4444");
 
@@ -44,18 +44,18 @@ void conectarAMemoria() {
 			cod_request = obtenerCodigoPalabraReservada(request[0], KERNEL);
 
 			printf("Y ahora es: %s \n", mensaje);
-
-			// El paquete tiene el cod_request y UN request completo
 			t_paquete* paquete = armar_paquete(cod_request, mensaje);
 			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 			log_info(logger, "Antes de enviar mensaje");
 			enviar(paquete, conexion);
 			log_info(logger, "despues de enviar mensaje");
+
 		}
 
-		//log_destroy(logger);
+
+		log_destroy(logger);
 		free(mensaje);
-		//config_destroy(config);
+		config_destroy(config);
 	}
 	close(conexion);
 

@@ -138,11 +138,14 @@ int esperar_cliente(int socket_servidor)
  * 	-> exit :: int */
 int validarMensaje(char* mensaje, Componente componente) {
 	char** request = string_n_split(mensaje, 2, " ");
+
 	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
 	if(request[1]==NULL){
 		if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
+			free(request);
 			return EXIT_SUCCESS;
 		}else{
+			free(request);
 			log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
 			return EXIT_FAILURE;
 		}
@@ -151,7 +154,8 @@ int validarMensaje(char* mensaje, Componente componente) {
 	char** parametros = separarString(request[1]);
 	int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
 	printf("CANT PARAMETROS: %d \n", cantidadDeParametros);
-
+	free(request);
+	free(parametros);
 	if(validarPalabraReservada(codPalabraReservada, componente) == TRUE && validadCantDeParametros(cantidadDeParametros,codPalabraReservada)== TRUE) {
 		return EXIT_SUCCESS;
 	}
@@ -488,6 +492,14 @@ void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 //	free(paquete->buffer);
 //	free(paquete);
 //}
+
+void eliminar_paquete(t_paquete* paquete)
+{
+	free(paquete->request);
+	free(paquete);
+}
+
+
 
 void liberar_conexion(int socket_cliente)
 {
