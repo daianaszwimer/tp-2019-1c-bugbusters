@@ -16,11 +16,11 @@
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAMemoria;		// semaforo para enviar mensaje
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
-int conexion;
 char* mensaje;  					// es el request completo
 
 void inicializarVariables(void);
 void leerDeConsola(void);
 void enviarMensajeAMemoria(void);
+t_log* logger_KERNEL;
 
 #endif /* KERNEL_H_*/

@@ -1,7 +1,7 @@
 #include "kernel.h"
-t_log* logger_KERNEL;
+
 int main(void) {
-	inicializarVariables();
+	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 	sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAMemoria, 0, 0);
@@ -16,13 +16,6 @@ int main(void) {
 
 	log_destroy(logger_KERNEL);
 	return EXIT_SUCCESS;
-}
-
-void inicializarVariables(void){
-	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
-	//log_info(logger_KERNEL, "InicializarVariables");
-	t_config* config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
-	conexion = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 }
 
 
@@ -44,7 +37,13 @@ void enviarMensajeAMemoria(void) {
 	int cod_request; // es la palabra reservada (ej: SELECT)
 	char** request;
 	int codValidacion;
+
 	t_paquete* paquete;
+	int conexionMemoria;
+
+	t_config* config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
+	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+
 
 	while (1) {
 		sem_wait(&semEnviarMensajeAMemoria);
@@ -61,14 +60,15 @@ void enviarMensajeAMemoria(void) {
 			paquete = armar_paquete(cod_request, mensaje);
 			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 			log_info(logger_KERNEL, "Antes de enviar mensaje");
-			enviar(paquete, conexion);
+			enviar(paquete, conexionMemoria);
 			free(paquete);
 			log_info(logger_KERNEL, "despues de enviar mensaje");
 		}
 		free(mensaje);
 		//config_destroy(config);
 		sem_post(&semLeerDeConsola);
-	}
-	liberar_conexion(conexion);
 
+	}
+	liberar_conexion(conexionMemoria);
+	config_destroy(config);
 }
