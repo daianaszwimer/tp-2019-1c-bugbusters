@@ -54,7 +54,7 @@ void enviarMensajeAMemoria(void) {
 		printf("El mensaje es: %s \n", mensaje);
 		codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 		printf("Codigo de validacion: %d \n", codValidacion);
-		if (codValidacion != EXIT_FAILURE) {
+		if (codValidacion != EXIT_FAILURE && codValidacion != QUERY_ERROR) {
 			request = separarString(mensaje);
 			cod_request = obtenerCodigoPalabraReservada(request[0], KERNEL);
 			// El paquete tiene el cod_request y UN request completo

@@ -89,7 +89,7 @@ void escucharMultiplesClientes(){
 						log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
 						break;
 				}
-				eliminar_paquete(paqueteRecibido);
+				//eliminar_paquete(paqueteRecibido);
 				printf("Del cliente nro: %d \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 			}
 		}

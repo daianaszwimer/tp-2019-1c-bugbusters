@@ -372,7 +372,6 @@ t_paquete* recibir(int socket)
 		paquete->palabraReservada = -1;
 		void* requestRecibido = malloc(sizeof(int));
 		paquete->request = requestRecibido;
-		free(requestRecibido);
 		return paquete;
 	}
 
@@ -384,7 +383,7 @@ t_paquete* recibir(int socket)
 
 	paquete->request = requestRecibido;
 
-	free(requestRecibido);
+
 
 	return paquete;
 }
@@ -468,7 +467,7 @@ void enviar(t_paquete* paquete, int socket_cliente)
 
 
 	send(socket_cliente, paqueteAEnviar, tamanioPaquete, MSG_WAITALL);
-	eliminar_paquete(paqueteAEnviar);
+	free(paqueteAEnviar);
 }
 
 
