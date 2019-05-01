@@ -67,6 +67,7 @@ typedef struct
 void iterator(char*);
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
+char** obtenerParametros(char*);
 
 
 int crearConexion(char*, char*);

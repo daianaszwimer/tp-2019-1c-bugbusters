@@ -27,6 +27,20 @@ int longitudDeArrayDeStrings(char** array){
 	}
 	return longitud;
 }
+/* obtenerParametros()
+ * Parametros:
+ *  -> request :: char*
+ *  Descripcion: recibe un request (ej: SELECT Tabla 4) y devuelve los parametros ([Tabla, 4])
+ *  Return:
+ *   -> requestSeparada :: char**
+ */
+char** obtenerParametros(char* request) {
+	char** requestSeparada;
+	requestSeparada = separarString(request);
+	//n = longitudDeArrayDeStrings(requestSeparada);
+    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
+	return requestSeparada;
+}
 
 /* leer_config()
  * Parametros:
