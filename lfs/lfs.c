@@ -31,9 +31,9 @@ void leerDeConsola(void){
 void recibirConexionMemoria() {
 	int lissandraFS_fd = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
 	log_info(logger_LFS, "Lissandra lista para recibir a Memoria");
+	int memoria_fd = esperar_cliente(lissandraFS_fd);
 
 	while(1) {
-		int memoria_fd = esperar_cliente(lissandraFS_fd);
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		int palabraReservada = paqueteRecibido->palabraReservada;
 		printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
