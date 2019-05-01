@@ -2,11 +2,30 @@
 
 int main(void){
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
-
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
+
+	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
+
 	recibirConexionMemoria();
+
+	pthread_join(hiloLeerDeConsola, NULL);
+
+
 	return EXIT_SUCCESS;
+}
+
+void leerDeConsola(void){
+	//log_info(logger, "leerDeConsola");
+	while (1) {
+		mensaje = readline(">");
+		if (!strcmp(mensaje, "\0")) {
+			break;
+		}
+		codValidacion = validarMensaje(mensaje, KERNEL, logger_LFS);
+		printf("El mensaje es: %s \n", mensaje);
+		printf("Codigo de validacion: %d \n", codValidacion);
+	}
 }
 
 void recibirConexionMemoria() {
