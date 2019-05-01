@@ -30,6 +30,7 @@ void leerDeConsola(void){
 			break;
 		}
 		codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
+
 		sem_post(&semEnviarMensajeAMemoria);
 	}
 }

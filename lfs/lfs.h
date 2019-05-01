@@ -13,6 +13,8 @@
 
 t_log* logger_LFS;
 t_config* config;
+t_list* descriptoresClientes;
+fd_set descriptoresDeInteres;			// Coleccion de descriptores de interes para select
 
 pthread_t hiloRecibirDeMemoria;			// hilo que lee de consola
 
@@ -20,6 +22,7 @@ char* mensaje;
 int codValidacion;
 
 void recibirConexionMemoria(void);
+void interpretarRequest(int, char*, int);
 void leerDeConsola(void);
 
 #endif /* LFS_H_ */

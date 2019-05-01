@@ -70,8 +70,8 @@ void escucharMultiplesClientes() {
 	 * fd_set es Set de fd's (una coleccion)*/
 
 	descriptoresClientes = list_create();	// Lista de descriptores de todos los clientes conectados (podemos conectar infinitos clientes)
-	int numeroDeClientes = 0;						// Cantidad de clientes conectados
-	int valorMaximo = 0;							// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
+	int numeroDeClientes = 0;				// Cantidad de clientes conectados
+	int valorMaximo = 0;					// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
 	t_paquete* paqueteRecibido;
 
 	while(1) {
@@ -169,10 +169,10 @@ void enviarMensajeAFileSystem(void){
 		free(mensaje);
 		//config_destroy(config);
 		sem_post(&semLeerDeConsola);
-		paqueteRecibido = recibir(conexionLfs);
-		int palabraReservada = paqueteRecibido->palabraReservada;
-		log_info(logger_MEMORIA, "Me respuesta, del SELECT, de LFS");
-		printf("El codigo que recibi de LFS es: %s \n", (char*) paqueteRecibido->request);
+//		paqueteRecibido = recibir(conexionLfs);
+//		int palabraReservada = paqueteRecibido->palabraReservada;
+//		log_info(logger_MEMORIA, "Me respuesta, del SELECT, de LFS");
+//		printf("El codigo que recibi de LFS es: %s \n", (char*) paqueteRecibido->request);
 
 	}
 }
@@ -187,10 +187,10 @@ void procesarSelect(cod_request palabraReservada, char* request) {
 		//y recibo la rta y se la mando a kernel y espero la rta de lfs
 		t_paquete* paquete = armar_paquete(palabraReservada, request);
 		enviar(paquete, conexionLfs);
-		t_paquete* paqueteRecibido = recibir(conexionLfs);
-		int palabraReservada = paqueteRecibido->palabraReservada;
-		log_info(logger_MEMORIA, "Me respuesta, del SELECT, de LFS");
-		printf("El codigo que recibi de LFS es: %s \n", (char*) paqueteRecibido->request);
+		//t_paquete* paqueteRecibido = recibir(conexionLfs);
+		//int palabraReservada = paqueteRecibido->palabraReservada;
+		//log_info(logger_MEMORIA, "Me respuesta, del SELECT, de LFS");
+		//printf("El codigo que recibi de LFS es: %s \n", (char*) paqueteRecibido->request);
 	}
 }
 
