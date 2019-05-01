@@ -5,11 +5,11 @@ int main(void){
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 
-	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
+	pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionMemoria, NULL);
 
-	recibirConexionMemoria();
+	leerDeConsola();
 
-	pthread_join(hiloLeerDeConsola, NULL);
+	pthread_join(hiloRecibirDeMemoria, NULL);
 
 
 	return EXIT_SUCCESS;

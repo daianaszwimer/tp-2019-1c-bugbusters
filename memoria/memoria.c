@@ -113,7 +113,7 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
 	switch(palabraReservada) {
 		case SELECT:
 			log_info(logger_MEMORIA, "Me llego un SELECT");
-			//procesarSelect(palabraReservada, request);
+			procesarSelect(palabraReservada, request);
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");

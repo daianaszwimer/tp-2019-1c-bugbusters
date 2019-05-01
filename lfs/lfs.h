@@ -14,7 +14,7 @@
 t_log* logger_LFS;
 t_config* config;
 
-pthread_t hiloLeerDeConsola;			// hilo que lee de consola
+pthread_t hiloRecibirDeMemoria;			// hilo que lee de consola
 
 char* mensaje;
 int codValidacion;
