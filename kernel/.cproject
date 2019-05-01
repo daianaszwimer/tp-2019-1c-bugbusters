@@ -39,6 +39,7 @@
 								<option id="gnu.c.link.option.libs.267892628" name="Libraries (-l)" superClass="gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="nuestro_lib"/>
 									<listOptionValue builtIn="false" value="commons"/>
+									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="readline"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1514530736" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
@@ -48,7 +49,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.2110659341" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.627230482" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug">
-								<option id="gnu.both.asm.option.include.paths.1312562960" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+								<option id="gnu.both.asm.option.include.paths.1312562960" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nuestro_lib}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.506910277" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
@@ -131,6 +132,7 @@
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.1457691148;cdt.managedbuild.toolchain.gnu.base.1457691148.331459256;cdt.managedbuild.tool.gnu.c.compiler.base.1563051212;cdt.managedbuild.tool.gnu.c.compiler.input.216346834">
@@ -140,6 +142,9 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.1668478075;cdt.managedbuild.config.gnu.exe.release.1668478075.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.1788951309;cdt.managedbuild.tool.gnu.c.compiler.input.384128028">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.239940799;cdt.managedbuild.config.gnu.exe.debug.239940799.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.176316084;cdt.managedbuild.tool.gnu.c.compiler.input.197128545">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1096255579;cdt.managedbuild.config.gnu.exe.debug.1096255579.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.258612092;cdt.managedbuild.tool.gnu.c.compiler.input.112945625">
@@ -152,5 +157,4 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
