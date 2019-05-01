@@ -494,16 +494,23 @@ void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 /*eliminar_paquete()
  * Parametros:
  * 	-> t_paquete* ::  paquete
- * Descripcion:
+ * Descripcion: CONSIDERACIONES: el paquete es un puntero a ua estructura t_paquete y, a
+ * 				su ve paquete tiene un string, char*, llamado request
+ * 				DESCRIPCION: elimino primero la request del paquete y luego dicho paquete
  * Return:
  * 	-> :: void */
-
 void eliminar_paquete(t_paquete* paquete)
 {
 	free(paquete->request);
 	free(paquete);
 }
 
+/*liberar_conexion()
+ * Parametros:
+ * 	-> int ::  socket_cliente
+ * Descripcion: cierra la conexion que creo
+ * Return:
+ * 	-> :: void */
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);

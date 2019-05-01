@@ -49,17 +49,6 @@ void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_LFS"),
 			config_get_string_value(config, "PUERTO_LFS"));
-	/*
-		request = separarString(mensaje);
-		cod_request = obtenerCodigoPalabraReservada(request[0], KERNEL);
-	char* request = "soy una request";
-	t_paquete* paquete = armar_paquete(0, request);
-	enviar(paquete, conexionLfs);
-	t_paquete* paqueteRecibido = recibir(conexionLfs);
-	int palabraReservada = paqueteRecibido->palabraReservada;
-	printf("El codigo que recibi es: %d \n", palabraReservada);
-	//free(request);
-	*/
 }
 
 void escucharMultiplesClientes() {
@@ -105,8 +94,6 @@ void escucharMultiplesClientes() {
 			numeroDeClientes++;
 		}
 	}
-	//log_destroy(logger_MEMORIA);
-	//config_destroy(config);
 }
 
 void interpretarRequest(int palabraReservada,char* request, int i) {
@@ -117,6 +104,7 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
+			procesarInsert(palabraReservada, request);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
@@ -141,7 +129,13 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
 	log_info(logger_MEMORIA, "(MENSAJE DE KERNEL)");
 }
 
-
+/*procesarInsert()
+ * Parametros:
+ * 	-> char* ::  request
+ * 	-> cod_request :: palabraReservada
+ * Descripcion:
+ * Return:
+ * 	-> :: void */
 void enviarMensajeAFileSystem(void){
 	int codRequest; // es la palabra reservada (ej: SELECT)
 	char** request;
@@ -177,8 +171,7 @@ void enviarMensajeAFileSystem(void){
 	}
 }
 
-
-void procesarSelect(cod_request palabraReservada, char* request) {
+void procesarSelect(char* request,cod_request palabraReservada) {
 	if(datoEstaEnCache == TRUE) {
 		//lo busco entre mis datos
 		//le respondo a kernel
@@ -187,10 +180,23 @@ void procesarSelect(cod_request palabraReservada, char* request) {
 		//y recibo la rta y se la mando a kernel y espero la rta de lfs
 		t_paquete* paquete = armar_paquete(palabraReservada, request);
 		enviar(paquete, conexionLfs);
-		t_paquete* paqueteRecibido = recibir(conexionLfs);
-		int palabraReservada = paqueteRecibido->palabraReservada;
-		log_info(logger_MEMORIA, "Me respuesta, del SELECT, de LFS");
-		printf("El codigo que recibi de LFS es: %s \n", (char*) paqueteRecibido->request);
+
 	}
+}
+
+/*procesarInsert()
+ * Parametros:
+ * 	-> char* ::  request
+ * 	-> cod_request :: palabraReservada
+ * Descripcion: se va a fijar si existe el segmento de la tabla ,que se quiere hacer insert,
+ * 				en la memoria principal.
+ * 				Si Existe dicho segmento, busca la key (y de encontrarla,
+ * 				actualiza su valor insertando el timestap actual).Y si no encuentra, solicita pag
+ * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
+ * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
+ * Return:
+ * 	-> :: void */
+void procesarInsert(char* request,cod_request palabraReservada) {
+
 }
 
