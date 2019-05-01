@@ -118,7 +118,7 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
-		case -1:
+		case QUERY_ERROR:
 			log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 			int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd
 			break;
