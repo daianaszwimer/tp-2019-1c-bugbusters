@@ -67,7 +67,6 @@ void enviarMensajeAMemoria(void) {
 		sem_post(&semLeerDeConsola);
 
 	}
-	log_destroy(logger);
 	liberar_conexion(conexionMemoria);
 	config_destroy(config);
 }

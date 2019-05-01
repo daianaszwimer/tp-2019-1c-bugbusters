@@ -508,12 +508,6 @@ void eliminar_paquete(t_paquete* paquete)
 	free(paquete);
 }
 
-void eliminar_paquete(t_paquete* paquete)
-{
-	free(paquete->request);
-	free(paquete);
-}
-
 
 
 void liberar_conexion(int socket_cliente)
