@@ -63,9 +63,8 @@ void enviarMensajeAMemoria(void) {
 			enviar(paquete, conexionMemoria);
 			free(paquete);
 			log_info(logger_KERNEL, "despues de enviar mensaje");
-		}
-		free(mensaje);
-		//config_destroy(config);
+		}		
+		free(mensaje);			
 		sem_post(&semLeerDeConsola);
 
 	}
