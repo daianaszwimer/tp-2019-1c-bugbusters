@@ -106,3 +106,47 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
 	}
 	log_info(logger_LFS, "(MENSAJE DE MEMORIA)");
 }
+
+/* create() [API]
+ * Parametros:
+ * 	-> nombreTabla :: char*
+ * 	-> tipoDeConsistencia :: char*
+ * 	-> numeroDeParticiones :: int
+ * 	-> tiempoDeCompactacion :: int
+ * Descripcion: permite la creación de una nueva tabla dentro del file system
+ * Return:  */
+void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
+	// La carpeta metadata y la de los bloques no se crea aca, se crea apenas levanta el lfs
+	char* raiz = config_get_string_value(config, "PUNTO_MONTAJE");
+	char* pathTabla = raiz;
+	strcat(pathTabla, "tables/");
+	strcat(pathTabla, nombreTabla);
+	strcat(pathTabla, "/");
+	if(fopen(pathTabla, "r") != NULL) {		// Verificamos si la tabla existe
+		char* log = "Ya existe una tabla de nombre: ";
+		strcat(log, nombreTabla);
+		log_error(logger_LFS, log);
+	}
+	else {
+		/* Creamos el archivo Metadata */
+		char* pathMetadata = pathTabla;
+		strcat(pathMetadata, "Metadata.config");
+		t_config* metadata = config_create(pathMetadata);
+		config_set_value(metadata, "CONSISTENCY", tipoDeConsistencia);
+		config_set_value(metadata, "PARTITIONS", numeroDeParticiones);
+		config_set_value(metadata, "COMPACTION_TIME", tiempoDeCompactacion);
+		config_save(metadata);
+
+		/* Creamos las particiones */
+		char* pathParticion = pathTabla;
+		for(int i = 0; i < numeroDeParticiones; i++) {
+			strcat(pathParticion, i);
+			strcat(pathParticion, ".bin");
+			FILE* particion = fopen(pathParticion, "w+");
+			char* tamanio = "Size=0";
+			char* bloques = "Block=[]"; // Hay que agregar un bloque por particion, no se si uno cualquiera o que
+			fwrite(&tamanio, sizeof(tamanio), 1, particion);
+			fwrite(&bloques, sizeof(bloques), 1, particion);
+		}
+	}
+}
