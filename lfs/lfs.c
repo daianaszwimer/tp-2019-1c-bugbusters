@@ -4,7 +4,7 @@ int main(void){
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
-
+	create("TABLA1", "SC", 3, 5000);
 	pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionMemoria, NULL);
 
 	leerDeConsola();
@@ -118,7 +118,7 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
 void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 	// La carpeta metadata y la de los bloques no se crea aca, se crea apenas levanta el lfs
 	char* raiz = config_get_string_value(config, "PUNTO_MONTAJE");
-	char* pathTabla = raiz;
+	char* pathTabla = strdup(raiz);
 	strcat(pathTabla, "tables/");
 	strcat(pathTabla, nombreTabla);
 	strcat(pathTabla, "/");
@@ -129,17 +129,18 @@ void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 	}
 	else {
 		/* Creamos el archivo Metadata */
-		char* pathMetadata = pathTabla;
+		char* pathMetadata = "/home/utnso/tp-2019-1c-bugbusters/lfs";
+		strcat(pathMetadata, pathTabla);
 		strcat(pathMetadata, "Metadata.config");
-		t_config* metadata = config_create(pathMetadata);
+		t_config* metadata = leer_config(pathMetadata);
 		config_set_value(metadata, "CONSISTENCY", tipoDeConsistencia);
 		config_set_value(metadata, "PARTITIONS", numeroDeParticiones);
 		config_set_value(metadata, "COMPACTION_TIME", tiempoDeCompactacion);
 		config_save(metadata);
 
 		/* Creamos las particiones */
-		char* pathParticion = pathTabla;
 		for(int i = 0; i < numeroDeParticiones; i++) {
+			char* pathParticion = strdup(pathTabla);
 			strcat(pathParticion, i);
 			strcat(pathParticion, ".bin");
 			FILE* particion = fopen(pathParticion, "w+");
@@ -147,6 +148,8 @@ void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 			char* bloques = "Block=[]"; // Hay que agregar un bloque por particion, no se si uno cualquiera o que
 			fwrite(&tamanio, sizeof(tamanio), 1, particion);
 			fwrite(&bloques, sizeof(bloques), 1, particion);
+			free(pathParticion);
 		}
 	}
+	free(pathTabla);
 }

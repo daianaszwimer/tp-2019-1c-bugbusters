@@ -24,5 +24,6 @@ int codValidacion;
 void recibirConexionMemoria(void);
 void interpretarRequest(int, char*, int);
 void leerDeConsola(void);
+void create(char*, char*, int, int);
 
 #endif /* LFS_H_ */
