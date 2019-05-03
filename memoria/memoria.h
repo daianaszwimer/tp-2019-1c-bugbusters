@@ -15,6 +15,19 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+typedef struct
+{
+	int numPagina;
+	void* pagina;
+	int flagModificado;
+}reg_pagina;
+
+typedef struct
+{
+	reg_pagina* registro;
+}tabla_paginas;
+
+
 t_log* logger_MEMORIA;
 t_config* config;
 
