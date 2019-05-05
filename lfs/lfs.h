@@ -10,6 +10,7 @@
 #include <readline/readline.h>
 #include <nuestro_lib/nuestro_lib.h>
 #include <pthread.h>
+#include <sys/stat.h>
 
 t_log* logger_LFS;
 t_config* config;
@@ -25,5 +26,8 @@ void recibirConexionMemoria(void);
 void interpretarRequest(int, char*, int);
 void leerDeConsola(void);
 void create(char*, char*, int, int);
+int obtenerBloqueDisponible(void);
+int mkdir_p(const char*);
+
 
 #endif /* LFS_H_ */

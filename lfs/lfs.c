@@ -1,4 +1,6 @@
 #include "lfs.h"
+#include <errno.h>
+#include <assert.h>
 
 int main(void){
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
@@ -129,27 +131,89 @@ void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 	}
 	else {
 		/* Creamos el archivo Metadata */
-		char* pathMetadata = "/home/utnso/tp-2019-1c-bugbusters/lfs";
+		char* pathMetadata = strdup("/home/utnso/tp-2019-1c-bugbusters/lfs");
 		strcat(pathMetadata, pathTabla);
-		strcat(pathMetadata, "Metadata.config");
-		t_config* metadata = leer_config(pathMetadata);
-		config_set_value(metadata, "CONSISTENCY", tipoDeConsistencia);
-		config_set_value(metadata, "PARTITIONS", numeroDeParticiones);
-		config_set_value(metadata, "COMPACTION_TIME", tiempoDeCompactacion);
-		config_save(metadata);
 
-		/* Creamos las particiones */
-		for(int i = 0; i < numeroDeParticiones; i++) {
-			char* pathParticion = strdup(pathTabla);
-			strcat(pathParticion, i);
-			strcat(pathParticion, ".bin");
-			FILE* particion = fopen(pathParticion, "w+");
-			char* tamanio = "Size=0";
-			char* bloques = "Block=[]"; // Hay que agregar un bloque por particion, no se si uno cualquiera o que
-			fwrite(&tamanio, sizeof(tamanio), 1, particion);
-			fwrite(&bloques, sizeof(bloques), 1, particion);
-			free(pathParticion);
+		int error = mkdir_p(pathMetadata);
+		if (error == 0){
+			strcat(pathMetadata, "Metadata.bin");
+
+			FILE* metadata = fopen("Metadata.bin", "w+");
+			char* consistency = "CONSISTENCY";
+			fwrite(&consistency, sizeof(consistency), sizeof(char), metadata);
+			fclose(metadata);
+
+			//t_config* metadata = config_create("Metadata.config");
+
+
+
+			/*sprintf(numeroDeParticiones, "PARTITIONS=%i", _numeroDeParticiones);
+			sprintf(tiempoDeCompactacion, "COMPACTION_TIME=%i", _tiempoDeCompactacion);*/
+
+			/*config_set_value(metadata, "CONSISTENCY", tipoDeConsistencia);
+			config_set_value(metadata, "PARTITIONS", numeroDeParticiones);
+			config_set_value(metadata, "COMPACTION_TIME", tiempoDeCompactacion);*/
+			int x = config_save(metadata);
+
+			/* Creamos las particiones */
+			for(int i = 0; i < numeroDeParticiones; i++) {
+				char* pathParticion = strdup(pathTabla);
+				strcat(pathParticion, i);
+				strcat(pathParticion, ".bin");
+				FILE* particion = fopen(pathParticion, "w+");
+				char* tamanio = "Size=0";
+				char* bloques;
+				sprintf(bloques,"Block=[%i]", obtenerBloqueDisponible()); // Hay que agregar un bloque por particion, no se si uno cualquiera o que
+				fwrite(&tamanio, sizeof(tamanio), 1, particion);
+				fwrite(&bloques, sizeof(bloques), 1, particion);
+				free(pathParticion);
+			}
 		}
+
 	}
 	free(pathTabla);
 }
+
+int obtenerBloqueDisponible(){
+	return 1;
+}
+
+int mkdir_p(const char *path)
+{
+    /* Adapted from http://stackoverflow.com/a/2336245/119527 */
+    const size_t len = strlen(path);
+    char _path[256];
+    char *p;
+
+    errno = 0;
+
+    /* Copy string so its mutable */
+    if (len > sizeof(_path)-1) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+    strcpy(_path, path);
+
+    /* Iterate the string */
+    for (p = _path + 1; *p; p++) {
+        if (*p == '/') {
+            /* Temporarily truncate */
+            *p = '\0';
+
+            if (mkdir(_path, S_IRWXU) != 0) {
+                if (errno != EEXIST)
+                    return -1;
+            }
+
+            *p = '/';
+        }
+    }
+
+    if (mkdir(_path, S_IRWXU) != 0) {
+        if (errno != EEXIST)
+            return -1;
+    }
+
+    return 0;
+}
+
