@@ -13,15 +13,23 @@
 #include <semaphore.h>
 
 t_log* logger_KERNEL;
+int conexionMemoria;
+t_config* config;
+
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAMemoria;		// semaforo para enviar mensaje
-pthread_t hiloLeerDeConsola;			// hilo que lee de consola
-char* mensaje;  					// es el request completo
-int codValidacion;
+pthread_t hiloLeerDeConsola;		// hilo que lee de consola
+pthread_t hiloConectarAMemoria;		//hilo que conecta a memoria
 
-void inicializarVariables(void);
+void conectarAMemoria(void);
+void liberarMemoria(void);
 void leerDeConsola(void);
-void enviarMensajeAMemoria(void);
+//validar + delegarrequests
+void interpretarRequest(char *);
+void manejarRequest(char *);
+//funciones que procesan requests:
+void enviarMensajeAMemoria(cod_request, char*);
+void procesarRun(char*);
 
 
 #endif /* KERNEL_H_*/
