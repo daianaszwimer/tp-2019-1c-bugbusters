@@ -34,8 +34,8 @@ typedef struct{
 	 t_flagModificado modificado;
 }t_tablaDePaginas;
 typedef struct{
-	long int tv_sec;
-    long int tv_usec;   /* microseconds */
+	unsigned long long tv_sec;
+    unsigned long long tv_usec;   /* microseconds */
 }t_timeval;
 
 
@@ -58,7 +58,7 @@ void leerDeConsola(void);
 void escucharMultiplesClientes(void);
 void interpretarRequest(cod_request, char*, int);
 void enviarMensajeAFileSystem(void);
-int long creame(t_timeval*);
+double obtenerHoraActual();
 void conectarAFileSystem(void);
 void procesarSelect(char*,cod_request);
 

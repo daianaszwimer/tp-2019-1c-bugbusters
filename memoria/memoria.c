@@ -1,14 +1,10 @@
 #include "memoria.h"
 
 int main(void) {
-	t_timeval* tv;
-
-	gettimeofday(&tv, NULL);
-
-	long millisecondsSinceEpoch = creame(tv);
 
 
-	puts(millisecondsSinceEpoch);
+
+	printf("%llu \n", obtenerHoraActual());
 
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
@@ -53,11 +49,23 @@ void leerDeConsola(void){
 	}
 }
 
-int long creame(t_timeval* tv){
-	int long date =(tv->tv_sec) * 1000 +
-		    (tv->tv_usec) / 1000;
-	return date;
+
+/*obtenerHoraActual()
+ * Parametros:
+ * 	-> t_timeval :: Hora actual en minutos y microsegundos VER!conversionDeUnidades
+ * Descripcion:
+ * Return:
+ * 	-> :: double */
+double obtenerHoraActual(){
+	t_timeval tv;
+	gettimeofday(&tv, NULL);
+	//printf("%llu \n", tv.tv_sec);
+	//printf("%llu \n", tv.tv_usec);
+	unsigned long long millisegundosDesdeEpoch = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+	double horaActual = millisegundosDesdeEpoch;
+	return millisegundosDesdeEpoch;
 }
+
 
 void conectarAFileSystem() {
 	//while
