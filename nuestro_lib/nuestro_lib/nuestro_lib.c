@@ -137,7 +137,6 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 
 		char** parametros = separarString(request[1]);
 		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-		printf("CANT PARAMETROS: %d \n", cantidadDeParametros);
 
 		if( validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger)== TRUE) {
 			return EXIT_SUCCESS;
@@ -360,14 +359,10 @@ t_paquete* recibir(int socket)
 	}
 
 	recv(socket, &paquete->tamanio, sizeof(int), MSG_WAITALL);
-
 	void* requestRecibido = malloc(paquete->tamanio);
-
 	recv(socket, requestRecibido, paquete->tamanio, MSG_WAITALL);
 
 	paquete->request = requestRecibido;
-
-
 
 	return paquete;
 }

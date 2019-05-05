@@ -61,15 +61,14 @@ bool datoEstaEnCache;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
 
 
-
 void leerDeConsola(void);
 void validarRequest(char*);
 
 void escucharMultiplesClientes(void);
 void interpretarRequest(cod_request, char*,t_caller, int);
-void enviarMensajeAFileSystem(cod_request, char*);
+char* intercambiarConFileSystem(cod_request, char*);
 //int long creame(t_timeval*);
 void conectarAFileSystem(void);
-void procesarSelect(cod_request,char*);
+void procesarSelect(cod_request,char*,t_caller, int);
 
 #endif /* MEMORIA_H_ */

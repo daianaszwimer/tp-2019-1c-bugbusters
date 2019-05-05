@@ -124,7 +124,6 @@ void escucharMultiplesClientes() {
 				char* request = paqueteRecibido->request;
 				printf("El codigo que recibi es: %s \n", request);
 				interpretarRequest(palabraReservada,request,HIMSELVE, i);
-				//eliminar_paquete(paqueteRecibido);
 				printf("Del bd \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 			}
 		}
@@ -142,7 +141,7 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 
 		case SELECT:
 			log_info(logger_MEMORIA, "Me llego un SELECT");
-			procesarSelect(palabraReservada, request);
+			procesarSelect(palabraReservada, request, caller, i);
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
@@ -177,20 +176,15 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 }
 
 
-void enviarMensajeAFileSystem(cod_request palabraReservada, char* request){
+char* intercambiarConFileSystem(cod_request palabraReservada, char* request){
 	t_paquete* paqueteRecibido;
 
-	log_info(logger_MEMORIA, "Antes de enviar mensaje");
 	enviar(palabraReservada, request, conexionLfs);
-	log_info(logger_MEMORIA, "despues de enviar mensaje");
 
+	sem_post(&semLeerDeConsola);
+	paqueteRecibido = recibir(conexionLfs);
 
-		sem_post(&semLeerDeConsola);
-		paqueteRecibido = recibir(conexionLfs);
-		//int palabraReservada = paqueteRecibido->palabraReservada;
-		log_info(logger_MEMORIA, "Me respuesta, del SELECT, de LFS");
-		printf("El codigo que recibi de LFS es: %s \n", (char*) paqueteRecibido->request);
-
+	return paqueteRecibido->request;
 
 }
 
@@ -201,31 +195,36 @@ void enviarMensajeAFileSystem(cod_request palabraReservada, char* request){
  * Descripcion: Permite obtener el valor de la key consultada de una tabla.
  * Return:
  * 	-> :: void */
-void procesarSelect(cod_request palabraReservada,char* request) {
+void procesarSelect(cod_request palabraReservada, char* request, t_caller caller, int i) {
 
 	if(datoEstaEnCache == TRUE) {
 
 	} else {
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-		//t_paquete* paquete = armar_paquete(palabraReservada, request);
-		enviarMensajeAFileSystem(palabraReservada,request);
+		char* respuesta = intercambiarConFileSystem(palabraReservada,request);
+		if(caller == HIMSELVE) {
+			enviar(palabraReservada, request, (int) list_get(descriptoresClientes,i));
+		} else if(caller == CONSOLE) {
+			log_info(logger_MEMORIA, "La respuesta del ", request, " es ", respuesta);
+		} else {
+//			log_error();
+		}
 
-
-		t_pagina* pag;
-		pag->timesamp = 12345;
-		pag->key=1;
-		pag->value="hola";
-		t_tablaDePaginas tablaDePag = tablaDePaginas[0];
-		tablaDePag.numeroDePag=1;
-		tablaDePag.pagina= pag;
-		tablaDePag.modificado = SINMODIFICAR;
-
-		printf("numer de pag %i\n",tablaDePag.numeroDePag);
-		printf("flag modificado %i\n",tablaDePag.modificado);
-		printf("timestamp %i\n",pag->timesamp);
-		printf("key %i\n",pag->key);
-		printf("timestamp %s\n",pag->value);
+//		t_pagina* pag;
+//		pag->timesamp = 12345;
+//		pag->key=1;
+//		pag->value="hola";
+//		t_tablaDePaginas tablaDePag = tablaDePaginas[0];
+//		tablaDePag.numeroDePag=1;
+//		tablaDePag.pagina= pag;
+//		tablaDePag.modificado = SINMODIFICAR;
+//
+//		printf("numer de pag %i\n",tablaDePag.numeroDePag);
+//		printf("flag modificado %i\n",tablaDePag.modificado);
+//		printf("timestamp %i\n",pag->timesamp);
+//		printf("key %i\n",pag->key);
+//		printf("timestamp %s\n",pag->value);
 
 	}
 }

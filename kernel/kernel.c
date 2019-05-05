@@ -89,7 +89,9 @@ void conectarAMemoria(void) {
 	//todo: esperar que se levante memoria
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 	//semaforos
-	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+	while(conexionMemoria == 0) {
+		conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+	}
 }
 
 void liberarMemoria(void) {
@@ -99,6 +101,7 @@ void liberarMemoria(void) {
 }
 
 void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
+	t_paquete* paqueteRecibido;
 	//t_paquete* paquete;
 	//sem_wait(&semEnviarMensajeAMemoria);
 	//printf("El mensaje es: %s \n", mensaje);
@@ -109,5 +112,7 @@ void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	enviar(codRequest, mensaje, conexionMemoria);
 	//free(paquete);
 	free(mensaje);
+	paqueteRecibido = recibir(conexionMemoria);
+	log_info(logger_KERNEL, "Recibi de memoria %s ", paqueteRecibido->request);
 	//sem_post(&semLeerDeConsola);
 }

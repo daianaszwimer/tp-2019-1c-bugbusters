@@ -36,10 +36,8 @@ void recibirConexionMemoria() {
 	while(1) {
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
-		printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
+		printf("El request que recibi es %s \n", paqueteRecibido->request);
 
-		char* respuesta = "soy una respuesta de lfss";
-		//t_paquete* paquete = armar_paquete(palabraReservada, respuesta);
 		enviar(palabraReservada, paqueteRecibido->request ,memoria_fd);
 	}
 }
