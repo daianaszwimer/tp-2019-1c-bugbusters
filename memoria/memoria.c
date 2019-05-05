@@ -1,6 +1,15 @@
 #include "memoria.h"
 
 int main(void) {
+	t_timeval* tv;
+
+	gettimeofday(&tv, NULL);
+
+	long millisecondsSinceEpoch = creame(tv);
+
+
+	puts(millisecondsSinceEpoch);
+
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 	datoEstaEnCache = FALSE;
@@ -44,6 +53,12 @@ void leerDeConsola(void){
 	}
 }
 
+int long creame(t_timeval* tv){
+	int long date =(tv->tv_sec) * 1000 +
+		    (tv->tv_usec) / 1000;
+	return date;
+}
+
 void conectarAFileSystem() {
 	//while
 	conexionLfs = crearConexion(
@@ -79,7 +94,7 @@ void escucharMultiplesClientes() {
 		for(int i=0; i<numeroDeClientes; i++) {
 			if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
 				paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
-				int palabraReservada = paqueteRecibido->palabraReservada;
+				cod_request palabraReservada = paqueteRecibido->palabraReservada;
 				char* request = paqueteRecibido->request;
 				printf("El codigo que recibi es: %d \n", palabraReservada);
 				interpretarRequest(palabraReservada,request, i);
@@ -96,15 +111,15 @@ void escucharMultiplesClientes() {
 	}
 }
 
-void interpretarRequest(int palabraReservada,char* request, int i) {
+void interpretarRequest(cod_request palabraReservada,char* request, int i) {
 	switch(palabraReservada) {
 		case SELECT:
 			log_info(logger_MEMORIA, "Me llego un SELECT");
-			procesarSelect(palabraReservada, request);
+			procesarSelect(request,palabraReservada);
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
-			procesarInsert(palabraReservada, request);
+			//procesarInsert(palabraReservada, request);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
