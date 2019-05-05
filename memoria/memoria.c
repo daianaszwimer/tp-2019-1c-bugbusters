@@ -48,6 +48,21 @@ void leerDeConsola(void){
 		free(mensaje);
 	}
 }
+
+
+/*obtenerHoraActual()
+ * Parametros:
+ * 	-> t_timeval :: Hora actual en minutos y microsegundos VER!conversionDeUnidades
+ * Descripcion:
+ * Return:
+ * 	-> :: unsigned long long */
+double obtenerHoraActual(){
+	t_timeval tv;
+	gettimeofday(&tv, NULL);
+	unsigned long long millisegundosDesdeEpoch = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
+	return millisegundosDesdeEpoch;
+}
+
 void validarRequest(char* mensaje){
 	int codValidacion;
 	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
@@ -110,7 +125,7 @@ void escucharMultiplesClientes() {
 				printf("El codigo que recibi es: %s \n", request);
 				interpretarRequest(palabraReservada,request,HIMSELVE, i);
 				//eliminar_paquete(paqueteRecibido);
-				printf("Del cliente nro: %d \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+				printf("Del bd \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 			}
 		}
 
