@@ -37,6 +37,10 @@ typedef struct{
 	t_pagina* pagina;
 	 t_flagModificado modificado;
 }t_tablaDePaginas;
+typedef struct{
+	unsigned long long tv_sec;
+    unsigned long long tv_usec;   /* microseconds */
+}t_timeval;
 
 t_log* logger_MEMORIA;
 t_config* config;

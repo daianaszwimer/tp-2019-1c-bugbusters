@@ -1,14 +1,10 @@
 #include "memoria.h"
 
 int main(void) {
-//	t_timeval* tv;
-//
-//	gettimeofday(&tv, NULL);
-//
-//	long millisecondsSinceEpoch = creame(tv);
-//
-//
-//	puts(millisecondsSinceEpoch);
+
+
+
+	printf("%llu \n", obtenerHoraActual());
 
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
