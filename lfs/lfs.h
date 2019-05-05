@@ -16,6 +16,7 @@ t_log* logger_LFS;
 t_config* config;
 t_list* descriptoresClientes;
 fd_set descriptoresDeInteres;			// Coleccion de descriptores de interes para select
+#define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"
 
 pthread_t hiloRecibirDeMemoria;			// hilo que lee de consola
 
@@ -28,6 +29,7 @@ void leerDeConsola(void);
 void create(char*, char*, int, int);
 int obtenerBloqueDisponible(void);
 int mkdir_p(const char*);
+void inicializarLfs(void);
 
 
 #endif /* LFS_H_ */

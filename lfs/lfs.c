@@ -6,13 +6,15 @@ int main(void){
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
-	create("TABLA1", "SC", 3, 5000);
+	inicializarLfs();
+	/*create("TABLA1", "SC", 3, 5000);
+
 	pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionMemoria, NULL);
 
 	leerDeConsola();
 
 	pthread_join(hiloRecibirDeMemoria, NULL);
-
+	 */
 
 	return EXIT_SUCCESS;
 }
@@ -120,58 +122,59 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
 void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 	// La carpeta metadata y la de los bloques no se crea aca, se crea apenas levanta el lfs
 	char* raiz = config_get_string_value(config, "PUNTO_MONTAJE");
-	char* pathTabla = strdup(raiz);
+	char* pathTabla = NULL;
+	pathTabla = strdup(raiz);
 	strcat(pathTabla, "tables/");
 	strcat(pathTabla, nombreTabla);
 	strcat(pathTabla, "/");
-	if(fopen(pathTabla, "r") != NULL) {		// Verificamos si la tabla existe
-		char* log = "Ya existe una tabla de nombre: ";
-		strcat(log, nombreTabla);
-		log_error(logger_LFS, log);
+
+	/* Creamos el archivo Metadata */
+	char pathMetadata[100] = "/home/utnso/tp-2019-1c-bugbusters/lfs";
+	strcat(pathMetadata, pathTabla);
+
+//	int error = mkdir_p(pathMetadata);
+//	if (error == 0){
+//		strcat(pathMetadata, "Metadata.bin");
+//
+	FILE* metadata = fopen("Metadata.bin", "wb+");
+	if(metadata != NULL) {
+		char* consistency = "CONSISTENCY";
+		fwrite(&consistency, sizeof(consistency), 1, metadata);
+		fclose(metadata);
 	}
-	else {
-		/* Creamos el archivo Metadata */
-		char* pathMetadata = strdup("/home/utnso/tp-2019-1c-bugbusters/lfs");
-		strcat(pathMetadata, pathTabla);
-
-		int error = mkdir_p(pathMetadata);
-		if (error == 0){
-			strcat(pathMetadata, "Metadata.bin");
-
-			FILE* metadata = fopen("Metadata.bin", "w+");
-			char* consistency = "CONSISTENCY";
-			fwrite(&consistency, sizeof(consistency), sizeof(char), metadata);
-			fclose(metadata);
-
-			//t_config* metadata = config_create("Metadata.config");
-
-
-
-			/*sprintf(numeroDeParticiones, "PARTITIONS=%i", _numeroDeParticiones);
-			sprintf(tiempoDeCompactacion, "COMPACTION_TIME=%i", _tiempoDeCompactacion);*/
-
-			/*config_set_value(metadata, "CONSISTENCY", tipoDeConsistencia);
-			config_set_value(metadata, "PARTITIONS", numeroDeParticiones);
-			config_set_value(metadata, "COMPACTION_TIME", tiempoDeCompactacion);*/
-			int x = config_save(metadata);
-
-			/* Creamos las particiones */
-			for(int i = 0; i < numeroDeParticiones; i++) {
-				char* pathParticion = strdup(pathTabla);
-				strcat(pathParticion, i);
-				strcat(pathParticion, ".bin");
-				FILE* particion = fopen(pathParticion, "w+");
-				char* tamanio = "Size=0";
-				char* bloques;
-				sprintf(bloques,"Block=[%i]", obtenerBloqueDisponible()); // Hay que agregar un bloque por particion, no se si uno cualquiera o que
-				fwrite(&tamanio, sizeof(tamanio), 1, particion);
-				fwrite(&bloques, sizeof(bloques), 1, particion);
-				free(pathParticion);
-			}
-		}
-
-	}
+	//free(pathMetadata);
 	free(pathTabla);
+//		//free(consistency);
+//
+//		//t_config* metadata = config_create("Metadata.config");
+//
+//
+//
+//		/*sprintf(numeroDeParticiones, "PARTITIONS=%i", _numeroDeParticiones);
+//		sprintf(tiempoDeCompactacion, "COMPACTION_TIME=%i", _tiempoDeCompactacion);*/
+//
+//		/*config_set_value(metadata, "CONSISTENCY", tipoDeConsistencia);
+//		config_set_value(metadata, "PARTITIONS", numeroDeParticiones);
+//		config_set_value(metadata, "COMPACTION_TIME", tiempoDeCompactacion);*/
+//		int x = config_save(metadata);
+//
+//		/* Creamos las particiones */
+//		for(int i = 0; i < numeroDeParticiones; i++) {
+//			char* pathParticion = strdup(pathTabla);
+//			strcat(pathParticion, i);
+//			strcat(pathParticion, ".bin");
+//			FILE* particion = fopen(pathParticion, "w+");
+//			char* tamanio = "Size=0";
+//			char* bloques;
+//			sprintf(bloques,"Block=[%i]", obtenerBloqueDisponible()); // Hay que agregar un bloque por particion, no se si uno cualquiera o que
+//			fwrite(&tamanio, sizeof(tamanio), 1, particion);
+//			fwrite(&bloques, sizeof(bloques), 1, particion);
+//			free(pathParticion);
+//		}
+//	}
+//
+//	free(pathTabla);
+
 }
 
 int obtenerBloqueDisponible(){
@@ -180,7 +183,6 @@ int obtenerBloqueDisponible(){
 
 int mkdir_p(const char *path)
 {
-    /* Adapted from http://stackoverflow.com/a/2336245/119527 */
     const size_t len = strlen(path);
     char _path[256];
     char *p;
@@ -204,16 +206,36 @@ int mkdir_p(const char *path)
                 if (errno != EEXIST)
                     return -1;
             }
-
             *p = '/';
         }
     }
-
     if (mkdir(_path, S_IRWXU) != 0) {
         if (errno != EEXIST)
             return -1;
     }
-
     return 0;
+}
+
+void inicializarLfs() {
+	char* raiz = config_get_string_value(config, "PUNTO_MONTAJE");
+	char* fs_Lissandra = strdup(PATH);
+	strcat(fs_Lissandra, raiz);
+
+	char* tablas = strdup(fs_Lissandra);
+	char* metadata = strdup(fs_Lissandra);
+	char* bloques = strdup(fs_Lissandra);
+
+	strcat(tablas, "Tables/");
+	strcat(metadata, "Metadata/");
+	strcat(bloques, "Bloques/");
+
+	mkdir_p(tablas);
+	mkdir_p(metadata);
+	mkdir_p(bloques);
+
+	free(tablas);
+	free(metadata);
+	free(bloques);
+
 }
 
