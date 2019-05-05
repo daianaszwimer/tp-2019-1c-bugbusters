@@ -59,8 +59,10 @@ t_config* leer_config(char* nombreArchivo) {
 t_paquete* armar_paquete(cod_request palabraReservada, char* request) {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->palabraReservada = palabraReservada;
-	paquete->tamanio = sizeof(int);
-	paquete->request = request;
+	paquete->tamanio = strlen(request)+1;
+	printf("TAMANIO DE LA REQUEST 12345678OIHGFDFGH: %d \n",paquete->tamanio);
+	paquete->request = malloc(paquete->request);
+	memcpy(paquete->request,request, paquete->tamanio);
 	return paquete;
 }
 
@@ -462,12 +464,14 @@ int crearConexion(char* ip, char* puerto)
  * 	-> :: void  */
 void enviar(t_paquete* paquete, int socket_cliente)
 {
-	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio; // Preguntar en tp0 estaba asi:  paquete->buffer->size
+	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio; 	 // Preguntar en tp0 estaba asi:  paquete->buffer->size
 	void* paqueteAEnviar = serializar_paquete(paquete, tamanioPaquete);
 
 
 	send(socket_cliente, paqueteAEnviar, tamanioPaquete, MSG_WAITALL);
 	free(paqueteAEnviar);
+	free(paquete->request);
+	free(paquete);
 }
 
 

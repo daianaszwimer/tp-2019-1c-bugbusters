@@ -4,7 +4,7 @@ int main(void) {
 
 
 
-	printf("%llu \n", obtenerHoraActual());
+//	printf("%llu \n", obtenerHoraActual());
 
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
@@ -107,7 +107,7 @@ void escucharMultiplesClientes() {
 				paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
 				cod_request palabraReservada = paqueteRecibido->palabraReservada;
 				char* request = paqueteRecibido->request;
-				printf("El codigo que recibi es: %d \n", palabraReservada);
+				printf("El codigo que recibi es: %s \n", request);
 				interpretarRequest(palabraReservada,request,HIMSELVE, i);
 				//eliminar_paquete(paqueteRecibido);
 				printf("Del cliente nro: %d \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
