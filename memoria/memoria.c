@@ -55,14 +55,11 @@ void leerDeConsola(void){
  * 	-> t_timeval :: Hora actual en minutos y microsegundos VER!conversionDeUnidades
  * Descripcion:
  * Return:
- * 	-> :: double */
+ * 	-> :: unsigned long long */
 double obtenerHoraActual(){
 	t_timeval tv;
 	gettimeofday(&tv, NULL);
-	//printf("%llu \n", tv.tv_sec);
-	//printf("%llu \n", tv.tv_usec);
-	unsigned long long millisegundosDesdeEpoch = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-	double horaActual = millisegundosDesdeEpoch;
+	unsigned long long millisegundosDesdeEpoch = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
 	return millisegundosDesdeEpoch;
 }
 

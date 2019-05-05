@@ -34,8 +34,8 @@ typedef struct{
 	 t_flagModificado modificado;
 }t_tablaDePaginas;
 typedef struct{
-	unsigned long long tv_sec;
-    unsigned long long tv_usec;   /* microseconds */
+	time_t tv_sec;
+	suseconds_t tv_usec;   /* microseconds */
 }t_timeval;
 
 
