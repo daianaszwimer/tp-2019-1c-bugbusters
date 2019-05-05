@@ -48,24 +48,6 @@ t_config* leer_config(char* nombreArchivo) {
 //}
 //
 
-/* armar_paquete()
- * Parametros:
- * 	-> codRequest ::  palabraReservada
- * 	-> request :: char*
- * Descripcion: crea un paquete, reservado memoria para el mismo, y guarda en dicha estructura
- * 				de paquete : la palabra reservada, el tamanio del paquete y toda la reques(string entero)
- * Return:
- * 	-> paquete :: t_paquete*  */
-t_paquete* armar_paquete(cod_request palabraReservada, char* request) {
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete->palabraReservada = palabraReservada;
-	paquete->tamanio = strlen(request)+1;
-	printf("TAMANIO DE LA REQUEST 12345678OIHGFDFGH: %d \n",paquete->tamanio);
-	paquete->request = malloc(paquete->request);
-	memcpy(paquete->request,request, paquete->tamanio);
-	return paquete;
-}
-
 ////								  requests
 //void _leer_consola_haciendo(void (accion)(char)) {
 //	char* leido = readline(">");
@@ -462,13 +444,19 @@ int crearConexion(char* ip, char* puerto)
  * 				y finalmente se libera el paquete que se envio.
  * Return:
  * 	-> :: void  */
-void enviar(t_paquete* paquete, int socket_cliente)
+void enviar(cod_request palabraReservada, char* mensaje, int socket_cliente)
 {
-	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio; 	 // Preguntar en tp0 estaba asi:  paquete->buffer->size
+	//armamos el paquete
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->palabraReservada = palabraReservada;
+	paquete->tamanio = strlen(mensaje)+1;
+	paquete->request = malloc(paquete->tamanio);
+	memcpy(paquete->request, mensaje, paquete->tamanio);
+	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio;
+	//serializamos
 	void* paqueteAEnviar = serializar_paquete(paquete, tamanioPaquete);
-
-
-	send(socket_cliente, paqueteAEnviar, tamanioPaquete, MSG_WAITALL);
+	//enviamos
+	send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0);
 	free(paqueteAEnviar);
 	free(paquete->request);
 	free(paquete);
@@ -485,12 +473,15 @@ void enviar(t_paquete* paquete, int socket_cliente)
 void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 {
 	void * buffer = malloc(tamanioPaquete);
+	int desplazamiento = 0;
 
 	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
 	// destino es un string
-	memcpy(buffer, &paquete->palabraReservada, sizeof(int));
-	memcpy(buffer + sizeof(int), &paquete->tamanio, sizeof(int));
-	memcpy(buffer + 2 * sizeof(int), paquete->request, paquete->tamanio);
+	memcpy(buffer + desplazamiento, &paquete->palabraReservada, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, &paquete->tamanio, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, paquete->request, paquete->tamanio);
 	return buffer;
 }
 

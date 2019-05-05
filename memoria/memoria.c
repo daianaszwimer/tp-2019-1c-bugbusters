@@ -178,16 +178,10 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 
 
 void enviarMensajeAFileSystem(cod_request palabraReservada, char* request){
-	//char** request;
-	t_paquete* paquete;
 	t_paquete* paqueteRecibido;
 
-
-	paquete = armar_paquete(palabraReservada, request);
-	printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 	log_info(logger_MEMORIA, "Antes de enviar mensaje");
-	enviar(paquete, conexionLfs);
-	free(paquete);
+	enviar(palabraReservada, request, conexionLfs);
 	log_info(logger_MEMORIA, "despues de enviar mensaje");
 
 
@@ -214,7 +208,7 @@ void procesarSelect(cod_request palabraReservada,char* request) {
 	} else {
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-		t_paquete* paquete = armar_paquete(palabraReservada, request);
+		//t_paquete* paquete = armar_paquete(palabraReservada, request);
 		enviarMensajeAFileSystem(palabraReservada,request);
 
 

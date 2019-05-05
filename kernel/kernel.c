@@ -99,15 +99,15 @@ void liberarMemoria(void) {
 }
 
 void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
-	t_paquete* paquete;
+	//t_paquete* paquete;
 	//sem_wait(&semEnviarMensajeAMemoria);
-	printf("El mensaje es: %s \n", mensaje);
+	//printf("El mensaje es: %s \n", mensaje);
 	// El paquete tiene el cod_request y UN request completo
-	paquete = armar_paquete(codRequest, mensaje);
-	printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
+	//paquete = armar_paquete(codRequest, mensaje);
+	//printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 	//semaforos
-	enviar(paquete, conexionMemoria);
-	free(paquete);
+	enviar(codRequest, mensaje, conexionMemoria);
+	//free(paquete);
 	free(mensaje);
 	//sem_post(&semLeerDeConsola);
 }
