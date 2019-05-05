@@ -19,12 +19,12 @@ int main(void) {
 	// 	HILOS
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
-	pthread_create(&hiloEnviarMensajeAFileSystem, NULL, (void*)enviarMensajeAFileSystem, NULL);
+	//pthread_create(&hiloEnviarMensajeAFileSystem, NULL, (void*)enviarMensajeAFileSystem, NULL);
 
 
 	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
-	pthread_join(hiloEnviarMensajeAFileSystem, NULL);
+	//pthread_join(hiloEnviarMensajeAFileSystem, NULL);
 
 	liberar_conexion(conexionLfs);
 	log_destroy(logger_MEMORIA);
@@ -36,18 +36,19 @@ int main(void) {
 }
 
 void leerDeConsola(void){
-	//log_info(logger, "leerDeConsola");
+	char* mensaje;
+	log_info(logger_MEMORIA, "Vamos a leer de consola");
 	while (1) {
 		sem_wait(&semLeerDeConsola);
 		mensaje = readline(">");
 		if (!strcmp(mensaje, "\0")) {
-			sem_post(&semEnviarMensajeAFileSystem);
 			break;
 		}
-		codValidacion = validarMensaje(mensaje, KERNEL, logger_MEMORIA);
-		sem_post(&semEnviarMensajeAFileSystem);
+		validarRequest(mensaje);
+		free(mensaje);
 	}
 }
+<<<<<<< HEAD
 
 
 /*obtenerHoraActual()
@@ -61,11 +62,32 @@ double obtenerHoraActual(){
 	gettimeofday(&tv, NULL);
 	unsigned long long millisegundosDesdeEpoch = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
 	return millisegundosDesdeEpoch;
+=======
+void validarRequest(char* mensaje){
+	int codValidacion;
+	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
+	switch(codValidacion){
+		case EXIT_SUCCESS:
+			interpretarRequest(codValidacion, mensaje,CONSOLE,NULL);
+			break;
+		case QUERY_ERROR:
+			//es la q hay q hacerla generica
+			log_error(logger_MEMORIA, "No es valida la request");
+			break;
+		default:
+			break;
+	}
+>>>>>>> 84203d416e21ff34198a038e55819a271a8abfd4
 }
 
 
+//int long creame(t_timeval* tv){
+//	int long date =(tv->tv_sec) * 1000 +
+//		    (tv->tv_usec) / 1000;
+//	return date;
+//}
+
 void conectarAFileSystem() {
-	//while
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_LFS"),
 			config_get_string_value(config, "PUERTO_LFS"));
@@ -102,7 +124,7 @@ void escucharMultiplesClientes() {
 				cod_request palabraReservada = paqueteRecibido->palabraReservada;
 				char* request = paqueteRecibido->request;
 				printf("El codigo que recibi es: %d \n", palabraReservada);
-				interpretarRequest(palabraReservada,request, i);
+				interpretarRequest(palabraReservada,request,HIMSELVE, i);
 				//eliminar_paquete(paqueteRecibido);
 				printf("Del cliente nro: %d \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 			}
@@ -116,11 +138,12 @@ void escucharMultiplesClientes() {
 	}
 }
 
-void interpretarRequest(cod_request palabraReservada,char* request, int i) {
+void interpretarRequest(cod_request palabraReservada,char* request,t_caller caller, int i) {
 	switch(palabraReservada) {
+
 		case SELECT:
 			log_info(logger_MEMORIA, "Me llego un SELECT");
-			procesarSelect(request,palabraReservada);
+			procesarSelect(palabraReservada, request);
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
@@ -139,9 +162,14 @@ void interpretarRequest(cod_request palabraReservada,char* request, int i) {
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
 		case QUERY_ERROR:
-			log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-			int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd
-			break;
+			if(caller == HIMSELVE){
+				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
+				int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+				break;
+			}
+			else{
+				break;
+			}
 		default:
 			log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
 			break;
@@ -149,57 +177,62 @@ void interpretarRequest(cod_request palabraReservada,char* request, int i) {
 	log_info(logger_MEMORIA, "(MENSAJE DE KERNEL)");
 }
 
-/*procesarInsert()
- * Parametros:
- * 	-> char* ::  request
- * 	-> cod_request :: palabraReservada
- * Descripcion:
- * Return:
- * 	-> :: void */
-void enviarMensajeAFileSystem(void){
-	int codRequest; // es la palabra reservada (ej: SELECT)
-	char** request;
+
+void enviarMensajeAFileSystem(cod_request palabraReservada, char* request){
+	//char** request;
 	t_paquete* paquete;
 	t_paquete* paqueteRecibido;
 
-	while (1) {
-		sem_wait(&semEnviarMensajeAFileSystem);
-		if (!strcmp(mensaje, "\0")) {
-			break;
-		}
-		printf("El mensaje es: %s \n", mensaje);
-		printf("Codigo de validacion: %d \n", codValidacion);
-		if (codValidacion != EXIT_FAILURE && codValidacion != QUERY_ERROR) {
-			request = separarString(mensaje);
-			codRequest = obtenerCodigoPalabraReservada(request[0], KERNEL);
-			// El paquete tiene el cod_request y UN request completo
-			paquete = armar_paquete(codRequest, mensaje);
-			printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
-			log_info(logger_MEMORIA, "Antes de enviar mensaje");
-			enviar(paquete, conexionLfs);
-			free(paquete);
-			log_info(logger_MEMORIA, "despues de enviar mensaje");
-		}
-		free(mensaje);
-		//config_destroy(config);
+
+	paquete = armar_paquete(palabraReservada, request);
+	printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
+	log_info(logger_MEMORIA, "Antes de enviar mensaje");
+	enviar(paquete, conexionLfs);
+	free(paquete);
+	log_info(logger_MEMORIA, "despues de enviar mensaje");
+
+
 		sem_post(&semLeerDeConsola);
 		paqueteRecibido = recibir(conexionLfs);
-		int palabraReservada = paqueteRecibido->palabraReservada;
+		//int palabraReservada = paqueteRecibido->palabraReservada;
 		log_info(logger_MEMORIA, "Me respuesta, del SELECT, de LFS");
 		printf("El codigo que recibi de LFS es: %s \n", (char*) paqueteRecibido->request);
 
-	}
+
 }
 
-void procesarSelect(char* request,cod_request palabraReservada) {
+/*procesarSelect()
+ * Parametros:
+ * 	-> char* ::  request
+ * 	-> cod_request :: palabraReservada
+ * Descripcion: Permite obtener el valor de la key consultada de una tabla.
+ * Return:
+ * 	-> :: void */
+void procesarSelect(cod_request palabraReservada,char* request) {
+
 	if(datoEstaEnCache == TRUE) {
-		//lo busco entre mis datos
-		//le respondo a kernel
+
 	} else {
-		//mando request a lfs
-		//y recibo la rta y se la mando a kernel y espero la rta de lfs
+
+		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 		t_paquete* paquete = armar_paquete(palabraReservada, request);
-		enviar(paquete, conexionLfs);
+		enviarMensajeAFileSystem(palabraReservada,request);
+
+
+		t_pagina* pag;
+		pag->timesamp = 12345;
+		pag->key=1;
+		pag->value="hola";
+		t_tablaDePaginas tablaDePag = tablaDePaginas[0];
+		tablaDePag.numeroDePag=1;
+		tablaDePag.pagina= pag;
+		tablaDePag.modificado = SINMODIFICAR;
+
+		printf("numer de pag %i\n",tablaDePag.numeroDePag);
+		printf("flag modificado %i\n",tablaDePag.modificado);
+		printf("timestamp %i\n",pag->timesamp);
+		printf("key %i\n",pag->key);
+		printf("timestamp %s\n",pag->value);
 
 	}
 }
