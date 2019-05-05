@@ -147,7 +147,7 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 				return EXIT_SUCCESS;
 			}else{
 				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
-				return EXIT_FAILURE;
+				return QUERY_ERROR;
 			}
 		}
 
@@ -159,7 +159,7 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			return EXIT_SUCCESS;
 		}
 		else {
-			return EXIT_FAILURE;
+			return QUERY_ERROR;
 		}
 	}
 	else {
@@ -180,7 +180,7 @@ int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t
 	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
 	if(resultadoCantParametros == EXIT_FAILURE){
 		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
-		return EXIT_FAILURE;
+		return QUERY_ERROR;
 	}else{
 		return EXIT_SUCCESS;
 	}
@@ -226,7 +226,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			default:
-				retorno = EXIT_FAILURE;
+				retorno = QUERY_ERROR;
 				break;
 	}
 	return retorno;
@@ -244,7 +244,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
 	if(codigoPalabraReservada == -1) {
 		log_info(logger, "Debe ingresar un request válido");
-		return EXIT_FAILURE;
+		return QUERY_ERROR;
 	}
 	return EXIT_SUCCESS;
 }

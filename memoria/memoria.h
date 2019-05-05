@@ -16,12 +16,16 @@
 #include <semaphore.h>
 #include <sys/time.h>
 
-t_log* logger_MEMORIA;
-t_config* config;
+typedef enum
+{
+	CONSOLE,
+	HIMSELVE
+} t_caller;
 
 typedef enum
-{	MODIFICADO,
-	SINMODIFICAR
+{
+	SINMODIFICAR,
+	MODIFICADO
 } t_flagModificado;
 typedef struct{
 	long int timesamp;
@@ -33,11 +37,11 @@ typedef struct{
 	t_pagina* pagina;
 	 t_flagModificado modificado;
 }t_tablaDePaginas;
-typedef struct{
-	long int tv_sec;
-    long int tv_usec;   /* microseconds */
-}t_timeval;
 
+t_log* logger_MEMORIA;
+t_config* config;
+
+t_tablaDePaginas tablaDePaginas[1];
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
@@ -45,9 +49,9 @@ sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 pthread_t hiloEnviarMensajeAFileSystem;	// hilo para enviar mensaje a file system
-char* mensaje;  					// es el request completo
+
 int conexionLfs;
-int codValidacion;
+
 t_list* descriptoresClientes ;
 bool datoEstaEnCache;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
@@ -55,11 +59,13 @@ fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para s
 
 
 void leerDeConsola(void);
+void validarRequest(char*);
+
 void escucharMultiplesClientes(void);
-void interpretarRequest(cod_request, char*, int);
-void enviarMensajeAFileSystem(void);
-int long creame(t_timeval*);
+void interpretarRequest(cod_request, char*,t_caller, int);
+void enviarMensajeAFileSystem(cod_request, char*);
+//int long creame(t_timeval*);
 void conectarAFileSystem(void);
-void procesarSelect(char*,cod_request);
+void procesarSelect(cod_request,char*);
 
 #endif /* MEMORIA_H_ */
