@@ -5,7 +5,7 @@ int main(void) {
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 
 	//	SEMAFOROS
-	//sem_init(&semLeerDeConsola, 0, 1);
+	sem_init(&semLiberarConsola, 0, 0);
 	//sem_init(&semEnviarMensajeAMemoria, 0, 0);
 
 	//HILOS
@@ -35,6 +35,8 @@ void leerDeConsola(void){
 			break;
 		}
 		interpretarRequest(mensaje);
+		sem_wait(&semLiberarConsola);
+		free(mensaje);
 	}
 }
 
@@ -110,7 +112,7 @@ void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 	enviar(paquete, conexionMemoria);
 	free(paquete);
-	free(mensaje);
+	sem_post(&semLiberarConsola);
 }
 
 void procesarRun(char* mensaje) {
@@ -122,10 +124,10 @@ void procesarRun(char* mensaje) {
 	if (archivoLql == NULL) {
 		log_error(logger_KERNEL, "No existe un archivo en esa ruta");
 	} else {
-		char* palabra;
-		//no anda este while
-		while(fscanf(archivoLql, "%s", palabra) == 1) {
-			//	interpretarRequest(request);
+		char request[100];
+		while(fgets(request, sizeof(request), archivoLql) != NULL) {
+			request[strcspn(request, "\n")] = 0;
+			interpretarRequest(request);
 		}
 		fclose(archivoLql);
 	}

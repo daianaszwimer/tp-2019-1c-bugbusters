@@ -18,6 +18,7 @@ t_config* config;
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAMemoria;		// semaforo para enviar mensaje
+sem_t semLiberarConsola;			// semaforo para liberar mensaje de consola
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		//hilo que conecta a memoria
 
