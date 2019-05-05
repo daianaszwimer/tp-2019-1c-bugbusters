@@ -24,17 +24,14 @@ int main(void) {
 
 
 void leerDeConsola(void){
-	//log_info(logger, "leerDeConsola");
 	char* mensaje;
 	while (1) {
-		//sem_wait(&semLeerDeConsola);
 		mensaje = readline(">");
 		//todo: usar exit
 		if (!strcmp(mensaje, "\0")) {
-			//sem_post(&semEnviarMensajeAMemoria);
 			break;
 		}
-		interpretarRequest(mensaje);
+		validarRequest(mensaje);
 		sem_wait(&semLiberarConsola);
 		free(mensaje);
 	}
@@ -43,7 +40,7 @@ void leerDeConsola(void){
 /*
  * Se ocupa de validar y si esta todo bien, delega
  * */
-void interpretarRequest(char* mensaje) {
+void validarRequest(char* mensaje) {
 	int codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 	switch(codValidacion) {
 		case EXIT_SUCCESS:
@@ -112,7 +109,6 @@ void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
 	enviar(paquete, conexionMemoria);
 	free(paquete);
-	sem_post(&semLiberarConsola);
 }
 
 void procesarRun(char* mensaje) {
@@ -127,8 +123,9 @@ void procesarRun(char* mensaje) {
 		char request[100];
 		while(fgets(request, sizeof(request), archivoLql) != NULL) {
 			request[strcspn(request, "\n")] = 0;
-			interpretarRequest(request);
+			validarRequest(request);
 		}
 		fclose(archivoLql);
+		sem_post(&semLiberarConsola);
 	}
 }

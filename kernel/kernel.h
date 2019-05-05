@@ -25,8 +25,8 @@ pthread_t hiloConectarAMemoria;		//hilo que conecta a memoria
 void conectarAMemoria(void);
 void liberarMemoria(void);
 void leerDeConsola(void);
-//validar + delegarrequests
-void interpretarRequest(char *);
+//validar + delegar requests
+void validarRequest(char *);
 void manejarRequest(char *);
 //funciones que procesan requests:
 void enviarMensajeAMemoria(cod_request, char*);
