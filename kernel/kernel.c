@@ -3,16 +3,22 @@
 int main(void) {
 	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
+	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 
 	//	SEMAFOROS
-	sem_init(&semLiberarConsola, 0, 0);
+	//sem_init(&semLiberarConsola, 0, 0);
+	sem_init(&semRequestNew, 0, 0);
 	//sem_init(&semEnviarMensajeAMemoria, 0, 0);
 
 	//HILOS
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)conectarAMemoria, NULL);
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
+	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNew, NULL);
+	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarExec, NULL);
 
-	//enviarMensajeAMemoria();
+	new = queue_create();
+	ready = queue_create();
+	exec = queue_create();
 
 	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloConectarAMemoria, NULL);
@@ -31,12 +37,24 @@ void leerDeConsola(void){
 		if (!strcmp(mensaje, "\0")) {
 			break;
 		}
-		validarRequest(mensaje);
-		sem_wait(&semLiberarConsola);
+		//agregar request a la cola de new
+		queue_push(new, mensaje);
+		sem_post(&semRequestNew);
+
+		//sem_wait(&semLiberarConsola);
 		free(mensaje);
 	}
 }
 
+void planificarNew(void) {
+	sem_wait(&semRequestNew);
+
+}
+
+
+void planificarExec(void) {
+
+}
 /*
  * Se ocupa de validar y si esta todo bien, delega
  * */
@@ -86,7 +104,6 @@ void manejarRequest(char* mensaje) {
 
 void conectarAMemoria(void) {
 	//todo: esperar que se levante memoria
-	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 	//semaforos
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 }
@@ -126,6 +143,6 @@ void procesarRun(char* mensaje) {
 			validarRequest(request);
 		}
 		fclose(archivoLql);
-		sem_post(&semLiberarConsola);
+		//sem_post(&semLiberarConsola);
 	}
 }
