@@ -12,7 +12,7 @@ int main(void) {
 	//Hilos
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)conectarAMemoria, NULL);
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
-	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNew, NULL);
+	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarExec, NULL);
 
 	new = queue_create();
@@ -27,6 +27,10 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
+void conectarAMemoria(void) {
+	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+	procesarAdd(0);
+}
 
 void leerDeConsola(void){
 	char* mensaje;
@@ -54,7 +58,7 @@ void planificarNewAReady(void) {
 	while(1) {
 		sem_wait(&semRequestNew);
 		sem_wait(&semMColaNew);
-		if(validarRequest(queue_pop(&new))) {
+		if(validarRequest(queue_pop(new))) {
 			//queue_pop va con &?
 			sem_post(&semMColaNew);
 			//validar
@@ -67,7 +71,7 @@ void planificarNewAReady(void) {
 }
 
 void planificarExec(void) {
-
+	//cuando se ejecuta una sola linea se hace lo mismo que cuando se ejcuta una linea de un archivo de RUN
 }
 
 int validarRequest(char* mensaje) {
@@ -90,10 +94,11 @@ int validarRequest(char* mensaje) {
 
 /*
  * Se ocupa de delegar la request
- * */
+*/
 void reservarRecursos(char* request) {
-
+	//desarmar archivo lql y ponerlo en una cola
 }
+
 void manejarRequest(char* mensaje) {
 	cod_request codRequest; // es la palabra reservada (ej: SELECT)
 	char** request;
@@ -118,10 +123,6 @@ void manejarRequest(char* mensaje) {
 		default:
 			break;
 	}
-}
-
-void conectarAMemoria(void) {
-	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 }
 
 void liberarMemoria(void) {
@@ -160,4 +161,17 @@ void procesarRun(char* mensaje) {
 		}
 		fclose(archivoLql);
 	}
+}
+
+void procesarAdd(int memoria) {
+	//validar que int sea menor al tamaño de mi lista
+	//en la lista se van a encontrar las memorias levantadas
+	//y va a ser una lista de config_memoria
+	//hacer switch con cada case un criterio
+	//crear tipo de dato criterio que tenga los 3 criterios
+	//para esta iteracion vamos a llamar al add en el conectar
+	//y guardar en SC la memoria que se encuentra en el config
+	memoriaSc.ip = config_get_string_value(config, "IP_MEMORIA");
+	memoriaSc.puerto = config_get_string_value(config, "PUERTO_MEMORIA");
+	printf("Asigne al criterio SC la memoria con ip: %s y puerto %s", memoriaSc.ip, memoriaSc.puerto);
 }

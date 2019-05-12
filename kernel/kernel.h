@@ -7,6 +7,7 @@
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/collections/queue.h>
+#include <commons/collections/list.h>
 #include <commons/config.h>
 #include <readline/readline.h>
 #include <nuestro_lib/nuestro_lib.h>
@@ -25,6 +26,7 @@ t_config* config;
 t_queue* new;
 t_queue* ready;
 t_queue* exec;
+config_memoria memoriaSc;
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAMemoria;		// semaforo para enviar mensaje
@@ -42,7 +44,7 @@ void conectarAMemoria(void);
 void liberarMemoria(void);
 void leerDeConsola(void);
 //planificar requests
-void planificarNew(void);
+void planificarNewAReady(void);
 void planificarExec(void);
 //validar + delegar requests
 int validarRequest(char *);
@@ -50,6 +52,7 @@ void manejarRequest(char *);
 //funciones que procesan requests:
 void enviarMensajeAMemoria(cod_request, char*);
 void procesarRun(char*);
+void procesarAdd(int);
 
 
 #endif /* KERNEL_H_*/
