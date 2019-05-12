@@ -14,6 +14,10 @@ char** separarString(char* mensaje) {
 	return string_split(mensaje, " ");
 }
 
+char** obtenerParametros(char* request) { //ojo con la memoria reservada
+	char** queryYParametros =string_n_split(request, 2, " ");
+	return string_split(queryYParametros[1], " ");
+}
 /* longitudDeArrayDeStrings()
  * Parametros:
  * 	-> array ::  char**
@@ -34,13 +38,13 @@ int longitudDeArrayDeStrings(char** array){
  *  Return:
  *   -> requestSeparada :: char**
  */
-char** obtenerParametros(char* request) {
-	char** requestSeparada;
-	requestSeparada = separarString(request);
-	//n = longitudDeArrayDeStrings(requestSeparada);
-    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
-	return requestSeparada;
-}
+//char** obtenerParametros(char* request) {
+//	char** requestSeparada;
+//	requestSeparada = separarString(request);
+//	//n = longitudDeArrayDeStrings(requestSeparada);
+//    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
+//	return requestSeparada;
+//}
 
 /* leer_config()
  * Parametros:
