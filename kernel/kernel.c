@@ -48,7 +48,7 @@ void interpretarRequest(char* mensaje) {
 			manejarRequest(mensaje);
 			break;
 		case EXIT_FAILURE:
-		case QUERY_ERROR:
+		case NUESTRO_ERROR:
 			//informar error
 			break;
 		default:
@@ -130,7 +130,7 @@ void procesarRun(char* mensaje) {
 	if (archivoLql == NULL) {
 		log_error(logger_KERNEL, "No existe un archivo en esa ruta");
 	} else {
-		char* palabra;
+		char* palabra = NULL;
 		//no anda este while
 		while(fscanf(archivoLql, "%s", palabra) == 1) {
 			//	interpretarRequest(request);
