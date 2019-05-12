@@ -43,7 +43,7 @@ void leerDeConsola(void){
 		}
 		sem_wait(&semMColaNew);
 		//agregar request a la cola de new
-		queue_push(&new, mensaje);
+		queue_push(new, mensaje);
 		sem_post(&semMColaNew);
 		sem_post(&semRequestNew);
 
@@ -57,10 +57,9 @@ void leerDeConsola(void){
 
 void planificarNewAReady(void) {
 	while(1) {
-		printf("esta porqueria tiene espera activa?? \n");
 		sem_wait(&semRequestNew);
 		sem_wait(&semMColaNew);
-		if(validarRequest(queue_pop(&new))) {
+		if(validarRequest(queue_pop(new))) {
 			sem_post(&semMColaNew);
 			//validar
 			//agregar a
@@ -76,7 +75,6 @@ void planificarExec(void) {
 }
 
 int validarRequest(char* mensaje) {
-	printf("validar %s \n", mensaje);
 	//aca se va a poder validar que se haga select/insert sobre tabla existente?
 	int codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 	switch(codValidacion) {
