@@ -4,7 +4,7 @@ int main(void) {
 
 
 
-//	printf("%llu \n", obtenerHoraActual());
+	printf("%llu \n", obtenerHoraActual());
 
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
@@ -56,7 +56,7 @@ void leerDeConsola(void){
  * Descripcion:
  * Return:
  * 	-> :: unsigned long long */
-double obtenerHoraActual(){
+unsigned long long obtenerHoraActual(){
 	t_timeval tv;
 	gettimeofday(&tv, NULL);
 	unsigned long long millisegundosDesdeEpoch = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
@@ -79,12 +79,6 @@ void validarRequest(char* mensaje){
 	}
 }
 
-
-//int long creame(t_timeval* tv){
-//	int long date =(tv->tv_sec) * 1000 +
-//		    (tv->tv_usec) / 1000;
-//	return date;
-//}
 
 void conectarAFileSystem() {
 	conexionLfs = crearConexion(
