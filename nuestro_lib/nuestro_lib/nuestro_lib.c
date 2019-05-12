@@ -53,22 +53,6 @@ t_config* leer_config(char* nombreArchivo) {
 	return config_create(nombreArchivo);
 }
 
-/* armar_paquete()
- * Parametros:
- * 	-> codRequest ::  palabraReservada
- * 	-> request :: char*
- * Descripcion: crea un paquete, reservado memoria para el mismo, y guarda en dicha estructura
- * 				de paquete : la palabra reservada, el tamanio del paquete y toda la reques(string entero)
- * Return:
- * 	-> paquete :: t_paquete*  */
-t_paquete* armar_paquete(cod_request palabraReservada, char* request) {
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete->palabraReservada = palabraReservada;
-	paquete->tamanio = sizeof(int);
-	paquete->request = request;
-	return paquete;
-}
-
 int iniciar_servidor(char* puerto, char* ip)
 {
 	int socket_servidor;
@@ -129,26 +113,29 @@ int esperar_cliente(int socket_servidor)
  * 	-> exit :: int */
 int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 	char** request = string_n_split(mensaje, 2, " ");
+
 	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
 	if(validarPalabraReservada(codPalabraReservada, componente, logger)== TRUE){
 		if(request[1]==NULL){
 			if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
+				free(request);
 				return EXIT_SUCCESS;
 			}else{
+				free(request);
 				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
-				return EXIT_FAILURE;
+				return QUERY_ERROR;
 			}
 		}
 
 		char** parametros = separarString(request[1]);
 		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-		printf("CANT PARAMETROS: %d \n", cantidadDeParametros);
-
+		//free(request);
+		//free(parametros);
 		if( validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger)== TRUE) {
 			return EXIT_SUCCESS;
 		}
 		else {
-			return EXIT_FAILURE;
+			return QUERY_ERROR;
 		}
 	}
 	else {
@@ -169,7 +156,7 @@ int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t
 	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
 	if(resultadoCantParametros == EXIT_FAILURE){
 		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
-		return EXIT_FAILURE;
+		return QUERY_ERROR;
 	}else{
 		return EXIT_SUCCESS;
 	}
@@ -215,7 +202,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			default:
-				retorno = EXIT_FAILURE;
+				retorno = QUERY_ERROR;
 				break;
 	}
 	return retorno;
@@ -233,7 +220,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
 	if(codigoPalabraReservada == -1) {
 		log_info(logger, "Debe ingresar un request válido");
-		return EXIT_FAILURE;
+		return QUERY_ERROR;
 	}
 	return EXIT_SUCCESS;
 }
@@ -308,14 +295,10 @@ t_paquete* recibir(int socket)
 	}
 
 	recv(socket, &paquete->tamanio, sizeof(int), MSG_WAITALL);
-
 	void* requestRecibido = malloc(paquete->tamanio);
-
 	recv(socket, requestRecibido, paquete->tamanio, MSG_WAITALL);
 
 	paquete->request = requestRecibido;
-
-
 
 	return paquete;
 }
@@ -352,14 +335,22 @@ int crearConexion(char* ip, char* puerto)
  * 				y finalmente se libera el paquete que se envio.
  * Return:
  * 	-> :: void  */
-void enviar(t_paquete* paquete, int socket_cliente)
+void enviar(cod_request palabraReservada, char* mensaje, int socket_cliente)
 {
-	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio; // Preguntar en tp0 estaba asi:  paquete->buffer->size
+	//armamos el paquete
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->palabraReservada = palabraReservada;
+	paquete->tamanio = strlen(mensaje)+1;
+	paquete->request = malloc(paquete->tamanio);
+	memcpy(paquete->request, mensaje, paquete->tamanio);
+	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio;
+	//serializamos
 	void* paqueteAEnviar = serializar_paquete(paquete, tamanioPaquete);
-
-
-	send(socket_cliente, paqueteAEnviar, tamanioPaquete, MSG_WAITALL);
+	//enviamos
+	send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0);
 	free(paqueteAEnviar);
+	free(paquete->request);
+	free(paquete);
 }
 
 
@@ -373,12 +364,15 @@ void enviar(t_paquete* paquete, int socket_cliente)
 void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 {
 	void * buffer = malloc(tamanioPaquete);
+	int desplazamiento = 0;
 
 	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
 	// destino es un string
-	memcpy(buffer, &paquete->palabraReservada, sizeof(int));
-	memcpy(buffer + sizeof(int), &paquete->tamanio, sizeof(int));
-	memcpy(buffer + 2 * sizeof(int), paquete->request, paquete->tamanio);
+	memcpy(buffer + desplazamiento, &paquete->palabraReservada, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, &paquete->tamanio, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, paquete->request, paquete->tamanio);
 	return buffer;
 }
 
@@ -386,16 +380,23 @@ void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 /*eliminar_paquete()
  * Parametros:
  * 	-> t_paquete* ::  paquete
- * Descripcion:
+ * Descripcion: CONSIDERACIONES: el paquete es un puntero a ua estructura t_paquete y, a
+ * 				su ve paquete tiene un string, char*, llamado request
+ * 				DESCRIPCION: elimino primero la request del paquete y luego dicho paquete
  * Return:
  * 	-> :: void */
-
 void eliminar_paquete(t_paquete* paquete)
 {
 	free(paquete->request);
 	free(paquete);
 }
 
+/*liberar_conexion()
+ * Parametros:
+ * 	-> int ::  socket_cliente
+ * Descripcion: cierra la conexion que creo
+ * Return:
+ * 	-> :: void */
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
