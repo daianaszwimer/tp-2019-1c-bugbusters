@@ -52,15 +52,6 @@ char** obtenerParametros(char* request) {
 t_config* leer_config(char* nombreArchivo) {
 	return config_create(nombreArchivo);
 }
-//
-//void leer_consola(t_log* logger) {
-//	void loggear(char* leido) {
-//		log_info(logger, leido);
-//	}
-//
-//	_leer_consola_haciendo((void*) loggear);
-//}
-//
 
 /* armar_paquete()
  * Parametros:
@@ -77,21 +68,6 @@ t_paquete* armar_paquete(cod_request palabraReservada, char* request) {
 	paquete->request = request;
 	return paquete;
 }
-
-////								  requests
-//void _leer_consola_haciendo(void (accion)(char)) {
-//	char* leido = readline(">");
-//
-//	while (strncmp(leido, "", 1) != 0) {
-//		accion(leido);
-//		free(leido);
-//		leido = readline(">");
-//	}
-//
-//	free(leido);
-//}
-//
-//
 
 int iniciar_servidor(char* puerto, char* ip)
 {
@@ -118,7 +94,6 @@ int iniciar_servidor(char* puerto, char* ip)
 	listen(socket_servidor, SOMAXCONN);
     freeaddrinfo(servinfo);
     //log_trace(logger, "Listo para escuchar a mi cliente");
-    //puts("2345678");
     return socket_servidor;
 }
 
@@ -308,51 +283,6 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 	return codPalabraReservada;
 }
 
-//void enviar_mensaje(char* mensaje, int socket_cliente)
-//{
-//	t_paquete* paquete = malloc(sizeof(t_paquete));
-//
-//	paquete->codigo_operacion = MENSAJE;
-//	paquete->buffer = malloc(sizeof(t_buffer));
-//	paquete->buffer->size = strlen(mensaje) + 1;
-//	paquete->buffer->stream = malloc(paquete->buffer->size);
-//	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
-//
-//	int bytes = paquete->buffer->size + 2*sizeof(int);
-//
-//	void* a_enviar = serializar_paquete(paquete, bytes);
-//
-//	send(socket_cliente, a_enviar, bytes, 0);
-//
-//	free(a_enviar);
-//	eliminar_paquete(paquete);
-//}
-//
-//int recibir_request(int socket_cliente)
-//{
-//	int cod_request;
-//	int size;
-//	char* buffer = "";
-//	buffer = (char*) recibir_buffer(&size, socket_cliente);
-//	//strcat(buffer, "\0");   // Chequear esto
-//	//log_info(logger, "Me llego la request %s", buffer);
-//	free(buffer);
-//	return cod_request;
-//
-//}
-//
-////int recibir_operacion(int socket_cliente)
-////{
-////	int cod_op;
-////	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) != 0)
-////		return cod_op;
-////	else
-////	{
-////		close(socket_cliente);
-////		return -1;
-////	}
-////}
-//
 void* recibir_buffer(int* size, int socket_cliente)
 {
 	void* buffer = "";
@@ -363,18 +293,6 @@ void* recibir_buffer(int* size, int socket_cliente)
 
 	return buffer;
 }
-//
-//void recibir_mensaje(int socket_cliente)
-//{
-//	int size;
-//	char* buffer = "";
-//	buffer = (char*) recibir_buffer(&size, socket_cliente);
-//	//strcat(buffer, "\0");   // Chequear esto
-//	log_info(logger, "Me llego el mensaje %s", buffer);
-//	free(buffer);
-//}
-//
-////podemos usar la lista de valores para poder hablar del for y de como recorrer la lista
 
 t_paquete* recibir(int socket)
 {
@@ -401,9 +319,7 @@ t_paquete* recibir(int socket)
 
 	return paquete;
 }
-//
-//
-//
+
 ////cliente
 
 int crearConexion(char* ip, char* puerto)
@@ -427,44 +343,6 @@ int crearConexion(char* ip, char* puerto)
 
 	return socket_cliente;
 }
-//
-//
-//void crear_buffer(t_paquete* paquete)
-//{
-//	paquete->buffer = malloc(sizeof(t_buffer));
-//	paquete->buffer->size = 0;
-//	paquete->buffer->stream = NULL;
-//}
-//
-//t_paquete* crear_super_paquete(void)
-//{
-//	//me falta un malloc!
-//	t_paquete* paquete;
-//
-//	//descomentar despues de arreglar
-//	//paquete->codigo_operacion = PAQUETE;
-//	//crear_buffer(paquete);
-//	return paquete;
-//}
-//
-//t_paquete* crear_paquete(void)
-//{
-//	t_paquete* paquete = malloc(sizeof(t_paquete));
-//	paquete->codigo_operacion = PAQUETE;
-//	crear_buffer(paquete);
-//	return paquete;
-//}
-//
-//void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
-//{
-//	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int));
-//
-//	memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio, sizeof(int));
-//	memcpy(paquete->buffer->stream + paquete->buffer->size + sizeof(int), valor, tamanio);
-//
-//	paquete->buffer->size += tamanio + sizeof(int);
-//}
-//
 
 /* enviar()
  * Parametros:
