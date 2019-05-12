@@ -137,19 +137,10 @@ void liberarMemoria(void) {
 
 void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	t_paquete* paqueteRecibido;
-	//t_paquete* paquete;
-	//sem_wait(&semEnviarMensajeAMemoria);
-	//printf("El mensaje es: %s \n", mensaje);
-	// El paquete tiene el cod_request y UN request completo
-	//paquete = armar_paquete(codRequest, mensaje);
-	//printf("Voy a enviar este cod: %d \n", paquete->palabraReservada);
-	//semaforos
 	enviar(codRequest, mensaje, conexionMemoria);
-	//free(paquete);
 	free(mensaje);
 	paqueteRecibido = recibir(conexionMemoria);
 	log_info(logger_KERNEL, "Recibi de memoria %s ", paqueteRecibido->request);
-	//sem_post(&semLeerDeConsola);
 }
 
 void procesarRun(char* mensaje) {
