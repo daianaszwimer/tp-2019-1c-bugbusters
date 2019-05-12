@@ -62,12 +62,13 @@ fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para s
 
 
 void leerDeConsola(void);
+unsigned long long obtenerHoraActual();
 void validarRequest(char*);
 
 void escucharMultiplesClientes(void);
 void interpretarRequest(cod_request, char*,t_caller, int);
 char* intercambiarConFileSystem(cod_request, char*);
-//int long creame(t_timeval*);
+
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
 int estaEnCache(cod_request, char**);

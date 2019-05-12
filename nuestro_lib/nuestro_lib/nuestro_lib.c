@@ -31,6 +31,20 @@ int longitudDeArrayDeStrings(char** array){
 	}
 	return longitud;
 }
+/* obtenerParametros()
+ * Parametros:
+ *  -> request :: char*
+ *  Descripcion: recibe un request (ej: SELECT Tabla 4) y devuelve los parametros ([Tabla, 4])
+ *  Return:
+ *   -> requestSeparada :: char**
+ */
+char** obtenerParametros(char* request) {
+	char** requestSeparada;
+	requestSeparada = separarString(request);
+	//n = longitudDeArrayDeStrings(requestSeparada);
+    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
+	return requestSeparada;
+}
 
 /* leer_config()
  * Parametros:
@@ -128,12 +142,15 @@ int esperar_cliente(int socket_servidor)
  * 	-> exit :: int */
 int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 	char** request = string_n_split(mensaje, 2, " ");
+
 	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
 	if(validarPalabraReservada(codPalabraReservada, componente, logger)== TRUE){
 		if(request[1]==NULL){
 			if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
+				free(request);
 				return EXIT_SUCCESS;
 			}else{
+				free(request);
 				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
 				return QUERY_ERROR;
 			}
@@ -141,7 +158,8 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 
 		char** parametros = separarString(request[1]);
 		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-
+		//free(request);
+		//free(parametros);
 		if( validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger)== TRUE) {
 			return EXIT_SUCCESS;
 		}
