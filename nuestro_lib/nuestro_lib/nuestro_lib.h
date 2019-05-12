@@ -68,7 +68,7 @@ void iterator(char*);
 char** separarString(char*);
 char** obtenerParametros(char*);
 int longitudDeArrayDeStrings(char**);
-char** obtenerParametros(char*);
+
 
 
 int crearConexion(char*, char*);

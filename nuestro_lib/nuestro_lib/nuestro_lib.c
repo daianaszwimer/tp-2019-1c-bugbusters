@@ -38,13 +38,13 @@ int longitudDeArrayDeStrings(char** array){
  *  Return:
  *   -> requestSeparada :: char**
  */
-char** obtenerParametros(char* request) {
-	char** requestSeparada;
-	requestSeparada = separarString(request);
-	//n = longitudDeArrayDeStrings(requestSeparada);
-    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
-	return requestSeparada;
-}
+//char** obtenerParametros(char* request) {
+//	char** requestSeparada;
+//	requestSeparada = separarString(request);
+//	//n = longitudDeArrayDeStrings(requestSeparada);
+//    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
+//	return requestSeparada;
+//}
 
 /* leer_config()
  * Parametros:

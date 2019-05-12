@@ -19,7 +19,7 @@
 typedef enum
 {
 	CONSOLE,
-	HIMSELVE
+	HIMSELF
 } t_caller;
 
 typedef enum
