@@ -5,12 +5,11 @@ int main(void) {
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 
-	//	SEMAFOROS
-	//sem_init(&semLiberarConsola, 0, 0);
+	//Semáforos
 	sem_init(&semRequestNew, 0, 0);
-	//sem_init(&semEnviarMensajeAMemoria, 0, 0);
+	sem_init(&semMColaNew, 0, 1);
 
-	//HILOS
+	//Hilos
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)conectarAMemoria, NULL);
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNew, NULL);
@@ -37,38 +36,54 @@ void leerDeConsola(void){
 		if (!strcmp(mensaje, "\0")) {
 			break;
 		}
+		sem_wait(&semMColaNew);
 		//agregar request a la cola de new
 		queue_push(new, mensaje);
+		sem_post(&semMColaNew);
 		sem_post(&semRequestNew);
 
-		//sem_wait(&semLiberarConsola);
 		free(mensaje);
 	}
 }
 
-void planificarNew(void) {
-	sem_wait(&semRequestNew);
+/*
+ Planificación
+*/
 
+void planificarNewAReady(void) {
+	while(1) {
+		sem_wait(&semRequestNew);
+		sem_wait(&semMColaNew);
+		if(validarRequest(queue_pop(&new))) {
+			//queue_pop va con &?
+			sem_post(&semMColaNew);
+			//validar
+			//agregar a
+		} else {
+			sem_post(&semMColaNew);
+			//error
+		}
+	}
 }
-
 
 void planificarExec(void) {
 
 }
-/*
- * Se ocupa de validar y si esta todo bien, delega
- * */
-void validarRequest(char* mensaje) {
+
+int validarRequest(char* mensaje) {
 	int codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 	switch(codValidacion) {
 		case EXIT_SUCCESS:
-			manejarRequest(mensaje);
+			return TRUE;
+			//manejarRequest(mensaje);
 			break;
 		case EXIT_FAILURE:
 		case QUERY_ERROR:
+			return FALSE;
 			//informar error
 			break;
 		default:
+			return FALSE;
 			break;
 	}
 }
@@ -76,6 +91,9 @@ void validarRequest(char* mensaje) {
 /*
  * Se ocupa de delegar la request
  * */
+void reservarRecursos(char* request) {
+
+}
 void manejarRequest(char* mensaje) {
 	cod_request codRequest; // es la palabra reservada (ej: SELECT)
 	char** request;
@@ -103,8 +121,6 @@ void manejarRequest(char* mensaje) {
 }
 
 void conectarAMemoria(void) {
-	//todo: esperar que se levante memoria
-	//semaforos
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 }
 
@@ -116,7 +132,7 @@ void liberarMemoria(void) {
 
 /*
  * Funciones que procesan requests
- * */
+*/
 
 void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	t_paquete* paquete;
@@ -143,6 +159,5 @@ void procesarRun(char* mensaje) {
 			validarRequest(request);
 		}
 		fclose(archivoLql);
-		//sem_post(&semLiberarConsola);
 	}
 }
