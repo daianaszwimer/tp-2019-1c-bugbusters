@@ -148,7 +148,7 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			}else{
 				free(request);
 				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
-				return QUERY_ERROR;
+				return NUESTRO_ERROR;
 			}
 		}
 
@@ -160,11 +160,11 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			return EXIT_SUCCESS;
 		}
 		else {
-			return QUERY_ERROR;
+			return NUESTRO_ERROR;
 		}
 	}
 	else {
-		return QUERY_ERROR;
+		return NUESTRO_ERROR;
 	}
 }
 
@@ -181,7 +181,7 @@ int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t
 	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
 	if(resultadoCantParametros == EXIT_FAILURE){
 		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
-		return QUERY_ERROR;
+		return NUESTRO_ERROR;
 	}else{
 		return EXIT_SUCCESS;
 	}
@@ -227,7 +227,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			default:
-				retorno = QUERY_ERROR;
+				retorno = NUESTRO_ERROR;
 				break;
 	}
 	return retorno;
@@ -245,7 +245,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
 	if(codigoPalabraReservada == -1) {
 		log_info(logger, "Debe ingresar un request válido");
-		return QUERY_ERROR;
+		return NUESTRO_ERROR;
 	}
 	return EXIT_SUCCESS;
 }
@@ -290,7 +290,7 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 		codPalabraReservada = (componente == KERNEL) ? 8 : -1;
 	}
 	else {
-		codPalabraReservada = QUERY_ERROR;
+		codPalabraReservada = NUESTRO_ERROR;
 	}
 	return codPalabraReservada;
 }

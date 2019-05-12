@@ -28,7 +28,7 @@
 #define PARAMETROS_RUN 1
 #define PARAMETROS_METRICS 0
 
-#define QUERY_ERROR -1
+//#define NUESTRO_ERROR -1
 
 typedef enum
 {
@@ -48,7 +48,8 @@ typedef enum
 	JOURNAL,
 	ADD,
 	RUN,
-	METRICS
+	METRICS,
+	NUESTRO_ERROR = -1
 } cod_request;
 
 /*typedef struct
