@@ -35,6 +35,7 @@ void conectarAMemoria(void) {
 void leerDeConsola(void){
 	char* mensaje;
 	while (1) {
+		printf("while 1 \n");
 		mensaje = readline(">");
 		//todo: usar exit
 		if (!strcmp(mensaje, "\0")) {
@@ -42,11 +43,11 @@ void leerDeConsola(void){
 		}
 		sem_wait(&semMColaNew);
 		//agregar request a la cola de new
-		queue_push(new, mensaje);
+		queue_push(&new, mensaje);
 		sem_post(&semMColaNew);
 		sem_post(&semRequestNew);
 
-		free(mensaje);
+	//	free(mensaje);
 	}
 }
 
@@ -56,10 +57,10 @@ void leerDeConsola(void){
 
 void planificarNewAReady(void) {
 	while(1) {
+		printf("esta porqueria tiene espera activa?? \n");
 		sem_wait(&semRequestNew);
 		sem_wait(&semMColaNew);
-		if(validarRequest(queue_pop(new))) {
-			//queue_pop va con &?
+		if(validarRequest(queue_pop(&new))) {
 			sem_post(&semMColaNew);
 			//validar
 			//agregar a
@@ -75,6 +76,8 @@ void planificarExec(void) {
 }
 
 int validarRequest(char* mensaje) {
+	printf("validar %s \n", mensaje);
+	//aca se va a poder validar que se haga select/insert sobre tabla existente?
 	int codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 	switch(codValidacion) {
 		case EXIT_SUCCESS:
@@ -102,6 +105,7 @@ void reservarRecursos(char* request) {
 void manejarRequest(char* mensaje) {
 	cod_request codRequest; // es la palabra reservada (ej: SELECT)
 	char** request;
+	t_paquete* respuesta;
 	request = separarString(mensaje);
 	codRequest = obtenerCodigoPalabraReservada(request[0], KERNEL);
 	switch(codRequest) {
@@ -111,7 +115,7 @@ void manejarRequest(char* mensaje) {
 		case DESCRIBE:
 		case DROP:
 		case JOURNAL:
-			enviarMensajeAMemoria(codRequest, mensaje);
+			respuesta = enviarMensajeAMemoria(codRequest, mensaje);
 			break;
 		case ADD:
 			break;
@@ -135,12 +139,13 @@ void liberarMemoria(void) {
  * Funciones que procesan requests
 */
 
-void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
+t_paquete* enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	t_paquete* paqueteRecibido;
 	enviar(codRequest, mensaje, conexionMemoria);
 	free(mensaje);
 	paqueteRecibido = recibir(conexionMemoria);
-	log_info(logger_KERNEL, "Recibi de memoria %s ", paqueteRecibido->request);
+	log_info(logger_KERNEL, "Recibi de memoria %s \n", paqueteRecibido->request);
+	return paqueteRecibido;
 }
 
 void procesarRun(char* mensaje) {
@@ -171,5 +176,5 @@ void procesarAdd(int memoria) {
 	//y guardar en SC la memoria que se encuentra en el config
 	memoriaSc.ip = config_get_string_value(config, "IP_MEMORIA");
 	memoriaSc.puerto = config_get_string_value(config, "PUERTO_MEMORIA");
-	printf("Asigne al criterio SC la memoria con ip: %s y puerto %s", memoriaSc.ip, memoriaSc.puerto);
+	printf("Asigne al criterio SC la memoria con ip: %s y puerto %s \n", memoriaSc.ip, memoriaSc.puerto);
 }

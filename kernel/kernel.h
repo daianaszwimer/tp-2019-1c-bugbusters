@@ -50,7 +50,7 @@ void planificarExec(void);
 int validarRequest(char *);
 void manejarRequest(char *);
 //funciones que procesan requests:
-void enviarMensajeAMemoria(cod_request, char*);
+t_paquete* enviarMensajeAMemoria(cod_request, char*);
 void procesarRun(char*);
 void procesarAdd(int);
 
