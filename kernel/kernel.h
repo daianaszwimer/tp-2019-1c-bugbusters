@@ -15,11 +15,9 @@
 
 typedef struct
 {
-	cod_request palabraReservada;
-	int tamanio;
-	void* request;
+	char* ip;
+	char* puerto;
 } config_memoria;
-
 
 t_log* logger_KERNEL;
 int conexionMemoria;
@@ -38,6 +36,7 @@ pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		//hilo que conecta a memoria
 pthread_t hiloPlanificarNew;		//hilo para planificar requests de new a ready
 pthread_t hiloPlanificarExec;		//hilo para planificar requests de ready a exec y viceversa
+//todo: hilo que loguea cada x tiempo
 
 void conectarAMemoria(void);
 void liberarMemoria(void);
