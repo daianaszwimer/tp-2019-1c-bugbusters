@@ -76,7 +76,7 @@ void manejarRequest(char* mensaje) {
 		case ADD:
 			break;
 		case RUN:
-			//parsear
+			procesarRun(mensaje);
 			break;
 		case METRICS:
 			break;
@@ -100,6 +100,10 @@ void liberarMemoria(void) {
 	log_destroy(logger_KERNEL);
 }
 
+/*
+ * Funciones que procesan requests
+ * */
+
 void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	t_paquete* paqueteRecibido;
 	//t_paquete* paquete;
@@ -115,4 +119,22 @@ void enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	paqueteRecibido = recibir(conexionMemoria);
 	log_info(logger_KERNEL, "Recibi de memoria %s ", paqueteRecibido->request);
 	//sem_post(&semLeerDeConsola);
+}
+
+void procesarRun(char* mensaje) {
+	FILE *archivoLql;
+	char** parametros;
+	parametros = obtenerParametros(mensaje);
+	printf("ingresaste como archivo %s \n", parametros[0]);
+	archivoLql = fopen(parametros[0], "r");
+	if (archivoLql == NULL) {
+		log_error(logger_KERNEL, "No existe un archivo en esa ruta");
+	} else {
+		char* palabra;
+		//no anda este while
+		while(fscanf(archivoLql, "%s", palabra) == 1) {
+			//	interpretarRequest(request);
+		}
+		fclose(archivoLql);
+	}
 }

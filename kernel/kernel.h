@@ -23,10 +23,13 @@ pthread_t hiloConectarAMemoria;		//hilo que conecta a memoria
 
 void conectarAMemoria(void);
 void liberarMemoria(void);
+void leerDeConsola(void);
+//validar + delegarrequests
 void interpretarRequest(char *);
 void manejarRequest(char *);
-void leerDeConsola(void);
+//funciones que procesan requests:
 void enviarMensajeAMemoria(cod_request, char*);
+void procesarRun(char*);
 
 
 #endif /* KERNEL_H_*/
