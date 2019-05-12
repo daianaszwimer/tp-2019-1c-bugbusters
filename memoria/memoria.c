@@ -64,7 +64,7 @@ void leerDeConsola(void){
  * Return:
  * 	-> :: unsigned long long */
 unsigned long long obtenerHoraActual(){
-	t_timeval tv;
+	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	unsigned long long millisegundosDesdeEpoch = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
 	return millisegundosDesdeEpoch;
@@ -75,9 +75,9 @@ void validarRequest(char* mensaje){
 	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
 	switch(codValidacion){
 		case EXIT_SUCCESS:
-			interpretarRequest(codValidacion, mensaje,CONSOLE,NULL);
+			interpretarRequest(codValidacion, mensaje,CONSOLE,-1);
 			break;
-		case QUERY_ERROR:
+		case NUESTRO_ERROR:
 			//es la q hay q hacerla generica
 			log_error(logger_MEMORIA, "No es valida la request");
 			break;
@@ -133,7 +133,7 @@ void escucharMultiplesClientes() {
 
 		if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 			int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
-			numeroDeClientes = (int) list_add(descriptoresClientes, (int) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
+			numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 			numeroDeClientes++;
 		}
 	}
@@ -167,7 +167,8 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 		case QUERY_ERROR:
 			if(caller == HIMSELF){
 				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-				int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+				int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+				// TODO: Chequear si el -1 se puede castear como int*
 				break;
 			}
 			else{
