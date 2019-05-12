@@ -239,9 +239,9 @@ int estaEnCache(cod_request palabraReservada, char** parametros){
 	int keyABuscar = parametros[1];
 
 	puts("voy  ver si es la tablaA");
-	if( tablaABuscar == "tablaA")
+	if( strcmp(tablaABuscar,"tablaA"))
 	{
-		printf("%d se encuentra la tabla %d\n",tablaABuscar);
+		printf("%d se encuentra la tabla %s\n",tablaABuscar);
 		return TRUE;
 	}else{
 		return FALSE;
