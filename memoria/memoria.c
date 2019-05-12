@@ -1,14 +1,20 @@
 #include "memoria.h"
 
 int main(void) {
-
-
+	t_pagina* pag= (t_pagina*)malloc(sizeof(t_pagina));
+	pag->timesamp = 12345;
+    pag->key=1;
+    pag->value="hola";
+    t_tablaDePaginas* tablaA= (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
+	tablaA->numeroDePag=1;
+ 	tablaA->pagina= pag;
+	tablaA->modificado = SINMODIFICAR;
 
 //	printf("%llu \n", obtenerHoraActual());
 
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
-	datoEstaEnCache = FALSE;
+	//datoEstaEnCache = TRUE;
 	//conectar con file system
 	conectarAFileSystem();
 
@@ -90,6 +96,7 @@ void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_LFS"),
 			config_get_string_value(config, "PUERTO_LFS"));
+	log_info(logger_MEMORIA, "SE CONECTO CN LFS");
 }
 
 void escucharMultiplesClientes() {
@@ -123,8 +130,9 @@ void escucharMultiplesClientes() {
 				cod_request palabraReservada = paqueteRecibido->palabraReservada;
 				char* request = paqueteRecibido->request;
 				printf("El codigo que recibi es: %s \n", request);
+				printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 				interpretarRequest(palabraReservada,request,HIMSELVE, i);
-				printf("Del bd \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+
 			}
 		}
 
@@ -137,6 +145,8 @@ void escucharMultiplesClientes() {
 }
 
 void interpretarRequest(cod_request palabraReservada,char* request,t_caller caller, int i) {
+
+
 	switch(palabraReservada) {
 
 		case SELECT:
@@ -197,12 +207,19 @@ char* intercambiarConFileSystem(cod_request palabraReservada, char* request){
  * 	-> :: void */
 void procesarSelect(cod_request palabraReservada, char* request, t_caller caller, int i) {
 
-	if(datoEstaEnCache == TRUE) {
+	char** parametros = obtenerParametros(request);
+	puts("ANTES DE IR A BUSCAR A CACHE");
+	if(estaEnCache(palabraReservada, parametros) == TRUE) {
+		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+
 
 	} else {
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 		char* respuesta = intercambiarConFileSystem(palabraReservada,request);
+
+
+
 		if(caller == HIMSELVE) {
 			enviar(palabraReservada, request, (int) list_get(descriptoresClientes,i));
 		} else if(caller == CONSOLE) {
@@ -211,14 +228,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 //			log_error();
 		}
 
-//		t_pagina* pag;
-//		pag->timesamp = 12345;
-//		pag->key=1;
-//		pag->value="hola";
-//		t_tablaDePaginas tablaDePag = tablaDePaginas[0];
-//		tablaDePag.numeroDePag=1;
-//		tablaDePag.pagina= pag;
-//		tablaDePag.modificado = SINMODIFICAR;
+
 //
 //		printf("numer de pag %i\n",tablaDePag.numeroDePag);
 //		printf("flag modificado %i\n",tablaDePag.modificado);
@@ -227,6 +237,22 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 //		printf("timestamp %s\n",pag->value);
 
 	}
+}
+
+int estaEnCache(cod_request palabraReservada, char** parametros){
+
+	char* tablaABuscar= parametros[0];
+	int keyABuscar = parametros[1];
+
+	puts("voy  ver si es la tablaA");
+	if( tablaABuscar == "tablaA")
+	{
+		printf("%d se encuentra la tabla %d\n",tablaABuscar);
+		return TRUE;
+	}else{
+		return FALSE;
+	}
+
 }
 
 /*procesarInsert()

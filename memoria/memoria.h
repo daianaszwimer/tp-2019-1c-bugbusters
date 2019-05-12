@@ -45,7 +45,7 @@ typedef struct{
 t_log* logger_MEMORIA;
 t_config* config;
 
-t_tablaDePaginas tablaDePaginas[1];
+t_tablaDePaginas* tablaDePaginas[1];
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
@@ -70,5 +70,5 @@ char* intercambiarConFileSystem(cod_request, char*);
 //int long creame(t_timeval*);
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
-
+int estaEnCache(cod_request, char**);
 #endif /* MEMORIA_H_ */
