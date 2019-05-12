@@ -45,7 +45,17 @@ typedef struct{
 t_log* logger_MEMORIA;
 t_config* config;
 
-t_tablaDePaginas* tablaDePaginas[1];
+//t_tablaDePaginas* tablaDePaginas[1];
+//
+t_pagina* pag;
+
+t_tablaDePaginas* tablaA;
+
+
+
+//
+
+
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje

@@ -1,13 +1,14 @@
 #include "memoria.h"
 
 int main(void) {
-	t_pagina* pag= (t_pagina*)malloc(sizeof(t_pagina));
+	tablaA= (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
+	pag= (t_pagina*)malloc(sizeof(t_pagina));
 	pag->timesamp = 12345;
-    pag->key=1;
-    pag->value="hola";
-    t_tablaDePaginas* tablaA= (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
+	pag->key=1;
+	pag->value="hola";
+
 	tablaA->numeroDePag=1;
- 	tablaA->pagina= pag;
+	tablaA->pagina= pag;
 	tablaA->modificado = SINMODIFICAR;
 
 	//printf("%llu \n", obtenerHoraActual());
@@ -237,11 +238,12 @@ int estaEnCache(cod_request palabraReservada, char** parametros){
 	char* tablaABuscar= parametros[0];
 	int keyABuscar = parametros[1];
 
-	puts("voy  ver si es la tablaA");
 	if(!strcmp(tablaABuscar,"tablaA"))
 	{
-		printf("se encuentra la tabla %s\n",tablaABuscar);
+		if(keyABuscar==tablaA->pagina->key){
+			puts("Soy muy feliz");
 		return TRUE;
+		}
 	}else{
 		return FALSE;
 	}
