@@ -10,7 +10,7 @@ int main(void) {
  	tablaA->pagina= pag;
 	tablaA->modificado = SINMODIFICAR;
 
-	printf("%llu \n", obtenerHoraActual());
+	//printf("%llu \n", obtenerHoraActual());
 
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
@@ -205,13 +205,12 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	puts("ANTES DE IR A BUSCAR A CACHE");
 	if(estaEnCache(palabraReservada, parametros) == TRUE) {
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-
+		enviar(palabraReservada, request, (int) list_get(descriptoresClientes,i));
 
 	} else {
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 		char* respuesta = intercambiarConFileSystem(palabraReservada,request);
-
 
 
 		if(caller == HIMSELF) {
@@ -239,9 +238,9 @@ int estaEnCache(cod_request palabraReservada, char** parametros){
 	int keyABuscar = parametros[1];
 
 	puts("voy  ver si es la tablaA");
-	if( tablaABuscar == "tablaA")
+	if(!strcmp(tablaABuscar,"tablaA"))
 	{
-		printf("%d se encuentra la tabla %d\n",tablaABuscar);
+		printf("se encuentra la tabla %s\n",tablaABuscar);
 		return TRUE;
 	}else{
 		return FALSE;
