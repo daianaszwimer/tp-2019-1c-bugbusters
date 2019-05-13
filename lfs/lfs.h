@@ -17,6 +17,7 @@ t_config* config;
 t_list* descriptoresClientes;
 fd_set descriptoresDeInteres;			// Coleccion de descriptores de interes para select
 #define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"
+char* raiz;
 
 pthread_t hiloRecibirDeMemoria;			// hilo que lee de consola
 

@@ -1,14 +1,20 @@
 #include "lfs.h"
 #include <errno.h>
 #include <assert.h>
+#include <stdarg.h>
+
 
 int main(void){
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
-	inicializarLfs();
-	/*create("TABLA1", "SC", 3, 5000);
 
+
+
+	inicializarLfs();
+
+	create("TABLA1", "SC", 3, 5000);
+/*
 	pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionMemoria, NULL);
 
 	leerDeConsola();
@@ -16,7 +22,8 @@ int main(void){
 	pthread_join(hiloRecibirDeMemoria, NULL);
 	 */
 
-	return EXIT_SUCCESS;
+	free(raiz);
+	return 0;
 }
 
 void leerDeConsola(void){
@@ -121,29 +128,29 @@ void interpretarRequest(int palabraReservada,char* request, int i) {
  * Return:  */
 void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 	// La carpeta metadata y la de los bloques no se crea aca, se crea apenas levanta el lfs
-	char* raiz = config_get_string_value(config, "PUNTO_MONTAJE");
-	char* pathTabla = NULL;
-	pathTabla = strdup(raiz);
-	strcat(pathTabla, "tables/");
-	strcat(pathTabla, nombreTabla);
-	strcat(pathTabla, "/");
+
+	size_t sizeOfPathTable = snprintf(NULL, 0, "%s%s%s%s", PATH ,raiz, "/Tablas/", nombreTabla) + 1;
+	char* pathTabla = (char*) malloc(sizeOfPathTable);
+	sprintf(pathTabla, "%s%s%s%s", PATH, raiz, "/Tablas/", nombreTabla);
+
 
 	/* Creamos el archivo Metadata */
-	char pathMetadata[100] = "/home/utnso/tp-2019-1c-bugbusters/lfs";
-	strcat(pathMetadata, pathTabla);
 
-//	int error = mkdir_p(pathMetadata);
-//	if (error == 0){
-//		strcat(pathMetadata, "Metadata.bin");
-//
-	FILE* metadata = fopen("Metadata.bin", "wb+");
-	if(metadata != NULL) {
-		char* consistency = "CONSISTENCY";
-		fwrite(&consistency, sizeof(consistency), 1, metadata);
-		fclose(metadata);
-	}
+	int error = mkdir_p(pathTabla);
+	if (error == 0){
+
+		char* pathMetadata = strdup(pathTabla);
+		pathMetadata = (char*) realloc(pathMetadata, strlen(pathTabla) + sizeof(char) * 12);
+		strcat(pathMetadata, "/Metadata.bin");
+
+		FILE* metadata = fopen(pathMetadata, "w+");
+		if(metadata != NULL) {
+			char* consistency = strdup(tipoDeConsistencia);
+			fwrite(&tipoDeConsistencia, strlen(consistency), 1, metadata);
+			fclose(metadata);
+		}
 	//free(pathMetadata);
-	free(pathTabla);
+		free(pathTabla);
 //		//free(consistency);
 //
 //		//t_config* metadata = config_create("Metadata.config");
@@ -171,7 +178,7 @@ void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 //			fwrite(&bloques, sizeof(bloques), 1, particion);
 //			free(pathParticion);
 //		}
-//	}
+	}
 //
 //	free(pathTabla);
 
@@ -217,25 +224,30 @@ int mkdir_p(const char *path)
 }
 
 void inicializarLfs() {
-	char* raiz = config_get_string_value(config, "PUNTO_MONTAJE");
+	raiz = config_get_string_value(config, "PUNTO_MONTAJE");
 	char* fs_Lissandra = strdup(PATH);
+	fs_Lissandra = (char*) realloc(fs_Lissandra, strlen(fs_Lissandra) + strlen(raiz) );
 	strcat(fs_Lissandra, raiz);
 
 	char* tablas = strdup(fs_Lissandra);
-	char* metadata = strdup(fs_Lissandra);
-	char* bloques = strdup(fs_Lissandra);
+	tablas = (char*) realloc(tablas, strlen(fs_Lissandra) + sizeof(char) * 7);
+	strcat(tablas, "/Tablas");
 
-	strcat(tablas, "Tables/");
-	strcat(metadata, "Metadata/");
-	strcat(bloques, "Bloques/");
+	char* metadata = strdup(fs_Lissandra);
+	metadata = (char*) realloc(metadata, strlen(fs_Lissandra) + sizeof(char) * 9);
+	strcat(metadata, "/Metadata");
+
+	char* bloques = strdup(fs_Lissandra);
+	bloques = (char*) realloc(bloques, strlen(fs_Lissandra) + sizeof(char) * 8);
+	strcat(bloques, "/Bloques");
 
 	mkdir_p(tablas);
 	mkdir_p(metadata);
 	mkdir_p(bloques);
 
+
+	free(fs_Lissandra);
 	free(tablas);
 	free(metadata);
 	free(bloques);
-
 }
-
