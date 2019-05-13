@@ -51,12 +51,6 @@ typedef enum
 	METRICS
 } cod_request;
 
-/*typedef struct
-{
-	int size;
-	void* stream;
-} t_buffer;
-*/
 typedef struct
 {
 	cod_request palabraReservada;
@@ -67,13 +61,11 @@ typedef struct
 void iterator(char*);
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
-
+char* concatenar(char*, ...);
 
 int crearConexion(char*, char*);
 t_config* leer_config(char*);
-//void leer_consola(t_log* logger);
 t_paquete* armar_paquete(cod_request, char*);
-//void _leer_consola_haciendo(void(*accion)(char*));
 int validarMensaje(char*, Componente, t_log*);
 int cantDeParametrosEsCorrecta(int,int);
 int validarPalabraReservada(int,Componente, t_log*);
@@ -81,19 +73,10 @@ int validadCantDeParametros(int, int, t_log*);
 
 int obtenerCodigoPalabraReservada(char*, Componente);
 
-////servidor
 void* recibir_buffer(int*, int);
 int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
-//void recibir_mensaje(int);
-//int recibir_operacion(int);
-//
-////cliente
-//void enviar_mensaje(char* mensaje, int socket_cliente);
-//t_paquete* crear_paquete(void);
-//t_paquete* crear_super_paquete(void);
-//void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void* serializar_paquete(t_paquete* , int);
 void enviar(t_paquete*, int);
 void eliminar_paquete(t_paquete*);
