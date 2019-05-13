@@ -28,11 +28,9 @@ t_queue* ready;
 t_queue* exec;
 config_memoria memoriaSc;
 
-sem_t semLeerDeConsola;				// semaforo para el leer consola
-sem_t semEnviarMensajeAMemoria;		// semaforo para enviar mensaje
-sem_t semLiberarConsola;			// semaforo para liberar mensaje de consola
 sem_t semRequestNew;				// semaforo para planificar requests en new
 sem_t semMColaNew;					// semafoto mutex para cola de new
+sem_t semMultiprocesamiento;		// semaforo contador para limitar requests en exec
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		//hilo que conecta a memoria
@@ -45,7 +43,7 @@ void liberarMemoria(void);
 void leerDeConsola(void);
 //planificar requests
 void planificarNewAReady(void);
-void planificarExec(void);
+void planificarReadyAExec(void);
 //validar + delegar requests
 int validarRequest(char *);
 void manejarRequest(char *);

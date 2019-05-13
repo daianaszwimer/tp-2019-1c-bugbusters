@@ -4,16 +4,17 @@ int main(void) {
 	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
-
+	int multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
 	//Semáforos
 	sem_init(&semRequestNew, 0, 0);
 	sem_init(&semMColaNew, 0, 1);
+	sem_init(&semMultiprocesamiento, 0, multiprocesamiento);
 
 	//Hilos
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)conectarAMemoria, NULL);
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
-	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarExec, NULL);
+	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
 
 	new = queue_create();
 	ready = queue_create();
@@ -46,8 +47,7 @@ void leerDeConsola(void){
 		queue_push(new, mensaje);
 		sem_post(&semMColaNew);
 		sem_post(&semRequestNew);
-
-	//	free(mensaje);
+		//si descomento esto, tira segmentation fault -> free(mensaje);
 	}
 }
 
@@ -59,10 +59,11 @@ void planificarNewAReady(void) {
 	while(1) {
 		sem_wait(&semRequestNew);
 		sem_wait(&semMColaNew);
-		if(validarRequest(queue_pop(new))) {
+		char* request = queue_pop(new);
+		if(validarRequest(request)) {
 			sem_post(&semMColaNew);
-			//validar
-			//agregar a
+			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
+			queue_push(ready, request);
 		} else {
 			sem_post(&semMColaNew);
 			//error
@@ -70,7 +71,17 @@ void planificarNewAReady(void) {
 	}
 }
 
-void planificarExec(void) {
+void reservarRecursos(char* request) {
+	//desarmar archivo lql y ponerlo en una cola
+}
+
+void planificarReadyAExec(void) {
+	while(1) {
+		sem_wait(&semMultiprocesamiento);
+		//se crea hilo para el request y dentro del hilo se hace
+		//el post que esta abajo
+		sem_post(&semMultiprocesamiento);
+	}
 	//cuando se ejecuta una sola linea se hace lo mismo que cuando se ejcuta una linea de un archivo de RUN
 }
 
@@ -96,9 +107,6 @@ int validarRequest(char* mensaje) {
 /*
  * Se ocupa de delegar la request
 */
-void reservarRecursos(char* request) {
-	//desarmar archivo lql y ponerlo en una cola
-}
 
 void manejarRequest(char* mensaje) {
 	cod_request codRequest; // es la palabra reservada (ej: SELECT)
