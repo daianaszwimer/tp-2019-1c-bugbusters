@@ -29,7 +29,7 @@ typedef enum
 } t_flagModificado;
 typedef struct{
 	long int timesamp;
-	int key;
+	char* key;
 	char* value; // al inicializarse, lfs me tiene q decir el tamanio
 }t_pagina;
 typedef struct{

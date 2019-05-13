@@ -4,7 +4,7 @@ int main(void) {
 	tablaA= (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
 	pag= (t_pagina*)malloc(sizeof(t_pagina));
 	pag->timesamp = 12345;
-	pag->key=1;
+	pag->key="1";
 	pag->value="hola";
 
 	tablaA->numeroDePag=1;
@@ -164,7 +164,7 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
-		case QUERY_ERROR:
+		case NUESTRO_ERROR:
 			if(caller == HIMSELF){
 				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 				int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
@@ -239,9 +239,9 @@ int estaEnCache(cod_request palabraReservada, char** parametros){
 	char* tablaABuscar= parametros[0];
 	int keyABuscar = parametros[1];
 
-	if(!strcmp(tablaABuscar,"tablaA"))
+	if(strcmp(tablaABuscar,"tablaA")==0)
 	{
-		if(keyABuscar==tablaA->pagina->key){
+		if(strcmp(keyABuscar,tablaA->pagina->key)){
 			puts("Soy muy feliz");
 		return TRUE;
 		}
