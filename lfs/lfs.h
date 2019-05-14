@@ -29,6 +29,7 @@ void interpretarRequest(int, char*, int);
 void leerDeConsola(void);
 void create(char*, char*, int, int);
 int obtenerBloqueDisponible(void);
+int crearDirectorio(char*);
 int mkdir_p(const char*);
 void inicializarLfs(void);
 
