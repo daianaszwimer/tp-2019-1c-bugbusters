@@ -147,43 +147,32 @@ void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 
 		FILE* metadata = fopen(pathMetadata, "w+");
 		if (metadata != NULL) {
-			char* consistency = strdup(tipoDeConsistencia);
-			fwrite(&tipoDeConsistencia, strlen(consistency), 1, metadata);
+			fwrite(&tipoDeConsistencia, strlen(tipoDeConsistencia), 1, metadata);
+			fwrite(&numeroDeParticiones, sizeof(numeroDeParticiones), 1, metadata);
+			fwrite(&tiempoDeCompactacion, sizeof(tiempoDeCompactacion), 1, metadata);
 			fclose(metadata);
-			free(consistency);
 		}
 		free(pathMetadata);
-		free(pathTabla);
-//		//free(consistency);
-//
-//		//t_config* metadata = config_create("Metadata.config");
-//
-//
-//
-//		/*sprintf(numeroDeParticiones, "PARTITIONS=%i", _numeroDeParticiones);
-//		sprintf(tiempoDeCompactacion, "COMPACTION_TIME=%i", _tiempoDeCompactacion);*/
-//
-//		/*config_set_value(metadata, "CONSISTENCY", tipoDeConsistencia);
-//		config_set_value(metadata, "PARTITIONS", numeroDeParticiones);
-//		config_set_value(metadata, "COMPACTION_TIME", tiempoDeCompactacion);*/
-//		int x = config_save(metadata);
-//
-//		/* Creamos las particiones */
-//		for(int i = 0; i < numeroDeParticiones; i++) {
-//			char* pathParticion = strdup(pathTabla);
-//			strcat(pathParticion, i);
-//			strcat(pathParticion, ".bin");
-//			FILE* particion = fopen(pathParticion, "w+");
-//			char* tamanio = "Size=0";
-//			char* bloques;
-//			sprintf(bloques,"Block=[%i]", obtenerBloqueDisponible()); // Hay que agregar un bloque por particion, no se si uno cualquiera o que
-//			fwrite(&tamanio, sizeof(tamanio), 1, particion);
-//			fwrite(&bloques, sizeof(bloques), 1, particion);
-//			free(pathParticion);
-//		}
+
+		char* _i = strdup("");
+		/* Creamos las particiones */
+		for(int i = 0; i < numeroDeParticiones; i++) {
+			sprintf(_i, "%d", i); // Convierto i de int a string
+			char* pathParticion = concatenar(pathTabla, "/", _i, ".bin", NULL);
+			FILE* particion = fopen(pathParticion, "w+");
+			char* tamanio = strdup("Size=0");
+			char* bloques = strdup("");
+			sprintf(bloques,"Block=[%d]", obtenerBloqueDisponible()); // Hay que agregar un bloque por particion, no se si uno cualquiera o que
+			fwrite(&tamanio, sizeof(tamanio), 1, particion);
+			fwrite(&bloques, sizeof(bloques), 1, particion);
+			free(pathParticion);
+			free(tamanio);
+			free(bloques);
+		}
+		free(_i);
 	}
-//
-//	free(pathTabla);
+
+	free(pathTabla);
 
 }
 
