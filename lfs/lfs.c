@@ -10,14 +10,14 @@ int main(void) {
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 	
-	inicializarLfs();
-	create("TABLA1", "SC", 3, 5000);
+	//inicializarLfs();
+	//create("TABLA1", "SC", 3, 5000);
 
-	/*pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL);
+	pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL);
 
 	leerDeConsola();
 
-	pthread_join(hiloRecibirDeMemoria, NULL);*/
+	pthread_join(hiloRecibirDeMemoria, NULL);
 	
 	log_destroy(logger_LFS);
 	config_destroy(config);
@@ -31,9 +31,24 @@ void leerDeConsola(void) {
 		if (!strcmp(mensaje, "\0")) {
 			break;
 		}
-		codValidacion = validarMensaje(mensaje, KERNEL, logger_LFS);
-		printf("El mensaje es: %s \n", mensaje);
-		printf("Codigo de validacion: %d \n", codValidacion);
+		validarRequest(mensaje);
+		free(mensaje);
+	}
+}
+
+void validarRequest(char* mensaje){
+	int codValidacion;
+	codValidacion = validarMensaje(mensaje, LFS, logger_LFS);
+	switch(codValidacion){
+		case EXIT_SUCCESS:
+			interpretarRequest(codValidacion, mensaje,CONSOLE);
+			break;
+		case NUESTRO_ERROR:
+			//es la q hay q hacerla generica
+			log_error(logger_LFS, "La request no es valida");
+			break;
+		default:
+			break;
 	}
 }
 
@@ -58,11 +73,45 @@ void procesarRequest(int memoria_fd){
 	while(1){
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
-		printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
-
+		//printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
+		printf("De la memoria nro: %d \n", memoria_fd);
+		interpretarRequest(palabraReservada, paqueteRecibido->request, HIMSELF);
 		//t_paquete* paquete = armar_paquete(palabraReservada, respuesta);
 		enviar(palabraReservada, paqueteRecibido->request ,memoria_fd);
 	}
+}
+
+void interpretarRequest(cod_request palabraReservada, char* request, t_caller caller) {
+
+	switch(palabraReservada) {
+		case SELECT:
+			log_info(logger_LFS, "Me llego un SELECT");
+			break;
+		case INSERT:
+			log_info(logger_LFS, "Me llego un INSERT");
+			break;
+		case CREATE:
+			log_info(logger_LFS, "Me llego un CREATE");
+			break;
+		case DESCRIBE:
+			log_info(logger_LFS, "Me llego un DESCRIBE");
+			break;
+		case DROP:
+			log_info(logger_LFS, "Me llego un DROP");
+			break;
+		case NUESTRO_ERROR:
+			if(caller == HIMSELF){
+				log_error(logger_LFS, "El cliente se desconecto");
+				break;
+			}
+			else{
+				break;
+			}
+		default:
+			log_warning(logger_LFS, "Operacion desconocida. No quieras meter la pata");
+			break;
+	}
+	puts("\n");
 }
 
 /* create() [API]

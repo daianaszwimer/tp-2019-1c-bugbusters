@@ -58,7 +58,16 @@ typedef struct
 	void* request;
 } t_paquete;
 
+typedef enum
+{
+	CONSOLE,
+	HIMSELF
+} t_caller;
+
+#define NUESTRO_ERROR -1
+
 void iterator(char*);
+unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
 char* concatenar(char*, ...);

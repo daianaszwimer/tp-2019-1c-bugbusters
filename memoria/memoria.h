@@ -18,12 +18,6 @@
 
 typedef enum
 {
-	CONSOLE,
-	HIMSELVE
-} t_caller;
-
-typedef enum
-{
 	SINMODIFICAR,
 	MODIFICADO
 } t_flagModificado;
