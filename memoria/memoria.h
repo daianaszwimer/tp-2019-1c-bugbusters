@@ -81,5 +81,5 @@ char* intercambiarConFileSystem(cod_request, char*);
 
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
-int estaEnCache(cod_request, char**);
+char* estaEnCache(cod_request, char**);
 #endif /* MEMORIA_H_ */

@@ -5,7 +5,7 @@ int main(void) {
 	pag= (t_pagina*)malloc(sizeof(t_pagina));
 	pag->timesamp = 12345;
 	pag->key="1";
-	pag->value="hola";
+	pag->value=(char*)"hola";
 
 	tablaA->numeroDePag=1;
 	tablaA->pagina= pag;
@@ -202,48 +202,41 @@ char* intercambiarConFileSystem(cod_request palabraReservada, char* request){
  * Return:
  * 	-> :: void */
 void procesarSelect(cod_request palabraReservada, char* request, t_caller caller, int i) {
-
+	char* respuesta;
 	char** parametros = obtenerParametros(request);
 	puts("ANTES DE IR A BUSCAR A CACHE");
-	if(estaEnCache(palabraReservada, parametros) == TRUE) {
+	if((respuesta= estaEnCache(palabraReservada, parametros))!= NULL) {
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-		enviar(palabraReservada, request, (int) list_get(descriptoresClientes,i));
+		printf("LA RTA ES %s \n",respuesta);
+
 
 	} else {
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-		char* respuesta = intercambiarConFileSystem(palabraReservada,request);
-
+		respuesta = intercambiarConFileSystem(palabraReservada,request);
+	}
 
 		if(caller == HIMSELF) {
-			enviar(palabraReservada, request, (int) list_get(descriptoresClientes,i));
+			enviar(palabraReservada, respuesta, (int) list_get(descriptoresClientes,i));
 		} else if(caller == CONSOLE) {
 			log_info(logger_MEMORIA, "La respuesta del ", request, " es ", respuesta);
 		} else {
 //			log_error();
 		}
 
-
-//
-//		printf("numer de pag %i\n",tablaDePag.numeroDePag);
-//		printf("flag modificado %i\n",tablaDePag.modificado);
-//		printf("timestamp %i\n",pag->timesamp);
-//		printf("key %i\n",pag->key);
-//		printf("timestamp %s\n",pag->value);
-
-	}
 }
 
-int estaEnCache(cod_request palabraReservada, char** parametros){
+char* estaEnCache(cod_request palabraReservada, char** parametros){
 
 	char* tablaABuscar= parametros[0];
-	int keyABuscar = parametros[1];
+	int keyABuscar = (int)parametros[1];
 
 	if(strcmp(tablaABuscar,"tablaA")==0)
 	{
-		if(strcmp(keyABuscar,tablaA->pagina->key)){
-			puts("Soy muy feliz");
-		return TRUE;
+		if(keyABuscar==tablaA->pagina->key){
+			char* rtaCache= tablaA->pagina->value;
+
+		return rtaCache;
 		}
 	}else{
 		return FALSE;
