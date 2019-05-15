@@ -22,12 +22,11 @@ pthread_t hiloRecibirDeMemoria;			// hilo que lee de consola
 char* mensaje;
 int codValidacion;
 
-void recibirConexionMemoria(void);
-void interpretarRequest(int, char*, int);
 void leerDeConsola(void);
+void recibirConexionesMemoria(void);
+void procesarRequest(int);
 void create(char*, char*, int, int);
 int obtenerBloqueDisponible(void);
 int mkdir_p(const char*);
-
 
 #endif /* LFS_H_ */

@@ -67,12 +67,13 @@ typedef struct
 void iterator(char*);
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
+char* concatenar(char*, ...);
+char** obtenerParametros(char*);
 
 
 int crearConexion(char*, char*);
 t_config* leer_config(char*);
 //void leer_consola(t_log* logger);
-t_paquete* armar_paquete(cod_request, char*);
 //void _leer_consola_haciendo(void(*accion)(char*));
 int validarMensaje(char*, Componente, t_log*);
 int cantDeParametrosEsCorrecta(int,int);
@@ -95,7 +96,7 @@ t_paquete* recibir(int);
 //t_paquete* crear_super_paquete(void);
 //void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void* serializar_paquete(t_paquete* , int);
-void enviar(t_paquete*, int);
+void enviar(cod_request, char*, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 
