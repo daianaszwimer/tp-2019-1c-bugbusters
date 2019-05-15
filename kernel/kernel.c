@@ -8,7 +8,13 @@ int main(void) {
 	//Semáforos
 	sem_init(&semRequestNew, 0, 0);
 	sem_init(&semMColaNew, 0, 1);
+	sem_init(&semRequestReady, 0, 0);
+	sem_init(&semMColaReady, 0, 1);
 	sem_init(&semMultiprocesamiento, 0, multiprocesamiento);
+
+	new = queue_create();
+	ready = queue_create();
+	exec = queue_create();
 
 	//Hilos
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)conectarAMemoria, NULL);
@@ -16,12 +22,10 @@ int main(void) {
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
 
-	new = queue_create();
-	ready = queue_create();
-	exec = queue_create();
-
 	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloConectarAMemoria, NULL);
+	pthread_join(hiloPlanificarNew, NULL);
+	pthread_join(hiloPlanificarExec, NULL);
 
 	liberarMemoria();
 
@@ -40,6 +44,7 @@ void leerDeConsola(void){
 		mensaje = readline(">");
 		//todo: usar exit
 		if (!strcmp(mensaje, "\0")) {
+			printf("sali de leer consola");
 			break;
 		}
 		sem_wait(&semMColaNew);
@@ -47,6 +52,7 @@ void leerDeConsola(void){
 		queue_push(new, mensaje);
 		sem_post(&semMColaNew);
 		sem_post(&semRequestNew);
+		printf("salgo de post     ");
 		//si descomento esto, tira segmentation fault -> free(mensaje);
 	}
 }
@@ -59,11 +65,15 @@ void planificarNewAReady(void) {
 	while(1) {
 		sem_wait(&semRequestNew);
 		sem_wait(&semMColaNew);
+		printf("queue new     ");
 		char* request = queue_pop(new);
 		if(validarRequest(request)) {
 			sem_post(&semMColaNew);
 			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
+			sem_wait(&semMColaReady);
 			queue_push(ready, request);
+			sem_post(&semMColaReady);
+			sem_post(&semRequestReady);
 		} else {
 			sem_post(&semMColaNew);
 			//error
@@ -76,8 +86,21 @@ void reservarRecursos(char* request) {
 }
 
 void planificarReadyAExec(void) {
+	pthread_t hiloRequest;
+	char* request;
 	while(1) {
+		sem_wait(&semRequestReady);
+		printf("planificar ready a exec");
 		sem_wait(&semMultiprocesamiento);
+		hiloRequest = malloc(sizeof(pthread_t));
+		sem_wait(&semMColaReady);
+		request = queue_pop(ready);
+		sem_post(&semMColaReady);
+		if(pthread_create(&hiloRequest, NULL, (void*)procesarRequest, request)){
+			pthread_detach(hiloRequest);
+		} else {
+			//informar error
+		}
 		//if es individual -> un hilo
 		//si es run -> otro hilo
 		//se crea hilo para el request y dentro del hilo se hace
@@ -87,13 +110,17 @@ void planificarReadyAExec(void) {
 	//cuando se ejecuta una sola linea se hace lo mismo que cuando se ejcuta una linea de un archivo de RUN
 }
 
+void procesarRequest(char* request) {
+	printf("estoy en procesar request");
+	//free(request)?
+}
+
 int validarRequest(char* mensaje) {
 	//aca se va a poder validar que se haga select/insert sobre tabla existente?
 	int codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 	switch(codValidacion) {
 		case EXIT_SUCCESS:
 			return TRUE;
-			//manejarRequest(mensaje);
 			break;
 		case EXIT_FAILURE:
 		case QUERY_ERROR:
@@ -122,6 +149,7 @@ void manejarRequest(char* mensaje) {
 		case CREATE:
 		case DESCRIBE:
 		case DROP:
+		case JOURNAL:
 			respuesta = enviarMensajeAMemoria(codRequest, mensaje);
 			break;
 		case ADD:
@@ -130,8 +158,6 @@ void manejarRequest(char* mensaje) {
 			procesarRun(mensaje);
 			break;
 		case METRICS:
-			break;
-		case JOURNAL:
 			break;
 		default:
 			break;

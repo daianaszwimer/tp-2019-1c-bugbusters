@@ -30,6 +30,8 @@ config_memoria memoriaSc;
 
 sem_t semRequestNew;				// semaforo para planificar requests en new
 sem_t semMColaNew;					// semafoto mutex para cola de new
+sem_t semRequestReady;				// semaforo para planificar requests en ready
+sem_t semMColaReady;				// semafoto mutex para cola de ready
 sem_t semMultiprocesamiento;		// semaforo contador para limitar requests en exec
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
@@ -51,6 +53,7 @@ void manejarRequest(char *);
 t_paquete* enviarMensajeAMemoria(cod_request, char*);
 void procesarRun(char*);
 void procesarAdd(int);
+void procesarRequest(char*);
 
 
 #endif /* KERNEL_H_*/
