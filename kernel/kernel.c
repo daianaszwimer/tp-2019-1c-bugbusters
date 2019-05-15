@@ -65,7 +65,6 @@ void planificarNewAReady(void) {
 	while(1) {
 		sem_wait(&semRequestNew);
 		sem_wait(&semMColaNew);
-		printf("queue new     ");
 		char* request = queue_pop(new);
 		if(validarRequest(request)) {
 			sem_post(&semMColaNew);
@@ -90,7 +89,6 @@ void planificarReadyAExec(void) {
 	char* request;
 	while(1) {
 		sem_wait(&semRequestReady);
-		printf("planificar ready a exec");
 		sem_wait(&semMultiprocesamiento);
 		hiloRequest = malloc(sizeof(pthread_t));
 		sem_wait(&semMColaReady);
@@ -224,5 +222,4 @@ void procesarAdd(int memoria) {
 	//y guardar en SC la memoria que se encuentra en el config
 	memoriaSc.ip = config_get_string_value(config, "IP_MEMORIA");
 	memoriaSc.puerto = config_get_string_value(config, "PUERTO_MEMORIA");
-	printf("Asigne al criterio SC la memoria con ip: %s y puerto %s \n", memoriaSc.ip, memoriaSc.puerto);
 }
