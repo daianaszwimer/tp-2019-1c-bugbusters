@@ -78,6 +78,8 @@ void reservarRecursos(char* request) {
 void planificarReadyAExec(void) {
 	while(1) {
 		sem_wait(&semMultiprocesamiento);
+		//if es individual -> un hilo
+		//si es run -> otro hilo
 		//se crea hilo para el request y dentro del hilo se hace
 		//el post que esta abajo
 		sem_post(&semMultiprocesamiento);
@@ -120,7 +122,6 @@ void manejarRequest(char* mensaje) {
 		case CREATE:
 		case DESCRIBE:
 		case DROP:
-		case JOURNAL:
 			respuesta = enviarMensajeAMemoria(codRequest, mensaje);
 			break;
 		case ADD:
@@ -129,6 +130,8 @@ void manejarRequest(char* mensaje) {
 			procesarRun(mensaje);
 			break;
 		case METRICS:
+			break;
+		case JOURNAL:
 			break;
 		default:
 			break;
@@ -147,6 +150,7 @@ void liberarMemoria(void) {
 
 t_paquete* enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	t_paquete* paqueteRecibido;
+	//en enviar habria que enviar puerto para que memoria sepa a quien le delega el request segun la consistency
 	enviar(codRequest, mensaje, conexionMemoria);
 	free(mensaje);
 	paqueteRecibido = recibir(conexionMemoria);
@@ -157,6 +161,9 @@ t_paquete* enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 void procesarRun(char* mensaje) {
 	FILE *archivoLql;
 	char** parametros;
+	cod_request codRequest; // es la palabra reservada (ej: SELECT)
+	char** requestSeparada;
+	t_paquete* respuesta;
 	parametros = obtenerParametros(mensaje);
 	printf("ingresaste como archivo %s \n", parametros[0]);
 	archivoLql = fopen(parametros[0], "r");
@@ -166,7 +173,16 @@ void procesarRun(char* mensaje) {
 		char request[100];
 		while(fgets(request, sizeof(request), archivoLql) != NULL) {
 			request[strcspn(request, "\n")] = 0;
-			validarRequest(request);
+			if (validarRequest(request)) {
+				requestSeparada = separarString(mensaje);
+				codRequest = obtenerCodigoPalabraReservada(requestSeparada[0], KERNEL);
+				respuesta = enviarMensajeAMemoria(codRequest, mensaje);
+				if (respuesta->palabraReservada == QUERY_ERROR) {
+					//libero recursos, mato hilo, lo saco de la cola, e informo error
+				}
+			} else {
+				//libero recursos, mato hilo, lo saco de la cola, e informo error
+			}
 		}
 		fclose(archivoLql);
 	}
