@@ -1,24 +1,30 @@
 #include "lfs.h"
 #include <errno.h>
 #include <assert.h>
+#include <stdarg.h>
+#include <dirent.h>
+#include <stdlib.h>
 
-int main(void){
+int main(void) {
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
-	//create("TABLA1", "SC", 3, 5000);
+	
+	inicializarLfs();
+	create("TABLA1", "SC", 3, 5000);
 
-	pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL);
+	/*pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL);
 
 	leerDeConsola();
 
-	pthread_join(hiloRecibirDeMemoria, NULL);
-
-
-	return EXIT_SUCCESS;
+	pthread_join(hiloRecibirDeMemoria, NULL);*/
+	
+	log_destroy(logger_LFS);
+	config_destroy(config);
+	return 0;
 }
 
-void leerDeConsola(void){
+void leerDeConsola(void) {
 	//log_info(logger, "leerDeConsola");
 	while (1) {
 		mensaje = readline(">");
@@ -50,15 +56,13 @@ void recibirConexionesMemoria() {
 
 void procesarRequest(int memoria_fd){
 	while(1){
-	t_paquete* paqueteRecibido = recibir(memoria_fd);
-	cod_request palabraReservada = paqueteRecibido->palabraReservada;
-	printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
+		t_paquete* paqueteRecibido = recibir(memoria_fd);
+		cod_request palabraReservada = paqueteRecibido->palabraReservada;
+		printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
 
-	//t_paquete* paquete = armar_paquete(palabraReservada, respuesta);
-	enviar(palabraReservada, paqueteRecibido->request ,memoria_fd);
-
+		//t_paquete* paquete = armar_paquete(palabraReservada, respuesta);
+		enviar(palabraReservada, paqueteRecibido->request ,memoria_fd);
 	}
-	log_info(logger_LFS, "(MENSAJE DE MEMORIA)");
 }
 
 /* create() [API]
@@ -71,101 +75,153 @@ void procesarRequest(int memoria_fd){
  * Return:  */
 void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 	// La carpeta metadata y la de los bloques no se crea aca, se crea apenas levanta el lfs
-	char* raiz = config_get_string_value(config, "PUNTO_MONTAJE");
-	char* pathTabla = strdup(raiz);
-	strcat(pathTabla, "tables/");
-	strcat(pathTabla, nombreTabla);
-	strcat(pathTabla, "/");
-	if(fopen(pathTabla, "r") != NULL) {		// Verificamos si la tabla existe
-		char* log = "Ya existe una tabla de nombre: ";
-		strcat(log, nombreTabla);
-		log_error(logger_LFS, log);
-	}
-	else {
-		/* Creamos el archivo Metadata */
-		char* pathMetadata = strdup("/home/utnso/tp-2019-1c-bugbusters/lfs");
-		strcat(pathMetadata, pathTabla);
 
-		int error = mkdir_p(pathMetadata);
-		if (error == 0){
-			strcat(pathMetadata, "Metadata.bin");
+	char* pathTabla = concatenar(PATH, raiz, "/Tablas/", nombreTabla, NULL);
 
-			FILE* metadata = fopen("Metadata.bin", "w+");
-			char* consistency = "CONSISTENCY";
-			fwrite(&consistency, sizeof(consistency), sizeof(char), metadata);
-			fclose(metadata);
+	/* Creamos el archivo Metadata */
+	DIR *dir = opendir(pathTabla);
 
-			//t_config* metadata = config_create("Metadata.config");
+	if(!dir){
+		int error = mkdir_p(pathTabla);
+		if (error == 0) {
 
+			char* pathMetadata = concatenar(pathTabla, "/Metadata.bin", NULL);
 
+			FILE* metadata = fopen(pathMetadata, "w+");
+			if (metadata != NULL) {
+				//char* _tipoDeConsistencia = concatenar("CONSISTENCY=", tipoDeConsistencia, );
+				//TODO: Aca hay que escribir CONSISTENCY=tipoDeConsistencia, lo mismo con los otros 2.
+				fwrite(&tipoDeConsistencia, strlen(tipoDeConsistencia), 1, metadata);
+				fwrite(&numeroDeParticiones, sizeof(numeroDeParticiones), 1, metadata);
+				fwrite(&tiempoDeCompactacion, sizeof(tiempoDeCompactacion), 1, metadata);
+				fclose(metadata);
+			}
+			free(pathMetadata);
 
-			/*sprintf(numeroDeParticiones, "PARTITIONS=%i", _numeroDeParticiones);
-			sprintf(tiempoDeCompactacion, "COMPACTION_TIME=%i", _tiempoDeCompactacion);*/
-
-			/*config_set_value(metadata, "CONSISTENCY", tipoDeConsistencia);
-			config_set_value(metadata, "PARTITIONS", numeroDeParticiones);
-			config_set_value(metadata, "COMPACTION_TIME", tiempoDeCompactacion);*/
-			int x = config_save(metadata);
-
+			char* _i = strdup("");
 			/* Creamos las particiones */
 			for(int i = 0; i < numeroDeParticiones; i++) {
-				char* pathParticion = strdup(pathTabla);
-				strcat(pathParticion, i);
-				strcat(pathParticion, ".bin");
+				sprintf(_i, "%d", i); // Convierto i de int a string
+				char* pathParticion = concatenar(pathTabla, "/", _i, ".bin", NULL);
 				FILE* particion = fopen(pathParticion, "w+");
-				char* tamanio = "Size=0";
-				char* bloques;
-				sprintf(bloques,"Block=[%i]", obtenerBloqueDisponible()); // Hay que agregar un bloque por particion, no se si uno cualquiera o que
+				char* tamanio = strdup("Size=0");
+				char* bloques = strdup("");
+				sprintf(bloques,"Block=[%d]", obtenerBloqueDisponible()); // Hay que agregar un bloque por particion, no se si uno cualquiera o que
 				fwrite(&tamanio, sizeof(tamanio), 1, particion);
 				fwrite(&bloques, sizeof(bloques), 1, particion);
 				free(pathParticion);
+				free(tamanio);
+				free(bloques);
 			}
+			free(_i);
 		}
-
 	}
 	free(pathTabla);
+
 }
 
-int obtenerBloqueDisponible(){
+int obtenerBloqueDisponible() {
 	return 1;
 }
 
-int mkdir_p(const char *path)
-{
-    /* Adapted from http://stackoverflow.com/a/2336245/119527 */
-    const size_t len = strlen(path);
-    char _path[256];
-    char *p;
-
-    errno = 0;
-
-    /* Copy string so its mutable */
-    if (len > sizeof(_path)-1) {
-        errno = ENAMETOOLONG;
-        return -1;
-    }
-    strcpy(_path, path);
-
-    /* Iterate the string */
-    for (p = _path + 1; *p; p++) {
-        if (*p == '/') {
-            /* Temporarily truncate */
-            *p = '\0';
-
-            if (mkdir(_path, S_IRWXU) != 0) {
-                if (errno != EEXIST)
-                    return -1;
-            }
-
-            *p = '/';
-        }
-    }
-
-    if (mkdir(_path, S_IRWXU) != 0) {
-        if (errno != EEXIST)
-            return -1;
-    }
-
-    return 0;
+int crearDirectorio(char* path){
+	char** directorios = string_split(path,"/");
+	int i = 0;
+	char* _path = strdup("/");
+	while(directorios[i] != NULL){
+		_path = concatenar(_path, directorios[i],"/", NULL);
+		mkdir(_path, S_IRWXU);
+		i++;
+	}
+	return 0;
 }
 
+
+int mkdir_p(const char *path) {
+	const size_t len = strlen(path);
+	char _path[256];
+	char *p;
+
+	errno = 0;
+
+	/* Copy string so its mutable */
+	if (len > sizeof(_path) - 1) {
+		errno = ENAMETOOLONG;
+		return -1;
+	}
+	strcpy(_path, path);
+
+	/* Iterate the string */
+	for (p = _path + 1; *p; p++) {
+		if (*p == '/') {
+			/* Temporarily truncate */
+			*p = '\0';
+
+			if (mkdir(_path, S_IRWXU) != 0) {
+				if (errno != EEXIST){
+					return -1;
+				}
+			}
+			*p = '/';
+		}
+	}
+	if (mkdir(_path, S_IRWXU) != 0) {
+		if (errno != EEXIST)
+			return -1;
+	}
+	return 0;
+}
+
+
+//TODO: dado que crear directorio podria retornar si hubo errores o no, catchear esos errores en la creacion de cada directorio.
+void inicializarLfs() {
+	raiz = config_get_string_value(config, "PUNTO_MONTAJE");
+
+	char* tablas = concatenar(PATH, raiz, "Tablas", NULL);
+	char* metadata = concatenar(PATH, raiz, "Metadata", NULL);
+	char* bloques = concatenar(PATH, raiz, "Bloques", NULL);
+
+	crearDirectorio(tablas);
+
+	crearDirectorio(metadata);
+
+	metadata = concatenar(metadata, "/Metadata.bin", NULL);
+
+	FILE* metadataFile = fopen(metadata, "w+");
+	if(metadataFile != NULL){
+		//TODO: Este es el ejemplo que aparece en el TP, ver si despues hay que modificarlo.
+		char* blockSize = strdup("BLOCK_SIZE=64");
+		char* blocks = strdup("BLOCKS=100");
+		char* magicNumber = strdup("MAGIC_NUMBER=LISSANDRA");
+		fwrite(&blockSize, strlen(blockSize), 1, metadataFile);
+		fwrite(&blocks, strlen(blocks), 1, metadataFile);
+		fwrite(&magicNumber, strlen(magicNumber), 1, metadataFile);\
+
+		fclose(metadataFile);
+
+		free(blockSize);
+		free(blocks);
+		free(magicNumber);
+	}else{
+		//TODO: no se creo el metadata correctamente
+	}
+
+	crearDirectorio(bloques);
+	config = leer_config(metadata);
+
+	/*
+	 ver si la cantidad de bloques se puede obtener levantando el metadata como config y crear la cantidad de bloques que dice en dicho
+	 archivo (chequear si aca es el momento de hacer esto).
+	*/
+
+	/*
+	int blocks = atoi(config_get_string_value(config, "BLOCKS"));
+	for(int i= 1; i<=blocks; i++){
+
+	}*/
+
+
+	free(tablas);
+	free(metadata);
+	free(bloques);
+}
