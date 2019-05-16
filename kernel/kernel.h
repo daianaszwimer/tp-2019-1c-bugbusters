@@ -29,9 +29,9 @@ t_queue* exec;
 config_memoria memoriaSc;
 
 sem_t semRequestNew;				// semaforo para planificar requests en new
-sem_t semMColaNew;					// semafoto mutex para cola de new
+pthread_mutex_t semMColaNew;					// semafoto mutex para cola de new
 sem_t semRequestReady;				// semaforo para planificar requests en ready
-sem_t semMColaReady;				// semafoto mutex para cola de ready
+pthread_mutex_t semMColaReady;				// semafoto mutex para cola de ready
 sem_t semMultiprocesamiento;		// semaforo contador para limitar requests en exec
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
@@ -46,6 +46,7 @@ void leerDeConsola(void);
 //planificar requests
 void planificarNewAReady(void);
 void planificarReadyAExec(void);
+void reservarRecursos(char*);
 //validar + delegar requests
 int validarRequest(char *);
 void manejarRequest(char *);

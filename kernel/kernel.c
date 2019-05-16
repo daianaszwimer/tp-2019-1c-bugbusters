@@ -7,10 +7,10 @@ int main(void) {
 	int multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
 	//Semáforos
 	sem_init(&semRequestNew, 0, 0);
-	sem_init(&semMColaNew, 0, 1);
 	sem_init(&semRequestReady, 0, 0);
-	sem_init(&semMColaReady, 0, 1);
 	sem_init(&semMultiprocesamiento, 0, multiprocesamiento);
+	pthread_mutex_init(&semMColaNew, NULL);
+	pthread_mutex_init(&semMColaReady, NULL);
 
 	new = queue_create();
 	ready = queue_create();
@@ -22,10 +22,10 @@ int main(void) {
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
 
-	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloConectarAMemoria, NULL);
 	pthread_join(hiloPlanificarNew, NULL);
 	pthread_join(hiloPlanificarExec, NULL);
+	pthread_join(hiloLeerDeConsola, NULL);
 
 	liberarMemoria();
 
@@ -40,19 +40,17 @@ void conectarAMemoria(void) {
 void leerDeConsola(void){
 	char* mensaje;
 	while (1) {
-		printf("while 1 \n");
 		mensaje = readline(">");
 		//todo: usar exit
 		if (!strcmp(mensaje, "\0")) {
 			printf("sali de leer consola");
 			break;
 		}
-		sem_wait(&semMColaNew);
+		pthread_mutex_lock(&semMColaNew);
 		//agregar request a la cola de new
 		queue_push(new, mensaje);
-		sem_post(&semMColaNew);
+		pthread_mutex_unlock(&semMColaNew);
 		sem_post(&semRequestNew);
-		printf("salgo de post     ");
 		//si descomento esto, tira segmentation fault -> free(mensaje);
 	}
 }
@@ -64,38 +62,43 @@ void leerDeConsola(void){
 void planificarNewAReady(void) {
 	while(1) {
 		sem_wait(&semRequestNew);
-		sem_wait(&semMColaNew);
+		pthread_mutex_lock(&semMColaNew);
 		char* request = queue_pop(new);
-		if(validarRequest(request)) {
-			sem_post(&semMColaNew);
+		pthread_mutex_unlock(&semMColaNew);
+		if(validarRequest(request) == TRUE) {
 			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
-			sem_wait(&semMColaReady);
-			queue_push(ready, request);
-			sem_post(&semMColaReady);
-			sem_post(&semRequestReady);
+			reservarRecursos(request);
 		} else {
-			sem_post(&semMColaNew);
 			//error
 		}
 	}
 }
 
 void reservarRecursos(char* request) {
+	pthread_mutex_lock(&semMColaReady);
+	queue_push(ready, request);
+	pthread_mutex_unlock(&semMColaReady);
+	sem_post(&semRequestReady);
 	//desarmar archivo lql y ponerlo en una cola
 }
 
 void planificarReadyAExec(void) {
 	pthread_t hiloRequest;
+	pthread_attr_t attr;
 	char* request;
+	int threadProcesar;
 	while(1) {
 		sem_wait(&semRequestReady);
 		sem_wait(&semMultiprocesamiento);
-		hiloRequest = malloc(sizeof(pthread_t));
-		sem_wait(&semMColaReady);
+		//hiloRequest = malloc(sizeof(pthread_t));
+		pthread_mutex_lock(&semMColaReady);
 		request = queue_pop(ready);
-		sem_post(&semMColaReady);
-		if(pthread_create(&hiloRequest, NULL, (void*)procesarRequest, request)){
-			pthread_detach(hiloRequest);
+		pthread_mutex_unlock(&semMColaReady);
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequest, request);
+		if(threadProcesar == 0){
+			pthread_attr_destroy(&attr);
 		} else {
 			//informar error
 		}
@@ -103,14 +106,14 @@ void planificarReadyAExec(void) {
 		//si es run -> otro hilo
 		//se crea hilo para el request y dentro del hilo se hace
 		//el post que esta abajo
-		sem_post(&semMultiprocesamiento);
 	}
 	//cuando se ejecuta una sola linea se hace lo mismo que cuando se ejcuta una linea de un archivo de RUN
 }
 
 void procesarRequest(char* request) {
-	printf("estoy en procesar request");
-	//free(request)?
+	printf("aa  ");
+	sem_post(&semMultiprocesamiento);
+	free(request);
 }
 
 int validarRequest(char* mensaje) {
@@ -166,6 +169,11 @@ void liberarMemoria(void) {
 	liberar_conexion(conexionMemoria);
 	config_destroy(config);
 	log_destroy(logger_KERNEL);
+	pthread_mutex_destroy(&semMColaNew);
+	pthread_mutex_destroy(&semMColaReady);
+	sem_destroy(&semRequestNew);
+	sem_destroy(&semRequestReady);
+	sem_destroy(&semMultiprocesamiento);
 }
 
 /*
