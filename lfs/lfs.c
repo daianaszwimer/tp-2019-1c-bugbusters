@@ -10,8 +10,8 @@ int main(void) {
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 	
-	//inicializarLfs();
-	//create("TABLA1", "SC", 3, 5000);
+	inicializarLfs();
+	create("TABLA1", "SC", 3, 5000);
 
 	pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL);
 
@@ -28,9 +28,6 @@ void leerDeConsola(void) {
 	//log_info(logger, "leerDeConsola");
 	while (1) {
 		mensaje = readline(">");
-		if (!strcmp(mensaje, "\0")) {
-			break;
-		}
 		validarRequest(mensaje);
 		free(mensaje);
 	}
@@ -38,10 +35,12 @@ void leerDeConsola(void) {
 
 void validarRequest(char* mensaje){
 	int codValidacion;
+	char** request = string_n_split(mensaje, 2, " ");
 	codValidacion = validarMensaje(mensaje, LFS, logger_LFS);
+	cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0],LFS);
 	switch(codValidacion){
 		case EXIT_SUCCESS:
-			interpretarRequest(codValidacion, mensaje,CONSOLE);
+			interpretarRequest(palabraReservada, mensaje,CONSOLE);
 			break;
 		case NUESTRO_ERROR:
 			//es la q hay q hacerla generica

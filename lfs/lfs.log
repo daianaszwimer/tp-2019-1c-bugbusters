@@ -302,3 +302,13 @@
 [WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
 [WARNING] 15:39:07:411 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
 [WARNING] 15:39:07:411 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[INFO] 16:00:52:44 Lfs/(25259:25259): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:00:59:975 Lfs/(25259:25259): Me llego un SELECT
+[INFO] 16:01:09:439 Lfs/(25259:25259): Me llego un SELECT
+[INFO] 16:02:02:209 Lfs/(25303:25303): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:04:36:326 Lfs/(25382:25382): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:22:42:870 Lfs/(25637:25637): ----------------INICIO DE LISSANDRA FS--------------
+[WARNING] 16:22:47:888 Lfs/(25637:25637): Operacion desconocida. No quieras meter la pata
+[INFO] 16:23:26:865 Lfs/(25667:25667): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:27:29:520 Lfs/(26063:26063): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:28:12:985 Lfs/(26063:26063): Me llego un INSERT
