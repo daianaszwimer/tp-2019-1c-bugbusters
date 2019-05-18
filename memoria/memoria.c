@@ -1,14 +1,14 @@
 #include "memoria.h"
-#include <stdbool.h>
+#include <stdlib.h>
 
 
 
 
 int main(void) {
 
-	pag = (t_pagina*)malloc(sizeof(t_pagina));
 	tablaA = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
 	elementoA1 = (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	pag = (t_pagina*)malloc(sizeof(t_pagina));
 
 	tablaA->elementosDeTablaDePagina = list_create();	//list_create() HACE UN MALLOC
 
@@ -67,22 +67,24 @@ void leerDeConsola(void){
 	}
 }
 
-
 void validarRequest(char* mensaje){
 	int codValidacion;
+	char** request = string_n_split(mensaje, 2, " ");
 	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
+	cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
 	switch(codValidacion){
 		case EXIT_SUCCESS:
-			interpretarRequest(codValidacion, mensaje,CONSOLE,-1);
+			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
 			break;
 		case NUESTRO_ERROR:
 			//es la q hay q hacerla generica
-			log_error(logger_MEMORIA, "No es valida la request");
+			log_error(logger_MEMORIA, "La request no es valida");
 			break;
 		default:
 			break;
 	}
 }
+
 
 
 void conectarAFileSystem() {
@@ -148,7 +150,7 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
-			//procesarInsert(palabraReservada, request);
+			procesarInsert(palabraReservada, request, caller);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
@@ -262,25 +264,27 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
  * Return:
  * 	-> :: void */
 void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
-		t_pagina* pagEncontrada;
+		t_elemTablaDePaginas* elementoEncontrado;
 		char* valorEncontrado;
-		char* valorDeLFS;
 		char** parametros = obtenerParametros(request);
-		char* pagina; //t_pagina
+		char* newValue = parametros[2];
 
 		puts("ANTES DE IR A BUSCAR A CACHE");
-		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&pagEncontrada)!= FALSE) {
-//		KEY encontrada	-> modifico timestamp
-//						-> modifico valor
-//						-> modifico flagTabla
 
+		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
+//			KEY encontrada	-> modifico timestamp
+//							-> modifico valor
+//							-> modifico flagTabla
+			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue); //ver &
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-			printf("LA RTA ES %s \n",pagina);
-//			timestampAhora(pagina);
-//		}else if((pagina= estaEnMemoria(palabraReservada, parametros))== FALSE){
-////		KEY no encontrada -> solicito nueva pagina
-//			//list
-//
+			puts(elementoEncontrado->pagina->value);
+		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
+//			KEY no encontrada -> solicito nueva pagina
+//								valido largoTablaDePagina
+
+			crearElementoEnTablaDePagina(parametros[0],parametros[1],parametros[2]);
+			puts("NO ESTA EN CACHE");
+
 		}
 }
 
@@ -298,9 +302,9 @@ void actualizarPagina (t_pagina* pagina, char* newValue){
 	pagina->value = newValue;
 }
 
-void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, int numeroDePag, uint16_t newKey, char* newValue){
+void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
 	t_elemTablaDePaginas* newElementoDePagina;
-	newElementoDePagina->numeroDePag = numeroDePag;
+	newElementoDePagina->numeroDePag = rand();
 	newElementoDePagina->pagina = crearPagina(newKey,newValue);
 	newElementoDePagina->modificado = SINMODIFICAR;
 	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
@@ -308,6 +312,7 @@ void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, int numeroDePa
 
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
 	actualizarPagina(elemento->pagina,newValue);
+	elemento->modificado = MODIFICADO;
 }
 
 
