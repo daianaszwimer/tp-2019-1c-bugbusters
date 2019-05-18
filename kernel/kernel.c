@@ -113,7 +113,7 @@ void planificarReadyAExec(void) {
 void procesarRequest(char* request) {
 	printf("aa  ");
 	sem_post(&semMultiprocesamiento);
-	free(request);
+	//free(request);
 }
 
 int validarRequest(char* mensaje) {
