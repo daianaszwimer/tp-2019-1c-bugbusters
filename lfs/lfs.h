@@ -19,7 +19,8 @@ pthread_t hiloRecibirDeMemoria;			// hilo que lee de consola
 char* mensaje;
 int codValidacion;
 
-void recibirConexionMemoria(void);
+void recibirConexionesMemoria(void);
 void leerDeConsola(void);
+void procesarRequest(int);
 
 #endif /* LFS_H_ */
