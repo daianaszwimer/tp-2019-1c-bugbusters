@@ -23,9 +23,9 @@ int main(void) {
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
 
 	pthread_join(hiloConectarAMemoria, NULL);
+	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloPlanificarNew, NULL);
 	pthread_join(hiloPlanificarExec, NULL);
-	pthread_join(hiloLeerDeConsola, NULL);
 
 	liberarMemoria();
 
@@ -67,7 +67,12 @@ void planificarNewAReady(void) {
 		pthread_mutex_unlock(&semMColaNew);
 		if(validarRequest(request) == TRUE) {
 			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
-			reservarRecursos(request);
+
+			pthread_mutex_lock(&semMColaReady);
+			queue_push(ready, request);
+			pthread_mutex_unlock(&semMColaReady);
+			sem_post(&semRequestReady);
+			//reservarRecursos(request);
 		} else {
 			//error
 		}
@@ -75,10 +80,6 @@ void planificarNewAReady(void) {
 }
 
 void reservarRecursos(char* request) {
-	pthread_mutex_lock(&semMColaReady);
-	queue_push(ready, request);
-	pthread_mutex_unlock(&semMColaReady);
-	sem_post(&semRequestReady);
 	//desarmar archivo lql y ponerlo en una cola
 }
 
@@ -113,7 +114,7 @@ void planificarReadyAExec(void) {
 void procesarRequest(char* request) {
 	printf("aa  ");
 	sem_post(&semMultiprocesamiento);
-	free(request);
+	//free(request);
 }
 
 int validarRequest(char* mensaje) {
@@ -191,6 +192,8 @@ t_paquete* enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 }
 
 void procesarRun(char* mensaje) {
+	// wrappear todo con un contador y que no supere al Q
+	// usar inotify por si cambia Q
 	FILE *archivoLql;
 	char** parametros;
 	cod_request codRequest; // es la palabra reservada (ej: SELECT)
