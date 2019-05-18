@@ -29,7 +29,7 @@ typedef enum
 } t_flagModificado;
 typedef struct{
 	long int timesamp;
-	char* key;
+	uint16_t key;
 	char* value; // al inicializarse, lfs me tiene q decir el tamanio
 }t_pagina;
 typedef struct{
@@ -81,5 +81,6 @@ char* intercambiarConFileSystem(cod_request, char*);
 
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
-char* estaEnCache(cod_request, char**);
+int estaEnMemoria(cod_request, char**, char**, t_pagina**);
+void enviarAlDestinatarioCorrecto(cod_request, char*, char* , t_caller, int);
 #endif /* MEMORIA_H_ */

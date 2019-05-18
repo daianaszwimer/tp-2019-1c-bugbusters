@@ -4,7 +4,7 @@ int main(void) {
 	tablaA= (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
 	pag= (t_pagina*)malloc(sizeof(t_pagina));
 	pag->timesamp = 12345;
-	pag->key="1";
+	pag->key=1;
 	pag->value=(char*)"hola";
 
 	tablaA->numeroDePag=1;
@@ -202,47 +202,55 @@ char* intercambiarConFileSystem(cod_request palabraReservada, char* request){
  * Return:
  * 	-> :: void */
 void procesarSelect(cod_request palabraReservada, char* request, t_caller caller, int i) {
-	char* respuesta;
+	t_pagina* pagEncontrada;
+	char* valorEncontrado;
+	char* valorDeLFS;
 	char** parametros = obtenerParametros(request);
 	puts("ANTES DE IR A BUSCAR A CACHE");
-	if((respuesta= estaEnCache(palabraReservada, parametros))!= NULL) {
+	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&pagEncontrada)!= FALSE) {
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-		printf("LA RTA ES %s \n",respuesta);
+		enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 
 
 	} else {
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-		respuesta = intercambiarConFileSystem(palabraReservada,request);
+		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+		enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 	}
-
-		if(caller == HIMSELF) {
-			enviar(palabraReservada, respuesta, (int) list_get(descriptoresClientes,i));
-		} else if(caller == CONSOLE) {
-			log_info(logger_MEMORIA, "La respuesta del ", request, " es ", respuesta);
-		} else {
-//			log_error();
-		}
 
 }
 
-char* estaEnCache(cod_request palabraReservada, char** parametros){
-
+int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado, t_pagina** pagEncontrada){
+	log_info(logger_MEMORIA,"ENTRE A ESTAE EN MEMORIA");
 	char* tablaABuscar= parametros[0];
-	int keyABuscar = (int)parametros[1];
+	 char *ptrResto;
+	int keyABuscar = (int)strtol((char*)parametros[1],&ptrResto,16);
 
 	if(strcmp(tablaABuscar,"tablaA")==0)
 	{
 		if(keyABuscar==tablaA->pagina->key){
-			char* rtaCache= tablaA->pagina->value;
+			*pagEncontrada=tablaA->pagina;
+			*valorEncontrado=(char*)tablaA->pagina->value;
+			printf("LA RTA ES %s \n",*valorEncontrado);
 
-		return rtaCache;
+		return TRUE;
 		}
 	}else{
 		return FALSE;
 	}
 
 }
+
+ void enviarAlDestinatarioCorrecto(cod_request palabraReservada,char* request,char* valorAEnviar,t_caller caller,int i){
+		if(caller == HIMSELF) {
+				enviar(palabraReservada, valorAEnviar, (int) list_get(descriptoresClientes,i));
+			} else if(caller == CONSOLE) {
+				log_info(logger_MEMORIA, "La respuesta del ", request, " es ", valorAEnviar);
+			} else {
+	//			log_error();
+			}
+ }
 
 /*procesarInsert()
  * Parametros:
