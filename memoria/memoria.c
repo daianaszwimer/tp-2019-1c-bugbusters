@@ -64,18 +64,6 @@ void leerDeConsola(void){
 }
 
 
-/*obtenerHoraActual()
- * Parametros:
- * Descripcion: Hora actual en minutos y microsegundos
- * Return:
- * 	-> :: unsigned long long */
-unsigned long long obtenerHoraActual(){
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	unsigned long long millisegundosDesdeEpoch = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
-	return millisegundosDesdeEpoch;
-}
-
 void validarRequest(char* mensaje){
 	int codValidacion;
 	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
