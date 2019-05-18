@@ -3,12 +3,12 @@
 
 
 
-
 int main(void) {
 
-	pag = (t_pagina*)malloc(sizeof(t_pagina));
-	tablaA = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
-	elementoA1 = (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	pag = malloc(sizeof(t_pagina));
+	elementoA1 =malloc(sizeof(t_elemTablaDePaginas));
+	tablaA = malloc(sizeof(t_tablaDePaginas));
+
 
 	tablaA->elementosDeTablaDePagina = list_create();	//list_create() HACE UN MALLOC
 
@@ -16,9 +16,9 @@ int main(void) {
 	pag->key=1;
 	pag->value=(char*)"hola";
 
-	elementoA1->numeroDePag=1;
-	elementoA1->pagina= pag;
-	elementoA1->modificado = SINMODIFICAR;
+//	elementoA1->numeroDePag=1;
+//	elementoA1->pagina= pag;
+//	elementoA1->modificado = SINMODIFICAR;
 
 
 
@@ -139,7 +139,7 @@ void escucharMultiplesClientes() {
 
 void interpretarRequest(cod_request palabraReservada,char* request,t_caller caller, int i) {
 
-
+log_info(logger_MEMORIA,"entre a interpretarr request");
 	switch(palabraReservada) {
 
 		case SELECT:
@@ -208,7 +208,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
-
+		//hay q liberar
 
 	} else {
 
@@ -225,7 +225,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 	char *ptrResto;
 	int keyABuscar = (int)strtol((char*)parametros[1],&ptrResto,16);
 
-	if(strcmp(tablaABuscar,"tablaA")==0)
+	if(strcmp(tablaABuscar,"tablaA")==0) //esto hay que cambiarlo
 	{
 		if(keyABuscar==elementoA1->pagina->key){
 			*elementoEncontrado=elementoA1;
@@ -244,8 +244,6 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 				enviar(palabraReservada, valorAEnviar, (int) list_get(descriptoresClientes,i));
 			} else if(caller == CONSOLE) {
 				log_info(logger_MEMORIA, "La respuesta del ", request, " es ", valorAEnviar);
-			} else {
-//				log_error();
 			}
  }
 
@@ -261,54 +259,53 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
  * 	-> :: void */
-void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
-		t_pagina* pagEncontrada;
-		char* valorEncontrado;
-		char* valorDeLFS;
-		char** parametros = obtenerParametros(request);
-		char* pagina; //t_pagina
-
-		puts("ANTES DE IR A BUSCAR A CACHE");
-		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&pagEncontrada)!= FALSE) {
-//		KEY encontrada	-> modifico timestamp
-//						-> modifico valor
-//						-> modifico flagTabla
-
-			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-			printf("LA RTA ES %s \n",pagina);
-//			timestampAhora(pagina);
-//		}else if((pagina= estaEnMemoria(palabraReservada, parametros))== FALSE){
-////		KEY no encontrada -> solicito nueva pagina
-//			//list
+//void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
+//		t_elemTablaDePaginas elementoEncontrado ;
+//		char* valorEncontrado;
+//		char* valorDeLFS;
+//		char** parametros = obtenerParametros(request);
+//		char* pagina; //t_paginas
 //
-		}
-}
+//		puts("ANTES DE IR A BUSCAR A CACHE");
+//		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
+////		KEY encontrada	-> modifico timestamp
+////						-> modifico valor
+////						-> modifico flagTabla
+//
+//			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+////			timestampAhora(pagina);
+////		}else if((pagina= estaEnMemoria(palabraReservada, parametros))== FALSE){
+//////		KEY no encontrada -> solicito nueva pagina
+////			//list
+////
+//		}
+//}
 
-t_pagina* crearPagina(uint16_t newKey, char* newValue){
-	t_pagina* nuevaPagina;
-	nuevaPagina->timestamp = obtenerHoraActual();
-	nuevaPagina->key = newKey;
-	nuevaPagina->value = newValue;
-	return nuevaPagina;
-}
-
-void actualizarPagina (t_pagina* pagina, char* newValue){
-	unsigned long long newTimes = obtenerHoraActual();
-	pagina->timestamp = newTimes;
-	pagina->value = newValue;
-}
-
-void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, int numeroDePag, uint16_t newKey, char* newValue){
-	t_elemTablaDePaginas* newElementoDePagina;
-	newElementoDePagina->numeroDePag = numeroDePag;
-	newElementoDePagina->pagina = crearPagina(newKey,newValue);
-	newElementoDePagina->modificado = SINMODIFICAR;
-	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
-}
-
-void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
-	actualizarPagina(elemento->pagina,newValue);
-}
+//t_pagina* crearPagina(uint16_t newKey, char* newValue){
+//	t_pagina* nuevaPagina;
+//	nuevaPagina->timestamp = obtenerHoraActual();
+//	nuevaPagina->key = newKey;
+//	nuevaPagina->value = newValue;
+//	return nuevaPagina;
+//}
+//
+//void actualizarPagina (t_pagina* pagina, char* newValue){
+//	unsigned long long newTimes = obtenerHoraActual();
+//	pagina->timestamp = newTimes;
+//	pagina->value = newValue;
+//}
+//
+//void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, int numeroDePag, uint16_t newKey, char* newValue){
+//	t_elemTablaDePaginas* newElementoDePagina;
+//	newElementoDePagina->numeroDePag = numeroDePag;
+//	newElementoDePagina->pagina = crearPagina(newKey,newValue);
+//	newElementoDePagina->modificado = SINMODIFICAR;
+//	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
+//}
+//
+//void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
+//	actualizarPagina(elemento->pagina,newValue);
+//}
 
 
 

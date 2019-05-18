@@ -54,7 +54,7 @@ t_config* config;
 
 
 //
-t_tablaDePaginas tablaA;
+t_tablaDePaginas* tablaA;
 
 t_pagina* pag;
 
@@ -78,7 +78,6 @@ fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para s
 
 
 void leerDeConsola(void);
-unsigned long long obtenerHoraActual();
 void validarRequest(char*);
 
 void escucharMultiplesClientes(void);
