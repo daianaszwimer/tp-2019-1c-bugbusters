@@ -1,9 +1,9 @@
 #include "lfs.h"
 #include <errno.h>
-#include <assert.h>
-#include <stdarg.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <fcntl.h>
+
 
 int main(void) {
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
@@ -11,6 +11,8 @@ int main(void) {
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 	
 	inicializarLfs();
+
+	Create("TABLA1","SC",3,5000);
 
 	if(pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL)){
 
@@ -126,51 +128,46 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
  * Return:  */
 void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 
-	char* pathTabla = concatenar(PATH, pathRaiz, "/Tablas/", nombreTabla, NULL);
+	char* pathTabla = concatenar(pathRaiz, "Tablas/", nombreTabla, NULL);
+
+	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
+
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
-
+	//TODO ver si chequear si la tabla existe asi, o usando mkdir
 	if(!dir){
 		/* Creamos la carpeta de la tabla */
-		int error = crearDirectorio(pathTabla);
-		if (error == 0) {
-			char* metadataPath = concatenar(pathTabla, "/Metadata.bin", NULL);
-			/* Creamos el archivo Metadata */
-			FILE* metadata = fopen(metadataPath, "w+");
-			if (metadata != NULL) {
-				fclose(metadata);
-				t_config *metadataConfig = config_create(metadataPath);
-				config_set_value(metadataConfig, "CONSISTENCY", tipoDeConsistencia);
-				config_set_value(metadataConfig, "PARTITIONS", string_itoa(tipoDeConsistencia));
-				config_set_value(metadataConfig, "COMPACTION_TIME", string_itoa(tiempoDeCompactacion));
-				config_save(metadataConfig);
-				free(metadataPath);
+		mkdir(pathTabla, S_IRWXU);
+		char* metadataPath = concatenar(pathTabla, "/Metadata.bin", NULL);
 
-				/* Creamos las particiones */
-				for(int i = 0; i < numeroDeParticiones; i++) {
-					char* pathParticion = concatenar(pathTabla, "/", string_itoa(i), ".bin", NULL);
-					FILE* fileParticion = fopen(pathParticion, "w+");
-					if(fileParticion != NULL){
-						fclose(fileParticion);
-						t_config *configParticion = config_create(pathParticion);
+		/* Creamos el archivo Metadata */
+		int metadataFileDescriptor = open(metadataPath, O_CREAT , S_IRWXU);
+		close(metadataFileDescriptor);
 
-						config_set_value(configParticion, "SIZE", "0");
-						config_set_value(configParticion, "BLOCKS", string_itoa(obtenerBloqueDisponible()));
-						config_save(configParticion);
-						config_destroy(configParticion);
-					} else {
-						//TODO archivo particion i no creada
-					}
-					free(pathParticion);
-				}
-			} else {
-				// TODO archivo metadata no creado
-			}
+		t_config *metadataConfig = config_create(metadataPath);
+		config_set_value(metadataConfig, "CONSISTENCY", tipoDeConsistencia);
+		config_set_value(metadataConfig, "PARTITIONS", string_itoa(numeroDeParticiones));
+		config_set_value(metadataConfig, "COMPACTION_TIME", string_itoa(tiempoDeCompactacion));
+		config_save(metadataConfig);
 
-		} else {
-			//TODO error al crear tabla
+		/* Creamos las particiones */
+		for(int i = 0; i < numeroDeParticiones; i++) {
+			char* pathParticion = concatenar(pathTabla, "/", string_itoa(i), ".bin", NULL);
+
+			int particionFileDescriptor = open(pathParticion, O_CREAT ,S_IRWXU);
+			close(particionFileDescriptor);
+
+			t_config *configParticion = config_create(pathParticion);
+			config_set_value(configParticion, "SIZE", "0");
+			config_set_value(configParticion, "BLOCKS", string_itoa(obtenerBloqueDisponible()));
+			config_save(configParticion);
+			config_destroy(configParticion);
+			free(pathParticion);
 		}
+
+		config_destroy(metadataConfig);
+		free(metadataPath);
 	} else {
 		//TODO existe tabla
 	}
@@ -181,51 +178,34 @@ int obtenerBloqueDisponible() {
 	return 1;
 }
 
-int crearDirectorio(char* path){
-	char** directorios = string_split(path,"/");
-	int i = 0;
-	char* _path = strdup("/");
-	while(directorios[i] != NULL){
-		_path = concatenar(_path, directorios[i],"/", NULL);
-		mkdir(_path, S_IRWXU);
-		i++;
-	}
-	return 0;
-}
-
 void inicializarLfs() {
-	pathRaiz = config_get_string_value(config, "PUNTO_MONTAJE");
+	pathRaiz = concatenar(PATH, config_get_string_value(config, "PUNTO_MONTAJE"), NULL);
+	mkdir(pathRaiz, S_IRWXU);
 
-	char* pathTablas = concatenar(PATH, pathRaiz, "Tablas", NULL);
-	char* pathMetadata = concatenar(PATH, pathRaiz, "Metadata", NULL);
-	char* pathBloques = concatenar(PATH, pathRaiz, "Bloques", NULL);
+	char* pathTablas = concatenar(pathRaiz, "Tablas", NULL);
+	char* pathMetadata = concatenar(pathRaiz, "Metadata", NULL);
+	char* pathBloques = concatenar(pathRaiz, "Bloques", NULL);
 
-	crearDirectorio(pathTablas);
+	mkdir(pathTablas, S_IRWXU);
 
-	crearDirectorio(pathMetadata);
-
+	mkdir(pathMetadata, S_IRWXU);
 	pathMetadata = concatenar(pathMetadata, "/Metadata.bin", NULL);
 
-	FILE* file = fopen(pathMetadata, "w+");
-	if(file != NULL){
-		fclose(file);
-	}
-	t_config *configMetadata = config_create(pathMetadata);
+	int metadataDescriptor = open(pathMetadata, O_CREAT ,S_IRWXU);
+	close(metadataDescriptor);
 
+	t_config *configMetadata = config_create(pathMetadata);
 	config_set_value(configMetadata, "BLOCK_SIZE", "64");
 	config_set_value(configMetadata, "BLOCKS", "10");
 	config_set_value(configMetadata, "MAGIC_NUMBER", "LISSANDRA");
-
 	config_save(configMetadata);
 
-	crearDirectorio(pathBloques);
+	mkdir(pathBloques, S_IRWXU);
 
 	int blocks = config_get_int_value(configMetadata, "BLOCKS");
 	for(int i = 1; i <= blocks; i++){
-		FILE* block = fopen(concatenar(pathBloques, "/", string_itoa(i), ".bin", NULL), "w+");
-		if(block != NULL){
-			fclose(block);
-		}
+		int bloqueFileDescriptor = open(concatenar(pathBloques, "/", string_itoa(i), ".bin", NULL), O_CREAT ,S_IRWXU);
+		close(bloqueFileDescriptor);
 	}
 
 	config_destroy(configMetadata);

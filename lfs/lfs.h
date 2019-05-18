@@ -29,7 +29,7 @@ void recibirConexionesMemoria(void);
 void validarRequest(char*);
 void procesarRequest(int);
 void interpretarRequest(cod_request, char*, t_caller);
-void create(char*, char*, int, int);
+void Create(char*, char*, int, int);
 int obtenerBloqueDisponible(void);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
