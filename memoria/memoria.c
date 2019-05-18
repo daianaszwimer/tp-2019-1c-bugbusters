@@ -117,7 +117,7 @@ void escucharMultiplesClientes() {
 				cod_request palabraReservada = paqueteRecibido->palabraReservada;
 				char* request = paqueteRecibido->request;
 				printf("El codigo que recibi es: %s \n", request);
-				interpretarRequest(palabraReservada,request,HIMSELF, i);
+				interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
 				printf("Del bd \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 			}
 		}
@@ -154,7 +154,7 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
 		case QUERY_ERROR:
-			if(caller == HIMSELF){
+			if(caller == ANOTHER_COMPONENT){
 				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 				int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd}
 				break;
@@ -197,7 +197,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 		char* respuesta = intercambiarConFileSystem(palabraReservada,request);
-		if(caller == HIMSELF) {
+		if(caller == ANOTHER_COMPONENT) {
 			enviar(palabraReservada, request, (int) list_get(descriptoresClientes,i));
 		} else if(caller == CONSOLE) {
 			log_info(logger_MEMORIA, "La respuesta del ", request, " es ", respuesta);

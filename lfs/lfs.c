@@ -76,7 +76,7 @@ void procesarRequest(int memoria_fd){
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
 		//printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
 		printf("De la memoria nro: %d \n", memoria_fd);
-		interpretarRequest(palabraReservada, paqueteRecibido->request, HIMSELF);
+		interpretarRequest(palabraReservada, paqueteRecibido->request, ANOTHER_COMPONENT);
 		//t_paquete* paquete = armar_paquete(palabraReservada, respuesta);
 		enviar(palabraReservada, paqueteRecibido->request ,memoria_fd);
 	}
@@ -102,7 +102,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
 			log_info(logger_LFS, "Me llego un DROP");
 			break;
 		case NUESTRO_ERROR:
-			if(caller == HIMSELF){
+			if(caller == ANOTHER_COMPONENT){
 				log_error(logger_LFS, "El cliente se desconecto");
 				break;
 			}

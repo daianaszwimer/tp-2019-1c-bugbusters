@@ -61,7 +61,7 @@ typedef struct
 typedef enum
 {
 	CONSOLE,
-	HIMSELF
+	ANOTHER_COMPONENT
 } t_caller;
 
 #define NUESTRO_ERROR -1
