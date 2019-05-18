@@ -1,6 +1,5 @@
 #include "lfs.h"
 #include <errno.h>
-#include <assert.h>
 #include <stdarg.h>
 #include <dirent.h>
 #include <stdlib.h>
@@ -142,7 +141,7 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 				fclose(metadata);
 				t_config *metadataConfig = config_create(metadataPath);
 				config_set_value(metadataConfig, "CONSISTENCY", tipoDeConsistencia);
-				config_set_value(metadataConfig, "PARTITIONS", string_itoa(tipoDeConsistencia));
+				config_set_value(metadataConfig, "PARTITIONS", string_itoa(numeroDeParticiones));
 				config_set_value(metadataConfig, "COMPACTION_TIME", string_itoa(tiempoDeCompactacion));
 				config_save(metadataConfig);
 				free(metadataPath);
@@ -232,4 +231,31 @@ void inicializarLfs() {
 	free(pathTablas);
 	free(pathMetadata);
 	free(pathBloques);
+}
+
+/* insert() [API]
+ * Parametros:
+ * 	-> nombreTabla :: char*
+ * 	-> key :: uint16_t
+ * 	-> value :: char*
+ * 	-> timestamp :: unsigned long long
+ * Descripcion: permite la creacion y/o actualizacion del valor de una key dentro de una tabla
+ * Return:  */
+void insert(char* nombreTabla, uint16_t key, char* value, unsigned long long timestamp) {
+	char* pathTabla = concatenar(PATH, pathRaiz, "/Tablas/", nombreTabla, NULL);
+
+	/* Validamos si la tabla existe */
+	DIR *dir = opendir(pathTabla);
+	if(dir) {
+		char* metadataPath = concatenar(pathTabla, "/Metadata.bin", NULL);
+		t_config *metadataConfig = config_create(metadataPath);
+		char* tipoDeConsistencia = config_get_string_value(metadataConfig, "CONSISTENCY");
+		int numeroDeParticiones = config_get_int_value(metadataConfig, "PARTITIONS");
+		int tiempoDeCompactacion = config_get_int_value(metadataConfig, "COMPACTION_TIME");
+
+
+
+	} else {
+		// TODO: no existe tabla
+	}
 }
