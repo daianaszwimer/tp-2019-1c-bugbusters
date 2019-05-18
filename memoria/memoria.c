@@ -271,13 +271,18 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
  * Return:
  * 	-> :: void */
 void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
-
+		t_pagina* pagEncontrada;
+		char* valorEncontrado;
+		char* valorDeLFS;
 		char** parametros = obtenerParametros(request);
 		char* pagina; //t_pagina
 
 		puts("ANTES DE IR A BUSCAR A CACHE");
-		if((pagina= estaEnCache(palabraReservada, parametros))!= NULL) {
-//		KEY encontrada -> modifico timestamp
+		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&pagEncontrada)!= FALSE) {
+//		KEY encontrada	-> modifico timestamp
+//						-> modifico valor
+//						-> modifico flagTabla
+
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 			printf("LA RTA ES %s \n",pagina);
 //			timestampAhora(pagina);
