@@ -2,24 +2,24 @@
 #include <stdbool.h>
 
 
+
+
 int main(void) {
 
-	t_tablaDePaginas* tabla = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
+	pag = (t_pagina*)malloc(sizeof(t_pagina));
+	tablaA = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
+	elementoA1 = (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
 
-	t_elemTablaDePaginas* elementoA = (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-//	t_elemTablaDePaginas* elementoB = (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-
-	t_pagina* pag = (t_pagina*)malloc(sizeof(t_pagina));
-
-	tabla->elementosDeTablaDePagina = list_create();	//list_create() HACE UN MALLOC
+	tablaA->elementosDeTablaDePagina = list_create();	//list_create() HACE UN MALLOC
 
 	pag->timestamp = 123456789;
 	pag->key=1;
 	pag->value=(char*)"hola";
 
-	elementoA->numeroDePag=1;
-	elementoA->pagina= pag;
-	elementoA->modificado = SINMODIFICAR;
+	elementoA1->numeroDePag=1;
+	elementoA1->pagina= pag;
+	elementoA1->modificado = SINMODIFICAR;
+
 
 
 	//printf("%llu \n", obtenerHoraActual());
@@ -200,12 +200,12 @@ char* intercambiarConFileSystem(cod_request palabraReservada, char* request){
  * Return:
  * 	-> :: void */
 void procesarSelect(cod_request palabraReservada, char* request, t_caller caller, int i) {
-	t_pagina* pagEncontrada;
+	t_elemTablaDePaginas* elementoEncontrado;
 	char* valorEncontrado;
 	char* valorDeLFS;
 	char** parametros = obtenerParametros(request);
 	puts("ANTES DE IR A BUSCAR A CACHE");
-	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&pagEncontrada)!= FALSE) {
+	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 
@@ -219,17 +219,17 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 
 }
 
-int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado, t_pagina** pagEncontrada){
+int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
 	log_info(logger_MEMORIA,"ENTRE A ESTAE EN MEMORIA");
 	char* tablaABuscar= parametros[0];
 	char *ptrResto;
 	int keyABuscar = (int)strtol((char*)parametros[1],&ptrResto,16);
 
-	if(strcmp(tablaABuscar,"elementoA")==0)
+	if(strcmp(tablaABuscar,"tablaA")==0)
 	{
-		if(keyABuscar==elementoA->pagina->key){
-			*pagEncontrada=elementoA->pagina;
-			*valorEncontrado=(char*) elementoA->pagina->value;
+		if(keyABuscar==elementoA1->pagina->key){
+			*elementoEncontrado=elementoA1;
+			*valorEncontrado=(char*) elementoA1->pagina->value;
 			printf("LA RTA ES %s \n",*valorEncontrado);
 
 		return TRUE;

@@ -54,9 +54,11 @@ t_config* config;
 
 
 //
+t_tablaDePaginas tablaA;
+
 t_pagina* pag;
 
-t_elemTablaDePaginas* elementoA;
+t_elemTablaDePaginas* elementoA1;
 //
 
 
@@ -86,7 +88,7 @@ char* intercambiarConFileSystem(cod_request, char*);
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
 
-int estaEnMemoria(cod_request, char**, char**, t_pagina**);
+int estaEnMemoria(cod_request, char**, char**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, char*, char* , t_caller, int);
 
 t_pagina* crearPagina(uint16_t, char*);
