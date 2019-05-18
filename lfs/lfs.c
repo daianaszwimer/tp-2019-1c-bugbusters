@@ -11,9 +11,11 @@ int main(void) {
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 	
 	inicializarLfs();
-	create("TABLA1", "SC", 3, 5000);
+	//create("TABLA1", "SC", 3, 5000);
 
-	pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL);
+	if(pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL)){
+
+	}
 
 	leerDeConsola();
 
@@ -121,7 +123,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
  * 	-> tiempoDeCompactacion :: int
  * Descripcion: permite la creación de una nueva tabla dentro del file system
  * Return:  */
-void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
+void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 	// La carpeta metadata y la de los bloques no se crea aca, se crea apenas levanta el lfs
 
 	char* pathTabla = concatenar(PATH, raiz, "/Tablas/", nombreTabla, NULL);
@@ -130,7 +132,7 @@ void create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 	DIR *dir = opendir(pathTabla);
 
 	if(!dir){
-		int error = mkdir_p(pathTabla);
+		int error = crearDirectorio(pathTabla);
 		if (error == 0) {
 
 			char* pathMetadata = concatenar(pathTabla, "/Metadata.bin", NULL);
@@ -184,92 +186,50 @@ int crearDirectorio(char* path){
 	return 0;
 }
 
-
-int mkdir_p(const char *path) {
-	const size_t len = strlen(path);
-	char _path[256];
-	char *p;
-
-	errno = 0;
-
-	/* Copy string so its mutable */
-	if (len > sizeof(_path) - 1) {
-		errno = ENAMETOOLONG;
-		return -1;
-	}
-	strcpy(_path, path);
-
-	/* Iterate the string */
-	for (p = _path + 1; *p; p++) {
-		if (*p == '/') {
-			/* Temporarily truncate */
-			*p = '\0';
-
-			if (mkdir(_path, S_IRWXU) != 0) {
-				if (errno != EEXIST){
-					return -1;
-				}
-			}
-			*p = '/';
-		}
-	}
-	if (mkdir(_path, S_IRWXU) != 0) {
-		if (errno != EEXIST)
-			return -1;
-	}
-	return 0;
-}
-
-
 //TODO: dado que crear directorio podria retornar si hubo errores o no, catchear esos errores en la creacion de cada directorio.
 void inicializarLfs() {
 	raiz = config_get_string_value(config, "PUNTO_MONTAJE");
 
-	char* tablas = concatenar(PATH, raiz, "Tablas", NULL);
-	char* metadata = concatenar(PATH, raiz, "Metadata", NULL);
-	char* bloques = concatenar(PATH, raiz, "Bloques", NULL);
+	char* tablasPath = concatenar(PATH, raiz, "Tablas", NULL);
+	char* metadataPath = concatenar(PATH, raiz, "Metadata", NULL);
+	char* bloquesPath = concatenar(PATH, raiz, "Bloques", NULL);
 
-	crearDirectorio(tablas);
+	crearDirectorio(tablasPath);
 
-	crearDirectorio(metadata);
+	crearDirectorio(metadataPath);
 
-	metadata = concatenar(metadata, "/Metadata.bin", NULL);
+	metadataPath = concatenar(metadataPath, "/Metadata.bin", NULL);
 
-	FILE* metadataFile = fopen(metadata, "w+");
-	if(metadataFile != NULL){
-		//TODO: Este es el ejemplo que aparece en el TP, ver si despues hay que modificarlo.
-		char* blockSize = strdup("BLOCK_SIZE=64");
-		char* blocks = strdup("BLOCKS=100");
-		char* magicNumber = strdup("MAGIC_NUMBER=LISSANDRA");
-		fwrite(&blockSize, strlen(blockSize), 1, metadataFile);
-		fwrite(&blocks, strlen(blocks), 1, metadataFile);
-		fwrite(&magicNumber, strlen(magicNumber), 1, metadataFile);\
-
-		fclose(metadataFile);
-
-		free(blockSize);
-		free(blocks);
-		free(magicNumber);
-	}else{
-		//TODO: no se creo el metadata correctamente
+	FILE* file = fopen(metadataPath, "w+");
+	if(file != NULL){
+		fclose(file);
 	}
+	t_config *metadataConfig = config_create(metadataPath);
 
-	crearDirectorio(bloques);
-	config = leer_config(metadata);
+	config_set_value(metadataConfig, "BLOCK_SIZE", "64");
+	config_set_value(metadataConfig, "BLOCKS", "10");
+	config_set_value(metadataConfig, "MAGIC_NUMBER", "LISSANDRA");
+
+	config_save(metadataConfig);
+
+	crearDirectorio(bloquesPath);
+
 
 	/*
 	 ver si la cantidad de bloques se puede obtener levantando el metadata como config y crear la cantidad de bloques que dice en dicho
 	 archivo (chequear si aca es el momento de hacer esto).
 	*/
 
-	/*
-	int blocks = atoi(config_get_string_value(config, "BLOCKS"));
-	for(int i= 1; i<=blocks; i++){
+	int blocks = config_get_int_value(metadataConfig, "BLOCKS");
+	for(int i = 1; i <= blocks; i++){
+		FILE* block = fopen(concatenar(bloquesPath,"/" ,string_itoa(i), ".bin" , NULL),"w+");
+		if(block != NULL){
+			fclose(block);
+		}
+	}
 
-	}*/
-
-
-	free(tablas);
-	free(metadata);
-	free(bloques);
+	free(raiz);
+	free(tablasPath);
+	free(metadataPath);
+	free(bloquesPath);
 }
