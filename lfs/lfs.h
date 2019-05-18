@@ -19,7 +19,29 @@ fd_set descriptoresDeInteres;			// Coleccion de descriptores de interes para sel
 #define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"
 char* pathRaiz;
 
-pthread_t hiloRecibirDeMemoria;			// hilo que lee de consola
+typedef struct{
+	unsigned long long timestamp;
+	uint16_t key;
+	char* value;
+} t_registro;
+
+t_registro* registro;
+
+typedef struct
+{
+	t_list* registro;
+} t_tabla;
+
+t_tabla* tabla;
+
+typedef struct
+{
+	t_list* tabla;
+} t_memtable;
+
+t_memtable* memtable;
+
+pthread_t hiloRecibirDeMemoria;
 
 char* mensaje;
 int codValidacion;
