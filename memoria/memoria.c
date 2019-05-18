@@ -120,7 +120,7 @@ void escucharMultiplesClientes() {
 				char* request = paqueteRecibido->request;
 				printf("El codigo que recibi es: %s \n", request);
 				printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-				interpretarRequest(palabraReservada,request,HIMSELF, i);
+				interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
 
 			}
 		}
@@ -159,7 +159,7 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
 		case NUESTRO_ERROR:
-			if(caller == HIMSELF){
+			if(caller == ANOTHER_COMPONENT){
 				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 				int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
 				// TODO: Chequear si el -1 se puede castear como int*
@@ -237,7 +237,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 }
 
  void enviarAlDestinatarioCorrecto(cod_request palabraReservada,char* request,char* valorAEnviar,t_caller caller,int i){
-		if(caller == HIMSELF) {
+		if(caller == ANOTHER_COMPONENT) {
 				enviar(palabraReservada, valorAEnviar, (int) list_get(descriptoresClientes,i));
 			} else if(caller == CONSOLE) {
 				log_info(logger_MEMORIA, "La respuesta del ", request, " es ", valorAEnviar);
