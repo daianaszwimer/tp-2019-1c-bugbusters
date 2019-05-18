@@ -1,15 +1,22 @@
 #include "memoria.h"
+#include <stdbool.h>
+
 
 int main(void) {
-	tablaA= (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
-	pag= (t_pagina*)malloc(sizeof(t_pagina));
-	pag->timesamp = 12345;
-	pag->key="1";
+	//tablaA= (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
+	//pag= (t_pagina*)malloc(sizeof(t_pagina));
+	tablaA= malloc(sizeof(t_tablaDePaginas));
+
+//	paginas y tabla son dos listas, debemos hacer malloc?
+
+	pag->timestamp = 12345;
+	pag->key=1;
 	pag->value=(char*)"hola";
 
 	tablaA->numeroDePag=1;
-	tablaA->pagina= pag;
+	tablaA->pagina= list_create();
 	tablaA->modificado = SINMODIFICAR;
+	list_add(tablaA->pagina,pag);
 
 	//printf("%llu \n", obtenerHoraActual());
 
@@ -59,8 +66,7 @@ void leerDeConsola(void){
 
 /*obtenerHoraActual()
  * Parametros:
- * 	-> t_timeval :: Hora actual en minutos y microsegundos VER!conversionDeUnidades
- * Descripcion:
+ * Descripcion: Hora actual en minutos y microsegundos
  * Return:
  * 	-> :: unsigned long long */
 unsigned long long obtenerHoraActual(){
@@ -235,7 +241,7 @@ char* estaEnCache(cod_request palabraReservada, char** parametros){
 	{
 		if(keyABuscar==tablaA->pagina->key){
 			char* rtaCache= tablaA->pagina->value;
-
+//Devolver un t_paquete
 		return rtaCache;
 		}
 	}else{
@@ -256,7 +262,53 @@ char* estaEnCache(cod_request palabraReservada, char** parametros){
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
  * 	-> :: void */
-void procesarInsert(char* request,cod_request palabraReservada) {
+void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
 
+		char** parametros = obtenerParametros(request);
+		char* pagina; //t_pagina
+
+		puts("ANTES DE IR A BUSCAR A CACHE");
+		if((pagina= estaEnCache(palabraReservada, parametros))!= NULL) {
+//		KEY encontrada -> modifico timestamp
+			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+			printf("LA RTA ES %s \n",pagina);
+//			timestampAhora(pagina);
+		}else if((pagina= estaEnCache(palabraReservada, parametros))== FALSE){
+//		KEY no encontrada -> solicito nueva pagina
+			//list
+
+		}
 }
+
+t_pagina* timestampAhora (t_pagina* pagina){
+	unsigned long long nuevoTimes = obtenerHoraActual();
+	pagina->timestamp = nuevoTimes;
+	return pagina;
+}
+
+t_pagina* crearPagina(int clave, char* valor){ //VER TIPO DE KEY
+	t_pagina* nuevaPagina;
+	nuevaPagina->timestamp = obtenerHoraActual();
+	nuevaPagina->key = clave;
+	nuevaPagina->value = valor;
+	return nuevaPagina;
+}
+
+t_tablaDePaginas* crearTablaDePagina(int numeroDePag){
+	t_tablaDePaginas* nuevaTablaDePaginas;
+	nuevaTablaDePaginas->numeroDePag = numeroDePag;
+	nuevaTablaDePaginas->pagina = list_create();
+	nuevaTablaDePaginas->modificado = SINMODIFICAR;
+	return nuevaTablaDePaginas;
+}
+
+//tablaA->numeroDePag=1;
+//tablaA->pagina= list_create();
+//tablaA->modificado = SINMODIFICAR;
+
+//int numeroDePag;
+//t_list* pagina;		//t_pagina* pagina;
+//t_flagModificado modificado;
+
+
 

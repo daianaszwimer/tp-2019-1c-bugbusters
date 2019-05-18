@@ -28,14 +28,14 @@ typedef enum
 	MODIFICADO
 } t_flagModificado;
 typedef struct{
-	long int timesamp;
-	char* key;
+	unsigned long long timestamp;
+	int key;
 	char* value; // al inicializarse, lfs me tiene q decir el tamanio
 }t_pagina;
 typedef struct{
 	int numeroDePag;
-	t_pagina* pagina;
-	 t_flagModificado modificado;
+	t_list* pagina;		//t_pagina* pagina;
+	t_flagModificado modificado;
 }t_tablaDePaginas;
 typedef struct{
 	time_t tv_sec;
@@ -50,8 +50,6 @@ t_config* config;
 t_pagina* pag;
 
 t_tablaDePaginas* tablaA;
-
-
 
 //
 
@@ -82,4 +80,10 @@ char* intercambiarConFileSystem(cod_request, char*);
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
 char* estaEnCache(cod_request, char**);
+t_pagina* actualizarPagina (t_pagina*);
+t_pagina* crearPagina(int, char*);
+t_tablaDePaginas* crearTablaDePagina(int);
+
+
+
 #endif /* MEMORIA_H_ */
