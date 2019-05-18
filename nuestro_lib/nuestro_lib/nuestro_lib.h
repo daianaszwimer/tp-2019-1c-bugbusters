@@ -60,6 +60,9 @@ typedef struct
 } t_paquete;
 
 void iterator(char*);
+int convertirKey(char*, uint16_t*);
+int convertirTimestamp(char*, unsigned long long*);
+unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
 char* concatenar(char*, ...);
