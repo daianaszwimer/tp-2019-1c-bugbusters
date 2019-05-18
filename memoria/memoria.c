@@ -3,26 +3,30 @@
 
 
 int main(void) {
-	//tablaA= (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
-	//pag= (t_pagina*)malloc(sizeof(t_pagina));
-	tablaA= malloc(sizeof(t_tablaDePaginas));
 
-/*	paginas y tabla son dos listas, debemos hacer malloc? 	*/
+	t_tablaDePaginas* tabla = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
 
-	pag->timestamp = 12345;
+	t_elemTablaDePaginas* elementoA = (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+//	t_elemTablaDePaginas* elementoB = (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+
+	t_pagina* pag = (t_pagina*)malloc(sizeof(t_pagina));
+
+	tabla->elementosDeTablaDePagina = list_create();	//list_create() HACE UN MALLOC
+
+	pag->timestamp = 123456789;
 	pag->key=1;
 	pag->value=(char*)"hola";
 
-	tablaA->numeroDePag=1;
-	tablaA->pagina= list_create();
-	tablaA->modificado = SINMODIFICAR;
-	list_add(tablaA->pagina,pag);
+	elementoA->numeroDePag=1;
+	elementoA->pagina= pag;
+	elementoA->modificado = SINMODIFICAR;
+
 
 	//printf("%llu \n", obtenerHoraActual());
 
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
-	//datoEstaEnCache = TRUE;
+	//datoEstaEnMemoria = TRUE;
 	//conectar con file system
 	conectarAFileSystem();
 
@@ -218,14 +222,14 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado, t_pagina** pagEncontrada){
 	log_info(logger_MEMORIA,"ENTRE A ESTAE EN MEMORIA");
 	char* tablaABuscar= parametros[0];
-	 char *ptrResto;
+	char *ptrResto;
 	int keyABuscar = (int)strtol((char*)parametros[1],&ptrResto,16);
 
-	if(strcmp(tablaABuscar,"tablaA")==0)
+	if(strcmp(tablaABuscar,"elementoA")==0)
 	{
-		if(keyABuscar==tablaA->pagina->key){
-			*pagEncontrada=tablaA->pagina;
-			*valorEncontrado=(char*)tablaA->pagina->value;
+		if(keyABuscar==elementoA->pagina->key){
+			*pagEncontrada=elementoA->pagina;
+			*valorEncontrado=(char*) elementoA->pagina->value;
 			printf("LA RTA ES %s \n",*valorEncontrado);
 
 		return TRUE;
@@ -233,7 +237,6 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 	}else{
 		return FALSE;
 	}
-
 }
 
  void enviarAlDestinatarioCorrecto(cod_request palabraReservada,char* request,char* valorAEnviar,t_caller caller,int i){
@@ -242,7 +245,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 			} else if(caller == CONSOLE) {
 				log_info(logger_MEMORIA, "La respuesta del ", request, " es ", valorAEnviar);
 			} else {
-	//			log_error();
+//				log_error();
 			}
  }
 
@@ -274,33 +277,37 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 			printf("LA RTA ES %s \n",pagina);
 //			timestampAhora(pagina);
-		}else if((pagina= estaEnCache(palabraReservada, parametros))== FALSE){
-//		KEY no encontrada -> solicito nueva pagina
-			//list
-
+//		}else if((pagina= estaEnMemoria(palabraReservada, parametros))== FALSE){
+////		KEY no encontrada -> solicito nueva pagina
+//			//list
+//
 		}
 }
 
-t_pagina* timestampAhora (t_pagina* pagina){
-	unsigned long long nuevoTimes = obtenerHoraActual();
-	pagina->timestamp = nuevoTimes;
-	return pagina;
-}
-
-t_pagina* crearPagina(int clave, char* valor){ //VER TIPO DE KEY
+t_pagina* crearPagina(uint16_t newKey, char* newValue){
 	t_pagina* nuevaPagina;
 	nuevaPagina->timestamp = obtenerHoraActual();
-	nuevaPagina->key = clave;
-	nuevaPagina->value = valor;
+	nuevaPagina->key = newKey;
+	nuevaPagina->value = newValue;
 	return nuevaPagina;
 }
 
-t_tablaDePaginas* crearTablaDePagina(int numeroDePag){
-	t_tablaDePaginas* nuevaTablaDePaginas;
-	nuevaTablaDePaginas->numeroDePag = numeroDePag;
-	nuevaTablaDePaginas->pagina = list_create();
-	nuevaTablaDePaginas->modificado = SINMODIFICAR;
-	return nuevaTablaDePaginas;
+void actualizarPagina (t_pagina* pagina, char* newValue){
+	unsigned long long newTimes = obtenerHoraActual();
+	pagina->timestamp = newTimes;
+	pagina->value = newValue;
+}
+
+void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, int numeroDePag, uint16_t newKey, char* newValue){
+	t_elemTablaDePaginas* newElementoDePagina;
+	newElementoDePagina->numeroDePag = numeroDePag;
+	newElementoDePagina->pagina = crearPagina(newKey,newValue);
+	newElementoDePagina->modificado = SINMODIFICAR;
+	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
+}
+
+void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
+	actualizarPagina(elemento->pagina,newValue);
 }
 
 

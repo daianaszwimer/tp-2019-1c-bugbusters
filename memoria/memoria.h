@@ -27,16 +27,23 @@ typedef enum
 	SINMODIFICAR,
 	MODIFICADO
 } t_flagModificado;
+
 typedef struct{
 	unsigned long long timestamp;
 	uint16_t key;
 	char* value; // al inicializarse, lfs me tiene q decir el tamanio
 }t_pagina;
+
 typedef struct{
 	int numeroDePag;
-	t_list* pagina;		//t_pagina* pagina;
+	t_pagina* pagina;
 	t_flagModificado modificado;
+}t_elemTablaDePaginas;
+
+typedef struct{
+	t_list* elementosDeTablaDePagina;
 }t_tablaDePaginas;
+
 typedef struct{
 	time_t tv_sec;
 	suseconds_t tv_usec;   /* microseconds */
@@ -45,12 +52,11 @@ typedef struct{
 t_log* logger_MEMORIA;
 t_config* config;
 
-//t_tablaDePaginas* tablaDePaginas[1];
+
 //
 t_pagina* pag;
 
-t_tablaDePaginas* tablaA;
-
+t_elemTablaDePaginas* elementoA;
 //
 
 
@@ -82,8 +88,10 @@ void procesarSelect(cod_request,char*,t_caller, int);
 
 int estaEnMemoria(cod_request, char**, char**, t_pagina**);
 void enviarAlDestinatarioCorrecto(cod_request, char*, char* , t_caller, int);
-t_pagina* actualizarPagina (t_pagina*);
-t_pagina* crearPagina(int, char*);
-t_tablaDePaginas* crearTablaDePagina(int);
+
+t_pagina* crearPagina(uint16_t, char*);
+void actualizarPagina (t_pagina*, char*);
+void agregarElementoATablaDePagina(t_tablaDePaginas*, int,t_pagina*);
+
 
 #endif /* MEMORIA_H_ */
