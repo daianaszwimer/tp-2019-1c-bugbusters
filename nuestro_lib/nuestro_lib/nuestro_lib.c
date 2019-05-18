@@ -31,6 +31,35 @@ int longitudDeArrayDeStrings(char** array){
 	}
 	return longitud;
 }
+
+/* concatenar()
+ * Parametros:
+ * 	-> primerString :: char*
+ * 	-> ... :: n char*
+ * Descripcion: concatena n strings
+ * Se le debe pasar como ultimo parametro un NULL(indicando que se finalizo la entrada de parametros)
+ * Se debe hacer un free de la variable retornada
+ * Return: string concatenado*/
+char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de parametros variable
+	char* stringFinal;	// String donde se guarda el resultado de la concatenacion
+	va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
+	char* parametro;	// Este es un parametro solo
+
+	if (primerString == NULL)
+		return NULL;
+
+	stringFinal = strdup(primerString);
+	va_start(parametros, primerString);	// Inicalizo el va_list
+
+	while ((parametro = va_arg(parametros, char*)) != NULL) {	// Recorro la lista de parametros hasta encontrar un NULL
+		stringFinal = (char*) realloc(stringFinal, strlen(stringFinal) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
+		strcat(stringFinal, parametro); // Concateno el parametro con stringFinal
+	}
+
+	va_end(parametros); // Libero la va_list
+	return stringFinal;
+}
+
 /* obtenerParametros()
  * Parametros:
  *  -> request :: char*
@@ -56,30 +85,6 @@ int longitudDeArrayDeStrings(char** array){
 t_config* leer_config(char* nombreArchivo) {
 	return config_create(nombreArchivo);
 }
-//
-//void leer_consola(t_log* logger) {
-//	void loggear(char* leido) {
-//		log_info(logger, leido);
-//	}
-//
-//	_leer_consola_haciendo((void*) loggear);
-//}
-//
-
-////								  requests
-//void _leer_consola_haciendo(void (accion)(char)) {
-//	char* leido = readline(">");
-//
-//	while (strncmp(leido, "", 1) != 0) {
-//		accion(leido);
-//		free(leido);
-//		leido = readline(">");
-//	}
-//
-//	free(leido);
-//}
-//
-//
 
 int iniciar_servidor(char* puerto, char* ip)
 {
@@ -106,7 +111,6 @@ int iniciar_servidor(char* puerto, char* ip)
 	listen(socket_servidor, SOMAXCONN);
     freeaddrinfo(servinfo);
     //log_trace(logger, "Listo para escuchar a mi cliente");
-    //puts("2345678");
     return socket_servidor;
 }
 
@@ -299,51 +303,6 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 	return codPalabraReservada;
 }
 
-//void enviar_mensaje(char* mensaje, int socket_cliente)
-//{
-//	t_paquete* paquete = malloc(sizeof(t_paquete));
-//
-//	paquete->codigo_operacion = MENSAJE;
-//	paquete->buffer = malloc(sizeof(t_buffer));
-//	paquete->buffer->size = strlen(mensaje) + 1;
-//	paquete->buffer->stream = malloc(paquete->buffer->size);
-//	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
-//
-//	int bytes = paquete->buffer->size + 2*sizeof(int);
-//
-//	void* a_enviar = serializar_paquete(paquete, bytes);
-//
-//	send(socket_cliente, a_enviar, bytes, 0);
-//
-//	free(a_enviar);
-//	eliminar_paquete(paquete);
-//}
-//
-//int recibir_request(int socket_cliente)
-//{
-//	int cod_request;
-//	int size;
-//	char* buffer = "";
-//	buffer = (char*) recibir_buffer(&size, socket_cliente);
-//	//strcat(buffer, "\0");   // Chequear esto
-//	//log_info(logger, "Me llego la request %s", buffer);
-//	free(buffer);
-//	return cod_request;
-//
-//}
-//
-////int recibir_operacion(int socket_cliente)
-////{
-////	int cod_op;
-////	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) != 0)
-////		return cod_op;
-////	else
-////	{
-////		close(socket_cliente);
-////		return -1;
-////	}
-////}
-//
 void* recibir_buffer(int* size, int socket_cliente)
 {
 	void* buffer = "";
@@ -354,18 +313,6 @@ void* recibir_buffer(int* size, int socket_cliente)
 
 	return buffer;
 }
-//
-//void recibir_mensaje(int socket_cliente)
-//{
-//	int size;
-//	char* buffer = "";
-//	buffer = (char*) recibir_buffer(&size, socket_cliente);
-//	//strcat(buffer, "\0");   // Chequear esto
-//	log_info(logger, "Me llego el mensaje %s", buffer);
-//	free(buffer);
-//}
-//
-////podemos usar la lista de valores para poder hablar del for y de como recorrer la lista
 
 t_paquete* recibir(int socket)
 {
@@ -388,9 +335,7 @@ t_paquete* recibir(int socket)
 
 	return paquete;
 }
-//
-//
-//
+
 ////cliente
 
 int crearConexion(char* ip, char* puerto)
@@ -414,44 +359,6 @@ int crearConexion(char* ip, char* puerto)
 
 	return socket_cliente;
 }
-//
-//
-//void crear_buffer(t_paquete* paquete)
-//{
-//	paquete->buffer = malloc(sizeof(t_buffer));
-//	paquete->buffer->size = 0;
-//	paquete->buffer->stream = NULL;
-//}
-//
-//t_paquete* crear_super_paquete(void)
-//{
-//	//me falta un malloc!
-//	t_paquete* paquete;
-//
-//	//descomentar despues de arreglar
-//	//paquete->codigo_operacion = PAQUETE;
-//	//crear_buffer(paquete);
-//	return paquete;
-//}
-//
-//t_paquete* crear_paquete(void)
-//{
-//	t_paquete* paquete = malloc(sizeof(t_paquete));
-//	paquete->codigo_operacion = PAQUETE;
-//	crear_buffer(paquete);
-//	return paquete;
-//}
-//
-//void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
-//{
-//	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int));
-//
-//	memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio, sizeof(int));
-//	memcpy(paquete->buffer->stream + paquete->buffer->size + sizeof(int), valor, tamanio);
-//
-//	paquete->buffer->size += tamanio + sizeof(int);
-//}
-//
 
 /* enviar()
  * Parametros:
