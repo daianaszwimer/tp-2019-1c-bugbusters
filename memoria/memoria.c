@@ -1,8 +1,6 @@
 #include "memoria.h"
 #include <stdbool.h>
 
-
-
 int main(void) {
 
 	pag = malloc(sizeof(t_pagina));
@@ -14,11 +12,11 @@ int main(void) {
 
 	pag->timestamp = 123456789;
 	pag->key=1;
-	pag->value=(char*)"hola";
+	pag->value=strdup("hola");
 
-//	elementoA1->numeroDePag=1;
-//	elementoA1->pagina= pag;
-//	elementoA1->modificado = SINMODIFICAR;
+	elementoA1->numeroDePag=1;
+	elementoA1->pagina= pag;
+	elementoA1->modificado = SINMODIFICAR;
 
 
 
@@ -54,6 +52,7 @@ int main(void) {
 }
 
 void leerDeConsola(void){
+	/*
 	char* mensaje;
 	log_info(logger_MEMORIA, "Vamos a leer de consola");
 	while (1) {
@@ -65,6 +64,7 @@ void leerDeConsola(void){
 		validarRequest(mensaje);
 		free(mensaje);
 	}
+	*/
 }
 
 
@@ -220,17 +220,17 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 }
 
 int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
-	log_info(logger_MEMORIA,"ENTRE A ESTAE EN MEMORIA");
+	//log_info(logger_MEMORIA,"ENTRE A ESTAE EN MEMORIA");
 	char* tablaABuscar= parametros[0];
-	char *ptrResto;
-	int keyABuscar = (int)strtol((char*)parametros[1],&ptrResto,16);
+	int keyABuscar;
+	int tuvieja = convertirKey(parametros[1], &keyABuscar);
 
 	if(strcmp(tablaABuscar,"tablaA")==0) //esto hay que cambiarlo
 	{
-		if(keyABuscar==elementoA1->pagina->key){
+		if(tuvieja==(int)elementoA1->pagina->key){
 			*elementoEncontrado=elementoA1;
-			*valorEncontrado=(char*) elementoA1->pagina->value;
-			printf("LA RTA ES %s \n",*valorEncontrado);
+			*valorEncontrado = strdup(elementoA1->pagina->value);
+			//printf("LA RTA ES %s \n",*valorEncontrado);
 
 		return TRUE;
 		}
