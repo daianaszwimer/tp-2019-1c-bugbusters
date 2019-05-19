@@ -90,9 +90,11 @@ void procesarSelect(cod_request,char*,t_caller, int);
 int estaEnMemoria(cod_request, char**, char**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, char*, char* , t_caller, int);
 
+void procesarInsert(cod_request, char*, t_caller);
 t_pagina* crearPagina(uint16_t, char*);
 void actualizarPagina (t_pagina*, char*);
-void agregarElementoATablaDePagina(t_tablaDePaginas*, int,t_pagina*);
+void crearElementoEnTablaDePagina(t_tablaDePaginas*, uint16_t, char*);
+void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
 
 #endif /* MEMORIA_H_ */
