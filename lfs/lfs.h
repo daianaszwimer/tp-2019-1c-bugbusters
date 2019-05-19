@@ -46,6 +46,8 @@ pthread_t hiloRecibirDeMemoria;
 char* mensaje;
 int codValidacion;
 
+char** separarRequest(char*);
+
 void leerDeConsola(void);
 void recibirConexionesMemoria(void);
 void validarRequest(char*);

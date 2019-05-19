@@ -10,24 +10,57 @@ int main(void) {
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
+	char** a = separarRequest("INSERT 1 \"Hola como te va\" 12345");
+	//inicializarLfs();
+
+	//Create("TABLA1","SC",3,5000);
+
+	//if(pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL)){
+
+	//}
+
+	//leerDeConsola();
+
+	//pthread_join(hiloRecibirDeMemoria, NULL);
 	
-	inicializarLfs();
 
-	Create("TABLA1","SC",3,5000);
-
-	if(pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL)){
-
-	}
-
-	leerDeConsola();
-
-	pthread_join(hiloRecibirDeMemoria, NULL);
-	
-
-	free(pathRaiz);
+	//free(pathRaiz);
 	log_destroy(logger_LFS);
 	config_destroy(config);
 	return 0;
+}
+
+char** separarRequest(char* request) {
+	// La idea es concatenar cada char hasta que haya un espacio,
+	// ahi lo guardo en una posicion de requestSeparada
+	// Si aparece una comilla activo el flag comilla
+	// y concateno aunque haya espacios hasta que el flag comilla se desactive
+	char** requestSeparada = NULL;
+	int comilla = 0;
+	int j=0;
+	char* elementoConcatenado = strdup("");
+	char* elemento;
+
+	for(int i=0;request[i]!='\0';i++) {
+		elemento = malloc(2*sizeof(char));
+		elemento[0] = request[i];
+		elemento[1] = '\0';
+		if((request[i]==34) && comilla) { // 34 es el valor ascii de la comilla
+			comilla = 0;
+		} else if(request[i]==34) {
+			comilla = 1;
+		}
+		if((request[i]==32) && !comilla) { // 32 es el valor ascii del espacio
+			requestSeparada[j] = strdup(elementoConcatenado);
+			free(elementoConcatenado);
+			j++;
+		} else {
+			elementoConcatenado = concatenar(elementoConcatenado,elemento,NULL);
+		}
+		free(elemento);
+	}
+	free(elementoConcatenado);
+	return requestSeparada;
 }
 
 void leerDeConsola(void) {
