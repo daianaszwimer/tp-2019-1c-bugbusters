@@ -52,6 +52,7 @@ pthread_t hiloPlanificarExec;		//hilo para planificar requests de ready a exec y
 
 void conectarAMemoria(void);
 void liberarMemoria(void);
+void liberarRequestProcesada(request_procesada*);
 void leerDeConsola(void);
 //planificar requests
 void planificarNewAReady(void);

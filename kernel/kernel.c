@@ -55,7 +55,6 @@ void leerDeConsola(void){
 		queue_push(new, mensaje);
 		pthread_mutex_unlock(&semMColaNew);
 		sem_post(&semRequestNew);
-		//si descomento esto, tira segmentation fault -> free(mensaje);
 	}
 }
 
@@ -67,7 +66,8 @@ void planificarNewAReady(void) {
 	while(1) {
 		sem_wait(&semRequestNew);
 		pthread_mutex_lock(&semMColaNew);
-		char* request = queue_pop(new);
+		char* request = malloc(strlen((char*)queue_peek(new)) + 1);
+		request = queue_pop(new);
 		pthread_mutex_unlock(&semMColaNew);
 		if(validarRequest(request) == TRUE) {
 			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
@@ -81,7 +81,7 @@ void planificarNewAReady(void) {
 void reservarRecursos(char* mensaje) {
 	char** request = string_n_split(mensaje, 2, " ");
 	cod_request codigo = obtenerCodigoPalabraReservada(request[0], KERNEL);
-	request_procesada* _request;
+	request_procesada* _request = malloc(sizeof(request_procesada));
 	if (codigo == RUN) {
 		//desarmo archivo y lo pongo en una cola
 		t_queue* colaRun = queue_create();
@@ -92,31 +92,55 @@ void reservarRecursos(char* mensaje) {
 		if (archivoLql == NULL) {
 			log_error(logger_KERNEL, "No existe un archivo en esa ruta");
 		} else {
-			// usar memoria dinamica o leer caracter por caracter
-			char* request;
-			char** requestDividida;
-			while(fgets(request, sizeof(request), archivoLql) != NULL) {
-				request[strcspn(request, "\n")] = 0;
-				requestDividida = string_n_split(request, 2, " ");
-				cod_request codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
-				_request->codigo = codigo;
-				_request->request = request;
-				queue_push(colaRun, _request);
+			char letra;
+			char* request = (char *) malloc(sizeof(char));
+			char** requestDividida = NULL;
+			int i = 0;
+			while((letra = fgetc(archivoLql)) != EOF) {
+				if (letra != '\n') {
+					// concateno
+					request = (char *) realloc(request, sizeof(letra));
+					request[i] = letra;
+					i++;
+				} else {
+					request_procesada* otraRequest = malloc(sizeof(request_procesada));
+					request[i] = '\0';
+					requestDividida = string_n_split(request, 2, " ");
+					cod_request codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
+					void* requestRecibido = malloc(sizeof(request));
+					otraRequest->request = requestRecibido;
+					otraRequest->codigo = codigo;
+					otraRequest->request = request;
+					queue_push(colaRun, otraRequest);
+					free(request);
+					free(requestDividida[0]);
+					free(requestDividida[1]);
+					free(requestDividida);
+					liberarRequestProcesada(otraRequest);
+					request = malloc(sizeof(char));
+					i = 0;
+				}
 			}
+			free(request);
 			fclose(archivoLql);
 		}
+		void* requestRecibido = malloc(sizeof(colaRun));
+		_request->request = requestRecibido;
 		_request->codigo = RUN;
 		_request->request = colaRun;
 		pthread_mutex_lock(&semMColaReady);
 		queue_push(ready, _request);
 		pthread_mutex_unlock(&semMColaReady);
 	} else {
+		void* requestRecibido = malloc(sizeof(mensaje));
+		_request->request = requestRecibido;
 		_request->codigo = codigo;
 		_request->request = mensaje;
 		pthread_mutex_lock(&semMColaReady);
 		queue_push(ready, _request);
 		pthread_mutex_unlock(&semMColaReady);
 	}
+	liberarRequestProcesada(_request);
 	sem_post(&semRequestReady);
 }
 
@@ -126,9 +150,17 @@ void planificarReadyAExec(void) {
 	request_procesada* request;
 	int threadProcesar;
 	while(1) {
+		request = malloc(sizeof(request_procesada));
 		sem_wait(&semRequestReady);
+		// esto tira invalid read
+		if(((request_procesada*)queue_peek(ready))->codigo == RUN) {
+			request->request = malloc(sizeof((request_procesada*)queue_peek(ready))->request);
+		} else {
+			request->request = malloc(strlen(((request_procesada*)queue_peek(ready))->request) + 1);
+		}
+		printf("Tamanio es %d    ", strlen(((request_procesada*)queue_peek(ready))->request) + 1);
 		sem_wait(&semMultiprocesamiento);
-		//hiloRequest = malloc(sizeof(pthread_t));
+		//hiloRequest = malloc(sizeof(pthread_t)); esto va?
 		pthread_mutex_lock(&semMColaReady);
 		request = queue_pop(ready);
 		pthread_mutex_unlock(&semMColaReady);
@@ -140,19 +172,14 @@ void planificarReadyAExec(void) {
 		} else {
 			//informar error
 		}
-		//if es individual -> un hilo
-		//si es run -> otro hilo
-		//se crea hilo para el request y dentro del hilo se hace
-		//el post que esta abajo
 	}
-	//cuando se ejecuta una sola linea se hace lo mismo que cuando se ejcuta una linea de un archivo de RUN
 }
 
 void procesarRequest(request_procesada* request) {
 	manejarRequest(request);
 	printf("aa  ");
+	liberarRequestProcesada(request);
 	sem_post(&semMultiprocesamiento);
-	//free(request);
 }
 
 int validarRequest(char* mensaje) {
@@ -216,6 +243,12 @@ void liberarMemoria(void) {
 	sem_destroy(&semMultiprocesamiento);
 }
 
+void liberarRequestProcesada(request_procesada* request) {
+	// segun valgrind este free no hace falta
+	// free(request->request);
+	free(request);
+}
+
 /*
  * Funciones que procesan requests
 */
@@ -234,7 +267,7 @@ void procesarRun(t_queue* colaRun) {
 	// usar inotify por si cambia Q
 	t_paquete* respuesta;
 	request_procesada* request;
-	int quantumActual;
+	int quantumActual = 0;
 	//el while va a ser fin de Q o fin de cola
 	while(!queue_is_empty(colaRun) || quantumActual < quantum) {
 		request = queue_pop(colaRun);
@@ -243,6 +276,7 @@ void procesarRun(t_queue* colaRun) {
 			if (respuesta->palabraReservada == QUERY_ERROR) {
 				//libero recursos, mato hilo, lo saco de la cola, e informo error
 			}
+			eliminar_paquete(respuesta);
 		} else {
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
 		}
