@@ -37,6 +37,14 @@ typedef enum
 	LFS
 } Componente;
 
+typedef enum
+{
+	SC,
+	SHC,
+	EC,
+	CONSISTENCIA_INVALIDA = -1
+} consistencia;
+
 
 typedef enum
 {
