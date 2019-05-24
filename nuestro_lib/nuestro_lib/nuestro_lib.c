@@ -386,6 +386,7 @@ t_paquete* recibir(int socket)
 	recibido = recv(socket, &paquete->palabraReservada, sizeof(int), MSG_WAITALL);
 
 	if(recibido == 0) {
+		printf("ERROR \n");
 		paquete->palabraReservada = -1;
 		void* requestRecibido = malloc(sizeof(int));
 		paquete->request = requestRecibido;
