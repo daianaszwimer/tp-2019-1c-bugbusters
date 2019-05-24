@@ -32,27 +32,28 @@ void recibirConexionesMemoria() {
 	int lissandraFS_fd = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
 	log_info(logger_LFS, "Lissandra lista para recibir Memorias");
 	pthread_t hiloRequest;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
 
 	while(1){
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
-		hiloRequest = malloc(sizeof(pthread_t));
-		if(pthread_create(&hiloRequest, NULL, (void*)procesarRequest, memoria_fd)){
-			pthread_detach(hiloRequest);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		int threadRequest = pthread_create(&hiloRequest, &attr, (void*)procesarRequest, (int *)memoria_fd);
+		if(threadRequest == 0){
+			pthread_attr_destroy(&attr);
 		} else {
 			printf("Error al iniciar el hilo de la memoria con fd = %i", memoria_fd);
 		}
+		//hiloRequest = malloc(sizeof(pthread_t));
 	}
 }
 
 
 void procesarRequest(int memoria_fd){
 	while(1){
-	t_paquete* paqueteRecibido = recibir(memoria_fd);
-	cod_request palabraReservada = paqueteRecibido->palabraReservada;
-	printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
-
-	//t_paquete* paquete = armar_paquete(palabraReservada, respuesta);
-	enviar(palabraReservada, paqueteRecibido->request ,memoria_fd);
-
+		t_paquete* paqueteRecibido = recibir(memoria_fd);
+		cod_request palabraReservada = paqueteRecibido->palabraReservada;
+		printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
+		enviar(palabraReservada, paqueteRecibido->request ,memoria_fd);
 	}
 }
