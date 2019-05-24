@@ -19,7 +19,6 @@ int main(void) {
 	elementoA1->modificado = SINMODIFICAR;
 
 
-
 	//printf("%llu \n", obtenerHoraActual());
 
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
@@ -245,8 +244,8 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 		printf("La respuesta del request %s es %s \n", request, valorAEnviar);
 	}
  }
-/*
-/*procesarInsert()
+
+/* procesarInsert()
  * Parametros:
  * 	-> char* ::  request
  * 	-> cod_request :: palabraReservada
@@ -257,7 +256,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
  * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
- * 	-> :: void *\/
+ * 	-> :: void */
 void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
 		t_elemTablaDePaginas* elementoEncontrado;
 		char* valorEncontrado;
@@ -273,13 +272,12 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 //							-> modifico valor
 //							-> modifico flagTabla
 			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
-			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-			puts(elementoEncontrado->pagina->value);
+			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
 		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
 //			KEY no encontrada -> nueva pagina solicitada
 //TODO:							si faltaEspacio JOURNAL
 			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
-			puts("NO ESTA EN CACHE");
+			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
 		}else{
 //TODO:		TABLA no encontrada -> nuevo segmento
 
@@ -316,4 +314,3 @@ void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* new
 
 
 
-*/
