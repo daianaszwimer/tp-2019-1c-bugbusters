@@ -353,3 +353,14 @@
 [INFO] 10:55:31:194 Lfs/(7477:7477): ----------------INICIO DE LISSANDRA FS--------------
 [INFO] 10:55:58:470 Lfs/(7568:7568): ----------------INICIO DE LISSANDRA FS--------------
 [INFO] 10:56:57:935 Lfs/(7724:7724): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:15:33:518 Lfs/(14757:14757): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:17:40:320 Lfs/(14891:14891): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:17:59:554 Lfs/(14891:14891): Me llego un CREATE
+[INFO] 18:55:54:487 Lfs/(16380:16380): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:57:24:832 Lfs/(16380:16380): Me llego un CREATE
+[INFO] 18:58:05:291 Lfs/(16441:16441): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:58:20:994 Lfs/(16441:16441): Me llego un CREATE
+[INFO] 18:58:51:292 Lfs/(16492:16492): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:59:02:647 Lfs/(16492:16492): Me llego un CREATE
+[INFO] 19:03:44:13 Lfs/(16676:16676): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:04:07:440 Lfs/(16676:16676): Me llego un CREATE

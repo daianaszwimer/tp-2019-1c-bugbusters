@@ -50,12 +50,12 @@ void leerDeConsola(void);
 void recibirConexionesMemoria(void);
 void validarRequest(char*);
 void procesarRequest(int);
-void interpretarRequest(cod_request, char*, t_caller);
-void Create(char*, char*, int, int);
+void interpretarRequest(cod_request, char*, t_caller, int);
+return_create Create(char*, char*, int, int);
 int obtenerBloqueDisponible(void);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
 void inicializarLfs(void);
-char** separarRequest(char*, char*);
+void liberarString(char*);
 
 #endif /* LFS_H_ */

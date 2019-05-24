@@ -23,6 +23,45 @@ void iterator(char* value) {
 	printf("%s\n", value);
 }
 
+char** separarRequest(char* text, char* separator) {
+	char **substrings = NULL;
+	int size = 0;
+
+	char *text_to_iterate = string_duplicate(text);
+
+	char *next = text_to_iterate;
+	char *str = text_to_iterate;
+	int freeToken = 0;
+
+	while(next[0] != '\0') {
+		char* token = strtok_r(str, separator, &next);
+		if(token == NULL) {
+			break;
+		}
+		if(*token == '"'){
+			token++;
+			token = concatenar(token, " ", strtok_r(str, "\"", &next), NULL);
+			freeToken = 1;
+		}
+
+		str = NULL;
+		size++;
+		substrings = realloc(substrings, sizeof(char*) * size);
+		substrings[size - 1] = string_duplicate(token);
+		if(freeToken) {
+			free(token);
+			freeToken = 0;
+		}
+	}
+
+	size++;
+	substrings = realloc(substrings, sizeof(char*) * size);
+	substrings[size - 1] = NULL;
+
+	free(text_to_iterate);
+	return substrings;
+}
+
 /*obtenerHoraActual()
  * Parametros:
  * 	-> t_timeval :: Hora actual en minutos y microsegundos VER!conversionDeUnidades
@@ -97,7 +136,7 @@ char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de 
  */
 char** obtenerParametros(char* request) {
 	char** requestSeparada;
-	requestSeparada = separarString(request);
+	requestSeparada = separarRequest(request, " ");
 	//n = longitudDeArrayDeStrings(requestSeparada);
     memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
 	return requestSeparada;
@@ -188,7 +227,7 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			}
 		}
 
-		char** parametros = separarString(request[1]);
+		char** parametros = separarRequest(request[1], " ");
 		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
 		//free(request);
 		//free(parametros);
@@ -364,7 +403,7 @@ t_paquete* recibir(int socket)
 	return paquete;
 }
 
-////cliente
+//cliente
 
 int crearConexion(char* ip, char* puerto)
 {

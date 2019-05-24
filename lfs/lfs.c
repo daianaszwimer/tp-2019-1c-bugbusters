@@ -13,8 +13,6 @@ int main(void) {
 
 	inicializarLfs();
 
-	Create("TABLA1","SC",3,5000);
-
 	//if(pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL)){
 
 	//}
@@ -30,52 +28,17 @@ int main(void) {
 	return 0;
 }
 
-char** separarRequest(char* text, char* separator) {
-	char **substrings = NULL;
-	int size = 0;
-
-	char *text_to_iterate = string_duplicate(text);
-
-	char *next = text_to_iterate;
-	char *str = text_to_iterate;
-	int freeToken = 0;
-
-	while(next[0] != '\0') {
-		char* token = strtok_r(str, separator, &next);
-		if(token == NULL) {
-			break;
-		}
-		if(*token == '"'){
-			token++;
-			token = concatenar(token, " ", strtok_r(str, "\"", &next), NULL);
-			freeToken = 1;
-		}
-
-		str = NULL;
-		size++;
-		substrings = realloc(substrings, sizeof(char*) * size);
-		substrings[size - 1] = string_duplicate(token);
-		if(freeToken) {
-			free(token);
-			freeToken = 0;
-		}
-	}
-
-	size++;
-	substrings = realloc(substrings, sizeof(char*) * size);
-	substrings[size - 1] = NULL;
-
-	free(text_to_iterate);
-	return substrings;
-}
-
 void leerDeConsola(void) {
 	//log_info(logger, "leerDeConsola");
 	while (1) {
 		mensaje = readline(">");
+		if (!strcmp(mensaje, "\0")) {
+			free(mensaje);
+			break;
+		}
 		validarRequest(mensaje);
+		free(mensaje);
 	}
-	free(mensaje);
 }
 
 void validarRequest(char* mensaje){
@@ -85,7 +48,7 @@ void validarRequest(char* mensaje){
 	cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0],LFS);
 	switch(codValidacion){
 		case EXIT_SUCCESS:
-			interpretarRequest(palabraReservada, mensaje, CONSOLE);
+			interpretarRequest(palabraReservada, mensaje, CONSOLE, NULL);
 			break;
 		case NUESTRO_ERROR:
 			//es la q hay q hacerla generica
@@ -101,7 +64,7 @@ void recibirConexionesMemoria() {
 	log_info(logger_LFS, "Lissandra lista para recibir Memorias");
 	pthread_t hiloRequest;
 
-	while(1){
+	while(1) {
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
 		if(pthread_create(&hiloRequest, NULL, (void*)procesarRequest, (int*) memoria_fd)){
 			pthread_detach(hiloRequest);
@@ -118,14 +81,14 @@ void procesarRequest(int memoria_fd) {
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
 		//printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
 		printf("De la memoria nro: %d \n", memoria_fd);
-		interpretarRequest(palabraReservada, paqueteRecibido->request, ANOTHER_COMPONENT);
+		interpretarRequest(palabraReservada, paqueteRecibido->request, ANOTHER_COMPONENT, memoria_fd);
 		//t_paquete* paquete = armar_paquete(palabraReservada, respuesta);
 		enviar(palabraReservada, paqueteRecibido->request ,memoria_fd);
 	}
 }
 
-void interpretarRequest(cod_request palabraReservada, char* request, t_caller caller) {
-
+void interpretarRequest(cod_request palabraReservada, char* request, t_caller caller, int memoria_fd) {
+	char** requestSeparada = separarRequest(request, " ");
 	switch(palabraReservada) {
 		case SELECT:
 			log_info(logger_LFS, "Me llego un SELECT");
@@ -135,7 +98,13 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
 			break;
 		case CREATE:
 			log_info(logger_LFS, "Me llego un CREATE");
-			//Create()
+			int retorno = Create(requestSeparada[1], requestSeparada[2], strtol(requestSeparada[3], NULL, 10), strtol(requestSeparada[4], NULL, 10));
+			char* retorno_string = string_itoa(retorno);
+			if(caller == CONSOLE) {
+				// Cacheamos los errores wachin
+			} else {
+				enviar(palabraReservada, retorno_string, memoria_fd);
+			}
 			break;
 		case DESCRIBE:
 			log_info(logger_LFS, "Me llego un DESCRIBE");
@@ -155,8 +124,21 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
 			log_warning(logger_LFS, "Operacion desconocida. No quieras meter la pata");
 			break;
 	}
+
+
+	for(int i=0;requestSeparada[i]!=NULL;i++){
+			free(requestSeparada[i]);
+		}
+	free(requestSeparada);
+	//list_clean_and_destroy_elements(requestSeparada, (void*)liberarString);
+	//free(requestSeparada);
 	puts("\n");
 }
+
+	void liberarString(char* y){
+		free(y);
+	}
+
 
 /* create() [API]
  * Parametros:
@@ -165,24 +147,28 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
  * 	-> numeroDeParticiones :: int
  * 	-> tiempoDeCompactacion :: int
  * Descripcion: permite la creación de una nueva tabla dentro del file system
- * Return:  */
-void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
+ * Return: codigos de error o success*/
+return_create Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 
 	char* pathTabla = concatenar(pathRaiz, "Tablas/", nombreTabla, NULL);
 
 	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
 
-
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
-	//TODO ver si chequear si la tabla existe asi, o usando mkdir
-	if(!dir){
+	if(!dir) {
 		/* Creamos la carpeta de la tabla */
-		mkdir(pathTabla, S_IRWXU);
+		int resultadoCreacionDirectorio = mkdir(pathTabla, S_IRWXU);
+		if(resultadoCreacionDirectorio == -1) {
+			return ERROR_CREANDO_DIRECTORIO;
+		}
 		char* metadataPath = concatenar(pathTabla, "/Metadata.bin", NULL);
 
 		/* Creamos el archivo Metadata */
 		int metadataFileDescriptor = open(metadataPath, O_CREAT , S_IRWXU);
+		if(metadataFileDescriptor == -1) {
+			return ERROR_CREANDO_METADATA;
+		}
 		close(metadataFileDescriptor);
 
 		char* _numeroDeParticiones = string_itoa(numeroDeParticiones);
@@ -202,6 +188,9 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 			char* pathParticion = concatenar(pathTabla, "/", string_itoa(i), ".bin", NULL);
 
 			int particionFileDescriptor = open(pathParticion, O_CREAT ,S_IRWXU);
+			if(particionFileDescriptor == -1) {
+				return ERROR_CREANDO_PARTICIONES;
+			}
 			close(particionFileDescriptor);
 
 			char* bloqueDisponible = string_itoa(obtenerBloqueDisponible());
@@ -216,10 +205,11 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 		config_destroy(metadataConfig);
 		free(metadataPath);
 	} else {
-		//TODO existe tabla
+		return TABLA_EXISTE;
 	}
 	free(dir);
 	free(pathTabla);
+	return CREATE_EXITOSO;
 }
 
 int obtenerBloqueDisponible() {

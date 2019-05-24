@@ -45,6 +45,14 @@ typedef enum
 	CONSISTENCIA_INVALIDA = -1
 } consistencia;
 
+typedef enum
+{
+	CREATE_EXITOSO,
+	TABLA_EXISTE,
+	ERROR_CREANDO_DIRECTORIO,
+	ERROR_CREANDO_METADATA,
+	ERROR_CREANDO_PARTICIONES
+} return_create;
 
 typedef enum
 {
@@ -74,6 +82,7 @@ typedef enum
 } t_caller;
 
 void iterator(char*);
+char** separarRequest(char*, char*);
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
