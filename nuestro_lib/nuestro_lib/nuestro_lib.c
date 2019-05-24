@@ -11,8 +11,9 @@ void iterator(char* value) {
  * Descripcion: en el caso de que se pueda, crea una key de tipo int (de 16 bits)
  * Return:
  * 	-> :: int */
-int convertirKey(char* key, uint16_t* key16) {
+int convertirKey(char* key) {
 	uint64_t key64;
+	uint16_t key16;
 	key64 = strtol(key,NULL,10); //strol devuelve un int como resultado deconvierte un string a un int.LOs parametros son strtol(string, puntero al string, base)
 	if(key64 < 65536) {
 	    key16 = strtol(key,NULL,10);
@@ -20,6 +21,7 @@ int convertirKey(char* key, uint16_t* key16) {
 	}
 	return NUESTRO_ERROR;
 }
+
 /* convertirTimestamp()
  * Parametros:
  * 	-> key ::  char*

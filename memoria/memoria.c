@@ -222,19 +222,18 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 }
 
 int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
-	//log_info(logger_MEMORIA,"ENTRE A ESTAE EN MEMORIA");
 	char* tablaABuscar= parametros[0];
-	int keyABuscar;
-	int tuvieja = convertirKey(parametros[1], &keyABuscar);
+	int keyABuscar= convertirKey(parametros[1]);
 
 	if(strcmp(tablaABuscar,"tablaA")==0) //esto hay que cambiarlo
 	{
-		if(tuvieja==(int)elementoA1->pagina->key){
+		if(keyABuscar==(int)elementoA1->pagina->key){
 			*elementoEncontrado=elementoA1;
 			*valorEncontrado = strdup(elementoA1->pagina->value);
 			//printf("LA RTA ES %s \n",*valorEncontrado);
-
 		return TRUE;
+		}else{
+			return FALSE;
 		}
 	}else{
 		return FALSE;
@@ -265,6 +264,8 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 		t_elemTablaDePaginas* elementoEncontrado;
 		char* valorEncontrado;
 		char** parametros = obtenerParametros(request);
+		char* newKeyChar = parametros[1];
+		int newKey = convertirKey(newKeyChar);
 		char* newValue = parametros[2];
 
 		puts("ANTES DE IR A BUSCAR A CACHE");
@@ -280,14 +281,14 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 //			KEY no encontrada -> solicito nueva pagina
 //								valido largoTablaDePagina
 
-			crearElementoEnTablaDePagina(tablaA,newValue,newValue);
+			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
 			puts("NO ESTA EN CACHE");
 
 		}
 }
 
 t_pagina* crearPagina(uint16_t newKey, char* newValue){
-	t_pagina* nuevaPagina;
+	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
 	nuevaPagina->timestamp = obtenerHoraActual();
 	nuevaPagina->key = newKey;
 	nuevaPagina->value = newValue;
@@ -301,7 +302,7 @@ void actualizarPagina (t_pagina* pagina, char* newValue){
 }
 
 void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
-	t_elemTablaDePaginas* newElementoDePagina;
+	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
 	newElementoDePagina->numeroDePag = rand();
 	newElementoDePagina->pagina = crearPagina(newKey,newValue);
 	newElementoDePagina->modificado = SINMODIFICAR;

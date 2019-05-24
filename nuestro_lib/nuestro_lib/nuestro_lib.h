@@ -28,8 +28,6 @@
 #define PARAMETROS_RUN 1
 #define PARAMETROS_METRICS 0
 
-//#define NUESTRO_ERROR -1
-
 typedef enum
 {
 	KERNEL,
@@ -60,7 +58,7 @@ typedef struct
 } t_paquete;
 
 void iterator(char*);
-int convertirKey(char*, uint16_t*);
+int convertirKey(char*);
 int convertirTimestamp(char*, unsigned long long*);
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
