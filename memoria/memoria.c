@@ -59,7 +59,7 @@ void leerDeConsola(void){
 		if (!strcmp(mensaje, "\0")) {
 			break;
 		}
-		if(validarRequest(mensaje)== EXIT){
+		if(validarRequest(mensaje)== SALIDA){
 			break;
 			free(mensaje);
 		}
@@ -82,7 +82,7 @@ int validarRequest(char* mensaje){
 			log_error(logger_MEMORIA, "La request no es valida");
 			return EXIT_SUCCESS;
 			break;
-		case EXIT:
+		case SALIDA:
 			return EXIT_FAILURE;
 			break;
 		default:
@@ -170,7 +170,7 @@ log_info(logger_MEMORIA,"entre a interpretarr request");
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
-		case EXIT:
+		case SALIDA:
 			log_info(logger_MEMORIA,"HaS finalizado el componente MEMORIA");
 			liberarMemoria();
 			break;
