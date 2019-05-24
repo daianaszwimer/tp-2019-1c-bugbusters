@@ -15,8 +15,8 @@ int convertirKey(char* key, uint16_t* key16) {
 	uint64_t key64;
 	key64 = strtol(key,NULL,10); //strol devuelve un int como resultado deconvierte un string a un int.LOs parametros son strtol(string, puntero al string, base)
 	if(key64 < 65536) {
-	    *key16 = strtol(key,NULL,10);
-	    return EXIT_SUCCESS;
+	    key16 = strtol(key,NULL,10);
+	    return key16;
 	}
 	return NUESTRO_ERROR;
 }
