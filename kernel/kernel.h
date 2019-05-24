@@ -18,20 +18,31 @@ typedef struct
 {
 	char* ip;
 	char* puerto;
+	consistencia criterio;
 } config_memoria;
+
+typedef struct
+{
+	cod_request codigo;
+	void* request;
+} request_procesada;
 
 t_log* logger_KERNEL;
 int conexionMemoria;
+int quantum = 4; //hardcodeado por ahora
 t_config* config;
 t_queue* new;
 t_queue* ready;
 t_queue* exec;
 config_memoria memoriaSc;
+t_list* memoriasShc;
+t_list* memoriasEc;
+t_list* memorias;
 
 sem_t semRequestNew;				// semaforo para planificar requests en new
-pthread_mutex_t semMColaNew;					// semafoto mutex para cola de new
+pthread_mutex_t semMColaNew;		// semafoto mutex para cola de new
 sem_t semRequestReady;				// semaforo para planificar requests en ready
-pthread_mutex_t semMColaReady;				// semafoto mutex para cola de ready
+pthread_mutex_t semMColaReady;		// semafoto mutex para cola de ready
 sem_t semMultiprocesamiento;		// semaforo contador para limitar requests en exec
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
@@ -42,6 +53,7 @@ pthread_t hiloPlanificarExec;		//hilo para planificar requests de ready a exec y
 
 void conectarAMemoria(void);
 void liberarMemoria(void);
+void liberarRequestProcesada(request_procesada*);
 void leerDeConsola(void);
 //planificar requests
 void planificarNewAReady(void);
@@ -49,12 +61,12 @@ void planificarReadyAExec(void);
 void reservarRecursos(char*);
 //validar + delegar requests
 int validarRequest(char *);
-void manejarRequest(char *);
+t_paquete* manejarRequest(request_procesada*);
 //funciones que procesan requests:
-void enviarMensajeAMemoria(cod_request, char*);
-void procesarRun(char*);
-void procesarAdd(int);
-void procesarRequest(char*);
+t_paquete* enviarMensajeAMemoria(cod_request, char*);
+void procesarRun(t_queue*);
+void procesarAdd(char*);
+void procesarRequest(request_procesada*);
 
 
 #endif /* KERNEL_H_*/

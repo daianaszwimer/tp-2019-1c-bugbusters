@@ -46,3 +46,68 @@
 [INFO] 17:28:13:55 Memoria/(20981:20981): Servidor listo para recibir al cliente
 [INFO] 17:29:31:399 Memoria/(21086:21086): Servidor listo para recibir al cliente
 [INFO] 17:55:43:126 Memoria/(22385:22385): Servidor listo para recibir al cliente
+[INFO] 16:42:59:414 Memoria/(17983:17983): SE CONECTO CN LFS
+[INFO] 16:42:59:435 Memoria/(17983:17988): Vamos a leer de consola
+[INFO] 16:42:59:435 Memoria/(17983:17989): Memoria lista para recibir al kernel
+[INFO] 16:44:17:321 Memoria/(17983:17988): Me llego un SELECT
+[INFO] 16:44:17:353 Memoria/(17983:17988): ENTRE A ESTAE EN MEMORIA
+[INFO] 16:44:17:353 Memoria/(17983:17988): LO ENCONTRE EN CACHEE!
+[INFO] 16:44:17:354 Memoria/(17983:17988): La respuesta del 
+[INFO] 16:44:17:354 Memoria/(17983:17988): (MENSAJE DE KERNEL)
+[INFO] 16:52:32:556 Memoria/(18136:18136): SE CONECTO CN LFS
+[INFO] 16:52:32:566 Memoria/(18136:18141): Vamos a leer de consola
+[INFO] 16:52:32:569 Memoria/(18136:18142): Memoria lista para recibir al kernel
+[INFO] 16:53:38:208 Memoria/(18136:18141): Me llego un SELECT
+[INFO] 16:53:38:208 Memoria/(18136:18141): ENTRE A ESTAE EN MEMORIA
+[INFO] 16:53:38:209 Memoria/(18136:18141): LO ENCONTRE EN CACHEE!
+[INFO] 16:53:38:210 Memoria/(18136:18141): La respuesta del 
+[INFO] 16:53:38:216 Memoria/(18136:18141): (MENSAJE DE KERNEL)
+[INFO] 17:30:32:95 Memoria/(19446:19446): SE CONECTO CN LFS
+[INFO] 17:32:14:761 Memoria/(19486:19486): SE CONECTO CN LFS
+[INFO] 17:32:14:775 Memoria/(19486:19507): Vamos a leer de consola
+[INFO] 17:32:14:809 Memoria/(19486:19508): Memoria lista para recibir al kernel
+[INFO] 17:32:47:984 Memoria/(19486:19507): Me llego un INSERT
+[INFO] 17:32:47:987 Memoria/(19486:19507): ENTRE A ESTAE EN MEMORIA
+[INFO] 17:34:39:837 Memoria/(19486:19507): LO ENCONTRE EN CACHEE!
+[INFO] 17:34:54:800 Memoria/(19486:19507): (MENSAJE DE KERNEL)
+[INFO] 17:38:30:131 Memoria/(19607:19607): SE CONECTO CN LFS
+[INFO] 17:38:30:164 Memoria/(19607:19617): Vamos a leer de consola
+[INFO] 17:38:30:191 Memoria/(19607:19618): Memoria lista para recibir al kernel
+[INFO] 17:38:47:979 Memoria/(19607:19617): Me llego un INSERT
+[INFO] 17:38:47:983 Memoria/(19607:19617): ENTRE A ESTAE EN MEMORIA
+[INFO] 17:47:39:3 Memoria/(19808:19808): SE CONECTO CN LFS
+[INFO] 17:47:40:7 Memoria/(19808:19813): Vamos a leer de consola
+[INFO] 17:47:40:25 Memoria/(19808:19814): Memoria lista para recibir al kernel
+[INFO] 17:47:55:912 Memoria/(19808:19813): Me llego un INSERT
+[INFO] 17:47:55:914 Memoria/(19808:19813): ENTRE A ESTAE EN MEMORIA
+[INFO] 17:50:59:515 Memoria/(19808:19813): LO ENCONTRE EN CACHEE!
+[INFO] 17:52:47:951 Memoria/(19900:19900): SE CONECTO CN LFS
+[INFO] 17:52:48:3 Memoria/(19900:19908): Vamos a leer de consola
+[INFO] 17:52:48:25 Memoria/(19900:19909): Memoria lista para recibir al kernel
+[INFO] 17:53:23:455 Memoria/(19900:19908): Me llego un INSERT
+[INFO] 17:53:23:455 Memoria/(19900:19908): ENTRE A ESTAE EN MEMORIA
+[INFO] 17:53:49:765 Memoria/(19900:19908): LO ENCONTRE EN CACHEE!
+[INFO] 17:54:31:203 Memoria/(19939:19939): SE CONECTO CN LFS
+[INFO] 17:54:31:209 Memoria/(19939:19948): Vamos a leer de consola
+[INFO] 17:54:31:254 Memoria/(19939:19949): Memoria lista para recibir al kernel
+[INFO] 17:54:46:200 Memoria/(19939:19948): Me llego un INSERT
+[INFO] 17:54:46:200 Memoria/(19939:19948): ENTRE A ESTAE EN MEMORIA
+[INFO] 17:56:27:68 Memoria/(19939:19948): LO ENCONTRE EN CACHEE!
+[INFO] 19:07:36:937 Memoria/(21213:21213): SE CONECTO CN LFS
+[INFO] 19:07:36:995 Memoria/(21213:21224): Vamos a leer de consola
+[INFO] 19:07:36:1 Memoria/(21213:21225): Memoria lista para recibir al kernel
+[INFO] 19:07:59:405 Memoria/(21213:21224): entre a interpretarr request
+[INFO] 19:07:59:421 Memoria/(21213:21224): Me llego un INSERT
+[INFO] 19:07:59:424 Memoria/(21213:21224): ENTRE A ESTAE EN MEMORIA
+[INFO] 19:10:52:754 Memoria/(21273:21273): SE CONECTO CN LFS
+[INFO] 19:10:52:769 Memoria/(21273:21285): Vamos a leer de consola
+[INFO] 19:10:52:788 Memoria/(21273:21287): Memoria lista para recibir al kernel
+[INFO] 19:11:31:933 Memoria/(21273:21285): entre a interpretarr request
+[INFO] 19:11:31:936 Memoria/(21273:21285): Me llego un INSERT
+[INFO] 19:12:06:515 Memoria/(21273:21285): ENTRE A ESTAE EN MEMORIA
+[INFO] 09:48:17:570 Memoria/(24478:24478): SE CONECTO CN LFS
+[INFO] 09:48:52:881 Memoria/(24478:24665): Memoria lista para recibir al kernel
+[INFO] 09:50:28:113 Memoria/(24745:24745): SE CONECTO CN LFS
+[INFO] 09:51:50:201 Memoria/(24957:24957): SE CONECTO CN LFS
+[INFO] 09:52:34:971 Memoria/(24957:25028): Memoria lista para recibir al kernel
+[INFO] 09:54:01:160 Memoria/(25077:25077): SE CONECTO CN LFS

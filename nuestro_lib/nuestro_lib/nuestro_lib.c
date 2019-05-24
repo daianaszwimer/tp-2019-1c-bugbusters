@@ -1,5 +1,24 @@
 #include "nuestro_lib.h"
 
+/* obtenerEnumConsistencia()
+ * Parametros
+ * -> consistencia :: char*
+ * Descripcion: obtiene la consistencia y devuelve el enum correspondiente
+ * Return: constante consistencia
+ * -> consistencia
+ * */
+consistencia obtenerEnumConsistencia(char* consistencia) {
+	if(string_equals_ignore_case(consistencia, "sc")) {
+		return SC;
+	} else if(string_equals_ignore_case(consistencia, "shc")) {
+		return SHC;
+	} else if(string_equals_ignore_case(consistencia, "ec")) {
+		return EC;
+	} else {
+		return CONSISTENCIA_INVALIDA;
+	}
+}
+
 void iterator(char* value) {
 	printf("%s\n", value);
 }
