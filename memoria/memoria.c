@@ -3,12 +3,12 @@
 
 
 
-
 int main(void) {
 
-	tablaA = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
-	elementoA1 = (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-	pag = (t_pagina*)malloc(sizeof(t_pagina));
+	pag = malloc(sizeof(t_pagina));
+	elementoA1 =malloc(sizeof(t_elemTablaDePaginas));
+	tablaA = malloc(sizeof(t_tablaDePaginas));
+
 
 	tablaA->elementosDeTablaDePagina = list_create();	//list_create() HACE UN MALLOC
 
@@ -16,9 +16,9 @@ int main(void) {
 	pag->key=1;
 	pag->value=(char*)"hola";
 
-	elementoA1->numeroDePag=1;
-	elementoA1->pagina= pag;
-	elementoA1->modificado = SINMODIFICAR;
+//	elementoA1->numeroDePag=1;
+//	elementoA1->pagina= pag;
+//	elementoA1->modificado = SINMODIFICAR;
 
 
 
@@ -141,7 +141,7 @@ void escucharMultiplesClientes() {
 
 void interpretarRequest(cod_request palabraReservada,char* request,t_caller caller, int i) {
 
-
+log_info(logger_MEMORIA,"entre a interpretarr request");
 	switch(palabraReservada) {
 
 		case SELECT:
@@ -210,7 +210,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
-
+		//hay q liberar
 
 	} else {
 
@@ -227,7 +227,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 	char *ptrResto;
 	int keyABuscar = (int)strtol((char*)parametros[1],&ptrResto,16);
 
-	if(strcmp(tablaABuscar,"tablaA")==0)
+	if(strcmp(tablaABuscar,"tablaA")==0) //esto hay que cambiarlo
 	{
 		if(keyABuscar==elementoA1->pagina->key){
 			*elementoEncontrado=elementoA1;
@@ -246,8 +246,6 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 				enviar(palabraReservada, valorAEnviar, (int) list_get(descriptoresClientes,i));
 			} else if(caller == CONSOLE) {
 				log_info(logger_MEMORIA, "La respuesta del ", request, " es ", valorAEnviar);
-			} else {
-//				log_error();
 			}
  }
 
@@ -275,14 +273,14 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 //			KEY encontrada	-> modifico timestamp
 //							-> modifico valor
 //							-> modifico flagTabla
-			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue); //ver &
+			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 			puts(elementoEncontrado->pagina->value);
 		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
 //			KEY no encontrada -> solicito nueva pagina
 //								valido largoTablaDePagina
 
-			crearElementoEnTablaDePagina(parametros[0],parametros[1],parametros[2]);
+			crearElementoEnTablaDePagina(tablaA,newValue,newValue);
 			puts("NO ESTA EN CACHE");
 
 		}

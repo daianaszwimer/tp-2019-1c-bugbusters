@@ -51,7 +51,7 @@ void reservarRecursos(char*);
 int validarRequest(char *);
 void manejarRequest(char *);
 //funciones que procesan requests:
-t_paquete* enviarMensajeAMemoria(cod_request, char*);
+void enviarMensajeAMemoria(cod_request, char*);
 void procesarRun(char*);
 void procesarAdd(int);
 void procesarRequest(char*);
