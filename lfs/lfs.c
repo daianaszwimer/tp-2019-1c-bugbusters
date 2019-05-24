@@ -13,7 +13,7 @@ int main(void) {
 
 	inicializarLfs();
 
-	//Create("TABLA1","SC",3,5000);
+	Create("TABLA1","SC",3,5000);
 
 	//if(pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL)){
 
@@ -185,11 +185,17 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 		int metadataFileDescriptor = open(metadataPath, O_CREAT , S_IRWXU);
 		close(metadataFileDescriptor);
 
+		char* _numeroDeParticiones = string_itoa(numeroDeParticiones);
+		char* _tiempoDeCompactacion = string_itoa(tiempoDeCompactacion);
+
 		t_config *metadataConfig = config_create(metadataPath);
 		config_set_value(metadataConfig, "CONSISTENCY", tipoDeConsistencia);
 		config_set_value(metadataConfig, "PARTITIONS", string_itoa(numeroDeParticiones));
 		config_set_value(metadataConfig, "COMPACTION_TIME", string_itoa(tiempoDeCompactacion));
 		config_save(metadataConfig);
+
+		free(_numeroDeParticiones);
+		free(_tiempoDeCompactacion);
 
 		/* Creamos las particiones */
 		for(int i = 0; i < numeroDeParticiones; i++) {
@@ -198,9 +204,10 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 			int particionFileDescriptor = open(pathParticion, O_CREAT ,S_IRWXU);
 			close(particionFileDescriptor);
 
+			char* bloqueDisponible = string_itoa(obtenerBloqueDisponible());
 			t_config *configParticion = config_create(pathParticion);
 			config_set_value(configParticion, "SIZE", "0");
-			config_set_value(configParticion, "BLOCKS", string_itoa(obtenerBloqueDisponible()));
+			config_set_value(configParticion, "BLOCKS", bloqueDisponible);
 			config_save(configParticion);
 			config_destroy(configParticion);
 			free(pathParticion);
@@ -211,6 +218,7 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 	} else {
 		//TODO existe tabla
 	}
+	free(dir);
 	free(pathTabla);
 }
 
