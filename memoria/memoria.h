@@ -68,9 +68,12 @@ t_elemTablaDePaginas* elementoA1;
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
 
+
+
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
-pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 pthread_t hiloEnviarMensajeAFileSystem;	// hilo para enviar mensaje a file system
+pthread_attr_t attr;
+pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
 int conexionLfs;
 
@@ -80,7 +83,7 @@ fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para s
 
 
 void leerDeConsola(void);
-void validarRequest(char*);
+int validarRequest(char*);
 
 void escucharMultiplesClientes(void);
 void interpretarRequest(cod_request, char*,t_caller, int);
@@ -97,6 +100,11 @@ t_pagina* crearPagina(uint16_t, char*);
 void actualizarPagina (t_pagina*, char*);
 void crearElementoEnTablaDePagina(t_tablaDePaginas*, uint16_t, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
+
+
+void liberarElementoDePag(t_elemTablaDePaginas* self);
+void liberarMemoria();
+
 
 
 #endif /* MEMORIA_H_ */

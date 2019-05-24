@@ -362,6 +362,9 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 	else if (!strcmp(palabraReservada, "METRICS")) {
 		codPalabraReservada = (componente == KERNEL) ? 8 : -1;
 	}
+	else if (!strcmp(palabraReservada, "EXIT")) {
+		codPalabraReservada = 404;
+	}
 	else {
 		codPalabraReservada = NUESTRO_ERROR;
 	}
