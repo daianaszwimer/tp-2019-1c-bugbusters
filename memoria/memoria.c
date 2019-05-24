@@ -265,6 +265,7 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 		t_elemTablaDePaginas* elementoEncontrado;
 		char* valorEncontrado;
 		char** parametros = obtenerParametros(request);
+		char* newKey = parametros[1];
 		char* newValue = parametros[2];
 
 		puts("ANTES DE IR A BUSCAR A CACHE");
@@ -279,8 +280,7 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
 //			KEY no encontrada -> solicito nueva pagina
 //								valido largoTablaDePagina
-
-			crearElementoEnTablaDePagina(tablaA,newValue,newValue);
+			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
 			puts("NO ESTA EN CACHE");
 
 		}
