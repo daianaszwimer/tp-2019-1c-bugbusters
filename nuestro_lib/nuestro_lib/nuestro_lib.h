@@ -48,7 +48,8 @@ typedef enum
 	JOURNAL,
 	ADD,
 	RUN,
-	METRICS
+	METRICS,
+	NUESTRO_ERROR = -1
 } cod_request;
 
 typedef struct
@@ -64,13 +65,11 @@ typedef enum
 	ANOTHER_COMPONENT
 } t_caller;
 
-#define NUESTRO_ERROR -1
-
 void iterator(char*);
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
-char* concatenar(char*, ...);
+void concatenar(char**, ...);
 char** obtenerParametros(char*);
 
 

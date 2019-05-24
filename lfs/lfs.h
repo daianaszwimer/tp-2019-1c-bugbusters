@@ -58,5 +58,6 @@ int obtenerBloqueDisponible(void);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
 void inicializarLfs(void);
+char** separarString2(char*, char*);
 
 #endif /* LFS_H_ */

@@ -10,7 +10,22 @@ int main(void) {
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
-	char** a = separarRequest("INSERT 1 \"Hola como te va\" 12345");
+	char* a = strdup("INSERT 1 \"Hola como estas\" 12344");
+	char** hola = separarRequest(a);
+	//concatenar(&a,"Hola, ","como ", "estas?", NULL);
+	//concatenar(&a, " todo", " bien", "perroo", NULL);
+	return 0;
+	puts(a);
+	puts("\n");
+	puts(hola[0]);
+	puts("\n");
+	puts(hola[1]);
+	puts("\n");
+	puts(hola[2]);
+	puts("\n");
+	puts(hola[3]);
+	free(a);
+	//char** a = separarRequest("Idf 12345");
 	//inicializarLfs();
 
 	//Create("TABLA1","SC",3,5000);
@@ -25,9 +40,62 @@ int main(void) {
 	
 
 	//free(pathRaiz);
+	for(int i=0;hola[i]!=NULL;i++){
+		free(hola[i]);
+	}
+	free(hola);
 	log_destroy(logger_LFS);
 	config_destroy(config);
 	return 0;
+}
+
+char** separarString2(char* text, char* separator) {
+	char **substrings = NULL;
+	int size = 0;
+
+	char *text_to_iterate = string_duplicate(text);
+
+	char *next = text_to_iterate;
+	char *str = text_to_iterate;
+	int freeToken = 0;
+
+	while(next[0] != '\0') {
+		char* token = strtok_r(str, separator, &next);
+		if(token == NULL) {
+			break;
+		}
+		if(*token == '"'){
+			char lastCharacter = token[strlen(token) - 1];
+			while(lastCharacter != '"'){
+				concatenar(&token, " ", strtok_r(str, separator, &next), NULL);
+				lastCharacter = token[strlen(token) - 1];
+			}
+			freeToken = 1;
+		}
+
+		str = NULL;
+		size++;
+		substrings = realloc(substrings, sizeof(char*) * size);
+		substrings[size - 1] = string_duplicate(token);
+		if(freeToken) {
+			free(token);
+			freeToken = 0;
+		}
+
+	}
+
+	if (next[0] != '\0') {
+		size++;
+		substrings = realloc(substrings, sizeof(char*) * size);
+		substrings[size - 1] = string_duplicate(next);
+	}
+
+	size++;
+	substrings = realloc(substrings, sizeof(char*) * size);
+	substrings[size - 1] = NULL;
+
+	free(text_to_iterate);
+	return substrings;
 }
 
 char** separarRequest(char* request) {
@@ -35,7 +103,8 @@ char** separarRequest(char* request) {
 	// ahi lo guardo en una posicion de requestSeparada
 	// Si aparece una comilla activo el flag comilla
 	// y concateno aunque haya espacios hasta que el flag comilla se desactive
-	char** requestSeparada = NULL;
+	char** requestSeparada = malloc(2*sizeof(char*));
+	printf("Size of request: %d", strlen(request));
 	int comilla = 0;
 	int j=0;
 	char* elementoConcatenado = strdup("");
@@ -55,10 +124,13 @@ char** separarRequest(char* request) {
 			free(elementoConcatenado);
 			j++;
 		} else {
-			elementoConcatenado = concatenar(elementoConcatenado,elemento,NULL);
+			if(!(request[i]==34)) {
+				concatenar(&elementoConcatenado,elemento,NULL);
+			}
 		}
 		free(elemento);
 	}
+	requestSeparada[j] = strdup(elementoConcatenado);
 	free(elementoConcatenado);
 	return requestSeparada;
 }
@@ -97,7 +169,7 @@ void recibirConexionesMemoria() {
 
 	while(1){
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
-		if(pthread_create(&hiloRequest, NULL, (void*)procesarRequest, (int) memoria_fd)){
+		if(pthread_create(&hiloRequest, NULL, (void*)procesarRequest, (int*) memoria_fd)){
 			pthread_detach(hiloRequest);
 		} else {
 			printf("Error al iniciar el hilo de la memoria con fd = %i", memoria_fd);
@@ -106,7 +178,7 @@ void recibirConexionesMemoria() {
 }
 
 
-void procesarRequest(int memoria_fd){
+void procesarRequest(int memoria_fd) {
 	while(1){
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
@@ -162,7 +234,8 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
  * Return:  */
 void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 
-	char* pathTabla = concatenar(pathRaiz, "Tablas/", nombreTabla, NULL);
+	char* pathTabla = strdup("");
+	concatenar(&pathTabla, pathRaiz, "Tablas/", nombreTabla, NULL);
 
 	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
 
@@ -173,7 +246,8 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 	if(!dir){
 		/* Creamos la carpeta de la tabla */
 		mkdir(pathTabla, S_IRWXU);
-		char* metadataPath = concatenar(pathTabla, "/Metadata.bin", NULL);
+		char* metadataPath = strdup("");
+		concatenar(&metadataPath, pathTabla, "/Metadata.bin", NULL);
 
 		/* Creamos el archivo Metadata */
 		int metadataFileDescriptor = open(metadataPath, O_CREAT , S_IRWXU);
@@ -187,7 +261,8 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 
 		/* Creamos las particiones */
 		for(int i = 0; i < numeroDeParticiones; i++) {
-			char* pathParticion = concatenar(pathTabla, "/", string_itoa(i), ".bin", NULL);
+			char* pathParticion = strdup("");
+			concatenar(&pathParticion, pathTabla, "/", string_itoa(i), ".bin", NULL);
 
 			int particionFileDescriptor = open(pathParticion, O_CREAT ,S_IRWXU);
 			close(particionFileDescriptor);
@@ -213,17 +288,22 @@ int obtenerBloqueDisponible() {
 }
 
 void inicializarLfs() {
-	pathRaiz = concatenar(PATH, config_get_string_value(config, "PUNTO_MONTAJE"), NULL);
+	pathRaiz = strdup("");
+	concatenar(&pathRaiz, PATH, config_get_string_value(config, "PUNTO_MONTAJE"), NULL);
 	mkdir(pathRaiz, S_IRWXU);
 
-	char* pathTablas = concatenar(pathRaiz, "Tablas", NULL);
-	char* pathMetadata = concatenar(pathRaiz, "Metadata", NULL);
-	char* pathBloques = concatenar(pathRaiz, "Bloques", NULL);
+	char* pathTablas = strdup("");
+	char* pathMetadata = strdup("");
+	char* pathBloques = strdup("");
+
+	concatenar(&pathTablas, pathRaiz, "Tablas", NULL);
+	concatenar(&pathMetadata, pathRaiz, "Metadata", NULL);
+	concatenar(&pathBloques, pathRaiz, "Bloques", NULL);
 
 	mkdir(pathTablas, S_IRWXU);
 
 	mkdir(pathMetadata, S_IRWXU);
-	pathMetadata = concatenar(pathMetadata, "/Metadata.bin", NULL);
+	concatenar(&pathMetadata, "/Metadata.bin", NULL);
 
 	int metadataDescriptor = open(pathMetadata, O_CREAT ,S_IRWXU);
 	close(metadataDescriptor);
@@ -238,7 +318,9 @@ void inicializarLfs() {
 
 	int blocks = config_get_int_value(configMetadata, "BLOCKS");
 	for(int i = 1; i <= blocks; i++){
-		int bloqueFileDescriptor = open(concatenar(pathBloques, "/", string_itoa(i), ".bin", NULL), O_CREAT ,S_IRWXU);
+		char* pathBloque = strdup(pathBloques);
+		concatenar(&pathBloque, "/", string_itoa(i), ".bin", NULL);
+		int bloqueFileDescriptor = open(pathBloques, O_CREAT ,S_IRWXU);
 		close(bloqueFileDescriptor);
 	}
 
@@ -257,16 +339,12 @@ void inicializarLfs() {
  * Descripcion: permite la creacion y/o actualizacion del valor de una key dentro de una tabla
  * Return:  */
 void insert(char* nombreTabla, uint16_t key, char* value, unsigned long long timestamp) {
-	char* pathTabla = concatenar(PATH, pathRaiz, "/Tablas/", nombreTabla, NULL);
+	char* pathTabla = strdup("");
+	concatenar(&pathTabla, PATH, pathRaiz, "/Tablas/", nombreTabla, NULL);
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
 	if(dir) {
-		char* metadataPath = concatenar(pathTabla, "/Metadata.bin", NULL);
-		t_config *metadataConfig = config_create(metadataPath);
-		char* tipoDeConsistencia = config_get_string_value(metadataConfig, "CONSISTENCY");
-		int numeroDeParticiones = config_get_int_value(metadataConfig, "PARTITIONS");
-		int tiempoDeCompactacion = config_get_int_value(metadataConfig, "COMPACTION_TIME");
 
 
 
