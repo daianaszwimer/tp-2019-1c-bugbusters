@@ -1,3 +1,40 @@
 [INFO] 13:21:23:736 Kernel/(11774:11774): ----------------INICIO DE KERNEL--------------
-[INFO] 16:58:59:943 Kernel/(16865:16865): ----------------INICIO DE KERNEL--------------
-[INFO] 17:08:24:107 Kernel/(17459:17459): ----------------INICIO DE KERNEL--------------
+[INFO] 11:53:24:788 Kernel/(10814:10814): ----------------INICIO DE KERNEL--------------
+[INFO] 11:55:39:791 Kernel/(10918:10918): ----------------INICIO DE KERNEL--------------
+[INFO] 12:19:51:637 Kernel/(11389:11389): ----------------INICIO DE KERNEL--------------
+[INFO] 12:21:11:714 Kernel/(11462:11462): ----------------INICIO DE KERNEL--------------
+[INFO] 12:26:19:12 Kernel/(11612:11612): ----------------INICIO DE KERNEL--------------
+[INFO] 12:26:26:447 Kernel/(11612:11626): No se ha ingresado ningun parametro para la request, y esta request necesita parametros 
+[INFO] 12:26:26:447 Kernel/(11612:11626): Debe ingresar un request válido
+[INFO] 12:26:26:447 Kernel/(11612:11626): Debe ingresar un request válido
+[INFO] 12:26:26:447 Kernel/(11612:11626): Debe ingresar un request válido
+[INFO] 12:26:42:67 Kernel/(11612:11626): Debe ingresar un request válido
+[INFO] 14:45:06:632 Kernel/(9034:9034): ----------------INICIO DE KERNEL--------------
+[INFO] 14:45:21:559 Kernel/(9034:9052): Debe ingresar un request válido
+[INFO] 14:46:47:732 Kernel/(9100:9100): ----------------INICIO DE KERNEL--------------
+[INFO] 14:48:19:90 Kernel/(9230:9230): ----------------INICIO DE KERNEL--------------
+[INFO] 14:48:52:24 Kernel/(9230:9248): Debe ingresar un request válido
+[INFO] 14:59:18:368 Kernel/(9503:9503): ----------------INICIO DE KERNEL--------------
+[INFO] 14:59:43:895 Kernel/(9503:9527): Debe ingresar un request válido
+[INFO] 15:01:52:905 Kernel/(9608:9608): ----------------INICIO DE KERNEL--------------
+[INFO] 15:06:05:175 Kernel/(9880:9880): ----------------INICIO DE KERNEL--------------
+[INFO] 22:50:46:381 Kernel/(10439:10439): ----------------INICIO DE KERNEL--------------
+[INFO] 22:51:52:872 Kernel/(10518:10518): ----------------INICIO DE KERNEL--------------
+[INFO] 22:56:23:749 Kernel/(10665:10665): ----------------INICIO DE KERNEL--------------
+[INFO] 23:04:23:641 Kernel/(11110:11110): ----------------INICIO DE KERNEL--------------
+[INFO] 00:15:20:599 Kernel/(12671:12671): ----------------INICIO DE KERNEL--------------
+[INFO] 00:18:41:953 Kernel/(12836:12836): ----------------INICIO DE KERNEL--------------
+[INFO] 00:20:08:520 Kernel/(12994:12994): ----------------INICIO DE KERNEL--------------
+[INFO] 19:23:12:988 Kernel/(13531:13531): ----------------INICIO DE KERNEL--------------
+[INFO] 19:25:11:607 Kernel/(13608:13608): ----------------INICIO DE KERNEL--------------
+[INFO] 20:29:19:34 Kernel/(15269:15269): ----------------INICIO DE KERNEL--------------
+[INFO] 20:29:40:776 Kernel/(15351:15351): ----------------INICIO DE KERNEL--------------
+[INFO] 21:38:57:834 Kernel/(17372:17372): ----------------INICIO DE KERNEL--------------
+[INFO] 10:56:36:638 Kernel/(18644:18644): ----------------INICIO DE KERNEL--------------
+[INFO] 10:58:57:797 Kernel/(18811:18811): ----------------INICIO DE KERNEL--------------
+[INFO] 11:01:03:778 Kernel/(18885:18885): ----------------INICIO DE KERNEL--------------
+[INFO] 11:43:19:987 Kernel/(20230:20230): ----------------INICIO DE KERNEL--------------
+[INFO] 11:55:52:940 Kernel/(20521:20521): ----------------INICIO DE KERNEL--------------
+[INFO] 00:08:37:32 Kernel/(16011:16011): ----------------INICIO DE KERNEL--------------
+[INFO] 00:12:05:123 Kernel/(16114:16114): ----------------INICIO DE KERNEL--------------
+[INFO] 00:13:09:288 Kernel/(16211:16211): ----------------INICIO DE KERNEL--------------

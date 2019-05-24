@@ -193,7 +193,6 @@ void planificarReadyAExec(void) {
 		} else {
 			request->request = malloc(strlen(((request_procesada*)queue_peek(ready))->request) + 1);
 		}
-		printf("Tamanio es %d    ", strlen(((request_procesada*)queue_peek(ready))->request) + 1);
 		sem_wait(&semMultiprocesamiento);
 		//hiloRequest = malloc(sizeof(pthread_t)); esto va?
 		pthread_mutex_lock(&semMColaReady);
