@@ -44,6 +44,8 @@ typedef struct{
 	t_list* elementosDeTablaDePagina;
 }t_tablaDePaginas;
 
+//TODO: t_segmento
+
 typedef struct{
 	time_t tv_sec;
 	suseconds_t tv_usec;   /* microseconds */

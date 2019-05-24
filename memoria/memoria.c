@@ -222,12 +222,12 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 }
 
 int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
-	char* tablaABuscar= parametros[0];
+	char* segmentoABuscar= parametros[0];
 	int keyABuscar= convertirKey(parametros[1]);
 
-	if(strcmp(tablaABuscar,"tablaA")==0) //esto hay que cambiarlo
+	if(strcmp(segmentoABuscar,"tablaA")==0) //tabla = segmento (esto hay que cambiarlo)
 	{
-		if(keyABuscar==(int)elementoA1->pagina->key){
+		if(keyABuscar==(int)elementoA1->pagina->key){ //registro = pagina
 			*elementoEncontrado=elementoA1;
 			*valorEncontrado = strdup(elementoA1->pagina->value);
 			//printf("LA RTA ES %s \n",*valorEncontrado);
@@ -236,7 +236,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 			return FALSE;
 		}
 	}else{
-		return FALSE;
+		return NUESTRO_ERROR;
 	}
 }
 
@@ -278,10 +278,12 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 			puts(elementoEncontrado->pagina->value);
 		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
-//			KEY no encontrada -> solicito nueva pagina
-//								valido largoTablaDePagina
+//			KEY no encontrada -> nueva pagina solicitada
+//TODO:							si faltaEspacio JOURNAL
 			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
 			puts("NO ESTA EN CACHE");
+		}else{
+//TODO:		TABLA no encontrada -> nuevo segmento
 
 		}
 }
