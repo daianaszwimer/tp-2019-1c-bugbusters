@@ -23,6 +23,19 @@ void iterator(char* value) {
 	printf("%s\n", value);
 }
 
+/*obtenerHoraActual()
+ * Parametros:
+ * 	-> t_timeval :: Hora actual en minutos y microsegundos VER!conversionDeUnidades
+ * Descripcion:
+ * Return:
+ * 	-> :: unsigned long long */
+unsigned long long obtenerHoraActual(){
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	unsigned long long millisegundosDesdeEpoch = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
+	return millisegundosDesdeEpoch;
+}
+
 /* separarString()
  * Parametros:
  * 	-> mensaje ::  char*
@@ -55,24 +68,18 @@ int longitudDeArrayDeStrings(char** array){
  * Se le debe pasar como ultimo parametro un NULL(indicando que se finalizo la entrada de parametros)
  * Se debe hacer un free de la variable retornada
  * Return: string concatenado*/
-char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de parametros variable
-	char* stringFinal;	// String donde se guarda el resultado de la concatenacion
-	va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
-	char* parametro;	// Este es un parametro solo
+void concatenar(char** destino, ...) { // los 3 puntos indican cantidad de parametros variable
+  va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
+  char* parametro;  // Este es un parametro solo
 
-	if (primerString == NULL)
-		return NULL;
+  va_start(parametros, destino);  // Inicalizo el va_list
 
-	stringFinal = strdup(primerString);
-	va_start(parametros, primerString);	// Inicalizo el va_list
+  while ((parametro = va_arg(parametros, char*)) != NULL) { // Recorro la lista de parametros hasta encontrar un NULL
+    *destino = (char*) realloc(*destino, strlen(*destino) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
+    strcat(*destino, parametro); // Concateno el parametro con stringFinal
+  }
 
-	while ((parametro = va_arg(parametros, char*)) != NULL) {	// Recorro la lista de parametros hasta encontrar un NULL
-		stringFinal = (char*) realloc(stringFinal, strlen(stringFinal) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
-		strcat(stringFinal, parametro); // Concateno el parametro con stringFinal
-	}
-
-	va_end(parametros); // Libero la va_list
-	return stringFinal;
+  va_end(parametros); // Libero la va_list
 }
 
 /* obtenerParametros()
@@ -171,7 +178,7 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			}else{
 				free(request);
 				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
-				return QUERY_ERROR;
+				return NUESTRO_ERROR;
 			}
 		}
 
@@ -183,11 +190,11 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			return EXIT_SUCCESS;
 		}
 		else {
-			return QUERY_ERROR;
+			return NUESTRO_ERROR;
 		}
 	}
 	else {
-		return QUERY_ERROR;
+		return NUESTRO_ERROR;
 	}
 }
 
@@ -204,7 +211,7 @@ int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t
 	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
 	if(resultadoCantParametros == EXIT_FAILURE){
 		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
-		return QUERY_ERROR;
+		return NUESTRO_ERROR;
 	}else{
 		return EXIT_SUCCESS;
 	}
@@ -250,7 +257,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			default:
-				retorno = QUERY_ERROR;
+				retorno = NUESTRO_ERROR;
 				break;
 	}
 	return retorno;
@@ -268,7 +275,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
 	if(codigoPalabraReservada == -1) {
 		log_info(logger, "Debe ingresar un request válido");
-		return QUERY_ERROR;
+		return NUESTRO_ERROR;
 	}
 	return EXIT_SUCCESS;
 }
@@ -313,7 +320,7 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 		codPalabraReservada = (componente == KERNEL) ? 8 : -1;
 	}
 	else {
-		codPalabraReservada = QUERY_ERROR;
+		codPalabraReservada = NUESTRO_ERROR;
 	}
 	return codPalabraReservada;
 }

@@ -238,7 +238,7 @@ int validarRequest(char* mensaje) {
 			return TRUE;
 			break;
 		case EXIT_FAILURE:
-		case QUERY_ERROR:
+		case NUESTRO_ERROR:
 			return FALSE;
 			//informar error
 			break;
@@ -354,7 +354,7 @@ void procesarRun(t_queue* colaRun) {
 		request = queue_pop(colaRun);
 		if (validarRequest(request->request)) {
 			respuesta = manejarRequest(request);
-			if (respuesta->palabraReservada == QUERY_ERROR) {
+			if (respuesta->palabraReservada == NUESTRO_ERROR) {
 				//libero recursos, mato hilo, lo saco de la cola, e informo error
 			}
 			eliminar_paquete(respuesta);

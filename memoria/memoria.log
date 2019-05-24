@@ -46,3 +46,11 @@
 [INFO] 17:28:13:55 Memoria/(20981:20981): Servidor listo para recibir al cliente
 [INFO] 17:29:31:399 Memoria/(21086:21086): Servidor listo para recibir al cliente
 [INFO] 17:55:43:126 Memoria/(22385:22385): Servidor listo para recibir al cliente
+[INFO] 10:08:09:180 Memoria/(11092:11098): Memoria lista para recibir al kernel
+[INFO] 10:08:49:278 Memoria/(11111:11117): Memoria lista para recibir al kernel
+[INFO] 10:09:09:530 Memoria/(11111:11118): Antes de enviar mensaje
+[INFO] 10:09:09:530 Memoria/(11111:11118): despues de enviar mensaje
+[INFO] 10:09:09:531 Memoria/(11111:11118): Me respuesta, del SELECT, de LFS
+[INFO] 10:09:58:138 Memoria/(11111:11118): Antes de enviar mensaje
+[INFO] 10:09:58:138 Memoria/(11111:11118): despues de enviar mensaje
+[INFO] 10:12:00:158 Memoria/(11165:11180): Memoria lista para recibir al kernel

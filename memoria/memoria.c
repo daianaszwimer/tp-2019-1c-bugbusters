@@ -70,7 +70,7 @@ void validarRequest(char* mensaje){
 		case EXIT_SUCCESS:
 			interpretarRequest(codValidacion, mensaje,CONSOLE,NULL);
 			break;
-		case QUERY_ERROR:
+		case NUESTRO_ERROR:
 			//es la q hay q hacerla generica
 			log_error(logger_MEMORIA, "No es valida la request");
 			break;
@@ -94,8 +94,8 @@ void escucharMultiplesClientes() {
 	 * fd_set es Set de fd's (una coleccion)*/
 
 	descriptoresClientes = list_create();	// Lista de descriptores de todos los clientes conectados (podemos conectar infinitos clientes)
-	int numeroDeClientes = 0;						// Cantidad de clientes conectados
-	int valorMaximo = 0;							// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
+	int numeroDeClientes = 0;				// Cantidad de clientes conectados
+	int valorMaximo = 0;					// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
 	t_paquete* paqueteRecibido;
 
 	while(1) {
@@ -117,7 +117,7 @@ void escucharMultiplesClientes() {
 				cod_request palabraReservada = paqueteRecibido->palabraReservada;
 				char* request = paqueteRecibido->request;
 				printf("El codigo que recibi es: %s \n", request);
-				interpretarRequest(palabraReservada,request,HIMSELVE, i);
+				interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
 				printf("Del bd \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 			}
 		}
@@ -153,8 +153,8 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
-		case QUERY_ERROR:
-			if(caller == HIMSELVE){
+		case NUESTOR_ERROR:
+			if(caller == ANOTHER_COMPONENT){
 				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 				int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd}
 				break;
@@ -197,7 +197,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 		char* respuesta = intercambiarConFileSystem(palabraReservada,request);
-		if(caller == HIMSELVE) {
+		if(caller == ANOTHER_COMPONENT) {
 			enviar(palabraReservada, request, (int) list_get(descriptoresClientes,i));
 		} else if(caller == CONSOLE) {
 			log_info(logger_MEMORIA, "La respuesta del ", request, " es ", respuesta);
