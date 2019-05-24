@@ -14,9 +14,9 @@ int main(void) {
 	pag->key=1;
 	pag->value=strdup("hola");
 
-//	elementoA1->numeroDePag=1;
-//	elementoA1->pagina= pag;
-//	elementoA1->modificado = SINMODIFICAR;
+	elementoA1->numeroDePag=1;
+	elementoA1->pagina= pag;
+	elementoA1->modificado = SINMODIFICAR;
 
 
 
@@ -52,7 +52,6 @@ int main(void) {
 }
 
 void leerDeConsola(void){
-	/*
 	char* mensaje;
 	log_info(logger_MEMORIA, "Vamos a leer de consola");
 	while (1) {
@@ -64,7 +63,6 @@ void leerDeConsola(void){
 		validarRequest(mensaje);
 		free(mensaje);
 	}
-	*/
 }
 
 void validarRequest(char* mensaje){
@@ -231,7 +229,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 			*elementoEncontrado=elementoA1;
 			*valorEncontrado = strdup(elementoA1->pagina->value);
 			//printf("LA RTA ES %s \n",*valorEncontrado);
-		return TRUE;
+			return TRUE;
 		}else{
 			return FALSE;
 		}
@@ -240,14 +238,14 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 	}
 }
 
- void enviarAlDestinatarioCorrecto(cod_request palabraReservada,char* request,char* valorAEnviar,t_caller caller,int i){
-		if(caller == ANOTHER_COMPONENT) {
-				enviar(palabraReservada, valorAEnviar, (int) list_get(descriptoresClientes,i));
-			} else if(caller == CONSOLE) {
-				log_info(logger_MEMORIA, "La respuesta del ", request, " es ", valorAEnviar);
-			}
+ void enviarAlDestinatarioCorrecto(cod_request palabraReservada,char* request,char* valorAEnviar,t_caller caller,int socketKernel){
+	if(caller == ANOTHER_COMPONENT) {
+		enviar(palabraReservada, valorAEnviar, socketKernel);
+	} else if(caller == CONSOLE) {
+		printf("La respuesta del request %s es %s \n", request, valorAEnviar);
+	}
  }
-
+/*
 /*procesarInsert()
  * Parametros:
  * 	-> char* ::  request
@@ -259,7 +257,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
  * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
- * 	-> :: void */
+ * 	-> :: void *\/
 void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
 		t_elemTablaDePaginas* elementoEncontrado;
 		char* valorEncontrado;
@@ -316,4 +314,4 @@ void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* new
 
 
 
-
+*/
