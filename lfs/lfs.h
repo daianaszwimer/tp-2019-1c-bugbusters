@@ -46,8 +46,6 @@ pthread_t hiloRecibirDeMemoria;
 char* mensaje;
 int codValidacion;
 
-char** separarRequest(char*);
-
 void leerDeConsola(void);
 void recibirConexionesMemoria(void);
 void validarRequest(char*);
@@ -58,6 +56,6 @@ int obtenerBloqueDisponible(void);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
 void inicializarLfs(void);
-char** separarString2(char*, char*);
+char** separarRequest(char*, char*);
 
 #endif /* LFS_H_ */

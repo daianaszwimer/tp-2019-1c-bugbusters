@@ -77,7 +77,7 @@ void iterator(char*);
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
-void concatenar(char**, ...);
+char* concatenar(char*, ...);
 char** obtenerParametros(char*);
 
 

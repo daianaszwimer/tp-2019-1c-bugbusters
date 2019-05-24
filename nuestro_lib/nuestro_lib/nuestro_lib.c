@@ -68,18 +68,24 @@ int longitudDeArrayDeStrings(char** array){
  * Se le debe pasar como ultimo parametro un NULL(indicando que se finalizo la entrada de parametros)
  * Se debe hacer un free de la variable retornada
  * Return: string concatenado*/
-void concatenar(char** destino, ...) { // los 3 puntos indican cantidad de parametros variable
-  va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
-  char* parametro;  // Este es un parametro solo
+char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de parametros variable
+	char* stringFinal;	// String donde se guarda el resultado de la concatenacion
+	va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
+	char* parametro;	// Este es un parametro solo
 
-  va_start(parametros, destino);  // Inicalizo el va_list
+	if (primerString == NULL)
+		return NULL;
 
-  while ((parametro = va_arg(parametros, char*)) != NULL) { // Recorro la lista de parametros hasta encontrar un NULL
-    *destino = (char*) realloc(*destino, strlen(*destino) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
-    strcat(*destino, parametro); // Concateno el parametro con stringFinal
-  }
+	stringFinal = strdup(primerString);
+	va_start(parametros, primerString);	// Inicalizo el va_list
 
-  va_end(parametros); // Libero la va_list
+	while ((parametro = va_arg(parametros, char*)) != NULL) {	// Recorro la lista de parametros hasta encontrar un NULL
+		stringFinal = (char*) realloc(stringFinal, strlen(stringFinal) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
+		strcat(stringFinal, parametro); // Concateno el parametro con stringFinal
+	}
+
+	va_end(parametros); // Libero la va_list
+	return stringFinal;
 }
 
 /* obtenerParametros()

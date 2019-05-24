@@ -10,23 +10,8 @@ int main(void) {
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
-	char* a = strdup("INSERT 1 \"Hola como estas\" 12344");
-	char** hola = separarRequest(a);
-	//concatenar(&a,"Hola, ","como ", "estas?", NULL);
-	//concatenar(&a, " todo", " bien", "perroo", NULL);
-	return 0;
-	puts(a);
-	puts("\n");
-	puts(hola[0]);
-	puts("\n");
-	puts(hola[1]);
-	puts("\n");
-	puts(hola[2]);
-	puts("\n");
-	puts(hola[3]);
-	free(a);
-	//char** a = separarRequest("Idf 12345");
-	//inicializarLfs();
+
+	inicializarLfs();
 
 	//Create("TABLA1","SC",3,5000);
 
@@ -39,17 +24,13 @@ int main(void) {
 	//pthread_join(hiloRecibirDeMemoria, NULL);
 	
 
-	//free(pathRaiz);
-	for(int i=0;hola[i]!=NULL;i++){
-		free(hola[i]);
-	}
-	free(hola);
+	free(pathRaiz);
 	log_destroy(logger_LFS);
 	config_destroy(config);
 	return 0;
 }
 
-char** separarString2(char* text, char* separator) {
+char** separarRequest(char* text, char* separator) {
 	char **substrings = NULL;
 	int size = 0;
 
@@ -65,11 +46,8 @@ char** separarString2(char* text, char* separator) {
 			break;
 		}
 		if(*token == '"'){
-			char lastCharacter = token[strlen(token) - 1];
-			while(lastCharacter != '"'){
-				concatenar(&token, " ", strtok_r(str, separator, &next), NULL);
-				lastCharacter = token[strlen(token) - 1];
-			}
+			token++;
+			token = concatenar(token, " ", strtok_r(str, "\"", &next), NULL);
 			freeToken = 1;
 		}
 
@@ -81,13 +59,6 @@ char** separarString2(char* text, char* separator) {
 			free(token);
 			freeToken = 0;
 		}
-
-	}
-
-	if (next[0] != '\0') {
-		size++;
-		substrings = realloc(substrings, sizeof(char*) * size);
-		substrings[size - 1] = string_duplicate(next);
 	}
 
 	size++;
@@ -96,43 +67,6 @@ char** separarString2(char* text, char* separator) {
 
 	free(text_to_iterate);
 	return substrings;
-}
-
-char** separarRequest(char* request) {
-	// La idea es concatenar cada char hasta que haya un espacio,
-	// ahi lo guardo en una posicion de requestSeparada
-	// Si aparece una comilla activo el flag comilla
-	// y concateno aunque haya espacios hasta que el flag comilla se desactive
-	char** requestSeparada = malloc(2*sizeof(char*));
-	printf("Size of request: %d", strlen(request));
-	int comilla = 0;
-	int j=0;
-	char* elementoConcatenado = strdup("");
-	char* elemento;
-
-	for(int i=0;request[i]!='\0';i++) {
-		elemento = malloc(2*sizeof(char));
-		elemento[0] = request[i];
-		elemento[1] = '\0';
-		if((request[i]==34) && comilla) { // 34 es el valor ascii de la comilla
-			comilla = 0;
-		} else if(request[i]==34) {
-			comilla = 1;
-		}
-		if((request[i]==32) && !comilla) { // 32 es el valor ascii del espacio
-			requestSeparada[j] = strdup(elementoConcatenado);
-			free(elementoConcatenado);
-			j++;
-		} else {
-			if(!(request[i]==34)) {
-				concatenar(&elementoConcatenado,elemento,NULL);
-			}
-		}
-		free(elemento);
-	}
-	requestSeparada[j] = strdup(elementoConcatenado);
-	free(elementoConcatenado);
-	return requestSeparada;
 }
 
 void leerDeConsola(void) {
@@ -234,8 +168,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
  * Return:  */
 void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 
-	char* pathTabla = strdup("");
-	concatenar(&pathTabla, pathRaiz, "Tablas/", nombreTabla, NULL);
+	char* pathTabla = concatenar(pathRaiz, "Tablas/", nombreTabla, NULL);
 
 	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
 
@@ -246,8 +179,7 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 	if(!dir){
 		/* Creamos la carpeta de la tabla */
 		mkdir(pathTabla, S_IRWXU);
-		char* metadataPath = strdup("");
-		concatenar(&metadataPath, pathTabla, "/Metadata.bin", NULL);
+		char* metadataPath = concatenar(pathTabla, "/Metadata.bin", NULL);
 
 		/* Creamos el archivo Metadata */
 		int metadataFileDescriptor = open(metadataPath, O_CREAT , S_IRWXU);
@@ -261,8 +193,7 @@ void Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones
 
 		/* Creamos las particiones */
 		for(int i = 0; i < numeroDeParticiones; i++) {
-			char* pathParticion = strdup("");
-			concatenar(&pathParticion, pathTabla, "/", string_itoa(i), ".bin", NULL);
+			char* pathParticion = concatenar(pathTabla, "/", string_itoa(i), ".bin", NULL);
 
 			int particionFileDescriptor = open(pathParticion, O_CREAT ,S_IRWXU);
 			close(particionFileDescriptor);
@@ -288,27 +219,22 @@ int obtenerBloqueDisponible() {
 }
 
 void inicializarLfs() {
-	pathRaiz = strdup("");
-	concatenar(&pathRaiz, PATH, config_get_string_value(config, "PUNTO_MONTAJE"), NULL);
+	pathRaiz = concatenar(PATH, config_get_string_value(config, "PUNTO_MONTAJE"), NULL);
 	mkdir(pathRaiz, S_IRWXU);
 
-	char* pathTablas = strdup("");
-	char* pathMetadata = strdup("");
-	char* pathBloques = strdup("");
-
-	concatenar(&pathTablas, pathRaiz, "Tablas", NULL);
-	concatenar(&pathMetadata, pathRaiz, "Metadata", NULL);
-	concatenar(&pathBloques, pathRaiz, "Bloques", NULL);
+	char* pathTablas = concatenar(pathRaiz, "Tablas", NULL);
+	char* pathMetadata = concatenar(pathRaiz, "Metadata", NULL);
+	char* pathBloques = concatenar(pathRaiz, "Bloques", NULL);
 
 	mkdir(pathTablas, S_IRWXU);
 
 	mkdir(pathMetadata, S_IRWXU);
-	concatenar(&pathMetadata, "/Metadata.bin", NULL);
+	char* fileMetadata = concatenar(pathMetadata, "/Metadata.bin", NULL);
 
-	int metadataDescriptor = open(pathMetadata, O_CREAT ,S_IRWXU);
+	int metadataDescriptor = open(fileMetadata, O_CREAT ,S_IRWXU);
 	close(metadataDescriptor);
 
-	t_config *configMetadata = config_create(pathMetadata);
+	t_config *configMetadata = config_create(fileMetadata);
 	config_set_value(configMetadata, "BLOCK_SIZE", "64");
 	config_set_value(configMetadata, "BLOCKS", "10");
 	config_set_value(configMetadata, "MAGIC_NUMBER", "LISSANDRA");
@@ -317,14 +243,21 @@ void inicializarLfs() {
 	mkdir(pathBloques, S_IRWXU);
 
 	int blocks = config_get_int_value(configMetadata, "BLOCKS");
+	char* blockNumber;
+	char* fileBloque;
 	for(int i = 1; i <= blocks; i++){
-		char* pathBloque = strdup(pathBloques);
-		concatenar(&pathBloque, "/", string_itoa(i), ".bin", NULL);
-		int bloqueFileDescriptor = open(pathBloques, O_CREAT ,S_IRWXU);
+		blockNumber = string_itoa(i);
+		fileBloque = concatenar(pathBloques,"/", blockNumber , ".bin", NULL);
+		int bloqueFileDescriptor = open(fileBloque, O_CREAT ,S_IRWXU);
 		close(bloqueFileDescriptor);
+
+		free(blockNumber);
+		free(fileBloque);
 	}
 
 	config_destroy(configMetadata);
+
+	free(fileMetadata);
 	free(pathTablas);
 	free(pathMetadata);
 	free(pathBloques);
@@ -339,8 +272,7 @@ void inicializarLfs() {
  * Descripcion: permite la creacion y/o actualizacion del valor de una key dentro de una tabla
  * Return:  */
 void insert(char* nombreTabla, uint16_t key, char* value, unsigned long long timestamp) {
-	char* pathTabla = strdup("");
-	concatenar(&pathTabla, PATH, pathRaiz, "/Tablas/", nombreTabla, NULL);
+	char* pathTabla = concatenar(PATH, pathRaiz, "/Tablas/", nombreTabla, NULL);
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
