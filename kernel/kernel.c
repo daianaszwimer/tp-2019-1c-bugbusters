@@ -160,7 +160,7 @@ void reservarRecursos(char* mensaje) {
 		queue_push(ready, _request);
 		pthread_mutex_unlock(&semMColaReady);
 	} else {
-		void* requestRecibido = malloc(sizeof(mensaje));
+		void* requestRecibido = malloc(strlen(mensaje) + 1);
 		_request->request = requestRecibido;
 		_request->codigo = codigo;
 		_request->request = mensaje;
@@ -190,9 +190,9 @@ void planificarReadyAExec(void) {
 		request = malloc(sizeof(request_procesada));
 		// esto tira invalid read
 		if(((request_procesada*)queue_peek(ready))->codigo == RUN) {
-			request->request = malloc(sizeof((request_procesada*)queue_peek(ready))->request);
+			request->request = (t_queue*) malloc(sizeof((request_procesada*)queue_peek(ready))->request);
 		} else {
-			request->request = malloc(strlen(((request_procesada*)queue_peek(ready))->request) + 1);
+			request->request = (char*) malloc(strlen(((request_procesada*)queue_peek(ready))->request) + 1);
 		}
 		//hiloRequest = malloc(sizeof(pthread_t)); esto va?
 		pthread_mutex_lock(&semMColaReady);
@@ -219,7 +219,7 @@ void procesarRequest(request_procesada* request) {
 	manejarRequest(request);
 	//printf("aa  ");
 	//fflush(stdout);
-	liberarRequestProcesada(request);
+	//liberarRequestProcesada(request);
 	sem_post(&semMultiprocesamiento);
 }
 
@@ -258,7 +258,7 @@ int validarRequest(char* mensaje) {
  * Return:
  * 	-> respuesta :: t_paquete*  */
 t_paquete* manejarRequest(request_procesada* request) {
-	t_paquete* respuesta;
+	t_paquete* respuesta = (t_paquete*) malloc(sizeof(t_paquete));
 	//devolver la respuesta para usarla en el run
 	switch(request->codigo) {
 		case SELECT:
@@ -362,6 +362,8 @@ void procesarRun(t_queue* colaRun) {
 		}
 		quantumActual++;
 	}
+	//si llego aca es porque se quedo sin requests o fue fin de q,
+	//segun eso, ver si pasar la cola a ready o no
 }
 
 /* procesarAdd()
