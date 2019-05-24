@@ -18,9 +18,6 @@ int main(void) {
 	elementoA1->pagina= pag;
 	elementoA1->modificado = SINMODIFICAR;
 
-
-	//printf("%llu \n", obtenerHoraActual());
-
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 	//datoEstaEnMemoria = TRUE;
@@ -33,12 +30,14 @@ int main(void) {
 
 	// 	HILOS
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
-	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+	pthread_create(&hiloEscucharMultiplesClientes,&attr,(void*)escucharMultiplesClientes, NULL);
 	//pthread_create(&hiloEnviarMensajeAFileSystem, NULL, (void*)enviarMensajeAFileSystem, NULL);
 
 
 	pthread_join(hiloLeerDeConsola, NULL);
-	pthread_join(hiloEscucharMultiplesClientes, NULL);
+	pthread_attr_destroy(&attr);
 	//pthread_join(hiloEnviarMensajeAFileSystem, NULL);
 
 	liberar_conexion(conexionLfs);
@@ -46,6 +45,7 @@ int main(void) {
 	config_destroy(config);
 
 	//momentaneamente, asi cerramos todas las conexiones
+
 	FD_ZERO(&descriptoresDeInteres);
 	return 0;
 }
@@ -59,12 +59,15 @@ void leerDeConsola(void){
 		if (!strcmp(mensaje, "\0")) {
 			break;
 		}
-		validarRequest(mensaje);
+		if(validarRequest(mensaje)== EXIT){
+			break;
+			free(mensaje);
+		}
 		free(mensaje);
 	}
 }
 
-void validarRequest(char* mensaje){
+int validarRequest(char* mensaje){
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
@@ -72,12 +75,18 @@ void validarRequest(char* mensaje){
 	switch(codValidacion){
 		case EXIT_SUCCESS:
 			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
+			return EXIT_SUCCESS;
 			break;
 		case NUESTRO_ERROR:
-			//es la q hay q hacerla generica
+			//TODO es la q hay q hacerla generica
 			log_error(logger_MEMORIA, "La request no es valida");
+			return EXIT_SUCCESS;
+			break;
+		case EXIT:
+			return EXIT_FAILURE;
 			break;
 		default:
+			return EXIT_FAILURE;
 			break;
 	}
 }
@@ -160,6 +169,10 @@ log_info(logger_MEMORIA,"entre a interpretarr request");
 			break;
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
+			break;
+		case EXIT:
+			log_info(logger_MEMORIA,"HaS finalizado el componente MEMORIA");
+			liberarMemoria();
 			break;
 		case NUESTRO_ERROR:
 			if(caller == ANOTHER_COMPONENT){
@@ -311,6 +324,13 @@ void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* new
 	elemento->modificado = MODIFICADO;
 }
 
+void liberarElementoDePag(t_elemTablaDePaginas* self){
+	 free(self->pagina->value);
+	 free(self->pagina);
+	 free(self);
 
-
-
+ }
+void liberarMemoria(){
+	 list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
+ }
+ 

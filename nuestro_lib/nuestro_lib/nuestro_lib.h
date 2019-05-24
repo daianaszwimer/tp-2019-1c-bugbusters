@@ -54,7 +54,8 @@ typedef enum
 	ADD,
 	RUN,
 	METRICS,
-	NUESTRO_ERROR = -1
+	NUESTRO_ERROR = -1,
+	EXIT = 404
 } cod_request;
 
 typedef struct
