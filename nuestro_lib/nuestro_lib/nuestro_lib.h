@@ -28,8 +28,6 @@
 #define PARAMETROS_RUN 1
 #define PARAMETROS_METRICS 0
 
-//#define QUERY_ERROR -1
-
 typedef enum
 {
 	KERNEL,
@@ -45,7 +43,6 @@ typedef enum
 	CONSISTENCIA_INVALIDA = -1
 } consistencia;
 
-
 typedef enum
 {
 	SELECT,
@@ -57,7 +54,7 @@ typedef enum
 	ADD,
 	RUN,
 	METRICS,
-	QUERY_ERROR = -1
+	NUESTRO_ERROR = -1
 } cod_request;
 
 typedef struct
@@ -68,10 +65,15 @@ typedef struct
 } t_paquete;
 
 void iterator(char*);
+int convertirKey(char*);
+int convertirTimestamp(char*, unsigned long long*);
+unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
 char* concatenar(char*, ...);
 char** obtenerParametros(char*);
+int longitudDeArrayDeStrings(char**);
+
 
 
 int crearConexion(char*, char*);

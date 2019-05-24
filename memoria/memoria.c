@@ -1,14 +1,30 @@
 #include "memoria.h"
+#include <stdlib.h>
 
 int main(void) {
 
+	pag = malloc(sizeof(t_pagina));
+	elementoA1 =malloc(sizeof(t_elemTablaDePaginas));
+	tablaA = malloc(sizeof(t_tablaDePaginas));
 
 
-	printf("%llu \n", obtenerHoraActual());
+	tablaA->elementosDeTablaDePagina = list_create();	//list_create() HACE UN MALLOC
+
+	pag->timestamp = 123456789;
+	pag->key=1;
+	pag->value=strdup("hola");
+
+	elementoA1->numeroDePag=1;
+	elementoA1->pagina= pag;
+	elementoA1->modificado = SINMODIFICAR;
+
+
+
+	//printf("%llu \n", obtenerHoraActual());
 
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
-	datoEstaEnCache = FALSE;
+	//datoEstaEnMemoria = TRUE;
 	//conectar con file system
 	conectarAFileSystem();
 
@@ -49,30 +65,18 @@ void leerDeConsola(void){
 	}
 }
 
-
-/*obtenerHoraActual()
- * Parametros:
- * 	-> t_timeval :: Hora actual en minutos y microsegundos VER!conversionDeUnidades
- * Descripcion:
- * Return:
- * 	-> :: unsigned long long */
-unsigned long long obtenerHoraActual(){
-	t_timeval tv;
-	gettimeofday(&tv, NULL);
-	unsigned long long millisegundosDesdeEpoch = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
-	return millisegundosDesdeEpoch;
-}
-
 void validarRequest(char* mensaje){
 	int codValidacion;
+	char** request = string_n_split(mensaje, 2, " ");
 	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
+	cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
 	switch(codValidacion){
 		case EXIT_SUCCESS:
-			interpretarRequest(codValidacion, mensaje,CONSOLE,NULL);
+			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
 			break;
-		case QUERY_ERROR:
+		case NUESTRO_ERROR:
 			//es la q hay q hacerla generica
-			log_error(logger_MEMORIA, "No es valida la request");
+			log_error(logger_MEMORIA, "La request no es valida");
 			break;
 		default:
 			break;
@@ -80,10 +84,12 @@ void validarRequest(char* mensaje){
 }
 
 
+
 void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_LFS"),
 			config_get_string_value(config, "PUERTO_LFS"));
+	log_info(logger_MEMORIA, "SE CONECTO CN LFS");
 }
 
 void escucharMultiplesClientes() {
@@ -117,20 +123,23 @@ void escucharMultiplesClientes() {
 				cod_request palabraReservada = paqueteRecibido->palabraReservada;
 				char* request = paqueteRecibido->request;
 				printf("El codigo que recibi es: %s \n", request);
-				interpretarRequest(palabraReservada,request,HIMSELVE, i);
-				printf("Del bd \n \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+				printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+				interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
+
 			}
 		}
 
 		if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 			int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
-			numeroDeClientes = (int) list_add(descriptoresClientes, (int) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
+			numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 			numeroDeClientes++;
 		}
 	}
 }
 
 void interpretarRequest(cod_request palabraReservada,char* request,t_caller caller, int i) {
+
+log_info(logger_MEMORIA,"entre a interpretarr request");
 	switch(palabraReservada) {
 
 		case SELECT:
@@ -139,7 +148,7 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
-			//procesarInsert(palabraReservada, request);
+			procesarInsert(palabraReservada, request, caller);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
@@ -153,10 +162,11 @@ void interpretarRequest(cod_request palabraReservada,char* request,t_caller call
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
-		case QUERY_ERROR:
-			if(caller == HIMSELVE){
+		case NUESTRO_ERROR:
+			if(caller == ANOTHER_COMPONENT){
 				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-				int valorAnterior = (int) list_replace(descriptoresClientes, i, -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+				int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+				// TODO: Chequear si el -1 se puede castear como int*
 				break;
 			}
 			else{
@@ -190,39 +200,52 @@ char* intercambiarConFileSystem(cod_request palabraReservada, char* request){
  * Return:
  * 	-> :: void */
 void procesarSelect(cod_request palabraReservada, char* request, t_caller caller, int i) {
-
-	if(datoEstaEnCache == TRUE) {
+	t_elemTablaDePaginas* elementoEncontrado;
+	char* valorEncontrado;
+	char* valorDeLFS;
+	char** parametros = obtenerParametros(request);
+	puts("ANTES DE IR A BUSCAR A CACHE");
+	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
+		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+		enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
+		//hay q liberar
 
 	} else {
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-		char* respuesta = intercambiarConFileSystem(palabraReservada,request);
-		if(caller == HIMSELVE) {
-			enviar(palabraReservada, request, (int) list_get(descriptoresClientes,i));
-		} else if(caller == CONSOLE) {
-			log_info(logger_MEMORIA, "La respuesta del ", request, " es ", respuesta);
-		} else {
-//			log_error();
+		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+		enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+	}
+
+}
+
+int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
+	char* tablaABuscar= parametros[0];
+	int keyABuscar= convertirKey(parametros[1]);
+
+	if(strcmp(tablaABuscar,"tablaA")==0) //esto hay que cambiarlo
+	{
+		if(keyABuscar==(int)elementoA1->pagina->key){
+			*elementoEncontrado=elementoA1;
+			*valorEncontrado = strdup(elementoA1->pagina->value);
+			//printf("LA RTA ES %s \n",*valorEncontrado);
+			return TRUE;
+		}else{
+			return FALSE;
 		}
-
-//		t_pagina* pag;
-//		pag->timesamp = 12345;
-//		pag->key=1;
-//		pag->value="hola";
-//		t_tablaDePaginas tablaDePag = tablaDePaginas[0];
-//		tablaDePag.numeroDePag=1;
-//		tablaDePag.pagina= pag;
-//		tablaDePag.modificado = SINMODIFICAR;
-//
-//		printf("numer de pag %i\n",tablaDePag.numeroDePag);
-//		printf("flag modificado %i\n",tablaDePag.modificado);
-//		printf("timestamp %i\n",pag->timesamp);
-//		printf("key %i\n",pag->key);
-//		printf("timestamp %s\n",pag->value);
-
+	}else{
+		return FALSE;
 	}
 }
 
+ void enviarAlDestinatarioCorrecto(cod_request palabraReservada,char* request,char* valorAEnviar,t_caller caller,int socketKernel){
+	if(caller == ANOTHER_COMPONENT) {
+		enviar(palabraReservada, valorAEnviar, socketKernel);
+	} else if(caller == CONSOLE) {
+		printf("La respuesta del request %s es %s \n", request, valorAEnviar);
+	}
+ }
+/*
 /*procesarInsert()
  * Parametros:
  * 	-> char* ::  request
@@ -234,8 +257,61 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
  * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
- * 	-> :: void */
-void procesarInsert(char* request,cod_request palabraReservada) {
+ * 	-> :: void *\/
+void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
+		t_elemTablaDePaginas* elementoEncontrado;
+		char* valorEncontrado;
+		char** parametros = obtenerParametros(request);
+		char* newKeyChar = parametros[1];
+		int newKey = convertirKey(newKeyChar);
+		char* newValue = parametros[2];
 
+		puts("ANTES DE IR A BUSCAR A CACHE");
+
+		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
+//			KEY encontrada	-> modifico timestamp
+//							-> modifico valor
+//							-> modifico flagTabla
+			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
+			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+			puts(elementoEncontrado->pagina->value);
+		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
+//			KEY no encontrada -> solicito nueva pagina
+//								valido largoTablaDePagina
+			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
+			puts("NO ESTA EN CACHE");
+
+		}
 }
 
+t_pagina* crearPagina(uint16_t newKey, char* newValue){
+	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
+	nuevaPagina->timestamp = obtenerHoraActual();
+	nuevaPagina->key = newKey;
+	nuevaPagina->value = newValue;
+	return nuevaPagina;
+}
+
+void actualizarPagina (t_pagina* pagina, char* newValue){
+	unsigned long long newTimes = obtenerHoraActual();
+	pagina->timestamp = newTimes;
+	pagina->value = newValue;
+}
+
+void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
+	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	newElementoDePagina->numeroDePag = rand();
+	newElementoDePagina->pagina = crearPagina(newKey,newValue);
+	newElementoDePagina->modificado = SINMODIFICAR;
+	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
+}
+
+void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
+	actualizarPagina(elemento->pagina,newValue);
+	elemento->modificado = MODIFICADO;
+}
+
+
+
+
+*/

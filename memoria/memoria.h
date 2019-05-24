@@ -19,7 +19,7 @@
 typedef enum
 {
 	CONSOLE,
-	HIMSELVE
+	ANOTHER_COMPONENT
 } t_caller;
 
 typedef enum
@@ -27,16 +27,23 @@ typedef enum
 	SINMODIFICAR,
 	MODIFICADO
 } t_flagModificado;
+
 typedef struct{
-	long int timesamp;
-	int key;
+	unsigned long long timestamp;
+	uint16_t key;
 	char* value; // al inicializarse, lfs me tiene q decir el tamanio
 }t_pagina;
+
 typedef struct{
 	int numeroDePag;
 	t_pagina* pagina;
-	 t_flagModificado modificado;
+	t_flagModificado modificado;
+}t_elemTablaDePaginas;
+
+typedef struct{
+	t_list* elementosDeTablaDePagina;
 }t_tablaDePaginas;
+
 typedef struct{
 	time_t tv_sec;
 	suseconds_t tv_usec;   /* microseconds */
@@ -45,7 +52,16 @@ typedef struct{
 t_log* logger_MEMORIA;
 t_config* config;
 
-t_tablaDePaginas tablaDePaginas[1];
+
+//
+t_tablaDePaginas* tablaA;
+
+t_pagina* pag;
+
+t_elemTablaDePaginas* elementoA1;
+//
+
+
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
@@ -62,7 +78,6 @@ fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para s
 
 
 void leerDeConsola(void);
-unsigned long long obtenerHoraActual();
 void validarRequest(char*);
 
 void escucharMultiplesClientes(void);
@@ -71,5 +86,15 @@ char* intercambiarConFileSystem(cod_request, char*);
 
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
+
+int estaEnMemoria(cod_request, char**, char**, t_elemTablaDePaginas**);
+void enviarAlDestinatarioCorrecto(cod_request, char*, char* , t_caller, int);
+
+void procesarInsert(cod_request, char*, t_caller);
+t_pagina* crearPagina(uint16_t, char*);
+void actualizarPagina (t_pagina*, char*);
+void crearElementoEnTablaDePagina(t_tablaDePaginas*, uint16_t, char*);
+void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
+
 
 #endif /* MEMORIA_H_ */

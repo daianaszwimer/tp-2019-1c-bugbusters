@@ -193,7 +193,6 @@ void planificarReadyAExec(void) {
 		} else {
 			request->request = malloc(strlen(((request_procesada*)queue_peek(ready))->request) + 1);
 		}
-		printf("Tamanio es %d    ", strlen(((request_procesada*)queue_peek(ready))->request) + 1);
 		sem_wait(&semMultiprocesamiento);
 		//hiloRequest = malloc(sizeof(pthread_t)); esto va?
 		pthread_mutex_lock(&semMColaReady);
@@ -238,7 +237,7 @@ int validarRequest(char* mensaje) {
 			return TRUE;
 			break;
 		case EXIT_FAILURE:
-		case QUERY_ERROR:
+		case NUESTRO_ERROR:
 			return FALSE;
 			//informar error
 			break;
@@ -354,7 +353,7 @@ void procesarRun(t_queue* colaRun) {
 		request = queue_pop(colaRun);
 		if (validarRequest(request->request)) {
 			respuesta = manejarRequest(request);
-			if (respuesta->palabraReservada == QUERY_ERROR) {
+			if (respuesta->palabraReservada == NUESTRO_ERROR) {
 				//libero recursos, mato hilo, lo saco de la cola, e informo error
 			}
 			eliminar_paquete(respuesta);

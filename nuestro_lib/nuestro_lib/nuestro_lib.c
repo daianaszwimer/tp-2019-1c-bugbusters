@@ -23,6 +23,52 @@ void iterator(char* value) {
 	printf("%s\n", value);
 }
 
+/* convertirKey()
+ * Parametros:
+ * 	-> key ::  char*
+ * 	-> key16 :: unit16*
+ * Descripcion: en el caso de que se pueda, crea una key de tipo int (de 16 bits)
+ * Return:
+ * 	-> :: int */
+int convertirKey(char* key) {
+	uint64_t key64;
+	uint16_t key16;
+	key64 = strtol(key,NULL,10); //strol devuelve un int como resultado deconvierte un string a un int.LOs parametros son strtol(string, puntero al string, base)
+	if(key64 < 65536) {
+	    key16 = strtol(key,NULL,10);
+	    return key16;
+	}
+	return NUESTRO_ERROR;
+}
+
+/* convertirTimestamp()
+ * Parametros:
+ * 	-> key ::  char*
+ * 	-> key16 ::  unsigned long long*
+ * Descripcion: crea el timestamp en tipo unidgned long long en el caso de que sea posible.
+ * 				Es posible cuando el timestamp es menor al del milisegundo en que se entro a la funcion,
+ * Return:
+ * 	-> :: int */
+int convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
+	if(timestamp < obtenerHoraActual()) {
+	    *timestampLong = strtol(timestamp,NULL,10);
+	    return EXIT_SUCCESS;
+	}
+	return NUESTRO_ERROR;
+}
+
+/*obtenerHoraActual()
+ * Parametros:
+ * Descripcion: Hora actual en minutos y microsegundos
+ * Return:
+ * 	-> :: unsigned long long */
+unsigned long long obtenerHoraActual(){
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	unsigned long long millisegundosDesdeEpoch = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
+	return millisegundosDesdeEpoch;
+}
+
 /* separarString()
  * Parametros:
  * 	-> mensaje ::  char*
@@ -33,6 +79,10 @@ char** separarString(char* mensaje) {
 	return string_split(mensaje, " ");
 }
 
+char** obtenerParametros(char* request) { //ojo con la memoria reservada
+	char** queryYParametros =string_n_split(request, 2, " ");
+	return string_split(queryYParametros[1], " ");
+}
 /* longitudDeArrayDeStrings()
  * Parametros:
  * 	-> array ::  char**
@@ -82,13 +132,13 @@ char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de 
  *  Return:
  *   -> requestSeparada :: char**
  */
-char** obtenerParametros(char* request) {
-	char** requestSeparada;
-	requestSeparada = separarString(request);
-	//n = longitudDeArrayDeStrings(requestSeparada);
-    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
-	return requestSeparada;
-}
+//char** obtenerParametros(char* request) {
+//	char** requestSeparada;
+//	requestSeparada = separarString(request);
+//	//n = longitudDeArrayDeStrings(requestSeparada);
+//    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
+//	return requestSeparada;
+//}
 
 /* leer_config()
  * Parametros:
@@ -171,7 +221,7 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			}else{
 				free(request);
 				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
-				return QUERY_ERROR;
+				return NUESTRO_ERROR;
 			}
 		}
 
@@ -183,11 +233,11 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			return EXIT_SUCCESS;
 		}
 		else {
-			return QUERY_ERROR;
+			return NUESTRO_ERROR;
 		}
 	}
 	else {
-		return QUERY_ERROR;
+		return NUESTRO_ERROR;
 	}
 }
 
@@ -204,7 +254,7 @@ int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t
 	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
 	if(resultadoCantParametros == EXIT_FAILURE){
 		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
-		return QUERY_ERROR;
+		return NUESTRO_ERROR;
 	}else{
 		return EXIT_SUCCESS;
 	}
@@ -250,7 +300,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			default:
-				retorno = QUERY_ERROR;
+				retorno = NUESTRO_ERROR;
 				break;
 	}
 	return retorno;
@@ -268,7 +318,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
 	if(codigoPalabraReservada == -1) {
 		log_info(logger, "Debe ingresar un request válido");
-		return QUERY_ERROR;
+		return NUESTRO_ERROR;
 	}
 	return EXIT_SUCCESS;
 }
@@ -313,7 +363,7 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 		codPalabraReservada = (componente == KERNEL) ? 8 : -1;
 	}
 	else {
-		codPalabraReservada = QUERY_ERROR;
+		codPalabraReservada = NUESTRO_ERROR;
 	}
 	return codPalabraReservada;
 }
