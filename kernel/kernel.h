@@ -18,6 +18,7 @@ typedef struct
 {
 	char* ip;
 	char* puerto;
+	consistencia criterio;
 } config_memoria;
 
 typedef struct

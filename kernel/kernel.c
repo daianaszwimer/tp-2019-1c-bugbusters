@@ -36,11 +36,23 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
+/* conectarAMemoria()
+ * Parametros:
+ * 	-> void
+ * Descripcion: conecta kernel con memoria.
+ * Return:
+ * 	-> :: void  */
 void conectarAMemoria(void) {
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 	procesarAdd("");
 }
 
+/* leerDeConsola()
+ * Parametros:
+ * 	-> void
+ * Descripcion: es un hilo que lee input de consola y agrega los requests a cola de new.
+ * Return:
+ * 	-> :: void  */
 void leerDeConsola(void){
 	char* mensaje;
 	while (1) {
@@ -62,6 +74,14 @@ void leerDeConsola(void){
  Planificación
 */
 
+/* planificarNewAReady()
+ * Parametros:
+ * 	-> void
+ * Descripcion: hilo que, luego de que un request es agregado a la cola de new, lo toma
+ * y reserva recursos si y solo si es válido - en el caso de RUN solo valida si el RUN es válido,
+ * no las requests dentro del archivo.
+ * Return:
+ * 	-> :: void  */
 void planificarNewAReady(void) {
 	while(1) {
 		sem_wait(&semRequestNew);
@@ -78,6 +98,14 @@ void planificarNewAReady(void) {
 	}
 }
 
+/* reservarRecursos()
+ * Parametros:
+ * 	-> char* :: mensaje
+ * Descripcion: toma request y reserva recursos. Si es RUN lee el archivo y va agregando a una cola,
+ * despues esta es agregada a la cola de ready,
+ * sino, simplemente lo agrega a la cola de ready.
+ * Return:
+ * 	-> :: void  */
 void reservarRecursos(char* mensaje) {
 	char** request = string_n_split(mensaje, 2, " ");
 	cod_request codigo = obtenerCodigoPalabraReservada(request[0], KERNEL);
@@ -144,6 +172,13 @@ void reservarRecursos(char* mensaje) {
 	sem_post(&semRequestReady);
 }
 
+/* planificarReadyAExec()
+ * Parametros:
+ * 	-> void
+ * Descripcion: hilo que, luego de que un request es agregado a la cola de ready, lo toma
+ * y si no se superó el nivel de multiprocesamiento, lo ejecuta y lo agrega a la cola de exec.
+ * Return:
+ * 	-> :: void  */
 void planificarReadyAExec(void) {
 	pthread_t hiloRequest;
 	pthread_attr_t attr;
@@ -175,13 +210,26 @@ void planificarReadyAExec(void) {
 	}
 }
 
+/* procesarRequest()
+ * Parametros:
+ * 	-> request_procesada* :: request
+ * Descripcion: hilo que se crea dinámicamente, desde planificarReadyAExec, maneja la request y libera sus recursos.
+ * Return:
+ * 	-> :: void  */
 void procesarRequest(request_procesada* request) {
 	manejarRequest(request);
-	printf("aa  ");
+	//printf("aa  ");
+	//fflush(stdout);
 	liberarRequestProcesada(request);
 	sem_post(&semMultiprocesamiento);
 }
 
+/* validarRequest()
+ * Parametros:
+ * 	-> char* :: mensaje
+ * Descripcion: toma un request y se fija si es válido.
+ * Return:
+ * 	-> requestEsValida :: bool  */
 int validarRequest(char* mensaje) {
 	//aca se va a poder validar que se haga select/insert sobre tabla existente?
 	int codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
@@ -204,6 +252,12 @@ int validarRequest(char* mensaje) {
  * Se ocupa de delegar la request
 */
 
+/* manejarRequest()
+ * Parametros:
+ * 	-> request_procesada* :: request
+ * Descripcion: toma un request y se fija a quién delegarselo, toma la respuesta y la devuelve.
+ * Return:
+ * 	-> respuesta :: t_paquete*  */
 t_paquete* manejarRequest(request_procesada* request) {
 	t_paquete* respuesta;
 	//devolver la respuesta para usarla en el run
@@ -220,7 +274,7 @@ t_paquete* manejarRequest(request_procesada* request) {
 			procesarAdd(request->request);
 			break;
 		case RUN:
-			procesarRun(request->request);
+			//procesarRun(request->request);
 			break;
 		case METRICS:
 			break;
@@ -232,6 +286,12 @@ t_paquete* manejarRequest(request_procesada* request) {
 	return respuesta;
 }
 
+/* liberarMemoria()
+ * Parametros:
+ * 	-> void
+ * Descripcion: libera los recursos.
+ * Return:
+ * 	-> void  */
 void liberarMemoria(void) {
 	liberar_conexion(conexionMemoria);
 	config_destroy(config);
@@ -243,8 +303,15 @@ void liberarMemoria(void) {
 	sem_destroy(&semMultiprocesamiento);
 }
 
+/* liberarRequestProcesada()
+ * Parametros:
+ * 	-> request_procesada* :: request
+ * Descripcion: libera los recursos de la request.
+ * Return:
+ * 	-> void  */
 void liberarRequestProcesada(request_procesada* request) {
 	// segun valgrind este free no hace falta
+	// solo liberar cuando es un run
 	// free(request->request);
 	free(request);
 }
@@ -253,6 +320,13 @@ void liberarRequestProcesada(request_procesada* request) {
  * Funciones que procesan requests
 */
 
+/* enviarMensajeAMemoria()
+ * Parametros:
+ * 	-> cod_request :: codRequest
+ * 	-> char* :: mensaje
+ * Descripcion: recibe una request, se la manda a memoria y recibe la respuesta.
+ * Return:
+ * 	-> paqueteRecibido :: t_paquete*  */
 t_paquete* enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	t_paquete* paqueteRecibido;
 	//en enviar habria que enviar puerto para que memoria sepa a cual se le delega el request segun la consistency
@@ -263,6 +337,13 @@ t_paquete* enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	return paqueteRecibido;
 }
 
+/* procesarRun()
+ * Parametros:
+ * 	-> t_queue* :: colaRun
+ * Descripcion: recibe una cola de requests, procesa cada una,
+ * si es válida la ejecuta. Cuando es fin de quantum, vuelve a ready.
+ * Return:
+ * 	-> void  */
 void procesarRun(t_queue* colaRun) {
 	// usar inotify por si cambia Q
 	t_paquete* respuesta;
@@ -284,6 +365,13 @@ void procesarRun(t_queue* colaRun) {
 	}
 }
 
+/* procesarAdd()
+ * Parametros:
+ * 	-> char* :: mensaje
+ * Descripcion: recibe el request y asigna criterio a memoria.
+ * Luego le informa a memoria que se le asignó ese criterio.
+ * Return:
+ * 	-> void  */
 void procesarAdd(char* mensaje) {
 	memoriaSc.ip = config_get_string_value(config, "IP_MEMORIA");
 	memoriaSc.puerto = config_get_string_value(config, "PUERTO_MEMORIA");
