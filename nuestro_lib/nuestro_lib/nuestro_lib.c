@@ -229,6 +229,14 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 
 		char** parametros = separarRequest(request[1], " ");
 		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
+		for(int i=0; request[i] != NULL; i++){
+			free(request[i]);
+		}
+		free(request);
+		for(int i=0; parametros[i] != NULL; i++){
+			free(parametros[i]);
+		}
+		free(parametros);
 		//free(request);
 		//free(parametros);
 		if( validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger)== TRUE) {

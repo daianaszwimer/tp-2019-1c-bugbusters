@@ -12,12 +12,13 @@ int main(void) {
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 
 	inicializarLfs();
+	//validarRequest("CREATE TABLAxX SC 5 5000");
 
 	//if(pthread_create(&hiloRecibirDeMemoria, NULL, (void*)recibirConexionesMemoria, NULL)){
 
 	//}
 
-	//leerDeConsola();
+	leerDeConsola();
 
 	//pthread_join(hiloRecibirDeMemoria, NULL);
 	
@@ -32,7 +33,7 @@ void leerDeConsola(void) {
 	//log_info(logger, "leerDeConsola");
 	while (1) {
 		mensaje = readline(">");
-		if (!strcmp(mensaje, "\0")) {
+		if (!(strncmp(mensaje, "", 1) != 0)) {
 			free(mensaje);
 			break;
 		}
@@ -57,6 +58,10 @@ void validarRequest(char* mensaje){
 		default:
 			break;
 	}
+	for(int i=0; request[i] != NULL; i++){
+		free(request[i]);
+	}
+	free(request);
 }
 
 void recibirConexionesMemoria() {
@@ -105,6 +110,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
 			} else {
 				enviar(palabraReservada, retorno_string, memoria_fd);
 			}
+			free(retorno_string);
 			break;
 		case DESCRIBE:
 			log_info(logger_LFS, "Me llego un DESCRIBE");
@@ -156,7 +162,9 @@ return_create Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDePa
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
-	if(!dir) {
+	if(dir) {
+		return TABLA_EXISTE;
+	}else{
 		/* Creamos la carpeta de la tabla */
 		int resultadoCreacionDirectorio = mkdir(pathTabla, S_IRWXU);
 		if(resultadoCreacionDirectorio == -1) {
@@ -176,8 +184,8 @@ return_create Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDePa
 
 		t_config *metadataConfig = config_create(metadataPath);
 		config_set_value(metadataConfig, "CONSISTENCY", tipoDeConsistencia);
-		config_set_value(metadataConfig, "PARTITIONS", string_itoa(numeroDeParticiones));
-		config_set_value(metadataConfig, "COMPACTION_TIME", string_itoa(tiempoDeCompactacion));
+		config_set_value(metadataConfig, "PARTITIONS", _numeroDeParticiones);
+		config_set_value(metadataConfig, "COMPACTION_TIME", _tiempoDeCompactacion);
 		config_save(metadataConfig);
 
 		free(_numeroDeParticiones);
@@ -185,7 +193,8 @@ return_create Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDePa
 
 		/* Creamos las particiones */
 		for(int i = 0; i < numeroDeParticiones; i++) {
-			char* pathParticion = concatenar(pathTabla, "/", string_itoa(i), ".bin", NULL);
+			char* _i = string_itoa(i);
+			char* pathParticion = concatenar(pathTabla, "/", _i, ".bin", NULL);
 
 			int particionFileDescriptor = open(pathParticion, O_CREAT ,S_IRWXU);
 			if(particionFileDescriptor == -1) {
@@ -198,14 +207,16 @@ return_create Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDePa
 			config_set_value(configParticion, "SIZE", "0");
 			config_set_value(configParticion, "BLOCKS", bloqueDisponible);
 			config_save(configParticion);
-			config_destroy(configParticion);
+
+			free(_i);
 			free(pathParticion);
+			free(bloqueDisponible);
+			config_destroy(configParticion);
+
 		}
 
 		config_destroy(metadataConfig);
 		free(metadataPath);
-	} else {
-		return TABLA_EXISTE;
 	}
 	free(dir);
 	free(pathTabla);
