@@ -3,7 +3,7 @@
 
 int main(void) {
 
-	pag = malloc(sizeof(t_pagina));
+	pag =(t_pagina*) malloc(sizeof(t_pagina));
 	elementoA1 =malloc(sizeof(t_elemTablaDePaginas));
 	tablaA = malloc(sizeof(t_tablaDePaginas));
 
@@ -18,15 +18,17 @@ int main(void) {
 	elementoA1->pagina= pag;
 	elementoA1->modificado = SINMODIFICAR;
 
+	liberarMemoria();
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
-	//datoEstaEnMemoria = TRUE;
+
 	//conectar con file system
 	conectarAFileSystem();
 
 	//	SEMAFOROS
 	sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
+	pthread_mutex_init(&terminarHilo, NULL);
 
 	// 	HILOS
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
@@ -35,24 +37,31 @@ int main(void) {
 //	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
 //	pthread_create(&hiloEscucharMultiplesClientes,&attr,(void*)escucharMultiplesClientes, NULL);
 //	pthread_create(&hiloEnviarMensajeAFileSystem, NULL, (void*)enviarMensajeAFileSystem, NULL);
-
-	pthread_join(hiloLeerDeConsola, NULL);
+	pthread_detach(hiloLeerDeConsola);
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
+//	pthread_join(hiloLeerDeConsola, NULL);
+
 	//pthread_attr_destroy(&attr);
 	//pthread_join(hiloEnviarMensajeAFileSystem, NULL);
 
 
 	liberar_conexion(conexionLfs);
-	puts(":)");
+	//liberarMemoria();
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
+	FD_ZERO(&descriptoresDeInteres);// TODO momentaneamente, asi cerramos todas las conexiones
 
-	//momentaneamente, asi cerramos todas las conexiones
-
-	FD_ZERO(&descriptoresDeInteres);
 	return 0;
 }
 
+/* leerDeConsola()
+ * Parametros:
+ * 	->  ::  void
+ * Descripcion: Lee la request de consola.
+ * 				Valida el caso de que s ehaya ingresado SALIDA (por lo que setea el flagTerminaHiloMultiplesClientes en 1
+ * Return:
+ * 	-> codPalabraReservada :: void
+ * VALGRIND:: SI */
 void leerDeConsola(void){
 	char* mensaje;
 	log_info(logger_MEMORIA, "Vamos a leer de consola");
@@ -63,14 +72,26 @@ void leerDeConsola(void){
 			break;
 		}
 		if(validarRequest(mensaje)== SALIDA){
-			free(mensaje);
-			pthread_exit(&hiloEscucharMultiplesClientes);
+			pthread_mutex_lock(&terminarHilo);
+			flagTerminarHiloMultiplesClientes =1;
+			pthread_mutex_unlock(&terminarHilo);
 			break;
 		}
 		free(mensaje);
 	}
 }
 
+/* validarRequest()
+ * Parametros:
+ * 	->  mensaje :: char*
+ * Descripcion: Cachea si el codigo de validacion encontrado.
+ * 				En caso de ser un codigo valido, se proede a interpretar la request y se devuelve EXIT_SUCCESS.
+ * 				En caso de error se deuvuelve NUESTRO_ERROR y se logea el mismo.
+ * 				En caso de de ser salida, se devuelve SALIDA.
+ *
+ * Return:
+ * 	-> resultadoVlidacion :: int
+ * VALGRIND:: NO */
 int validarRequest(char* mensaje){
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
@@ -84,19 +105,25 @@ int validarRequest(char* mensaje){
 		case NUESTRO_ERROR:
 			//TODO es la q hay q hacerla generica
 			log_error(logger_MEMORIA, "La request no es valida");
-			return EXIT_SUCCESS;
+			return NUESTRO_ERROR;
 			break;
 		case SALIDA:
 			return SALIDA;
 			break;
 		default:
-			return EXIT_FAILURE;
+			return NUESTRO_ERROR;
 			break;
 	}
 }
 
-
-
+/* conectarAFileSystem()
+ * Parametros:
+ * 	->  :: void
+ * Descripcion: Se crea la conexion con lissandraFileSystem
+ *
+ * Return:
+ * 	-> :: void
+ * VALGRIND:: SI */
 void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_LFS"),
@@ -117,34 +144,43 @@ void escucharMultiplesClientes() {
 	t_paquete* paqueteRecibido;
 
 	while(1) {
+		pthread_mutex_lock(&terminarHilo);
+		if(flagTerminarHiloMultiplesClientes ==1){
+			pthread_mutex_unlock(&terminarHilo);
+			log_info(logger_MEMORIA,"ENTRE AL WHILE 1");
+			break;
+			//liberar
+		}else{
+			pthread_mutex_unlock(&terminarHilo);
 
-		eliminarClientesCerrados(descriptoresClientes, &numeroDeClientes);	// Se eliminan los clientes que tengan un -1 en su fd
-		FD_ZERO(&descriptoresDeInteres); 									// Inicializamos descriptoresDeInteres
-		FD_SET(descriptorServidor, &descriptoresDeInteres);					// Agregamos el descriptorServidor a la lista de interes
+			eliminarClientesCerrados(descriptoresClientes, &numeroDeClientes);	// Se eliminan los clientes que tengan un -1 en su fd
+			FD_ZERO(&descriptoresDeInteres); 									// Inicializamos descriptoresDeInteres
+			FD_SET(descriptorServidor, &descriptoresDeInteres);					// Agregamos el descriptorServidor a la lista de interes
 
-		for (int i=0; i< numeroDeClientes; i++) {
-			FD_SET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres); // Agregamos a la lista de interes, los descriptores de los clientes
-		}
-
-		valorMaximo = maximo(descriptoresClientes, descriptorServidor, numeroDeClientes); // Se el valor del descriptor mas grande. Si no hay ningun cliente, devuelve el fd del servidor
-		select(valorMaximo + 1, &descriptoresDeInteres, NULL, NULL, NULL); 				  // Espera hasta que algún cliente tenga algo que decir
-
-		for(int i=0; i<numeroDeClientes; i++) {
-			if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
-				paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
-				cod_request palabraReservada = paqueteRecibido->palabraReservada;
-				char* request = paqueteRecibido->request;
-				printf("El codigo que recibi es: %s \n", request);
-				printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-				interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
-
+			for (int i=0; i< numeroDeClientes; i++) {
+				FD_SET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres); // Agregamos a la lista de interes, los descriptores de los clientes
 			}
-		}
 
-		if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
-			int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
-			numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
-			numeroDeClientes++;
+			valorMaximo = maximo(descriptoresClientes, descriptorServidor, numeroDeClientes); // Se el valor del descriptor mas grande. Si no hay ningun cliente, devuelve el fd del servidor
+			select(valorMaximo + 1, &descriptoresDeInteres, NULL, NULL, NULL); 				  // Espera hasta que algún cliente tenga algo que decir
+
+			for(int i=0; i<numeroDeClientes; i++) {
+				if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
+					paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
+					cod_request palabraReservada = paqueteRecibido->palabraReservada;
+					char* request = paqueteRecibido->request;
+					printf("El codigo que recibi es: %s \n", request);
+					printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+					interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
+
+				}
+			}
+
+			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
+				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
+				numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
+				numeroDeClientes++;
+			}
 		}
 	}
 }
@@ -176,7 +212,6 @@ log_info(logger_MEMORIA,"entre a interpretarr request");
 			break;
 		case SALIDA:
 			log_info(logger_MEMORIA,"HaS finalizado el componente MEMORIA");
-			liberarMemoria();
 			break;
 		case NUESTRO_ERROR:
 			if(caller == ANOTHER_COMPONENT){
@@ -254,6 +289,18 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 	}
 }
 
+/* enviarAlDestinatarioCorrecto()
+ * Parametros:
+ * 	-> ch* ::  request
+ * 	-> cod_request :: palabraReservada
+ * Descripcion: se va a fijar si existe el segmento de la tabla ,que se quiere hacer insert,
+ * 				en la memoria principal.
+ * 				Si Existe dicho segmento, busca la key (y de encontrarla,
+ * 				actualiza su valor insertando el timestap actual).Y si no encuentra, solicita pag
+ * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
+ * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
+ * Return:
+ * 	-> :: void */
  void enviarAlDestinatarioCorrecto(cod_request palabraReservada,char* request,char* valorAEnviar,t_caller caller,int socketKernel){
 	if(caller == ANOTHER_COMPONENT) {
 		enviar(palabraReservada, valorAEnviar, socketKernel);
@@ -262,9 +309,10 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 	}
  }
 
+ //------------------------------------------------
 /* procesarInsert()
  * Parametros:
- * 	-> char* ::  request
+ * 	-> cod_request ::  palabraReserada
  * 	-> cod_request :: palabraReservada
  * Descripcion: se va a fijar si existe el segmento de la tabla ,que se quiere hacer insert,
  * 				en la memoria principal.
@@ -288,53 +336,53 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 //			KEY encontrada	-> modifico timestamp
 //							-> modifico valor
 //							-> modifico flagTabla
-			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
+			//actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
 			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
 		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
 //			KEY no encontrada -> nueva pagina solicitada
 //TODO:							si faltaEspacio JOURNAL
-			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
+			//crearElementoEnTablaDePagina(tablaA,newKey,newValue);
 			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
 		}else{
 //TODO:		TABLA no encontrada -> nuevo segmento
 
 		}
 }
+//
+//t_pagina* crearPagina(uint16_t newKey, char* newValue){
+//	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
+//	nuevaPagina->timestamp = obtenerHoraActual();
+//	nuevaPagina->key = newKey;
+//	nuevaPagina->value = newValue;
+//	return nuevaPagina;
+//}
+//
+//void actualizarPagina (t_pagina* pagina, char* newValue){
+//	unsigned long long newTimes = obtenerHoraActual();
+//	pagina->timestamp = newTimes;
+//	pagina->value = newValue;
+//}
+//
+//void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
+//	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+//	newElementoDePagina->numeroDePag = rand();
+//	newElementoDePagina->pagina = crearPagina(newKey,newValue);
+//	newElementoDePagina->modificado = SINMODIFICAR;
+//	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
+//}
+//
+//void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
+//	actualizarPagina(elemento->pagina,newValue);
+//	elemento->modificado = MODIFICADO;
+//}
 
-t_pagina* crearPagina(uint16_t newKey, char* newValue){
-	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
-	nuevaPagina->timestamp = obtenerHoraActual();
-	nuevaPagina->key = newKey;
-	nuevaPagina->value = newValue;
-	return nuevaPagina;
-}
 
-void actualizarPagina (t_pagina* pagina, char* newValue){
-	unsigned long long newTimes = obtenerHoraActual();
-	pagina->timestamp = newTimes;
-	pagina->value = newValue;
-}
-
-void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
-	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-	newElementoDePagina->numeroDePag = rand();
-	newElementoDePagina->pagina = crearPagina(newKey,newValue);
-	newElementoDePagina->modificado = SINMODIFICAR;
-	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
-}
-
-void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
-	actualizarPagina(elemento->pagina,newValue);
-	elemento->modificado = MODIFICADO;
-}
-
-void liberarElementoDePag(t_elemTablaDePaginas* self){
-	 free(self->pagina->value);
-	 free(self->pagina);
-	 free(self);
-
- }
 void liberarMemoria(){
-	 list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
- }
- 
+	void liberarElementoDePag(t_elemTablaDePaginas* self){
+		 free(self->pagina->value);
+		 free(self->pagina);
+	 }
+	list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
+
+}
+

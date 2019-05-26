@@ -1,28 +1,5 @@
 #include "nuestro_lib.h"
 
-/* obtenerEnumConsistencia()
- * Parametros
- * -> consistencia :: char*
- * Descripcion: obtiene la consistencia y devuelve el enum correspondiente
- * Return: constante consistencia
- * -> consistencia
- * */
-consistencia obtenerEnumConsistencia(char* consistencia) {
-	if(string_equals_ignore_case(consistencia, "sc")) {
-		return SC;
-	} else if(string_equals_ignore_case(consistencia, "shc")) {
-		return SHC;
-	} else if(string_equals_ignore_case(consistencia, "ec")) {
-		return EC;
-	} else {
-		return CONSISTENCIA_INVALIDA;
-	}
-}
-
-void iterator(char* value) {
-	printf("%s\n", value);
-}
-
 /* convertirKey()
  * Parametros:
  * 	-> key ::  char*
@@ -56,6 +33,30 @@ int convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
 	}
 	return NUESTRO_ERROR;
 }
+
+/* obtenerEnumConsistencia()
+ * Parametros
+ * -> consistencia :: char*
+ * Descripcion: obtiene la consistencia y devuelve el enum correspondiente
+ * Return: constante consistencia
+ * -> consistencia
+ * */
+consistencia obtenerEnumConsistencia(char* consistencia) {
+	if(string_equals_ignore_case(consistencia, "sc")) {
+		return SC;
+	} else if(string_equals_ignore_case(consistencia, "shc")) {
+		return SHC;
+	} else if(string_equals_ignore_case(consistencia, "ec")) {
+		return EC;
+	} else {
+		return CONSISTENCIA_INVALIDA;
+	}
+}
+
+void iterator(char* value) {
+	printf("%s\n", value);
+}
+
 
 /*obtenerHoraActual()
  * Parametros:
@@ -550,3 +551,21 @@ int maximo(t_list* descriptores, int descriptorServidor, int numeroDeClientes) {
 	}
 	return max;
 }
+
+/* validarValue()
+ * Parametros:
+ * 	-> char :: valor
+ * 	-> int :: tamanio Maximo
+ * Descripcion: devuelve el value sin "" (solo si el tamanio es valido)
+ * Return:
+ * 	->  char* :: valor  */
+char* validarValor(char* value, int tamMaximo) {
+	char* valorADevolver;
+	if(sizeof(string_length(value))<=tamMaximo){
+		valorADevolver =string_substring(value,value[1], tamMaximo-1);
+		return valorADevolver;
+	}
+	return EXIT_FAILURE;
+}
+
+

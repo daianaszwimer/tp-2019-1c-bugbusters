@@ -65,9 +65,9 @@ typedef struct
 	void* request;
 } t_paquete;
 
-void iterator(char*);
 int convertirKey(char*);
 int convertirTimestamp(char*, unsigned long long*);
+void iterator(char*);
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
@@ -83,9 +83,8 @@ int validarMensaje(char*, Componente, t_log*);
 int cantDeParametrosEsCorrecta(int,int);
 int validarPalabraReservada(int,Componente, t_log*);
 int validadCantDeParametros(int, int, t_log*);
-
 int obtenerCodigoPalabraReservada(char*, Componente);
-
+char* validarValor(char*, int);
 ////servidor
 void* recibir_buffer(int*, int);
 int iniciar_servidor(char*, char*);

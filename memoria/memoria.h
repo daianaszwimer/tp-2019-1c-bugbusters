@@ -16,6 +16,7 @@
 #include <semaphore.h>
 #include <sys/time.h>
 
+//-----------------STRUCTS------------------
 typedef enum
 {
 	CONSOLE,
@@ -51,36 +52,29 @@ typedef struct{
 	suseconds_t tv_usec;   /* microseconds */
 }t_timeval;
 
+
+//-------------VARIABLES GLOBALES-------------------------
 t_log* logger_MEMORIA;
 t_config* config;
 
-
-//
 t_tablaDePaginas* tablaA;
-
 t_pagina* pag;
-
 t_elemTablaDePaginas* elementoA1;
-//
-
-
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
-
-
+pthread_mutex_t terminarHilo;
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEnviarMensajeAFileSystem;	// hilo para enviar mensaje a file system
 //pthread_attr_t attr;
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
-int conexionLfs;
+int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 
 t_list* descriptoresClientes ;
-bool datoEstaEnCache;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
-
+//
 
 void leerDeConsola(void);
 int validarRequest(char*);
@@ -102,7 +96,7 @@ void crearElementoEnTablaDePagina(t_tablaDePaginas*, uint16_t, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
 
-void liberarElementoDePag(t_elemTablaDePaginas* self);
+//void liberarElementoDePag(t_elemTablaDePaginas* self);
 void liberarMemoria();
 
 
