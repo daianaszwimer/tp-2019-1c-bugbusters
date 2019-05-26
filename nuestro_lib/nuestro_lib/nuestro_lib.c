@@ -95,6 +95,7 @@ int longitudDeArrayDeStrings(char** array){
 		longitud++;
 	}
 	return longitud;
+
 }
 
 /* concatenar()
@@ -214,35 +215,34 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 	int resultadoValidacionParametros;
 	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
 	if(validarPalabraReservada(codPalabraReservada, componente, logger)== TRUE){
-		if(request[1]==NULL){
+		if(request[1]==NULL && codPalabraReservada != SALIDA && codPalabraReservada != NUESTRO_ERROR){
 			if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
 				free(request);
 				return EXIT_SUCCESS;
 			}else{
 				free(request);
 				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
-				if(codPalabraReservada == NUESTRO_ERROR){
+				return NUESTRO_ERROR;
+				/*if(codPalabraReservada == NUESTRO_ERROR){
 					return NUESTRO_ERROR;
 				}else if(codPalabraReservada == SALIDA){
 					return SALIDA;
-				}
+				}*/
 			}
+		}else if(codPalabraReservada != SALIDA && codPalabraReservada != NUESTRO_ERROR){
+			char** parametros = separarString(request[1]);
+			int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
+			//free(request);
+			//free(parametros);
+			resultadoValidacionParametros =validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger);
+			if( resultadoValidacionParametros == TRUE) {
+				return EXIT_SUCCESS;
+			}
+			return NUESTRO_ERROR;
 		}
-
-		char** parametros = separarString(request[1]);
-		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-		//free(request);
-		//free(parametros);
-		resultadoValidacionParametros =validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger);
-		if( resultadoValidacionParametros == TRUE) {
-			return EXIT_SUCCESS;
-		}
-		else {
-			return resultadoValidacionParametros;
-		}
-	}
-	else {
-		return resultadoValidacionParametros;
+		return codPalabraReservada;
+	}else{
+		return codPalabraReservada;
 	}
 }
 
@@ -259,12 +259,11 @@ int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t
 	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
 	if(resultadoCantParametros == EXIT_SUCCESS){
 		return EXIT_SUCCESS;
-	}else if(resultadoCantParametros == EXIT_FAILURE){
-		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
-		return NUESTRO_ERROR;
-	}else if(resultadoCantParametros == EXIT_FAILURE){
+	}else if(resultadoCantParametros == SALIDA){
 		return SALIDA;
 	}
+	log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
+	return NUESTRO_ERROR;
 }
 
 
@@ -280,31 +279,31 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 	int retorno;
 	switch(codPalabraReservada) {
 			case SELECT:
-				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case INSERT:
-				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case CREATE:
-				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case DESCRIBE:
-				retorno = (cantidadDeParametros == PARAMETROS_DESCRIBE) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_DESCRIBE) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case DROP:
-				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case JOURNAL:
-				retorno = (cantidadDeParametros == PARAMETROS_JOURNAL) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_JOURNAL) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case ADD:
-				retorno = (cantidadDeParametros == PARAMETROS_ADD) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_ADD) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case RUN:
-				retorno = (cantidadDeParametros == PARAMETROS_RUN) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_RUN) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case METRICS:
-				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case SALIDA:
 				retorno = SALIDA;
@@ -328,12 +327,11 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
 	if(codigoPalabraReservada != -1) {
 		return EXIT_SUCCESS;
-	}else if(codigoPalabraReservada != -1){
-		log_info(logger, "Debe ingresar un request válido");
-		return NUESTRO_ERROR;
 	}else if(codigoPalabraReservada == 404){
 		return SALIDA;
 	}
+	log_info(logger, "Debe ingresar un request válido");
+	return NUESTRO_ERROR;
 }
 
 

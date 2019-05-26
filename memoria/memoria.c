@@ -30,17 +30,20 @@ int main(void) {
 
 	// 	HILOS
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
-	pthread_create(&hiloEscucharMultiplesClientes,&attr,(void*)escucharMultiplesClientes, NULL);
-	//pthread_create(&hiloEnviarMensajeAFileSystem, NULL, (void*)enviarMensajeAFileSystem, NULL);
-
+	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
+//	pthread_attr_init(&attr);
+//	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+//	pthread_create(&hiloEscucharMultiplesClientes,&attr,(void*)escucharMultiplesClientes, NULL);
+//	pthread_create(&hiloEnviarMensajeAFileSystem, NULL, (void*)enviarMensajeAFileSystem, NULL);
 
 	pthread_join(hiloLeerDeConsola, NULL);
-	pthread_attr_destroy(&attr);
+	pthread_join(hiloEscucharMultiplesClientes, NULL);
+	//pthread_attr_destroy(&attr);
 	//pthread_join(hiloEnviarMensajeAFileSystem, NULL);
 
+
 	liberar_conexion(conexionLfs);
+	puts(":)");
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
 
@@ -60,8 +63,9 @@ void leerDeConsola(void){
 			break;
 		}
 		if(validarRequest(mensaje)== SALIDA){
-			break;
 			free(mensaje);
+			pthread_exit(&hiloEscucharMultiplesClientes);
+			break;
 		}
 		free(mensaje);
 	}
@@ -83,7 +87,7 @@ int validarRequest(char* mensaje){
 			return EXIT_SUCCESS;
 			break;
 		case SALIDA:
-			return EXIT_FAILURE;
+			return SALIDA;
 			break;
 		default:
 			return EXIT_FAILURE;
@@ -220,8 +224,8 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
-		//hay q liberar
-
+		free(elementoEncontrado);
+		free(parametros);
 	} else {
 
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
