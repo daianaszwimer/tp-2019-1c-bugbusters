@@ -437,10 +437,10 @@ int crearConexion(char* ip, char* puerto)
 void enviar(cod_request palabraReservada, char* mensaje, int socket_cliente)
 {
 	//armamos el paquete
-	t_paquete* paquete = malloc(sizeof(t_paquete));
+	t_paquete* paquete = (t_paquete*) malloc(sizeof(t_paquete));
 	paquete->palabraReservada = palabraReservada;
 	paquete->tamanio = strlen(mensaje)+1;
-	paquete->request = malloc(paquete->tamanio);
+	paquete->request = (char*) malloc(paquete->tamanio);
 	memcpy(paquete->request, mensaje, paquete->tamanio);
 	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio;
 	//serializamos
