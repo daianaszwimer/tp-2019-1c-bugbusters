@@ -20,6 +20,7 @@
 
 #define PARAMETROS_SELECT 2
 #define PARAMETROS_INSERT 3
+#define PARAMETROS_INSERT_TIMESTAMP 4
 #define PARAMETROS_CREATE 4
 #define PARAMETROS_DESCRIBE 1
 #define PARAMETROS_DROP 1
@@ -27,8 +28,6 @@
 #define PARAMETROS_ADD 4
 #define PARAMETROS_RUN 1
 #define PARAMETROS_METRICS 0
-
-//#define QUERY_ERROR -1
 
 typedef enum
 {
@@ -47,12 +46,13 @@ typedef enum
 
 typedef enum
 {
-	CREATE_EXITOSO,
+	SUCCESS,
 	TABLA_EXISTE,
+	TABLA_NO_EXISTE,
 	ERROR_CREANDO_DIRECTORIO,
 	ERROR_CREANDO_METADATA,
 	ERROR_CREANDO_PARTICIONES
-} return_create;
+} errorNo;
 
 typedef enum
 {
@@ -81,6 +81,8 @@ typedef enum
 	ANOTHER_COMPONENT
 } t_caller;
 
+int convertirKey(char*);
+int convertirTimestamp(char*, unsigned long long*);
 void iterator(char*);
 char** separarRequest(char*, char*);
 unsigned long long obtenerHoraActual();
@@ -88,7 +90,6 @@ char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
 char* concatenar(char*, ...);
 char** obtenerParametros(char*);
-
 
 int crearConexion(char*, char*);
 t_config* leer_config(char*);

@@ -25,14 +25,11 @@ typedef struct{
 	char* value;
 } t_registro;
 
-t_registro* registro;
-
 typedef struct
 {
+	char* nombreTabla;
 	t_list* registro;
 } t_tabla;
-
-t_tabla* tabla;
 
 typedef struct
 {
@@ -40,7 +37,6 @@ typedef struct
 } t_memtable;
 
 t_memtable* memtable;
-
 pthread_t hiloRecibirDeMemoria;
 
 char* mensaje;
@@ -51,12 +47,13 @@ void recibirConexionesMemoria(void);
 void validarRequest(char*);
 void procesarRequest(int);
 void interpretarRequest(cod_request, char*, t_caller, int);
-return_create Create(char*, char*, int, int);
+errorNo procesarCreate(char*, char*, int, int);
+errorNo procesarInsert(char*, uint16_t, char*, unsigned long long);
 int obtenerBloqueDisponible(void);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
 void inicializarLfs(void);
 void liberarString(char*);
-return_create crearParticiones(int, char*);
+errorNo crearParticiones(int, char*);
 
 #endif /* LFS_H_ */

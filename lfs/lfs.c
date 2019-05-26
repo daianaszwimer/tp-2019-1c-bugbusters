@@ -95,31 +95,36 @@ void procesarRequest(int memoria_fd) {
 	}
 }
 
-void interpretarRequest(cod_request palabraReservada, char* request,
-		t_caller caller, int memoria_fd) {
+void interpretarRequest(cod_request palabraReservada, char* request, t_caller caller, int memoria_fd) {
 	char** requestSeparada = separarRequest(request, " ");
+	errorNo retorno;
 	switch (palabraReservada) {
 	case SELECT:
 		log_info(logger_LFS, "Me llego un SELECT");
 		break;
 	case INSERT:
 		log_info(logger_LFS, "Me llego un INSERT");
+		unsigned long long timestamp;
+		if(longitudDeArrayDeStrings(requestSeparada) == 5) { //4 parametros + INSERT
+			retorno = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], convertirTimestamp(requestSeparada[4], &timestamp));
+		} else {
+			retorno = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], obtenerHoraActual());
+		}
 		break;
 	case CREATE:
 		log_info(logger_LFS, "Me llego un CREATE");
-		return_create retorno = Create(requestSeparada[1], requestSeparada[2], strtol(requestSeparada[3], NULL, 10), strtol(requestSeparada[4], NULL, 10));
-
+		retorno = procesarCreate(requestSeparada[1], requestSeparada[2], strtol(requestSeparada[3], NULL, 10), strtol(requestSeparada[4], NULL, 10));
 		char* mensajeError;
-		switch(retorno){
-			case CREATE_EXITOSO:
-				log_info(logger_LFS, "");
-				break;
-			case TABLA_EXISTE:
-			case ERROR_CREANDO_DIRECTORIO:
-			case ERROR_CREANDO_METADATA:
-			case ERROR_CREANDO_PARTICIONES:
-				log_error(logger_LFS, "");
-				break;
+		switch (retorno) {
+		case SUCCESS:
+			log_info(logger_LFS, "");
+			break;
+		case TABLA_EXISTE:
+		case ERROR_CREANDO_DIRECTORIO:
+		case ERROR_CREANDO_METADATA:
+		case ERROR_CREANDO_PARTICIONES:
+			log_error(logger_LFS, "");
+			break;
 		}
 		if (caller == ANOTHER_COMPONENT) {
 			char* retorno_string = string_itoa(retorno);
@@ -159,7 +164,7 @@ void liberarString(char* y) {
 	free(y);
 }
 
-/* create() [API]
+/* procesarCreate() [API]
  * Parametros:
  * 	-> nombreTabla :: char*
  * 	-> tipoDeConsistencia :: char*
@@ -167,10 +172,11 @@ void liberarString(char* y) {
  * 	-> tiempoDeCompactacion :: int
  * Descripcion: permite la creación de una nueva tabla dentro del file system
  * Return: codigos de error o success*/
-return_create Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
+errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,
+		int numeroDeParticiones, int tiempoDeCompactacion) {
 
 	char* pathTabla = concatenar(pathRaiz, "Tablas/", nombreTabla, NULL);
-	return_create errorNo = CREATE_EXITOSO;
+	errorNo errorNo = SUCCESS;
 	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
 
 	/* Validamos si la tabla existe */
@@ -194,9 +200,12 @@ return_create Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDePa
 				char* _tiempoDeCompactacion = string_itoa(tiempoDeCompactacion);
 
 				t_config *metadataConfig = config_create(metadataPath);
-				config_set_value(metadataConfig, "CONSISTENCY",	tipoDeConsistencia);
-				config_set_value(metadataConfig, "PARTITIONS", _numeroDeParticiones);
-				config_set_value(metadataConfig, "COMPACTION_TIME", _tiempoDeCompactacion);
+				config_set_value(metadataConfig, "CONSISTENCY",
+						tipoDeConsistencia);
+				config_set_value(metadataConfig, "PARTITIONS",
+						_numeroDeParticiones);
+				config_set_value(metadataConfig, "COMPACTION_TIME",
+						_tiempoDeCompactacion);
 				config_save(metadataConfig);
 				config_destroy(metadataConfig);
 				free(_numeroDeParticiones);
@@ -212,9 +221,9 @@ return_create Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDePa
 	return errorNo;
 }
 
-return_create crearParticiones(int numeroDeParticiones, char* pathTabla){
+errorNo crearParticiones(int numeroDeParticiones, char* pathTabla) {
 	/* Creamos las particiones */
-	return_create errorNo = CREATE_EXITOSO;
+	errorNo errorNo = SUCCESS;
 	for (int i = 0; i < numeroDeParticiones; i++) {
 		char* _i = string_itoa(i);
 		char* pathParticion = concatenar(pathTabla, "/", _i, ".bin", NULL);
@@ -223,7 +232,7 @@ return_create crearParticiones(int numeroDeParticiones, char* pathTabla){
 		if (particionFileDescriptor == -1) {
 			errorNo = ERROR_CREANDO_PARTICIONES;
 		} else {
-			char* bloqueDisponible = string_itoa( obtenerBloqueDisponible());
+			char* bloqueDisponible = string_itoa(obtenerBloqueDisponible());
 			t_config *configParticion = config_create(pathParticion);
 			config_set_value(configParticion, "SIZE", "0");
 			config_set_value(configParticion, "BLOCKS", bloqueDisponible);
@@ -245,6 +254,11 @@ int obtenerBloqueDisponible() {
 }
 
 void inicializarLfs() {
+	memtable = (t_memtable*) malloc(sizeof(t_memtable));
+	//tabla = (t_tabla*) malloc(sizeof(t_tabla));
+	memtable->tabla = list_create();
+	//tabla->registro = list_create();
+
 	pathRaiz = concatenar(PATH,
 			config_get_string_value(config, "PUNTO_MONTAJE"), NULL);
 	mkdir(pathRaiz, S_IRWXU);
@@ -290,7 +304,7 @@ void inicializarLfs() {
 	free(pathBloques);
 }
 
-/* insert() [API]
+/* procesarInsert() [API]
  * Parametros:
  * 	-> nombreTabla :: char*
  * 	-> key :: uint16_t
@@ -298,15 +312,37 @@ void inicializarLfs() {
  * 	-> timestamp :: unsigned long long
  * Descripcion: permite la creacion y/o actualizacion del valor de una key dentro de una tabla
  * Return:  */
-void insert(char* nombreTabla, uint16_t key, char* value,
-		unsigned long long timestamp) {
-	char* pathTabla = concatenar(PATH, pathRaiz, "/Tablas/", nombreTabla, NULL);
+errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned long long timestamp) {
+	int encontrarTabla(t_tabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+	char* pathTabla = string_from_format("%s%s%s", pathRaiz, "Tablas/",
+			nombreTabla);
+	errorNo errorNo = SUCCESS;
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
 	if (dir) {
+		t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
 
+		registro->key = key;
+		registro->value = strdup(value);
+		registro->timestamp = timestamp;
+		if (list_find(memtable->tabla, (void*) encontrarTabla) == NULL) {
+			puts("No existe");
+			t_tabla* tabla = (t_tabla*) malloc(sizeof(t_tabla));
+			tabla->nombreTabla = strdup(nombreTabla);
+			tabla->registro = list_create();
+			list_add(tabla->registro, registro);
+			list_add(memtable->tabla, tabla);
+		} else {
+			puts("Existe la tabla campeon");
+		}
 	} else {
-		// TODO: no existe tabla
+		errorNo = TABLA_NO_EXISTE;
 	}
+	free(dir);
+	return errorNo;
 }
+
+
