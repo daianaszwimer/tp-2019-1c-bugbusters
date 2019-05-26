@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-
 int main(void) {
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
-	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
+	log_info(logger_LFS,
+			"----------------INICIO DE LISSANDRA FS--------------");
 
 	inicializarLfs();
 	//validarRequest("CREATE TABLAxX SC 5 5000");
@@ -21,7 +21,6 @@ int main(void) {
 	leerDeConsola();
 
 	//pthread_join(hiloRecibirDeMemoria, NULL);
-	
 
 	free(pathRaiz);
 	log_destroy(logger_LFS);
@@ -30,7 +29,6 @@ int main(void) {
 }
 
 void leerDeConsola(void) {
-	//log_info(logger, "leerDeConsola");
 	while (1) {
 		mensaje = readline(">");
 		if (!(strncmp(mensaje, "", 1) != 0)) {
@@ -42,109 +40,124 @@ void leerDeConsola(void) {
 	}
 }
 
-void validarRequest(char* mensaje){
+void validarRequest(char* mensaje) {
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	codValidacion = validarMensaje(mensaje, LFS, logger_LFS);
-	cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0],LFS);
-	switch(codValidacion){
-		case EXIT_SUCCESS:
-			interpretarRequest(palabraReservada, mensaje, CONSOLE, NULL);
-			break;
-		case NUESTRO_ERROR:
-			//es la q hay q hacerla generica
-			log_error(logger_LFS, "La request no es valida");
-			break;
-		default:
-			break;
+	cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0],
+			LFS);
+	switch (codValidacion) {
+	case EXIT_SUCCESS:
+		interpretarRequest(palabraReservada, mensaje, CONSOLE, NULL);
+		break;
+	case NUESTRO_ERROR:
+		//es la q hay q hacerla generica
+		log_error(logger_LFS, "La request no es valida");
+		break;
+	default:
+		break;
 	}
-	for(int i=0; request[i] != NULL; i++){
+	for (int i = 0; request[i] != NULL; i++) {
 		free(request[i]);
 	}
 	free(request);
 }
 
 void recibirConexionesMemoria() {
-	int lissandraFS_fd = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
+	int lissandraFS_fd = iniciar_servidor(
+			config_get_string_value(config, "PUERTO"),
+			config_get_string_value(config, "IP"));
 	log_info(logger_LFS, "Lissandra lista para recibir Memorias");
 	pthread_t hiloRequest;
 
-	while(1) {
+	while (1) {
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
-		if(pthread_create(&hiloRequest, NULL, (void*)procesarRequest, (int*) memoria_fd)){
+		if (pthread_create(&hiloRequest, NULL, (void*) procesarRequest,
+				(int*) memoria_fd)) {
 			pthread_detach(hiloRequest);
 		} else {
-			printf("Error al iniciar el hilo de la memoria con fd = %i", memoria_fd);
+			printf("Error al iniciar el hilo de la memoria con fd = %i",
+					memoria_fd);
 		}
 	}
 }
 
-
 void procesarRequest(int memoria_fd) {
-	while(1){
+	while (1) {
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
 		//printf("El codigo que recibi de Memoria es: %d \n", palabraReservada);
 		printf("De la memoria nro: %d \n", memoria_fd);
-		interpretarRequest(palabraReservada, paqueteRecibido->request, ANOTHER_COMPONENT, memoria_fd);
+		interpretarRequest(palabraReservada, paqueteRecibido->request,
+				ANOTHER_COMPONENT, memoria_fd);
 		//t_paquete* paquete = armar_paquete(palabraReservada, respuesta);
-		enviar(palabraReservada, paqueteRecibido->request ,memoria_fd);
+		enviar(palabraReservada, paqueteRecibido->request, memoria_fd);
 	}
 }
 
-void interpretarRequest(cod_request palabraReservada, char* request, t_caller caller, int memoria_fd) {
+void interpretarRequest(cod_request palabraReservada, char* request,
+		t_caller caller, int memoria_fd) {
 	char** requestSeparada = separarRequest(request, " ");
-	switch(palabraReservada) {
-		case SELECT:
-			log_info(logger_LFS, "Me llego un SELECT");
-			break;
-		case INSERT:
-			log_info(logger_LFS, "Me llego un INSERT");
-			break;
-		case CREATE:
-			log_info(logger_LFS, "Me llego un CREATE");
-			int retorno = Create(requestSeparada[1], requestSeparada[2], strtol(requestSeparada[3], NULL, 10), strtol(requestSeparada[4], NULL, 10));
+	switch (palabraReservada) {
+	case SELECT:
+		log_info(logger_LFS, "Me llego un SELECT");
+		break;
+	case INSERT:
+		log_info(logger_LFS, "Me llego un INSERT");
+		break;
+	case CREATE:
+		log_info(logger_LFS, "Me llego un CREATE");
+		return_create retorno = Create(requestSeparada[1], requestSeparada[2], strtol(requestSeparada[3], NULL, 10), strtol(requestSeparada[4], NULL, 10));
+
+		char* mensajeError;
+		switch(retorno){
+			case CREATE_EXITOSO:
+				log_info(logger_LFS, "");
+				break;
+			case TABLA_EXISTE:
+			case ERROR_CREANDO_DIRECTORIO:
+			case ERROR_CREANDO_METADATA:
+			case ERROR_CREANDO_PARTICIONES:
+				log_error(logger_LFS, "");
+				break;
+		}
+		if (caller == ANOTHER_COMPONENT) {
 			char* retorno_string = string_itoa(retorno);
-			if(caller == CONSOLE) {
-				// Cacheamos los errores wachin
-			} else {
-				enviar(palabraReservada, retorno_string, memoria_fd);
-			}
+			enviar(palabraReservada, retorno_string, memoria_fd);
 			free(retorno_string);
+		}
+		break;
+	case DESCRIBE:
+		log_info(logger_LFS, "Me llego un DESCRIBE");
+		break;
+	case DROP:
+		log_info(logger_LFS, "Me llego un DROP");
+		break;
+	case NUESTRO_ERROR:
+		if (caller == ANOTHER_COMPONENT) {
+			log_error(logger_LFS, "El cliente se desconecto");
 			break;
-		case DESCRIBE:
-			log_info(logger_LFS, "Me llego un DESCRIBE");
+		} else {
 			break;
-		case DROP:
-			log_info(logger_LFS, "Me llego un DROP");
-			break;
-		case NUESTRO_ERROR:
-			if(caller == ANOTHER_COMPONENT){
-				log_error(logger_LFS, "El cliente se desconecto");
-				break;
-			}
-			else{
-				break;
-			}
-		default:
-			log_warning(logger_LFS, "Operacion desconocida. No quieras meter la pata");
-			break;
+		}
+	default:
+		log_warning(logger_LFS,
+				"Operacion desconocida. No quieras meter la pata");
+		break;
 	}
 
-
-	for(int i=0;requestSeparada[i]!=NULL;i++){
-			free(requestSeparada[i]);
-		}
+	for (int i = 0; requestSeparada[i] != NULL; i++) {
+		free(requestSeparada[i]);
+	}
 	free(requestSeparada);
 	//list_clean_and_destroy_elements(requestSeparada, (void*)liberarString);
 	//free(requestSeparada);
 	puts("\n");
 }
 
-	void liberarString(char* y){
-		free(y);
-	}
-
+void liberarString(char* y) {
+	free(y);
+}
 
 /* create() [API]
  * Parametros:
@@ -157,78 +170,83 @@ void interpretarRequest(cod_request palabraReservada, char* request, t_caller ca
 return_create Create(char* nombreTabla, char* tipoDeConsistencia, int numeroDeParticiones, int tiempoDeCompactacion) {
 
 	char* pathTabla = concatenar(pathRaiz, "Tablas/", nombreTabla, NULL);
-
+	return_create errorNo = CREATE_EXITOSO;
 	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
-	if(dir) {
-		return TABLA_EXISTE;
-	}else{
+	if (dir) {
+		errorNo = TABLA_EXISTE;
+	} else {
 		/* Creamos la carpeta de la tabla */
 		int resultadoCreacionDirectorio = mkdir(pathTabla, S_IRWXU);
-		if(resultadoCreacionDirectorio == -1) {
-			return ERROR_CREANDO_DIRECTORIO;
-		}
-		char* metadataPath = concatenar(pathTabla, "/Metadata.bin", NULL);
+		if (resultadoCreacionDirectorio == -1) {
+			errorNo = ERROR_CREANDO_DIRECTORIO;
+		} else {
+			char* metadataPath = concatenar(pathTabla, "/Metadata.bin", NULL);
 
-		/* Creamos el archivo Metadata */
-		int metadataFileDescriptor = open(metadataPath, O_CREAT , S_IRWXU);
-		if(metadataFileDescriptor == -1) {
-			return ERROR_CREANDO_METADATA;
-		}
-		close(metadataFileDescriptor);
+			/* Creamos el archivo Metadata */
+			int metadataFileDescriptor = open(metadataPath, O_CREAT, S_IRWXU);
+			if (metadataFileDescriptor == -1) {
+				errorNo = ERROR_CREANDO_METADATA;
+			} else {
+				char* _numeroDeParticiones = string_itoa(numeroDeParticiones);
+				char* _tiempoDeCompactacion = string_itoa(tiempoDeCompactacion);
 
-		char* _numeroDeParticiones = string_itoa(numeroDeParticiones);
-		char* _tiempoDeCompactacion = string_itoa(tiempoDeCompactacion);
-
-		t_config *metadataConfig = config_create(metadataPath);
-		config_set_value(metadataConfig, "CONSISTENCY", tipoDeConsistencia);
-		config_set_value(metadataConfig, "PARTITIONS", _numeroDeParticiones);
-		config_set_value(metadataConfig, "COMPACTION_TIME", _tiempoDeCompactacion);
-		config_save(metadataConfig);
-
-		free(_numeroDeParticiones);
-		free(_tiempoDeCompactacion);
-
-		/* Creamos las particiones */
-		for(int i = 0; i < numeroDeParticiones; i++) {
-			char* _i = string_itoa(i);
-			char* pathParticion = concatenar(pathTabla, "/", _i, ".bin", NULL);
-
-			int particionFileDescriptor = open(pathParticion, O_CREAT ,S_IRWXU);
-			if(particionFileDescriptor == -1) {
-				return ERROR_CREANDO_PARTICIONES;
+				t_config *metadataConfig = config_create(metadataPath);
+				config_set_value(metadataConfig, "CONSISTENCY",	tipoDeConsistencia);
+				config_set_value(metadataConfig, "PARTITIONS", _numeroDeParticiones);
+				config_set_value(metadataConfig, "COMPACTION_TIME", _tiempoDeCompactacion);
+				config_save(metadataConfig);
+				config_destroy(metadataConfig);
+				free(_numeroDeParticiones);
+				free(_tiempoDeCompactacion);
+				errorNo = crearParticiones(numeroDeParticiones, pathTabla);
 			}
-			close(particionFileDescriptor);
+			free(metadataPath);
+			close(metadataFileDescriptor);
+		}
+	}
+	free(dir);
+	free(pathTabla);
+	return errorNo;
+}
 
-			char* bloqueDisponible = string_itoa(obtenerBloqueDisponible());
+return_create crearParticiones(int numeroDeParticiones, char* pathTabla){
+	/* Creamos las particiones */
+	return_create errorNo = CREATE_EXITOSO;
+	for (int i = 0; i < numeroDeParticiones; i++) {
+		char* _i = string_itoa(i);
+		char* pathParticion = concatenar(pathTabla, "/", _i, ".bin", NULL);
+
+		int particionFileDescriptor = open(pathParticion, O_CREAT, S_IRWXU);
+		if (particionFileDescriptor == -1) {
+			errorNo = ERROR_CREANDO_PARTICIONES;
+		} else {
+			char* bloqueDisponible = string_itoa( obtenerBloqueDisponible());
 			t_config *configParticion = config_create(pathParticion);
 			config_set_value(configParticion, "SIZE", "0");
 			config_set_value(configParticion, "BLOCKS", bloqueDisponible);
 			config_save(configParticion);
 
-			free(_i);
-			free(pathParticion);
 			free(bloqueDisponible);
 			config_destroy(configParticion);
-
 		}
-
-		config_destroy(metadataConfig);
-		free(metadataPath);
+		close(particionFileDescriptor);
+		free(_i);
+		free(pathParticion);
 	}
-	free(dir);
-	free(pathTabla);
-	return CREATE_EXITOSO;
+	return errorNo;
 }
 
 int obtenerBloqueDisponible() {
+	//TODO retornar un bloque posta
 	return 1;
 }
 
 void inicializarLfs() {
-	pathRaiz = concatenar(PATH, config_get_string_value(config, "PUNTO_MONTAJE"), NULL);
+	pathRaiz = concatenar(PATH,
+			config_get_string_value(config, "PUNTO_MONTAJE"), NULL);
 	mkdir(pathRaiz, S_IRWXU);
 
 	char* pathTablas = concatenar(pathRaiz, "Tablas", NULL);
@@ -240,7 +258,7 @@ void inicializarLfs() {
 	mkdir(pathMetadata, S_IRWXU);
 	char* fileMetadata = concatenar(pathMetadata, "/Metadata.bin", NULL);
 
-	int metadataDescriptor = open(fileMetadata, O_CREAT ,S_IRWXU);
+	int metadataDescriptor = open(fileMetadata, O_CREAT, S_IRWXU);
 	close(metadataDescriptor);
 
 	t_config *configMetadata = config_create(fileMetadata);
@@ -254,10 +272,10 @@ void inicializarLfs() {
 	int blocks = config_get_int_value(configMetadata, "BLOCKS");
 	char* blockNumber;
 	char* fileBloque;
-	for(int i = 1; i <= blocks; i++){
+	for (int i = 1; i <= blocks; i++) {
 		blockNumber = string_itoa(i);
-		fileBloque = concatenar(pathBloques,"/", blockNumber , ".bin", NULL);
-		int bloqueFileDescriptor = open(fileBloque, O_CREAT ,S_IRWXU);
+		fileBloque = concatenar(pathBloques, "/", blockNumber, ".bin", NULL);
+		int bloqueFileDescriptor = open(fileBloque, O_CREAT, S_IRWXU);
 		close(bloqueFileDescriptor);
 
 		free(blockNumber);
@@ -280,14 +298,13 @@ void inicializarLfs() {
  * 	-> timestamp :: unsigned long long
  * Descripcion: permite la creacion y/o actualizacion del valor de una key dentro de una tabla
  * Return:  */
-void insert(char* nombreTabla, uint16_t key, char* value, unsigned long long timestamp) {
+void insert(char* nombreTabla, uint16_t key, char* value,
+		unsigned long long timestamp) {
 	char* pathTabla = concatenar(PATH, pathRaiz, "/Tablas/", nombreTabla, NULL);
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
-	if(dir) {
-
-
+	if (dir) {
 
 	} else {
 		// TODO: no existe tabla

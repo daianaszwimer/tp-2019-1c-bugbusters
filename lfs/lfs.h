@@ -57,5 +57,6 @@ int crearDirectorio(char*);
 int mkdir_p(const char*);
 void inicializarLfs(void);
 void liberarString(char*);
+return_create crearParticiones(int, char*);
 
 #endif /* LFS_H_ */
