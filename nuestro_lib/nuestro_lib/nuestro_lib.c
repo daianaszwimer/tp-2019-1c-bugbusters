@@ -96,40 +96,6 @@ char** separarRequest(char* text, char* separator) {
 	return substrings;
 }
 
-/* convertirKey()
- * Parametros:
- * 	-> key ::  char*
- * 	-> key16 :: unit16*
- * Descripcion: en el caso de que se pueda, crea una key de tipo int (de 16 bits)
- * Return:
- * 	-> :: int */
-int convertirKey(char* key) {
-	uint64_t key64;
-	uint16_t key16;
-	key64 = strtol(key,NULL,10); //strol devuelve un int como resultado deconvierte un string a un int.LOs parametros son strtol(string, puntero al string, base)
-	if(key64 < 65536) {
-	    key16 = strtol(key,NULL,10);
-	    return key16;
-	}
-	return NUESTRO_ERROR;
-}
-
-/* convertirTimestamp()
- * Parametros:
- * 	-> key ::  char*
- * 	-> key16 ::  unsigned long long*
- * Descripcion: crea el timestamp en tipo unidgned long long en el caso de que sea posible.
- * 				Es posible cuando el timestamp es menor al del milisegundo en que se entro a la funcion,
- * Return:
- * 	-> :: int */
-int convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
-	if(timestamp < obtenerHoraActual()) {
-	    *timestampLong = strtol(timestamp,NULL,10);
-	    return EXIT_SUCCESS;
-	}
-	return NUESTRO_ERROR;
-}
-
 /*obtenerHoraActual()
  * Parametros:
  * Descripcion: Hora actual en minutos y microsegundos
@@ -206,13 +172,13 @@ int longitudDeArrayDeStrings(char** array){
  *   -> requestSeparada :: char**
  */
 
-char** obtenerParametros(char* request) {
-	char** requestSeparada;
-	requestSeparada = separarRequest(request, " ");
-	//n = longitudDeArrayDeStrings(requestSeparada);
-    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
-	return requestSeparada;
-}
+//char** obtenerParametros(char* request) {
+//	char** requestSeparada;
+//	requestSeparada = separarRequest(request, " ");
+//	//n = longitudDeArrayDeStrings(requestSeparada);
+//    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
+//	return requestSeparada;
+//}
 
 /* leer_config()
  * Parametros:

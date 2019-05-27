@@ -186,18 +186,18 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numeroDeParticiones, char* tiempoDeCompactacion) {
 
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
-	errorNo errorNo = SUCCESS;
+	errorNo error = SUCCESS;
 	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
 	if (dir) {
-		errorNo = TABLA_EXISTE;
+		error = TABLA_EXISTE;
 	} else {
 		/* Creamos la carpeta de la tabla */
 		int resultadoCreacionDirectorio = mkdir(pathTabla, S_IRWXU);
 		if (resultadoCreacionDirectorio == -1) {
-			errorNo = ERROR_CREANDO_DIRECTORIO;
+			error = ERROR_CREANDO_DIRECTORIO;
 		} else {
 
 			char* metadataPath = string_from_format("%s/Metatada.bin", pathTabla);
@@ -205,7 +205,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			/* Creamos el archivo Metadata */
 			int metadataFileDescriptor = open(metadataPath, O_CREAT, S_IRWXU);
 			if (metadataFileDescriptor == -1) {
-				errorNo = ERROR_CREANDO_METADATA;
+				error = ERROR_CREANDO_METADATA;
 			} else {
 				t_config *metadataConfig = config_create(metadataPath);
 				config_set_value(metadataConfig, "CONSISTENCY",	tipoDeConsistencia);
@@ -213,7 +213,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 				config_set_value(metadataConfig, "COMPACTION_TIME", tiempoDeCompactacion);
 				config_save(metadataConfig);
 				config_destroy(metadataConfig);
-				errorNo = crearParticiones(pathTabla, numeroDeParticiones);
+				error = crearParticiones(pathTabla, numeroDeParticiones);
 			}
 
 
@@ -221,11 +221,12 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 
 			close(metadataFileDescriptor);
 		//hiloRequest = malloc(sizeof(pthread_t));
+		}
 	}
 	free(dir);
 	free(pathTabla);
-	return errorNo;
-}
+	return error;
+	}
 
 errorNo crearParticiones(char* pathTabla, char* numeroDeParticiones){
 	/* Creamos las particiones */
@@ -323,7 +324,7 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
 	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
-	errorNo errorNo = SUCCESS;
+	errorNo error = SUCCESS;
 
 
 	/* Validamos si la tabla existe */
@@ -345,12 +346,12 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 			puts("Existe la tabla campeon");
 		}
 	} else {
-		errorNo = TABLA_NO_EXISTE;
+		error = TABLA_NO_EXISTE;
 	}
 
 	free(pathTabla);
 	free(dir);
-	return errorNo;
+	return error;
 }
 
 
