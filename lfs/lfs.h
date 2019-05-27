@@ -41,22 +41,22 @@ typedef struct
 
 t_memtable* memtable;
 
-pthread_t hiloRecibirDeMemoria;
+pthread_t hiloLeerDeConsola;
+pthread_t hiloRecibirMemorias;
 
 char* mensaje;
 int codValidacion;
 
-void leerDeConsola(void);
-void recibirConexionesMemoria(void);
-void validarRequest(char*);
-void procesarRequest(int);
-void interpretarRequest(cod_request, char*, t_caller, int);
-return_create Create(char*, char*, int, int);
+void* leerDeConsola(void*);
+void* recibirMemorias(void*);
+void* conectarConMemoria(void*);
+void interpretarRequest(cod_request, char*, int);
+return_create procesarCreate(char*, char*, char*, char*);
 int obtenerBloqueDisponible(void);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
 void inicializarLfs(void);
 void liberarString(char*);
-return_create crearParticiones(int, char*);
+return_create crearParticiones(char*, char*);
 
 #endif /* LFS_H_ */

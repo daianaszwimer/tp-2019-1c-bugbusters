@@ -86,7 +86,7 @@ char** separarRequest(char*, char*);
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
-char* concatenar(char*, ...);
+//char* concatenar(char*, ...);
 char** obtenerParametros(char*);
 
 

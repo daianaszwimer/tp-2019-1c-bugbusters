@@ -40,7 +40,7 @@ char** separarRequest(char* text, char* separator) {
 		}
 		if(*token == '"'){
 			token++;
-			token = concatenar(token, " ", strtok_r(str, "\"", &next), NULL);
+			token = string_from_format(token, " ", strtok_r(str, "\"", &next));
 			freeToken = 1;
 		}
 
@@ -107,25 +107,25 @@ int longitudDeArrayDeStrings(char** array){
  * Se le debe pasar como ultimo parametro un NULL(indicando que se finalizo la entrada de parametros)
  * Se debe hacer un free de la variable retornada
  * Return: string concatenado*/
-char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de parametros variable
-	char* stringFinal;	// String donde se guarda el resultado de la concatenacion
-	va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
-	char* parametro;	// Este es un parametro solo
-
-	if (primerString == NULL)
-		return NULL;
-
-	stringFinal = strdup(primerString);
-	va_start(parametros, primerString);	// Inicalizo el va_list
-
-	while ((parametro = va_arg(parametros, char*)) != NULL) {	// Recorro la lista de parametros hasta encontrar un NULL
-		stringFinal = (char*) realloc(stringFinal, strlen(stringFinal) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
-		strcat(stringFinal, parametro); // Concateno el parametro con stringFinal
-	}
-
-	va_end(parametros); // Libero la va_list
-	return stringFinal;
-}
+//char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de parametros variable
+//	char* stringFinal;	// String donde se guarda el resultado de la concatenacion
+//	va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
+//	char* parametro;	// Este es un parametro solo
+//
+//	if (primerString == NULL)
+//		return NULL;
+//
+//	stringFinal = strdup(primerString);
+//	va_start(parametros, primerString);	// Inicalizo el va_list
+//
+//	while ((parametro = va_arg(parametros, char*)) != NULL) {	// Recorro la lista de parametros hasta encontrar un NULL
+//		stringFinal = (char*) realloc(stringFinal, strlen(stringFinal) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
+//		strcat(stringFinal, parametro); // Concateno el parametro con stringFinal
+//	}
+//
+//	va_end(parametros); // Libero la va_list
+//	return stringFinal;
+//}
 
 /* obtenerParametros()
  * Parametros:
@@ -239,7 +239,7 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 		free(parametros);
 		//free(request);
 		//free(parametros);
-		if( validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger)== TRUE) {
+		if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == TRUE) {
 			return EXIT_SUCCESS;
 		}
 		else {
