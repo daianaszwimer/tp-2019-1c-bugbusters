@@ -57,7 +57,13 @@ void iterator(char* value) {
 	printf("%s\n", value);
 }
 
-char** separarRequest(char* text, char* separator) {
+/* separarRequest()
+ * Parametros
+ * -> text :: char*
+ * Descripcion: version mejorada de string_split (de las commons) que recibe un char* y lo separa por espacios (tomando como un string entero aquello que este entre comillas)
+ * Return: char**
+ * */
+char** separarRequest(char* text) {
 	char **substrings = NULL;
 	int size = 0;
 
@@ -68,7 +74,7 @@ char** separarRequest(char* text, char* separator) {
 	int freeToken = 0;
 
 	while(next[0] != '\0') {
-		char* token = strtok_r(str, separator, &next);
+		char* token = strtok_r(str, " ", &next);
 		if(token == NULL) {
 			break;
 		}
@@ -118,6 +124,8 @@ char** separarString(char* mensaje) {
 	return string_split(mensaje, " ");
 }
 
+
+//TODO abajo habia otra funcion que era obtener parametros, chequear diferencias y ver cual dejar.
 char** obtenerParametros(char* request) { //ojo con la memoria reservada
 	char** queryYParametros =string_n_split(request, 2, " ");
 	return string_split(queryYParametros[1], " ");
@@ -265,7 +273,7 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			}
 		}
 
-		char** parametros = separarRequest(request[1], " ");
+		char** parametros = separarRequest(request[1]);
 		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
 		for(int i=0; request[i] != NULL; i++){
 			free(request[i]);

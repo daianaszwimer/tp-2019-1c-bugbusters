@@ -85,7 +85,7 @@ int convertirKey(char*);
 int convertirTimestamp(char*, unsigned long long*);
 void iterator(char*);
 
-char** separarRequest(char*, char*);
+char** separarRequest(char*);
 
 int convertirKey(char*);
 int convertirTimestamp(char*, unsigned long long*);

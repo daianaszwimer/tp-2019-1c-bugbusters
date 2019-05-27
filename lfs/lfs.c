@@ -64,8 +64,6 @@ void* recibirMemorias(void* arg) {
 	free(ip);
 
 	pthread_t hiloRequest;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
 
 	while (1) {
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
@@ -100,7 +98,7 @@ void* conectarConMemoria(void* arg) {
 }
 
 void interpretarRequest(cod_request palabraReservada, char* request, int memoria_fd) {
-	char** requestSeparada = separarRequest(request, " ");
+	char** requestSeparada = separarRequest(request);
 	errorNo retorno;
 	switch (palabraReservada){
 		case SELECT:
@@ -117,7 +115,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 			break;
 		case CREATE:
 			log_info(logger_LFS, "Me llego un CREATE");
-			//strtol(requestSeparada[3], NULL, 10)
+			//TODO validar los tipos de los parametros (ejemplo, SC, cantidad de particiones, etc.)
 			retorno = procesarCreate(requestSeparada[1], requestSeparada[2], requestSeparada[3], requestSeparada[4]);
 			break;
 		case DESCRIBE:
@@ -228,6 +226,12 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 	return error;
 	}
 
+/* crearParticiones()
+ * Parametros:
+ * -> pathTabla :: char*
+ * -> numeroDeParticiones :: char*
+ * Descripcion: crea las particiones de una tabla
+ * Return: codigo de error o success */
 errorNo crearParticiones(char* pathTabla, char* numeroDeParticiones){
 	/* Creamos las particiones */
 	errorNo errorNo = SUCCESS;
@@ -260,7 +264,12 @@ int obtenerBloqueDisponible() {
 	return 1;
 }
 
+/* procesarCreate() [API]
+ * Parametros:
+ * Descripcion: crea el punto de montaje y crea los directorios de: tablas, metadata y bloques
+ * Return: */
 void inicializarLfs() {
+	//TODO catchear todos los errores
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
 	pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);	
 
