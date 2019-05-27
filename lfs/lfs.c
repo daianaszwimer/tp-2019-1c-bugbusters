@@ -95,13 +95,19 @@ void* conectarConMemoria(void* arg) {
 
 void interpretarRequest(cod_request palabraReservada, char* request, int memoria_fd) {
 	char** requestSeparada = separarRequest(request, " ");
-	return_create retorno;
+	errorNo retorno;
 	switch (palabraReservada){
 		case SELECT:
 			log_info(logger_LFS, "Me llego un SELECT");
 			break;
 		case INSERT:
 			log_info(logger_LFS, "Me llego un INSERT");
+			unsigned long long timestamp;
+			if(longitudDeArrayDeStrings(requestSeparada) == 5) { //4 parametros + INSERT
+				retorno = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], convertirTimestamp(requestSeparada[4], &timestamp));
+			} else {
+				retorno = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], obtenerHoraActual());
+			}
 			break;
 		case CREATE:
 			log_info(logger_LFS, "Me llego un CREATE");
@@ -123,26 +129,29 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 
 	char* mensajeDeError;
 	switch(retorno){
-		case CREATE_EXITOSO:
-			mensajeDeError = string_from_format("%s %s %s", "La tabla", requestSeparada[1], "fue creada correctamente.");
+		case SUCCESS:
+			mensajeDeError = string_from_format("La tabla %s fue creada correctamente", requestSeparada[1]);
 			log_info(logger_LFS, mensajeDeError);
 			break;
 		case TABLA_EXISTE:
-			mensajeDeError = string_from_format("%s %s %s", "La tabla", requestSeparada[1], "ya existe.");
+			mensajeDeError = string_from_format("La tabla %s ya existe", requestSeparada[1]);
 			log_error(logger_LFS, mensajeDeError);
 			break;
 		case ERROR_CREANDO_DIRECTORIO:
-			mensajeDeError = string_from_format("%s %s", "Error al crear el directorio de la tabla", requestSeparada[1]);
+			mensajeDeError = string_from_format("Error al crear el directorio de la tabla %s", requestSeparada[1]);
 			log_error(logger_LFS, mensajeDeError);
 			break;
 		case ERROR_CREANDO_METADATA:
-			mensajeDeError = string_from_format("%s %s", "Error al crear el metadata de la tabla", requestSeparada[1]);
+			mensajeDeError = string_from_format("Error al crear el metadata de la tabla %s", requestSeparada[1]);
 			log_error(logger_LFS, mensajeDeError);
 			break;
 		case ERROR_CREANDO_PARTICIONES:
-			mensajeDeError = string_from_format("%s %s", "Error al crear las particiones de la tabla", requestSeparada[1]);
+			mensajeDeError = string_from_format("Error al crear las particiones de la tabla %s", requestSeparada[1]);
 			log_error(logger_LFS, mensajeDeError);
 			break;
+		case TABLA_NO_EXISTE:
+			mensajeDeError = string_from_format("La tabla %s no existe", requestSeparada[1]);
+			log_info(logger_LFS, mensajeDeError);
 	}
 
 	free(mensajeDeError);
@@ -160,7 +169,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 	puts("\n");
 }
 
-/* create() [API]
+/* procesarCreate() [API]
  * Parametros:
  * 	-> nombreTabla :: char*
  * 	-> tipoDeConsistencia :: char*
@@ -168,11 +177,10 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
  * 	-> tiempoDeCompactacion :: int
  * Descripcion: permite la creación de una nueva tabla dentro del file system
  * Return: codigos de error o success*/
-return_create procesarCreate(char* nombreTabla, char* tipoDeConsistencia, char* numeroDeParticiones, char* tiempoDeCompactacion) {
-
+errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numeroDeParticiones, char* tiempoDeCompactacion) {
 
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
-	return_create errorNo = CREATE_EXITOSO;
+	errorNo errorNo = SUCCESS;
 	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
 
 	/* Validamos si la tabla existe */
@@ -214,20 +222,19 @@ return_create procesarCreate(char* nombreTabla, char* tipoDeConsistencia, char* 
 	return errorNo;
 }
 
-return_create crearParticiones(char* pathTabla, char* numeroDeParticiones){
+errorNo crearParticiones(char* pathTabla, char* numeroDeParticiones){
 	/* Creamos las particiones */
-	return_create errorNo = CREATE_EXITOSO;
+	errorNo errorNo = SUCCESS;
 
 	int _numeroDeParticiones = strtol(numeroDeParticiones, NULL, 10);
 	for (int i = 0; i < _numeroDeParticiones; i++) {
-		log_info(logger_LFS, "esta");
 		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, i);
 
 		int particionFileDescriptor = open(pathParticion, O_CREAT, S_IRWXU);
 		if (particionFileDescriptor == -1) {
 			errorNo = ERROR_CREANDO_PARTICIONES;
 		} else {
-			char* bloqueDisponible = string_itoa( obtenerBloqueDisponible());
+			char* bloqueDisponible = string_itoa(obtenerBloqueDisponible());
 			t_config *configParticion = config_create(pathParticion);
 			config_set_value(configParticion, "SIZE", "0");
 			config_set_value(configParticion, "BLOCKS", bloqueDisponible);
@@ -249,7 +256,14 @@ int obtenerBloqueDisponible() {
 
 void inicializarLfs() {
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
-	pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);
+	pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);	
+
+	memtable = (t_memtable*) malloc(sizeof(t_memtable));
+	//tabla = (t_tabla*) malloc(sizeof(t_tabla));
+	memtable->tabla = list_create();
+	//tabla->registro = list_create();
+
+
 	//if error
 	mkdir(pathRaiz, S_IRWXU);
 
@@ -290,7 +304,7 @@ void inicializarLfs() {
 	free(pathBloques);
 }
 
-/* insert() [API]
+/* procesarInsert() [API]
  * Parametros:
  * 	-> nombreTabla :: char*
  * 	-> key :: uint16_t
@@ -298,14 +312,40 @@ void inicializarLfs() {
  * 	-> timestamp :: unsigned long long
  * Descripcion: permite la creacion y/o actualizacion del valor de una key dentro de una tabla
  * Return:  */
-void procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned long long timestamp) {
+
+errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned long long timestamp) {
+	int encontrarTabla(t_tabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
 	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
+	errorNo errorNo = SUCCESS;
+
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
 	if (dir) {
+		t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
 
+		registro->key = key;
+		registro->value = strdup(value);
+		registro->timestamp = timestamp;
+		if (list_find(memtable->tabla, (void*) encontrarTabla) == NULL) {
+			puts("No existe");
+			t_tabla* tabla = (t_tabla*) malloc(sizeof(t_tabla));
+			tabla->nombreTabla = strdup(nombreTabla);
+			tabla->registro = list_create();
+			list_add(tabla->registro, registro);
+			list_add(memtable->tabla, tabla);
+		} else {
+			puts("Existe la tabla campeon");
+		}
 	} else {
-		// TODO: no existe tabla
+		errorNo = TABLA_NO_EXISTE;
 	}
+
+	free(pathTabla);
+	free(dir);
+	return errorNo;
 }
+
+
