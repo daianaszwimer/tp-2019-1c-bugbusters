@@ -96,10 +96,43 @@ char** separarRequest(char* text, char* separator) {
 	return substrings;
 }
 
+/* convertirKey()
+ * Parametros:
+ * 	-> key ::  char*
+ * 	-> key16 :: unit16*
+ * Descripcion: en el caso de que se pueda, crea una key de tipo int (de 16 bits)
+ * Return:
+ * 	-> :: int */
+int convertirKey(char* key) {
+	uint64_t key64;
+	uint16_t key16;
+	key64 = strtol(key,NULL,10); //strol devuelve un int como resultado deconvierte un string a un int.LOs parametros son strtol(string, puntero al string, base)
+	if(key64 < 65536) {
+	    key16 = strtol(key,NULL,10);
+	    return key16;
+	}
+	return NUESTRO_ERROR;
+}
+
+/* convertirTimestamp()
+ * Parametros:
+ * 	-> key ::  char*
+ * 	-> key16 ::  unsigned long long*
+ * Descripcion: crea el timestamp en tipo unidgned long long en el caso de que sea posible.
+ * 				Es posible cuando el timestamp es menor al del milisegundo en que se entro a la funcion,
+ * Return:
+ * 	-> :: int */
+int convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
+	if(timestamp < obtenerHoraActual()) {
+	    *timestampLong = strtol(timestamp,NULL,10);
+	    return EXIT_SUCCESS;
+	}
+	return NUESTRO_ERROR;
+}
+
 /*obtenerHoraActual()
  * Parametros:
- * 	-> t_timeval :: Hora actual en minutos y microsegundos VER!conversionDeUnidades
- * Descripcion:
+ * Descripcion: Hora actual en minutos y microsegundos
  * Return:
  * 	-> :: unsigned long long */
 unsigned long long obtenerHoraActual(){
@@ -119,6 +152,10 @@ char** separarString(char* mensaje) {
 	return string_split(mensaje, " ");
 }
 
+char** obtenerParametros(char* request) { //ojo con la memoria reservada
+	char** queryYParametros =string_n_split(request, 2, " ");
+	return string_split(queryYParametros[1], " ");
+}
 /* longitudDeArrayDeStrings()
  * Parametros:
  * 	-> array ::  char**
@@ -168,6 +205,7 @@ int longitudDeArrayDeStrings(char** array){
  *  Return:
  *   -> requestSeparada :: char**
  */
+
 char** obtenerParametros(char* request) {
 	char** requestSeparada;
 	requestSeparada = separarRequest(request, " ");
@@ -435,6 +473,7 @@ t_paquete* recibir(int socket)
 	recibido = recv(socket, &paquete->palabraReservada, sizeof(int), MSG_WAITALL);
 
 	if(recibido == 0) {
+		printf("ERROR \n");
 		paquete->palabraReservada = -1;
 		void* requestRecibido = malloc(sizeof(int));
 		paquete->request = requestRecibido;

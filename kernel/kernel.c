@@ -185,16 +185,15 @@ void planificarReadyAExec(void) {
 	request_procesada* request;
 	int threadProcesar;
 	while(1) {
-		request = malloc(sizeof(request_procesada));
 		sem_wait(&semRequestReady);
+		sem_wait(&semMultiprocesamiento);
+		request = malloc(sizeof(request_procesada));
 		// esto tira invalid read
 		if(((request_procesada*)queue_peek(ready))->codigo == RUN) {
 			request->request = malloc(sizeof((request_procesada*)queue_peek(ready))->request);
 		} else {
 			request->request = malloc(strlen(((request_procesada*)queue_peek(ready))->request) + 1);
 		}
-		printf("Tamanio es %d    ", strlen(((request_procesada*)queue_peek(ready))->request) + 1);
-		sem_wait(&semMultiprocesamiento);
 		//hiloRequest = malloc(sizeof(pthread_t)); esto va?
 		pthread_mutex_lock(&semMColaReady);
 		request = queue_pop(ready);

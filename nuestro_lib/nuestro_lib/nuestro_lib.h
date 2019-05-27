@@ -84,12 +84,19 @@ typedef enum
 int convertirKey(char*);
 int convertirTimestamp(char*, unsigned long long*);
 void iterator(char*);
+
 char** separarRequest(char*, char*);
+
+int convertirKey(char*);
+int convertirTimestamp(char*, unsigned long long*);
+
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
 //char* concatenar(char*, ...);
 char** obtenerParametros(char*);
+int longitudDeArrayDeStrings(char**);
+
 
 int crearConexion(char*, char*);
 t_config* leer_config(char*);

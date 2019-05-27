@@ -64,18 +64,22 @@ void* recibirMemorias(void* arg) {
 	free(ip);
 
 	pthread_t hiloRequest;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
 
 	while (1) {
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
-		if (pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria,	(void*) memoria_fd)) {
-			char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
-			log_info(logger_LFS, mensaje);
-			pthread_detach(hiloRequest);
-			free(mensaje);
-		} else {
-			char* error = string_from_format("Error al iniciar el hilo de la memoria %d", memoria_fd);
-			log_error(logger_LFS, error);
-			free(error);
+		if(memoria_fd > 0) {
+			if (pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria,	(void*) memoria_fd)) {
+				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
+				log_info(logger_LFS, mensaje);
+				pthread_detach(hiloRequest);
+				free(mensaje);
+			} else {
+				char* error = string_from_format("Error al iniciar el hilo de la memoria %d", memoria_fd);
+				log_error(logger_LFS, error);
+				free(error);
+			}
 		}
 	}
 	return NULL;
@@ -87,7 +91,9 @@ void* conectarConMemoria(void* arg) {
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
 		printf("De la memoria nro: %d \n", memoria_fd);
+		//TODO ver de interpretar si es -1 q onda
 		interpretarRequest(palabraReservada, paqueteRecibido->request, memoria_fd);
+		if (palabraReservada == -1) break;
 		enviar(palabraReservada, paqueteRecibido->request, memoria_fd);
 	}
 	return NULL;
@@ -214,8 +220,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			free(metadataPath);
 
 			close(metadataFileDescriptor);
-
-		}
+		//hiloRequest = malloc(sizeof(pthread_t));
 	}
 	free(dir);
 	free(pathTabla);

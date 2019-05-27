@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [INFO] 22:45:57:884 Memoria/(4375:4375): Servidor listo para recibir al cliente
 [INFO] 09:49:07:21 Memoria/(5198:5198): Servidor listo para recibir al cliente
 [INFO] 14:11:20:469 Memoria/(10723:10723): Servidor listo para recibir al cliente
@@ -54,3 +55,5 @@
 [INFO] 10:09:58:138 Memoria/(11111:11118): Antes de enviar mensaje
 [INFO] 10:09:58:138 Memoria/(11111:11118): despues de enviar mensaje
 [INFO] 10:12:00:158 Memoria/(11165:11180): Memoria lista para recibir al kernel
+=======
+>>>>>>> master
