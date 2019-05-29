@@ -19,12 +19,6 @@
 //-----------------STRUCTS------------------
 typedef enum
 {
-	CONSOLE,
-	ANOTHER_COMPONENT
-} t_caller;
-
-typedef enum
-{
 	SINMODIFICAR,
 	MODIFICADO
 } t_flagModificado;

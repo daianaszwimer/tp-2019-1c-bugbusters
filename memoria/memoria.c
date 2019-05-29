@@ -136,8 +136,8 @@ void escucharMultiplesClientes() {
 	 * fd_set es Set de fd's (una coleccion)*/
 
 	descriptoresClientes = list_create();	// Lista de descriptores de todos los clientes conectados (podemos conectar infinitos clientes)
-	int numeroDeClientes = 0;						// Cantidad de clientes conectados
-	int valorMaximo = 0;							// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
+	int numeroDeClientes = 0;				// Cantidad de clientes conectados
+	int valorMaximo = 0;					// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
 	t_paquete* paqueteRecibido;
 
 	while(1) {
