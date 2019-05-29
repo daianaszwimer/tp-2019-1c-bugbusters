@@ -19,7 +19,7 @@ int main(void) {
 	elementoA1->modificado = SINMODIFICAR;
 
 
-	//list_add(tablaA->elementosDeTablaDePagina, elementoA1);
+	list_add(tablaA->elementosDeTablaDePagina, elementoA1);
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
@@ -73,6 +73,7 @@ void leerDeConsola(void){
 //			pthread_mutex_unlock(&terminarHilo);
 //			break;
 //		}
+		validarRequest(mensaje);
 		free(mensaje);
 	}
 }
@@ -252,16 +253,16 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	char* valorDeLFS;
 	char** parametros = obtenerParametros(request);
 	puts("ANTES DE IR A BUSCAR A CACHE");
-	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
+	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= NUESTRO_ERROR) {
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 		free(elementoEncontrado);
 		free(parametros);
 	} else {
-
+		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-		enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+		//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+		//enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 	}
 
 }
@@ -276,9 +277,9 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 			*elementoEncontrado=elementoA1;
 			*valorEncontrado = strdup(elementoA1->pagina->value);
 			//printf("LA RTA ES %s \n",*valorEncontrado);
-			return TRUE;
+			return EXIT_SUCCESS;
 		}else{
-			return FALSE;
+			return NUESTRO_ERROR;
 		}
 	}else{
 		return NUESTRO_ERROR;
