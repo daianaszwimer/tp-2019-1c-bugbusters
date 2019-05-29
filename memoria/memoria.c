@@ -67,6 +67,17 @@ void leerDeConsola(void){
 		if (!strcmp(mensaje, "\0")) {
 			break;
 		}
+		if(!validarMensaje(mensaje, MEMORIA, logger_MEMORIA)){
+			char** request = string_n_split(mensaje, 2, " ");
+			cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0], MEMORIA);
+			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
+			for(int i = 0; request[i] != NULL; i++){
+				free(request[i]);
+			}
+			free(request);
+		}else{
+			log_error(logger_MEMORIA, "Request invalida");
+		}
 //		if(validarRequest(mensaje)== SALIDA){
 //			pthread_mutex_lock(&terminarHilo);
 //			flagTerminarHiloMultiplesClientes =1;
