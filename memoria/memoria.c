@@ -18,7 +18,8 @@ int main(void) {
 	elementoA1->pagina= pag;
 	elementoA1->modificado = SINMODIFICAR;
 
-	liberarMemoria();
+
+	//list_add(tablaA->elementosDeTablaDePagina, elementoA1);
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
@@ -28,24 +29,19 @@ int main(void) {
 	//	SEMAFOROS
 	sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
-	pthread_mutex_init(&terminarHilo, NULL);
+	//pthread_mutex_init(&terminarHilo, NULL);
 
 	// 	HILOS
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
-//	pthread_attr_init(&attr);
-//	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
-//	pthread_create(&hiloEscucharMultiplesClientes,&attr,(void*)escucharMultiplesClientes, NULL);
-//	pthread_create(&hiloEnviarMensajeAFileSystem, NULL, (void*)enviarMensajeAFileSystem, NULL);
+
 	pthread_detach(hiloLeerDeConsola);
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
-//	pthread_join(hiloLeerDeConsola, NULL);
 
-	//pthread_attr_destroy(&attr);
-	//pthread_join(hiloEnviarMensajeAFileSystem, NULL);
 
 
 	liberar_conexion(conexionLfs);
+
 	//liberarMemoria();
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
@@ -71,12 +67,12 @@ void leerDeConsola(void){
 		if (!strcmp(mensaje, "\0")) {
 			break;
 		}
-		if(validarRequest(mensaje)== SALIDA){
-			pthread_mutex_lock(&terminarHilo);
-			flagTerminarHiloMultiplesClientes =1;
-			pthread_mutex_unlock(&terminarHilo);
-			break;
-		}
+//		if(validarRequest(mensaje)== SALIDA){
+//			pthread_mutex_lock(&terminarHilo);
+//			flagTerminarHiloMultiplesClientes =1;
+//			pthread_mutex_unlock(&terminarHilo);
+//			break;
+//		}
 		free(mensaje);
 	}
 }
@@ -144,14 +140,14 @@ void escucharMultiplesClientes() {
 	t_paquete* paqueteRecibido;
 
 	while(1) {
-		pthread_mutex_lock(&terminarHilo);
-		if(flagTerminarHiloMultiplesClientes ==1){
-			pthread_mutex_unlock(&terminarHilo);
-			log_info(logger_MEMORIA,"ENTRE AL WHILE 1");
-			break;
-			//liberar
-		}else{
-			pthread_mutex_unlock(&terminarHilo);
+		//Varibale global, el hilo de leerConsola, cuando reccibe "SALIDA" lo setea en 1
+//		pthread_mutex_lock(&terminarHilo);
+//		if(flagTerminarHiloMultiplesClientes ==1){
+//			pthread_mutex_unlock(&terminarHilo);
+//			log_info(logger_MEMORIA,"ENTRE AL WHILE 1");
+//			break;
+//		}else{
+//			pthread_mutex_unlock(&terminarHilo);
 
 			eliminarClientesCerrados(descriptoresClientes, &numeroDeClientes);	// Se eliminan los clientes que tengan un -1 en su fd
 			FD_ZERO(&descriptoresDeInteres); 									// Inicializamos descriptoresDeInteres
@@ -174,14 +170,14 @@ void escucharMultiplesClientes() {
 					interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
 
 				}
-			}
+			}//fin for
 
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
 				numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 				numeroDeClientes++;
 			}
-		}
+	//	}
 	}
 }
 
@@ -322,32 +318,32 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
  * 	-> :: void */
-void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
-		t_elemTablaDePaginas* elementoEncontrado;
-		char* valorEncontrado;
-		char** parametros = obtenerParametros(request);
-		char* newKeyChar = parametros[1];
-		int newKey = convertirKey(newKeyChar);
-		char* newValue = parametros[2];
-
-		puts("ANTES DE IR A BUSCAR A CACHE");
-
-		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
-//			KEY encontrada	-> modifico timestamp
-//							-> modifico valor
-//							-> modifico flagTabla
-			//actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
-			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
-		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
-//			KEY no encontrada -> nueva pagina solicitada
-//TODO:							si faltaEspacio JOURNAL
-			//crearElementoEnTablaDePagina(tablaA,newKey,newValue);
-			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
-		}else{
-//TODO:		TABLA no encontrada -> nuevo segmento
-
-		}
-}
+//void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
+//		t_elemTablaDePaginas* elementoEncontrado;
+//		char* valorEncontrado;
+//		char** parametros = obtenerParametros(request);
+//		char* newKeyChar = parametros[1];
+//		int newKey = convertirKey(newKeyChar);
+//		char* newValue = parametros[2];
+//
+//		puts("ANTES DE IR A BUSCAR A CACHE");
+//
+//		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
+////			KEY encontrada	-> modifico timestamp
+////							-> modifico valor
+////							-> modifico flagTabla
+//			//actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
+//			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
+//		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
+////			KEY no encontrada -> nueva pagina solicitada
+////TODO:							si faltaEspacio JOURNAL
+//			//crearElementoEnTablaDePagina(tablaA,newKey,newValue);
+//			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
+//		}else{
+////TODO:		TABLA no encontrada -> nuevo segmento
+//
+//		}
+//}
 //
 //t_pagina* crearPagina(uint16_t newKey, char* newValue){
 //	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
@@ -377,12 +373,53 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 //}
 
 
-void liberarMemoria(){
-	void liberarElementoDePag(t_elemTablaDePaginas* self){
-		 free(self->pagina->value);
-		 free(self->pagina);
-	 }
-	list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
 
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
+//void liberarMemoria(){
+//	void liberarElementoDePag(t_elemTablaDePaginas* self){
+//		 free(self->pagina->value);
+//		 free(self->pagina);
+//	 }
+//	list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
+//
+//}
 
