@@ -27,7 +27,7 @@ int main(void) {
 	conectarAFileSystem();
 
 	//	SEMAFOROS
-	sem_init(&semLeerDeConsola, 0, 1);
+	//sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
 	//pthread_mutex_init(&terminarHilo, NULL);
 
@@ -62,7 +62,7 @@ void leerDeConsola(void){
 	char* mensaje;
 	log_info(logger_MEMORIA, "Vamos a leer de consola");
 	while (1) {
-		sem_wait(&semLeerDeConsola);
+		//sem_wait(&semLeerDeConsola);
 		mensaje = readline(">");
 		if (!strcmp(mensaje, "\0")) {
 			break;
@@ -233,7 +233,7 @@ char* intercambiarConFileSystem(cod_request palabraReservada, char* request){
 
 	enviar(palabraReservada, request, conexionLfs);
 
-	sem_post(&semLeerDeConsola);
+	//sem_post(&semLeerDeConsola);
 	paqueteRecibido = recibir(conexionLfs);
 
 	return paqueteRecibido->request;
@@ -261,8 +261,8 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	} else {
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-		//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-		//enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+		enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 	}
 
 }
@@ -319,69 +319,68 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
  * 	-> :: void */
-//void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
-//		t_elemTablaDePaginas* elementoEncontrado;
-//		char* valorEncontrado;
-//		char** parametros = obtenerParametros(request);
-//		char* newKeyChar = parametros[1];
-//		int newKey = convertirKey(newKeyChar);
-//		char* newValue = parametros[2];
-//
-//		puts("ANTES DE IR A BUSCAR A CACHE");
-//
-//		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= FALSE) {
-////			KEY encontrada	-> modifico timestamp
-////							-> modifico valor
-////							-> modifico flagTabla
-//			//actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
-//			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
-//		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== FALSE){
-////			KEY no encontrada -> nueva pagina solicitada
-////TODO:							si faltaEspacio JOURNAL
-//			//crearElementoEnTablaDePagina(tablaA,newKey,newValue);
-//			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
-//		}else{
-////TODO:		TABLA no encontrada -> nuevo segmento
-//
-//		}
-//}
-//
-//t_pagina* crearPagina(uint16_t newKey, char* newValue){
-//	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
-//	nuevaPagina->timestamp = obtenerHoraActual();
-//	nuevaPagina->key = newKey;
-//	nuevaPagina->value = newValue;
-//	return nuevaPagina;
-//}
-//
-//void actualizarPagina (t_pagina* pagina, char* newValue){
-//	unsigned long long newTimes = obtenerHoraActual();
-//	pagina->timestamp = newTimes;
-//	pagina->value = newValue;
-//}
-//
-//void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
-//	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-//	newElementoDePagina->numeroDePag = rand();
-//	newElementoDePagina->pagina = crearPagina(newKey,newValue);
-//	newElementoDePagina->modificado = SINMODIFICAR;
-//	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
-//}
-//
-//void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
-//	actualizarPagina(elemento->pagina,newValue);
-//	elemento->modificado = MODIFICADO;
-//}
+void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
+		t_elemTablaDePaginas* elementoEncontrado;
+		char* valorEncontrado;
+		char** parametros = obtenerParametros(request);
+		char* newKeyChar = parametros[1];
+		int newKey = convertirKey(newKeyChar);
+		char* newValue = parametros[2];
 
+		puts("ANTES DE IR A BUSCAR A CACHE");
+
+		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= NUESTRO_ERROR) {
+//			KEY encontrada	-> modifico timestamp
+//							-> modifico valor
+//							-> modifico flagTabla
+			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
+			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
+		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== NUESTRO_ERROR){
+//			KEY no encontrada -> nueva pagina solicitada
+//TODO:							si faltaEspacio JOURNAL
+			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
+			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
+		}else{
+//TODO:		TABLA no encontrada -> nuevo segmento
+
+		}
+}
+
+t_pagina* crearPagina(uint16_t newKey, char* newValue){
+	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
+	nuevaPagina->timestamp = obtenerHoraActual();
+	nuevaPagina->key = newKey;
+	nuevaPagina->value = newValue;
+	return nuevaPagina;
+}
+
+void actualizarPagina (t_pagina* pagina, char* newValue){
+	unsigned long long newTimes = obtenerHoraActual();
+	pagina->timestamp = newTimes;
+	pagina->value = newValue;
+}
+
+void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
+	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	newElementoDePagina->numeroDePag = rand();
+	newElementoDePagina->pagina = crearPagina(newKey,newValue);
+	newElementoDePagina->modificado = SINMODIFICAR;
+	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
+}
+
+void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
+	actualizarPagina(elemento->pagina,newValue);
+	elemento->modificado = MODIFICADO;
+}
 
 
 // FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
-//void liberarMemoria(){
-//	void liberarElementoDePag(t_elemTablaDePaginas* self){
-//		 free(self->pagina->value);
-//		 free(self->pagina);
-//	 }
-//	list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
-//
-//}
+void liberarMemoria(){
+	void liberarElementoDePag(t_elemTablaDePaginas* self){
+		 free(self->pagina->value);
+		 free(self->pagina);
+	 }
+	list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
+
+}
 
