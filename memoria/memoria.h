@@ -16,12 +16,20 @@
 #include <semaphore.h>
 #include <sys/time.h>
 
-//-----------------STRUCTS------------------
+//----------------ENUMS--------------------
+
 typedef enum
 {
 	SINMODIFICAR,
 	MODIFICADO
 } t_flagModificado;
+
+typedef enum
+{
+	TABLAINEXISTENTE = 100,
+	KEYINEXISTENTE =101
+} t_erroresCache;
+//-----------------STRUCTS------------------
 
 typedef struct{
 	unsigned long long timestamp;
@@ -46,8 +54,10 @@ typedef struct{
 	suseconds_t tv_usec;   /* microseconds */
 }t_timeval;
 
-
 //-------------VARIABLES GLOBALES-------------------------
+
+consistencia consistenciaMemoria = EC;
+
 t_log* logger_MEMORIA;
 t_config* config;
 
@@ -69,6 +79,8 @@ int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 t_list* descriptoresClientes ;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
 //
+
+//------------------ --- FUNCIONES--------------------------------
 
 void leerDeConsola(void);
 int validarRequest(char*);

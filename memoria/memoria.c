@@ -3,6 +3,7 @@
 
 int main(void) {
 
+
 	pag =(t_pagina*) malloc(sizeof(t_pagina));
 	elementoA1 =malloc(sizeof(t_elemTablaDePaginas));
 	tablaA = malloc(sizeof(t_tablaDePaginas));
@@ -252,18 +253,32 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	char* valorEncontrado;
 	char* valorDeLFS;
 	char** parametros = obtenerParametros(request);
-	puts("ANTES DE IR A BUSCAR A CACHE");
-	if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= NUESTRO_ERROR) {
-		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-		enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
-		free(elementoEncontrado);
-		free(parametros);
-	} else {
-		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-		//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-		//enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+	switch(consistenciaMemoria){
+		case SC:
+		case SHC:
+			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
+			// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
+			//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+			//enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+			break;
+		case EC:
+			if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= NUESTRO_ERROR) {
+				log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+				enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
+				free(elementoEncontrado);
+				free(parametros);
+			} else {
+				log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
+				// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
+				//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+				//enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+			}
+			break;
+		default:
+			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
+			break;
 	}
+
 
 }
 
@@ -279,10 +294,10 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 			//printf("LA RTA ES %s \n",*valorEncontrado);
 			return EXIT_SUCCESS;
 		}else{
-			return NUESTRO_ERROR;
+			return KEYINEXISTENTE;
 		}
 	}else{
-		return NUESTRO_ERROR;
+		return TABLAINEXISTENTE;
 	}
 }
 
