@@ -57,8 +57,7 @@ void iterator(char* value) {
 	printf("%s\n", value);
 }
 
-<<<<<<< HEAD
-=======
+//TODO: Comparar con separarString de memoria
 /* separarRequest()
  * Parametros
  * -> text :: char*
@@ -103,7 +102,7 @@ char** separarRequest(char* text) {
 	free(text_to_iterate);
 	return substrings;
 }
->>>>>>> master
+
 
 /*obtenerHoraActual()
  * Parametros:
@@ -281,38 +280,25 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 				}*/
 			}
 		}else if(codPalabraReservada != SALIDA && codPalabraReservada != NUESTRO_ERROR){
-			char** parametros = separarString(request[1]);
+			char** parametros = separarRequest(request[1]);
 			int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-			//free(request);
-			//free(parametros);
-			resultadoValidacionParametros =validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger);
-			if( resultadoValidacionParametros == TRUE) {
-				return EXIT_SUCCESS;
+			for(int i=0; request[i] != NULL; i++){
+				free(request[i]);
 			}
-<<<<<<< HEAD
-=======
-		}
+			free(request);
+			for(int i=0; parametros[i] != NULL; i++){
+				free(parametros[i]);
+			}
+			free(parametros);
 
-		char** parametros = separarRequest(request[1]);
-		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-		for(int i=0; request[i] != NULL; i++){
-			free(request[i]);
-		}
-		free(request);
-		for(int i=0; parametros[i] != NULL; i++){
-			free(parametros[i]);
-		}
-		free(parametros);
-		//free(request);
-		//free(parametros);
-		if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == TRUE) {
-			return EXIT_SUCCESS;
-		}
-		else {
->>>>>>> master
-			return NUESTRO_ERROR;
+			if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == TRUE) {
+				return EXIT_SUCCESS;
+			} else {
+				return NUESTRO_ERROR;
+			}
 		}
 		return codPalabraReservada;
+
 	}else{
 		return codPalabraReservada;
 	}
@@ -354,16 +340,12 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case INSERT:
-<<<<<<< HEAD
-				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : NUESTRO_ERROR;
-=======
 				if(cantidadDeParametros == PARAMETROS_INSERT || cantidadDeParametros == PARAMETROS_INSERT_TIMESTAMP) {
 					retorno = EXIT_SUCCESS;
 				} else {
 					retorno = EXIT_FAILURE;
 				}
-				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : EXIT_FAILURE;
->>>>>>> master
+				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case CREATE:
 				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : NUESTRO_ERROR;
