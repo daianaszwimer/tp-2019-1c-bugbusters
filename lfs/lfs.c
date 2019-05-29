@@ -16,13 +16,13 @@ int main(void) {
 		log_info(logger_LFS, "Hilo de consola creado");
 	}
 
-//	if(pthread_create(&hiloRecibirMemorias, NULL, recibirMemorias, NULL)){
-//		log_info(logger_LFS, "Hilo de recibir memorias creado");
-//	}
+	if(pthread_create(&hiloRecibirMemorias, NULL, recibirMemorias, NULL)){
+		log_info(logger_LFS, "Hilo de recibir memorias creado");
+	}
 
 	pthread_join(hiloLeerDeConsola, NULL);
 	log_info(logger_LFS, "Hilo de consola finalizado");
-	//pthread_join(hiloRecibirMemorias, NULL);
+	pthread_join(hiloRecibirMemorias, NULL);
 
 	free(pathRaiz);
 	log_destroy(logger_LFS);
