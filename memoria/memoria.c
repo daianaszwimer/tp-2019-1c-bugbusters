@@ -3,30 +3,31 @@
 
 int main(void) {
 
-
+//--------------------------------RESERVA DE MEMORIA------------------------------------------------------------
+	//TODO solo se debe servar el tam max y DELEGARSE A UNA FUNCION
 	pag =(t_pagina*) malloc(sizeof(t_pagina));
 	elementoA1 =malloc(sizeof(t_elemTablaDePaginas));
 	tablaA = malloc(sizeof(t_tablaDePaginas));
 
+//--------------------------------AUXILIAR: creacion de tabla/pag/elemento --------------------------------------
 
 	tablaA->elementosDeTablaDePagina = list_create();	//list_create() HACE UN MALLOC
-
 	pag->timestamp = 123456789;
 	pag->key=1;
 	pag->value=strdup("hola");
-
 	elementoA1->numeroDePag=1;
 	elementoA1->pagina= pag;
 	elementoA1->modificado = SINMODIFICAR;
-
-
 	list_add(tablaA->elementosDeTablaDePagina, elementoA1);
+
+//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
-	//conectar con file system
+//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
 	conectarAFileSystem();
 
+//--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
 	sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
@@ -39,14 +40,9 @@ int main(void) {
 	pthread_detach(hiloLeerDeConsola);
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
 
-
-
+//-------------------------------- -PARTE FINAL DE MEMORIA---------------------------------------------------------
 	liberar_conexion(conexionLfs);
-
 	//liberarMemoria();
-	log_destroy(logger_MEMORIA);
-	config_destroy(config);
-	FD_ZERO(&descriptoresDeInteres);// TODO momentaneamente, asi cerramos todas las conexiones
 
 	return 0;
 }
@@ -257,9 +253,11 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 		case SC:
 		case SHC:
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
+			//TODO CUANDO LFS PUEDA HACER INSERT CORERCTAMENTE, HAY QUE DESCOMNTARLO
 			// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 			//enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+			//TODO GUARDAR EN CACHE RTA DE LFS
 			break;
 		case EC:
 			if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= NUESTRO_ERROR) {
@@ -269,9 +267,11 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 				free(parametros);
 			} else {
 				log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
+				//TODO CUANDO LFS PUEDA HACER INSERT CORERCTAMENTE, HAY QUE DESCOMNTARLO
 				// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 				//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 				//enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+				//TODO GUARDAR EN CACHE RTA DE LFS
 			}
 			break;
 		default:
@@ -391,12 +391,15 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 
 
 // FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
-//void liberarMemoria(){
-//	void liberarElementoDePag(t_elemTablaDePaginas* self){
-//		 free(self->pagina->value);
-//		 free(self->pagina);
-//	 }
-//	list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
-//
-//}
+void liberarMemoria(){
+	void liberarElementoDePag(t_elemTablaDePaginas* self){
+		 free(self->pagina->value);
+		 free(self->pagina);
+	 }
+	list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
+ 	 log_destroy(logger_MEMORIA);
+ 	config_destroy(config);
+ 	FD_ZERO(&descriptoresDeInteres);// TODO momentaneamente, asi cerramos todas las conexiones
+
+}
 
