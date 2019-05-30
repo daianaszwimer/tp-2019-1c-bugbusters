@@ -8,17 +8,22 @@ int main(void) {
 	pag =(t_pagina*) malloc(sizeof(t_pagina));
 	elementoA1 =malloc(sizeof(t_elemTablaDePaginas));
 	tablaA = malloc(sizeof(t_tablaDePaginas));
+	tablaDeSegmentos = malloc(sizeof(t_segmentos));
 
 //--------------------------------AUXILIAR: creacion de tabla/pag/elemento --------------------------------------
 
+	tablaDeSegmentos->segmentos =list_create();
 	tablaA->elementosDeTablaDePagina = list_create();	//list_create() HACE UN MALLOC
+	tablaA->nombre= strdup("TablaA");
 	pag->timestamp = 123456789;
 	pag->key=1;
 	pag->value=strdup("hola");
 	elementoA1->numeroDePag=1;
 	elementoA1->pagina= pag;
 	elementoA1->modificado = SINMODIFICAR;
+
 	list_add(tablaA->elementosDeTablaDePagina, elementoA1);
+	list_add(tablaDeSegmentos->segmentos,tablaA);
 
 //--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
@@ -227,12 +232,17 @@ log_info(logger_MEMORIA,"entre a interpretarr request");
 	log_info(logger_MEMORIA, "(MENSAJE DE KERNEL)");
 }
 
-
+/*intercambiarConFileSystem()
+ * Parametros:
+ * 	-> cod_request :: palabraReservada
+ * 	-> char* ::  request
+ * Descripcion: Permite enviar la request (recibida por parametro) a LFS y espera la respuesta de ella.
+ * Return:
+ * 	-> paqueteRecibido:: char* */
 char* intercambiarConFileSystem(cod_request palabraReservada, char* request){
 	t_paquete* paqueteRecibido;
 
 	enviar(palabraReservada, request, conexionLfs);
-
 	//sem_post(&semLeerDeConsola);
 	paqueteRecibido = recibir(conexionLfs);
 
@@ -263,7 +273,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 			//TODO GUARDAR EN CACHE RTA DE LFS
 			break;
 		case EC:
-			if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= NUESTRO_ERROR) {
+			if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== EXIT_SUCCESS ) {
 				log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 				enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 				free(elementoEncontrado);
@@ -285,12 +295,28 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 
 }
 
+/*estaEnMemoria()
+ * Parametros:
+ * 	-> cod_request :: palabraReservada
+ * 	-> char** ::  parametros de la request
+ * 	-> char** :: valorEncontrado- se modifica por referencia
+ * 	-> t_elemTablaDePaginas** :: elemento (que contiene el puntero a la pag econtrada)- se modifica por referecia.
+ * Descripcion: Revisa si la tabla y key solicitada se encuentran que cache.
+ * 				En caso de que sea cierto, modifica valorEncontrado y elementoEncontrado; devuelce operacion exitosa.
+ * 				En ccaso de que no exista la tabla||key devuelve el error correspondiente.
+ * Return:
+ * 	-> resultado de la operacion:: int */
 int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
+	t_tablaDePaginas* tablaABuscar;
 	char* segmentoABuscar= parametros[0];
 	int keyABuscar= convertirKey(parametros[1]);
-
-	if(strcmp(segmentoABuscar,"tablaA")==0) //tabla = segmento (esto hay que cambiarlo)
+	int encontrarTabla(t_tablaDePaginas* tablaDePaginas)
 	{
+		return string_equals_ignore_case(tablaDePaginas->nombre, segmentoABuscar);
+	}
+	tablaABuscar=list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	if(tablaABuscar!= NULL){
+
 		if(keyABuscar==(int)elementoA1->pagina->key){ //registro = pagina
 			*elementoEncontrado=elementoA1;
 			*valorEncontrado = strdup(elementoA1->pagina->value);
@@ -324,73 +350,73 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 	}
  }
 
- //------------------------------------------------
-/* procesarInsert()
- * Parametros:
- * 	-> cod_request ::  palabraReserada
- * 	-> cod_request :: palabraReservada
- * Descripcion: se va a fijar si existe el segmento de la tabla ,que se quiere hacer insert,
- * 				en la memoria principal.
- * 				Si Existe dicho segmento, busca la key (y de encontrarla,
- * 				actualiza su valor insertando el timestap actual).Y si no encuentra, solicita pag
- * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
- * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
- * Return:
- * 	-> :: void */
-void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
-		t_elemTablaDePaginas* elementoEncontrado;
-		char* valorEncontrado;
-		char** parametros = obtenerParametros(request);
-		char* newKeyChar = parametros[1];
-		int newKey = convertirKey(newKeyChar);
-		char* newValue = parametros[2];
 
-		puts("ANTES DE IR A BUSCAR A CACHE");
-
-		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= NUESTRO_ERROR) {
-//			KEY encontrada	-> modifico timestamp
-//							-> modifico valor
-//							-> modifico flagTabla
-			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
-			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
-		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== NUESTRO_ERROR){
-//			KEY no encontrada -> nueva pagina solicitada
-//TODO:							si faltaEspacio JOURNAL
-			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
-			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
-		}else{
-//TODO:		TABLA no encontrada -> nuevo segmento
-
-		}
-}
-
-t_pagina* crearPagina(uint16_t newKey, char* newValue){
-	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
-	nuevaPagina->timestamp = obtenerHoraActual();
-	nuevaPagina->key = newKey;
-	nuevaPagina->value = newValue;
-	return nuevaPagina;
-}
-
-void actualizarPagina (t_pagina* pagina, char* newValue){
-	unsigned long long newTimes = obtenerHoraActual();
-	pagina->timestamp = newTimes;
-	pagina->value = newValue;
-}
-
-void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
-	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-	newElementoDePagina->numeroDePag = rand();
-	newElementoDePagina->pagina = crearPagina(newKey,newValue);
-	newElementoDePagina->modificado = SINMODIFICAR;
-	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
-}
-
-void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
-	actualizarPagina(elemento->pagina,newValue);
-	elemento->modificado = MODIFICADO;
-}
-
+///* procesarInsert()
+// * Parametros:
+// * 	-> cod_request ::  palabraReserada
+// * 	-> cod_request :: palabraReservada
+// * Descripcion: se va a fijar si existe el segmento de la tabla ,que se quiere hacer insert,
+// * 				en la memoria principal.
+// * 				Si Existe dicho segmento, busca la key (y de encontrarla,
+// * 				actualiza su valor insertando el timestap actual).Y si no encuentra, solicita pag
+// * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
+// * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
+// * Return:
+// * 	-> :: void */
+//void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
+//		t_elemTablaDePaginas* elementoEncontrado;
+//		char* valorEncontrado;
+//		char** parametros = obtenerParametros(request);
+//		char* newKeyChar = parametros[1];
+//		int newKey = convertirKey(newKeyChar);
+//		char* newValue = parametros[2];
+//
+//		puts("ANTES DE IR A BUSCAR A CACHE");
+//
+//		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= NUESTRO_ERROR) {
+////			KEY encontrada	-> modifico timestamp
+////							-> modifico valor
+////							-> modifico flagTabla
+//			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
+//			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
+//		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== NUESTRO_ERROR){
+////			KEY no encontrada -> nueva pagina solicitada
+////TODO:							si faltaEspacio JOURNAL
+//			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
+//			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
+//		}else{
+////TODO:		TABLA no encontrada -> nuevo segmento
+//
+//		}
+//}
+//
+//t_pagina* crearPagina(uint16_t newKey, char* newValue){
+//	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
+//	nuevaPagina->timestamp = obtenerHoraActual();
+//	nuevaPagina->key = newKey;
+//	nuevaPagina->value = newValue;
+//	return nuevaPagina;
+//}
+//
+//void actualizarPagina (t_pagina* pagina, char* newValue){
+//	unsigned long long newTimes = obtenerHoraActual();
+//	pagina->timestamp = newTimes;
+//	pagina->value = newValue;
+//}
+//
+//void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
+//	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+//	newElementoDePagina->numeroDePag = rand();
+//	newElementoDePagina->pagina = crearPagina(newKey,newValue);
+//	newElementoDePagina->modificado = SINMODIFICAR;
+//	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
+//}
+//
+//void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
+//	actualizarPagina(elemento->pagina,newValue);
+//	elemento->modificado = MODIFICADO;
+//}
+//
 
 // FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
 void liberarMemoria(){

@@ -56,10 +56,14 @@ typedef struct{
 }t_elemTablaDePaginas;
 
 typedef struct{
+	char* nombre;
 	t_list* elementosDeTablaDePagina;
 }t_tablaDePaginas;
 
-//TODO: t_segmento
+typedef struct{
+	t_list* segmentos;//TODO por ahora cada segmento es una tablaDePagias pero faltan agregar conceptos
+}t_segmentos;
+//TODO: revisar teoria para esto ultimo
 
 typedef struct{
 	time_t tv_sec;
@@ -76,6 +80,7 @@ t_config* config;
 t_tablaDePaginas* tablaA;
 t_pagina* pag;
 t_elemTablaDePaginas* elementoA1;
+t_segmentos* tablaDeSegmentos;
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
