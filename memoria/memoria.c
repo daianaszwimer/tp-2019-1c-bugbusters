@@ -307,20 +307,28 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
  * Return:
  * 	-> resultado de la operacion:: int */
 int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
-	t_tablaDePaginas* tablaABuscar;
-	char* segmentoABuscar= parametros[0];
-	int keyABuscar= convertirKey(parametros[1]);
+	t_tablaDePaginas* tablaDeSegmentosEnCache = malloc(sizeof(t_tablaDePaginas));
+	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
+	char* segmentoABuscar=strdup(parametros[0]);
+	uint16_t keyABuscar= convertirKey(parametros[1]);
+
 	int encontrarTabla(t_tablaDePaginas* tablaDePaginas)
 	{
 		return string_equals_ignore_case(tablaDePaginas->nombre, segmentoABuscar);
 	}
-	tablaABuscar=list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
-	if(tablaABuscar!= NULL){
 
-		if(keyABuscar==(int)elementoA1->pagina->key){ //registro = pagina
-			*elementoEncontrado=elementoA1;
-			*valorEncontrado = strdup(elementoA1->pagina->value);
-			//printf("LA RTA ES %s \n",*valorEncontrado);
+	tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	if(tablaDeSegmentosEnCache!= NULL){
+
+		int encontrarElemDePag(t_elemTablaDePaginas* elemDePagina)
+					{
+						return (elemDePagina->pagina->key == keyABuscar);
+					}
+
+		elementoDePagEnCache= list_find(tablaDeSegmentosEnCache->elementosDeTablaDePagina,(void*)encontrarElemDePag);
+		if(elementoDePagEnCache !=NULL){ //registro = pagina
+			*elementoEncontrado=elementoDePagEnCache;
+			*valorEncontrado = strdup(elementoDePagEnCache->pagina->value);
 			return EXIT_SUCCESS;
 		}else{
 			return KEYINEXISTENTE;
