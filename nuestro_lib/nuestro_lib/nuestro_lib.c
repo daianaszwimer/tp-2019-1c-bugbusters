@@ -144,50 +144,6 @@ int longitudDeArrayDeStrings(char** array){
 	return longitud;
 }
 
-/* concatenar()
- * Parametros:
- * 	-> primerString :: char*
- * 	-> ... :: n char*
- * Descripcion: concatena n strings
- * Se le debe pasar como ultimo parametro un NULL(indicando que se finalizo la entrada de parametros)
- * Se debe hacer un free de la variable retornada
- * Return: string concatenado*/
-//char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de parametros variable
-//	char* stringFinal;	// String donde se guarda el resultado de la concatenacion
-//	va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
-//	char* parametro;	// Este es un parametro solo
-//
-//	if (primerString == NULL)
-//		return NULL;
-//
-//	stringFinal = strdup(primerString);
-//	va_start(parametros, primerString);	// Inicalizo el va_list
-//
-//	while ((parametro = va_arg(parametros, char*)) != NULL) {	// Recorro la lista de parametros hasta encontrar un NULL
-//		stringFinal = (char*) realloc(stringFinal, strlen(stringFinal) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
-//		strcat(stringFinal, parametro); // Concateno el parametro con stringFinal
-//	}
-//
-//	va_end(parametros); // Libero la va_list
-//	return stringFinal;
-//}
-
-/* obtenerParametros()
- * Parametros:
- *  -> request :: char*
- *  Descripcion: recibe un request (ej: SELECT Tabla 4) y devuelve los parametros ([Tabla, 4])
- *  Return:
- *   -> requestSeparada :: char**
- */
-
-//char** obtenerParametros(char* request) {
-//	char** requestSeparada;
-//	requestSeparada = separarRequest(request, " ");
-//	//n = longitudDeArrayDeStrings(requestSeparada);
-//    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
-//	return requestSeparada;
-//}
-
 /* leer_config()
  * Parametros:
  * 	-> nombreArchivo ::  char*
@@ -328,41 +284,41 @@ int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t
 int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada) {
 	int retorno;
 	switch(codPalabraReservada) {
-			case SELECT:
-				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : EXIT_FAILURE;
-				break;
-			case INSERT:
-				if(cantidadDeParametros == PARAMETROS_INSERT || cantidadDeParametros == PARAMETROS_INSERT_TIMESTAMP) {
-					retorno = EXIT_SUCCESS;
-				} else {
-					retorno = EXIT_FAILURE;
-				}
-				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : EXIT_FAILURE;
-				break;
-			case CREATE:
-				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : EXIT_FAILURE;
-				break;
-			case DESCRIBE:
-				retorno = (cantidadDeParametros == PARAMETROS_DESCRIBE) ? EXIT_SUCCESS : EXIT_FAILURE;
-				break;
-			case DROP:
-				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : EXIT_FAILURE;
-				break;
-			case JOURNAL:
-				retorno = (cantidadDeParametros == PARAMETROS_JOURNAL) ? EXIT_SUCCESS : EXIT_FAILURE;
-				break;
-			case ADD:
-				retorno = (cantidadDeParametros == PARAMETROS_ADD) ? EXIT_SUCCESS : EXIT_FAILURE;
-				break;
-			case RUN:
-				retorno = (cantidadDeParametros == PARAMETROS_RUN) ? EXIT_SUCCESS : EXIT_FAILURE;
-				break;
-			case METRICS:
-				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
-				break;
-			default:
-				retorno = NUESTRO_ERROR;
-				break;
+		case SELECT:
+			retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : EXIT_FAILURE;
+			break;
+		case INSERT:
+			if(cantidadDeParametros == PARAMETROS_INSERT || cantidadDeParametros == PARAMETROS_INSERT_TIMESTAMP) {
+				retorno = EXIT_SUCCESS;
+			} else {
+				retorno = EXIT_FAILURE;
+			}
+			retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : EXIT_FAILURE;
+			break;
+		case CREATE:
+			retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : EXIT_FAILURE;
+			break;
+		case DESCRIBE:
+			retorno = (cantidadDeParametros == PARAMETROS_DESCRIBE) ? EXIT_SUCCESS : EXIT_FAILURE;
+			break;
+		case DROP:
+			retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : EXIT_FAILURE;
+			break;
+		case JOURNAL:
+			retorno = (cantidadDeParametros == PARAMETROS_JOURNAL) ? EXIT_SUCCESS : EXIT_FAILURE;
+			break;
+		case ADD:
+			retorno = (cantidadDeParametros == PARAMETROS_ADD) ? EXIT_SUCCESS : EXIT_FAILURE;
+			break;
+		case RUN:
+			retorno = (cantidadDeParametros == PARAMETROS_RUN) ? EXIT_SUCCESS : EXIT_FAILURE;
+			break;
+		case METRICS:
+			retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
+			break;
+		default:
+			retorno = NUESTRO_ERROR;
+			break;
 	}
 	return retorno;
 }

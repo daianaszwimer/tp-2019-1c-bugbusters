@@ -93,7 +93,6 @@ int convertirTimestamp(char*, unsigned long long*);
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
-//char* concatenar(char*, ...);
 char** obtenerParametros(char*);
 int longitudDeArrayDeStrings(char**);
 
