@@ -48,3 +48,86 @@
 
 [INFO] 18:24:41:584 Kernel/(6485:6529): Recibi de memoria SELECT A A 
 
+[INFO] 12:57:19:904 Kernel/(10144:10144): ----------------INICIO DE KERNEL--------------
+[INFO] 14:38:47:228 Kernel/(10732:10732): ----------------INICIO DE KERNEL--------------
+[INFO] 15:01:18:8 Kernel/(11127:11127): ----------------INICIO DE KERNEL--------------
+[INFO] 15:08:20:216 Kernel/(11461:11461): ----------------INICIO DE KERNEL--------------
+[INFO] 15:23:37:710 Kernel/(11674:11674): ----------------INICIO DE KERNEL--------------
+[INFO] 15:25:10:391 Kernel/(11766:11766): ----------------INICIO DE KERNEL--------------
+[INFO] 15:40:29:892 Kernel/(12022:12022): ----------------INICIO DE KERNEL--------------
+[INFO] 15:44:08:502 Kernel/(12176:12176): ----------------INICIO DE KERNEL--------------
+[INFO] 15:47:58:306 Kernel/(12295:12295): ----------------INICIO DE KERNEL--------------
+[INFO] 16:04:21:841 Kernel/(12682:12682): ----------------INICIO DE KERNEL--------------
+[INFO] 16:10:03:72 Kernel/(12835:12835): ----------------INICIO DE KERNEL--------------
+[INFO] 16:15:20:195 Kernel/(12939:12939): ----------------INICIO DE KERNEL--------------
+[INFO] 16:16:27:481 Kernel/(13006:13006): ----------------INICIO DE KERNEL--------------
+[INFO] 16:26:40:87 Kernel/(13198:13198): ----------------INICIO DE KERNEL--------------
+[INFO] 16:54:58:524 Kernel/(13826:13826): ----------------INICIO DE KERNEL--------------
+[INFO] 17:17:28:247 Kernel/(14194:14194): ----------------INICIO DE KERNEL--------------
+[INFO] 17:17:34:159 Kernel/(14194:14205): No se ha ingresado ningun parametro para la request, y esta request necesita parametros 
+[INFO] 17:17:53:228 Kernel/(14194:14205): Debe ingresar un request válido
+[INFO] 17:18:43:195 Kernel/(14278:14278): ----------------INICIO DE KERNEL--------------
+[INFO] 17:20:14:558 Kernel/(14361:14361): ----------------INICIO DE KERNEL--------------
+[INFO] 17:20:21:684 Kernel/(14361:14372): No se ha ingresado ningun parametro para la request, y esta request necesita parametros 
+[INFO] 17:20:23:2 Kernel/(14361:14372): Debe ingresar un request válido
+[INFO] 17:20:58:90 Kernel/(14401:14401): ----------------INICIO DE KERNEL--------------
+[INFO] 17:22:24:479 Kernel/(14488:14488): ----------------INICIO DE KERNEL--------------
+[INFO] 17:30:20:280 Kernel/(14712:14712): ----------------INICIO DE KERNEL--------------
+[INFO] 17:37:28:558 Kernel/(14862:14862): ----------------INICIO DE KERNEL--------------
+[INFO] 17:39:58:916 Kernel/(14960:14960): ----------------INICIO DE KERNEL--------------
+[INFO] 18:16:31:977 Kernel/(15591:15591): ----------------INICIO DE KERNEL--------------
+[INFO] 18:25:08:911 Kernel/(15825:15825): ----------------INICIO DE KERNEL--------------
+[INFO] 18:26:52:70 Kernel/(15879:15879): ----------------INICIO DE KERNEL--------------
+[INFO] 18:30:40:331 Kernel/(15975:15975): ----------------INICIO DE KERNEL--------------
+[INFO] 18:31:55:661 Kernel/(15975:15999): Recibi de memoria SELECT A A 
+
+[INFO] 18:33:46:597 Kernel/(16077:16077): ----------------INICIO DE KERNEL--------------
+[INFO] 18:34:07:530 Kernel/(16077:16093): Recibi de memoria SELECT A A 
+
+[INFO] 18:38:38:746 Kernel/(16209:16209): ----------------INICIO DE KERNEL--------------
+[INFO] 18:41:22:334 Kernel/(16209:16253): Recibi de memoria SELECT A A 
+
+[INFO] 18:46:40:223 Kernel/(16442:16442): ----------------INICIO DE KERNEL--------------
+[INFO] 18:53:51:850 Kernel/(16632:16632): ----------------INICIO DE KERNEL--------------
+[INFO] 19:02:10:342 Kernel/(16819:16819): ----------------INICIO DE KERNEL--------------
+[INFO] 19:04:42:269 Kernel/(16910:16910): ----------------INICIO DE KERNEL--------------
+[INFO] 19:23:41:767 Kernel/(17538:17538): ----------------INICIO DE KERNEL--------------
+[INFO] 19:25:41:811 Kernel/(17604:17604): ----------------INICIO DE KERNEL--------------
+[INFO] 19:35:43:925 Kernel/(18050:18050): ----------------INICIO DE KERNEL--------------
+[INFO] 19:47:58:561 Kernel/(18371:18371): ----------------INICIO DE KERNEL--------------
+[INFO] 21:48:21:314 Kernel/(19439:19439): ----------------INICIO DE KERNEL--------------
+[INFO] 21:50:26:464 Kernel/(19515:19515): ----------------INICIO DE KERNEL--------------
+[INFO] 22:05:32:417 Kernel/(19771:19771): ----------------INICIO DE KERNEL--------------
+[INFO] 22:11:00:792 Kernel/(19981:19981): ----------------INICIO DE KERNEL--------------
+[INFO] 22:15:59:651 Kernel/(20221:20221): ----------------INICIO DE KERNEL--------------
+[INFO] 23:28:45:982 Kernel/(10103:10103): ----------------INICIO DE KERNEL--------------
+[INFO] 23:34:16:819 Kernel/(10103:10338): Recibi de memoria SELECT A A 
+
+[INFO] 10:08:47:774 Kernel/(13063:13063): ----------------INICIO DE KERNEL--------------
+[INFO] 10:12:15:964 Kernel/(13199:13199): ----------------INICIO DE KERNEL--------------
+[INFO] 10:15:39:899 Kernel/(13199:13309): Recibi de memoria SELECT A A 
+
+[INFO] 10:49:40:767 Kernel/(14604:14604): ----------------INICIO DE KERNEL--------------
+[INFO] 10:55:38:184 Kernel/(14604:14728): Recibi de memoria 0 
+
+[INFO] 11:04:45:331 Kernel/(15094:15094): ----------------INICIO DE KERNEL--------------
+[INFO] 11:08:25:978 Kernel/(15094:15196): Recibi de memoria SELECT A A 
+
+[INFO] 11:16:20:810 Kernel/(15681:15681): ----------------INICIO DE KERNEL--------------
+[INFO] 11:24:48:984 Kernel/(15681:15779): Recibi de memoria SELECT A A 
+
+[INFO] 11:27:01:869 Kernel/(15911:15911): ----------------INICIO DE KERNEL--------------
+[INFO] 11:27:47:287 Kernel/(15911:15933): Recibi de memoria 0 
+
+[INFO] 11:29:50:959 Kernel/(16145:16145): ----------------INICIO DE KERNEL--------------
+[INFO] 11:31:45:736 Kernel/(16145:16163): Recibi de memoria SELECT TablaA 1 
+
+[INFO] 11:52:49:896 Kernel/(16884:16884): ----------------INICIO DE KERNEL--------------
+[INFO] 11:53:13:656 Kernel/(16884:16908): Recibi de memoria 0 
+
+[INFO] 11:53:30:412 Kernel/(16939:16939): ----------------INICIO DE KERNEL--------------
+[INFO] 11:53:42:843 Kernel/(16939:16953): Recibi de memoria SELECT A A 
+
+[INFO] 11:54:55:474 Kernel/(16998:16998): ----------------INICIO DE KERNEL--------------
+[INFO] 11:56:32:251 Kernel/(16998:17014): Recibi de memoria 0 
+

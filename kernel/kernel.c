@@ -122,7 +122,7 @@ void reservarRecursos(char* mensaje) {
 		} else {
 			_request->request = queue_create();
 			char letra;
-			char* request = (char*) malloc(sizeof(char));
+			char* request = NULL;
 			char** requestDividida = NULL;
 			int i = 0;
 			while((letra = fgetc(archivoLql)) != EOF) {
@@ -132,23 +132,26 @@ void reservarRecursos(char* mensaje) {
 					request[i] = letra;
 					i++;
 				} else {
+					request[i] = '\0';
 					request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
 					requestDividida = string_n_split(request, 2, " ");
-					cod_request codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
-					otraRequest->codigo = codigo;
-					otraRequest->request = (char*) malloc(strlen(request) + 1);
-					otraRequest->request = request;
+					cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
+					otraRequest->codigo = _codigo;
+					otraRequest->request = strdup(request);
 					queue_push(_request->request, otraRequest);
-					free(request);
-					free(requestDividida[0]);
-					free(requestDividida[1]);
-					free(requestDividida);
-					request = (char*) malloc(sizeof(char));
+					for (int j = 0; requestDividida[j] != NULL; j++) {
+						free(requestDividida[j]);
+					}
+					//cuando saco free me tira invalid free, cuando lo dejo dice invalid malloc
+					//free(requestDividida);
 					i = 0;
+					request = NULL;
+					// dejo este null?
+					requestDividida = NULL;
 				}
 			}
-			free(request);
 			fclose(archivoLql);
+			free(requestDividida);
 		}
 		_request->codigo = RUN;
 		pthread_mutex_lock(&semMColaReady);
@@ -164,6 +167,7 @@ void reservarRecursos(char* mensaje) {
 	}
 	sem_post(&semRequestReady);
 }
+
 
 /* planificarReadyAExec()
  * Parametros:
@@ -253,7 +257,7 @@ int validarRequest(char* mensaje) {
  * Return:
  * 	-> respuesta :: t_paquete*  */
 t_paquete* manejarRequest(request_procesada* request) {
-	t_paquete* respuesta = (t_paquete*) malloc(sizeof(t_paquete));
+	t_paquete* respuesta;
 	//devolver la respuesta para usarla en el run
 	switch(request->codigo) {
 		case SELECT:
@@ -268,7 +272,7 @@ t_paquete* manejarRequest(request_procesada* request) {
 			procesarAdd((char*) request->request);
 			break;
 		case RUN:
-			//procesarRun(request->request);
+			procesarRun((t_queue*) request->request);
 			break;
 		case METRICS:
 			break;
@@ -300,7 +304,6 @@ void liberarMemoria(void) {
 	list_destroy(memorias);
 	list_destroy(memoriasShc);
 	list_destroy(memoriasEc);
-
 }
 
 /* liberarRequestProcesada()
@@ -359,26 +362,33 @@ t_paquete* enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 void procesarRun(t_queue* colaRun) {
 	// usar inotify por si cambia Q
 	t_paquete* respuesta;
-	request_procesada* request;
+	request_procesada* request ;//= NULL;
 	int quantumActual = 0;
 	//el while va a ser fin de Q o fin de cola
-	while(!queue_is_empty(colaRun) || quantumActual < quantum) {
-		request = (request_procesada*) queue_pop(colaRun);
-		if (validarRequest((char*) request->request)) {
+	while(!queue_is_empty(colaRun) && quantumActual < quantum) {
+		request = (request_procesada*) malloc(sizeof(request_procesada));
+		//request = (request_procesada*) realloc(request, sizeof(request_procesada));
+		request->codigo = ((request_procesada*) queue_peek(colaRun))->codigo;
+		request->request = strdup((char*)((request_procesada*)queue_peek(colaRun))->request);
+
+		printf("%s    ", (char*)request->request);
+		//aca muere la 2da vez
+		queue_pop(colaRun);
+
+		//hacer free de elementos que vienen del pop porque hay void*
+		if (validarRequest((char*) request->request) == TRUE) {
 			respuesta = manejarRequest(request);
 			if (respuesta->palabraReservada == NUESTRO_ERROR) {
-				liberarRequestProcesada(request);
 				eliminar_paquete(respuesta);
 				// informar error
 				break;
 			}
-			liberarRequestProcesada(request);
 			eliminar_paquete(respuesta);
 		} else {
-			liberarRequestProcesada(request);
 			break;
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
 		}
+		liberarRequestProcesada(request);
 		quantumActual++;
 	}
 	if(!queue_is_empty(colaRun)) {

@@ -15,8 +15,8 @@
 #include<string.h>
 #include<readline/readline.h>
 
-#define TRUE 0
-#define FALSE 1
+#define TRUE 1
+#define FALSE 0
 
 #define PARAMETROS_SELECT 2
 #define PARAMETROS_INSERT 3
@@ -120,6 +120,7 @@ void* serializar_paquete(t_paquete* , int);
 void enviar(cod_request, char*, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
+void liberarArrayDeChar(char**);
 
 /* Multiplexacion */
 void eliminarClientesCerrados(t_list*, int*);

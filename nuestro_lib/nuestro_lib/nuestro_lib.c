@@ -247,6 +247,19 @@ int esperar_cliente(int socket_servidor)
 	return socket_cliente;
 }
 
+/* liberarArrayDeChar()
+ * Parametros:
+ *  -> char** :: arrayDeChar
+ *  Descripcion: tomar un char** y lo libera
+ * Return:
+ *  -> void
+ */
+void liberarArrayDeChar(char** arrayDeChar) {
+	for (int j = 0; arrayDeChar[j] != NULL; j++) {
+		free(arrayDeChar[j]);
+	}
+	free(arrayDeChar);
+}
 
 /* validarMensaje()
  * Parametros:
@@ -258,34 +271,28 @@ int esperar_cliente(int socket_servidor)
  * Return: success or failure
  * 	-> exit :: int */
 int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
-	char** request = string_n_split(mensaje, 2, " ");
+	char** requestDividida = string_n_split(mensaje, 2, " ");
 
-	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
-	if(validarPalabraReservada(codPalabraReservada, componente, logger)== TRUE){
-		if(request[1]==NULL){
-			if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
-				free(request);
+	int codPalabraReservada = obtenerCodigoPalabraReservada(requestDividida[0], componente);
+	if(validarPalabraReservada(codPalabraReservada, componente, logger) == EXIT_SUCCESS){
+		if(requestDividida[1]==NULL){
+			if(cantDeParametrosEsCorrecta(0,codPalabraReservada) == EXIT_SUCCESS){
+				liberarArrayDeChar(requestDividida);
 				return EXIT_SUCCESS;
 			}else{
-				free(request);
+				liberarArrayDeChar(requestDividida);
 				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
 				return NUESTRO_ERROR;
 			}
 		}
 
-		char** parametros = separarRequest(request[1]);
+		char** parametros = separarRequest(requestDividida[1]);
 		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-		for(int i=0; request[i] != NULL; i++){
-			free(request[i]);
-		}
-		free(request);
-		for(int i=0; parametros[i] != NULL; i++){
-			free(parametros[i]);
-		}
-		free(parametros);
+		liberarArrayDeChar(requestDividida);
+		liberarArrayDeChar(parametros);
 		//free(request);
 		//free(parametros);
-		if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == TRUE) {
+		if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == EXIT_SUCCESS) {
 			return EXIT_SUCCESS;
 		}
 		else {
