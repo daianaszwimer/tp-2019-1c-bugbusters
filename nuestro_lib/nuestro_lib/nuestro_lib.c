@@ -511,11 +511,11 @@ int crearConexion(char* ip, char* puerto)
  * 				y finalmente se libera el paquete que se envio.
  * Return:
  * 	-> :: void  */
-void enviar(cod_request palabraReservada, char* mensaje, int socket_cliente)
+void enviar(int cod, char* mensaje, int socket_cliente)
 {
 	//armamos el paquete
 	t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete->palabraReservada = palabraReservada;
+	paquete->palabraReservada = cod;
 	paquete->tamanio = strlen(mensaje)+1;
 	paquete->request = malloc(paquete->tamanio);
 	memcpy(paquete->request, mensaje, paquete->tamanio);

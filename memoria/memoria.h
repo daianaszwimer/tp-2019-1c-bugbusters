@@ -104,7 +104,7 @@ int validarRequest(char*);
 
 void escucharMultiplesClientes(void);
 void interpretarRequest(cod_request, char*,t_caller, int);
-char* intercambiarConFileSystem(cod_request, char*);
+t_paquete* intercambiarConFileSystem(cod_request, char*);
 
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
