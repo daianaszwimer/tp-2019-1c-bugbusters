@@ -262,6 +262,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	char* valorEncontrado;
 	char* valorDeLFS;
 	char** parametros = obtenerParametros(request);
+	int resultadoCache;
 	switch(consistenciaMemoria){
 		case SC:
 		case SHC:
@@ -273,7 +274,8 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 			//TODO GUARDAR EN CACHE RTA DE LFS
 			break;
 		case EC:
-			if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== EXIT_SUCCESS ) {
+			resultadoCache= estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado);
+			if(resultadoCache == EXIT_SUCCESS ) {
 				log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 				enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 				free(elementoEncontrado);
@@ -285,6 +287,14 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 				//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 				//enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 				//TODO GUARDAR EN CACHE RTA DE LFS
+				valorDeLFS="SELECT tablaA 2 chau 1234567898";
+				char** resultadoSeparadoLFS= separarRequest(valorDeLFS);
+				switch(resultadoCache){
+					case(KEYINEXISTENTE):
+							break;
+					case(SEGMENTOINEXISTENTE):
+							break;
+				}
 			}
 			break;
 		default:
@@ -334,10 +344,17 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 			return KEYINEXISTENTE;
 		}
 	}else{
-		return TABLAINEXISTENTE;
+		return SEGMENTOINEXISTENTE;
 	}
 }
 
+t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
+	int encontrarTabla(t_tablaDePaginas* tablaDePaginas){
+		return string_equals_ignore_case(tablaDePaginas->nombre, segmentoABuscar);
+	}
+
+	return list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+}
 /* enviarAlDestinatarioCorrecto()
  * Parametros:
  * 	-> ch* ::  request

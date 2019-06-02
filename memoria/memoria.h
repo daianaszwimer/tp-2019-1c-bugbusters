@@ -37,7 +37,7 @@ typedef enum
 
 typedef enum
 {
-	TABLAINEXISTENTE = 100,
+	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101
 } t_erroresCache;
 
