@@ -4,7 +4,7 @@
 int main(void) {
 
 //--------------------------------RESERVA DE MEMORIA------------------------------------------------------------
-	//TODO solo se debe servar el tam max y DELEGARSE A UNA FUNCION
+	//TODO solo se debe reservar el tam max y DELEGARSE A UNA FUNCION
 	pag =(t_pagina*) malloc(sizeof(t_pagina));
 	elementoA1 =malloc(sizeof(t_elemTablaDePaginas));
 	tablaA = malloc(sizeof(t_tablaDePaginas));
@@ -198,7 +198,7 @@ log_info(logger_MEMORIA,"entre a interpretarr request");
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
-			//procesarInsert(palabraReservada, request, caller);
+			procesarInsert(palabraReservada, request, caller);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
@@ -312,8 +312,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 	char* segmentoABuscar=strdup(parametros[0]);
 	uint16_t keyABuscar= convertirKey(parametros[1]);
 
-	int encontrarTabla(t_tablaDePaginas* tablaDePaginas)
-	{
+	int encontrarTabla(t_tablaDePaginas* tablaDePaginas){
 		return string_equals_ignore_case(tablaDePaginas->nombre, segmentoABuscar);
 	}
 
@@ -340,7 +339,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 
 /* enviarAlDestinatarioCorrecto()
  * Parametros:
- * 	-> ch* ::  request
+ * 	-> char* ::  request
  * 	-> cod_request :: palabraReservada
  * Descripcion: se va a fijar si existe el segmento de la tabla ,que se quiere hacer insert,
  * 				en la memoria principal.
@@ -361,8 +360,9 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 
 ///* procesarInsert()
 // * Parametros:
-// * 	-> cod_request ::  palabraReserada
 // * 	-> cod_request :: palabraReservada
+// *	-> char* :: request
+// *	->
 // * Descripcion: se va a fijar si existe el segmento de la tabla ,que se quiere hacer insert,
 // * 				en la memoria principal.
 // * 				Si Existe dicho segmento, busca la key (y de encontrarla,
@@ -371,60 +371,71 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 // * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
 // * Return:
 // * 	-> :: void */
-//void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
-//		t_elemTablaDePaginas* elementoEncontrado;
-//		char* valorEncontrado;
-//		char** parametros = obtenerParametros(request);
-//		char* newKeyChar = parametros[1];
-//		int newKey = convertirKey(newKeyChar);
-//		char* newValue = parametros[2];
-//
-//		puts("ANTES DE IR A BUSCAR A CACHE");
-//
-//		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)!= NUESTRO_ERROR) {
-////			KEY encontrada	-> modifico timestamp
-////							-> modifico valor
-////							-> modifico flagTabla
-//			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
-//			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
-//		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== NUESTRO_ERROR){
-////			KEY no encontrada -> nueva pagina solicitada
-////TODO:							si faltaEspacio JOURNAL
-//			crearElementoEnTablaDePagina(tablaA,newKey,newValue);
-//			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
-//		}else{
-////TODO:		TABLA no encontrada -> nuevo segmento
-//
-//		}
-//}
-//
-//t_pagina* crearPagina(uint16_t newKey, char* newValue){
-//	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
-//	nuevaPagina->timestamp = obtenerHoraActual();
-//	nuevaPagina->key = newKey;
-//	nuevaPagina->value = newValue;
-//	return nuevaPagina;
-//}
-//
-//void actualizarPagina (t_pagina* pagina, char* newValue){
-//	unsigned long long newTimes = obtenerHoraActual();
-//	pagina->timestamp = newTimes;
-//	pagina->value = newValue;
-//}
-//
-//void crearElementoEnTablaDePagina(t_tablaDePaginas* tablaDestino, uint16_t newKey, char* newValue){
-//	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-//	newElementoDePagina->numeroDePag = rand();
-//	newElementoDePagina->pagina = crearPagina(newKey,newValue);
-//	newElementoDePagina->modificado = SINMODIFICAR;
-//	list_add(tablaDestino->elementosDeTablaDePagina,newElementoDePagina);
-//}
-//
-//void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
-//	actualizarPagina(elemento->pagina,newValue);
-//	elemento->modificado = MODIFICADO;
-//}
-//
+void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
+		t_elemTablaDePaginas* elementoEncontrado;
+		char* valorEncontrado;
+		char** parametros = obtenerParametros(request);
+		char* newTabla = strdup(parametros[0]);
+		char* newKeyChar = strdup(parametros[1]);
+		int newKey = convertirKey(newKeyChar);
+		char* newValue = strdup(parametros[2]);
+
+		puts("ANTES DE IR A BUSCAR A CACHE");
+
+		if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== EXIT_SUCCESS) {
+//			KEY encontrada	-> modifico timestamp
+//							-> modifico valor
+//							-> modifico flagTabla
+			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
+			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
+		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== KEYINEXISTENTE){
+//			KEY no encontrada -> nueva pagina solicitada
+//TODO:							si faltaEspacio JOURNAL
+			list_add(tablaA->elementosDeTablaDePagina,crearElementoEnTablaDePagina(newKey,newValue));
+			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
+		}else if(estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado)== TABLAINEXISTENTE){
+//TODO:		TABLA no encontrada -> nuevo segmento
+			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(newTabla,newKey,newValue);
+			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
+			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(newKey,newValue));
+			log_info(logger_MEMORIA, "TABLA no encontrada: nuevo segmento creado");
+		}
+}
+
+t_pagina* crearPagina(uint16_t newKey, char* newValue){
+	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
+	nuevaPagina->timestamp = obtenerHoraActual();
+	nuevaPagina->key = newKey;
+	nuevaPagina->value = newValue;
+	return nuevaPagina;
+}
+
+void actualizarPagina (t_pagina* pagina, char* newValue){
+	unsigned long long newTimes = obtenerHoraActual();
+	pagina->timestamp = newTimes;
+	pagina->value = newValue;
+}
+
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t newKey, char* newValue){
+	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	newElementoDePagina->numeroDePag = rand();
+	newElementoDePagina->pagina = crearPagina(newKey,newValue);
+	newElementoDePagina->modificado = SINMODIFICAR;
+	return newElementoDePagina;
+}
+
+void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
+	actualizarPagina(elemento->pagina,newValue);
+	elemento->modificado = MODIFICADO;
+}
+
+t_tablaDePaginas* crearTablaDePagina(char* nuevaTabla, uint16_t newKey, char* newValue){
+	t_tablaDePaginas* newTablaDePagina = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
+	newTablaDePagina->nombre=strdup(nuevaTabla);
+	newTablaDePagina->elementosDeTablaDePagina=list_create();
+	return newTablaDePagina;
+}
+
 
 // FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
 void liberarMemoria(){
@@ -433,6 +444,4 @@ void liberarMemoria(){
 		 free(self->pagina);
 	 }
 	list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
-
 }
-

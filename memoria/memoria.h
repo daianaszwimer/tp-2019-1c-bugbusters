@@ -113,11 +113,14 @@ int estaEnMemoria(cod_request, char**, char**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, char*, char* , t_caller, int);
 
 void procesarInsert(cod_request, char*, t_caller);
+
 t_pagina* crearPagina(uint16_t, char*);
 void actualizarPagina (t_pagina*, char*);
-void crearElementoEnTablaDePagina(t_tablaDePaginas*, uint16_t, char*);
+
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
+t_tablaDePaginas* crearTablaDePagina(char*, uint16_t, char*);
 
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
 void liberarMemoria();
