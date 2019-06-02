@@ -43,7 +43,9 @@ int main(void) {
  * Return:
  * 	-> :: void  */
 void conectarAMemoria(void) {
+	t_handshake_memoria* handshake;
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+	handshake = recibirHandshakeMemoria(conexionMemoria);
 	procesarAdd("");
 }
 

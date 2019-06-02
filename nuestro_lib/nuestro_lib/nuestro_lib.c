@@ -197,7 +197,7 @@ int esperar_cliente(int socket_servidor)
 	unsigned int tam_direccion = sizeof(struct sockaddr_in);
 
 	int socket_cliente = accept(socket_servidor, (void*) &dir_cliente, &tam_direccion);
-
+	// enviar
 	//log_info(logger, "Se conecto un cliente!");
 
 	return socket_cliente;
@@ -441,6 +441,65 @@ int crearConexion(char* ip, char* puerto)
 	freeaddrinfo(server_info);
 
 	return socket_cliente;
+}
+
+// se hace funcion de recibir handshake que recibe y se llama si o si post conexion
+// en la parte del server hacer enviar handshake
+/*
+ *
+ *
+ */
+void enviarHandshakeMemoria(t_list* memorias, int socket_cliente)
+{
+	char** daiu = (char**)malloc(sizeof(char**));
+	int tamanio;
+	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
+	handshake->memorias = 6;
+	void* handshakeAEnviar = serializar_handshake_memoria(handshake, 4);
+	send(socket_cliente, handshakeAEnviar, sizeof(int), 0);
+	/*t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
+	handshake->tamanio = list_size(memorias) * sizeof(int);//sizeof(memorias);
+	handshake->memorias = malloc(handshake->tamanio);
+	memcpy(handshake->memorias, memorias, handshake->tamanio);
+	int tamanio = sizeof(int) + handshake->tamanio;
+	//serializamos
+	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanio);
+	//enviamos
+	send(socket_cliente, handshakeAEnviar, tamanio, 0);
+	free(handshakeAEnviar);
+	free(handshake->memorias);
+	free(handshake);*/
+}
+
+t_handshake_memoria* recibirHandshakeMemoria(int socket)
+{
+	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
+
+	recv(socket, &handshake->memorias, sizeof(int), MSG_WAITALL);
+	//recv(socket, &handshake->tamanio, sizeof(int), MSG_WAITALL);
+	//void* handshakeRecibido = list_create();
+	//recv(socket, handshakeRecibido, handshake->tamanio, MSG_WAITALL);
+
+	//handshake->memorias = handshakeRecibido;
+
+	return handshake;
+}
+
+void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
+{
+	void* buffer = malloc(sizeof(int));
+	memcpy(buffer, &handshake->memorias, sizeof(int));
+
+	/*void * buffer = malloc(tamanio);
+	int desplazamiento = 0;
+
+	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
+	// destino es un string
+	memcpy(buffer + desplazamiento, &handshake->tamanio, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, &handshake->memorias, handshake->tamanio);
+	*/
+	return buffer;
 }
 
 /* enviar()

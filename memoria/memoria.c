@@ -131,6 +131,11 @@ void escucharMultiplesClientes() {
 
 		if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 			int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
+			t_list* daiu = list_create();
+			list_add(daiu, 3);
+			list_add(daiu, 5);
+			enviarHandshakeMemoria(daiu, descriptorCliente);
+			list_destroy(daiu);
 			numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 			numeroDeClientes++;
 		}
