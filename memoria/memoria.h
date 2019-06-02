@@ -109,8 +109,8 @@ t_paquete* intercambiarConFileSystem(cod_request, char*);
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
 
-int estaEnMemoria(cod_request, char**, char**, t_elemTablaDePaginas**);
-void enviarAlDestinatarioCorrecto(cod_request, char*, char* , t_caller, int);
+int estaEnMemoria(cod_request, char**, t_paquete**, t_elemTablaDePaginas**);
+void enviarAlDestinatarioCorrecto(int, char*, t_paquete* , t_caller, int);
 
 void procesarInsert(cod_request, char*, t_caller);
 

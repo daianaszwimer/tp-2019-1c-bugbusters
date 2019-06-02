@@ -30,7 +30,7 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 //--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-	conectarAFileSystem();
+	//conectarAFileSystem();
 
 //--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
@@ -198,7 +198,7 @@ log_info(logger_MEMORIA,"entre a interpretarr request");
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
-			procesarInsert(palabraReservada, request, caller);
+//			procesarInsert(palabraReservada, request, caller);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
@@ -258,15 +258,17 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
  * Return:
  * 	-> :: void */
 void procesarSelect(cod_request palabraReservada, char* request, t_caller caller, int i) {
-	t_elemTablaDePaginas* elementoEncontrado;
-	char* valorEncontrado;
+	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas));
+	t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
 	//char* valorDeLFS;
+
 	char** parametros = obtenerParametros(request);
 	int resultadoCache;
 	t_paquete* valorDeLF=malloc(sizeof(t_paquete));
-					valorDeLF->palabraReservada= 6;
-					valorDeLF->tamanio=100;
-					valorDeLF->request=(" ");
+	valorDeLF->palabraReservada= 6;
+	valorDeLF->tamanio=100;
+	valorDeLF->request=(" ");
+
 	switch(consistenciaMemoria){
 		case SC:
 		case SHC:
@@ -315,7 +317,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
  * 				En ccaso de que no exista la tabla||key devuelve el error correspondiente.
  * Return:
  * 	-> resultado de la operacion:: int */
-int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
+int estaEnMemoria(cod_request palabraReservada, char** parametros,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
 	t_tablaDePaginas* tablaDeSegmentosEnCache = malloc(sizeof(t_tablaDePaginas));
 	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
 	char* segmentoABuscar=strdup(parametros[0]);
@@ -328,15 +330,19 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,char** valorEn
 	tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
 	if(tablaDeSegmentosEnCache!= NULL){
 
-		int encontrarElemDePag(t_elemTablaDePaginas* elemDePagina)
-					{
-						return (elemDePagina->pagina->key == keyABuscar);
-					}
+		int encontrarElemDePag(t_elemTablaDePaginas* elemDePagina){
+			return (elemDePagina->pagina->key == keyABuscar);
+		}
 
 		elementoDePagEnCache= list_find(tablaDeSegmentosEnCache->elementosDeTablaDePagina,(void*)encontrarElemDePag);
 		if(elementoDePagEnCache !=NULL){ //registro = pagina
+			t_paquete* paqueteAuxiliar=malloc(sizeof(t_paquete));
+			paqueteAuxiliar->palabraReservada=SUCCESS;
+			paqueteAuxiliar->request = strdup(elementoDePagEnCache->pagina->value);
+			paqueteAuxiliar->tamanio=sizeof(elementoDePagEnCache->pagina->value);
+
 			*elementoEncontrado=elementoDePagEnCache;
-			*valorEncontrado = strdup(elementoDePagEnCache->pagina->value);
+			*valorEncontrado = paqueteAuxiliar;
 			return EXIT_SUCCESS;
 		}else{
 			return KEYINEXISTENTE;
@@ -366,33 +372,37 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
  * 	-> :: void */
- void enviarAlDestinatarioCorrecto(cod_request codResultado,char* request,char* valorAEnviar,t_caller caller,int socketKernel){
+ void enviarAlDestinatarioCorrecto(int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int socketKernel){
 	 //TODO reservar y liberar todo
 
-	 char** valorLFSSeparado= separarRequest(valorAEnviar);
+//	 char** valorLFSSeparado= separarRequest(valorAEnviar);
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
-				enviar(codResultado, valorAEnviar, socketKernel);
+				enviar(codResultado, valorAEnviar->request, socketKernel);
 	 	 	 break;
 	 	 case(CONSOLE):
 			if(codResultado!= NUESTRO_ERROR){
-				char* rta = valorLFSSeparado[3];
-				log_info(logger_MEMORIA,"La Respuesta a la request",request,"es: ",rta);
-			}else{
-
-				errorNo tipoDeError= (errorNo)valorLFSSeparado[1];
-				switch(tipoDeError){
-					case(KEY_NO_EXISTE):
-						log_info(logger_MEMORIA,"La request",request,"no es valida, KEY INEXISTENTE");
-						break;
-					case(TABLA_NO_EXISTE):
-						log_info(logger_MEMORIA,"La request",request,"no es valida, TABLA INEXISTENTE");
-						break;
-					default:
-						log_info(logger_MEMORIA,"No se ha podido encontrar respuesta a la request",request);
-						break;
-				}
+				char *respuesta= strdup("");
+				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a: ",request," es ", valorAEnviar->request);
+				//string_append_with_format(&respuesta, "%s%s%s%s","La Respuesta a la request ",request,"es: ",valorAEnviar->request);
+				log_info(logger_MEMORIA,respuesta);
 			}
+
+//			}else{
+//				char* rta = valorLFSSeparado[3];
+//				errorNo tipoDeError= (errorNo)valorLFSSeparado[1];
+//				switch(tipoDeError){
+//					case(KEY_NO_EXISTE):
+//						log_info(logger_MEMORIA,"La request",request,"no es valida, KEY INEXISTENTE");
+//						break;
+//					case(TABLA_NO_EXISTE):
+//						log_info(logger_MEMORIA,"La request",request,"no es valida, TABLA INEXISTENTE");
+//						break;
+//					default:
+//						log_info(logger_MEMORIA,"No se ha podido encontrar respuesta a la request",request);
+//						break;
+//				}
+//			}
 	}
  }
 
@@ -429,8 +439,8 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
 			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
 		}else if(KEYINEXISTENTE){
-	//			KEY no encontrada -> nueva pagina solicitada
-	//TODO:							si faltaEspacio JOURNAL
+//			KEY no encontrada -> nueva pagina solicitada
+//TODO:							si faltaEspacio JOURNAL
 				list_add(tablaA->elementosDeTablaDePagina,crearElementoEnTablaDePagina(newKey,newValue));
 				log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
 		}else if(SEGMENTOINEXISTENTE){
