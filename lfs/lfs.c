@@ -11,18 +11,25 @@ int main(void) {
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 
 	inicializarLfs();
-	//leerDeConsola(NULL);
-	if(pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL)){
+
+	if(!pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL)){
 		log_info(logger_LFS, "Hilo de consola creado");
+	}else{
+		log_error(logger_LFS, "Error al crear hilo de consola");
 	}
 
-	if(pthread_create(&hiloRecibirMemorias, NULL, recibirMemorias, NULL)){
+
+	if(!pthread_create(&hiloRecibirMemorias, NULL, recibirMemorias, NULL)){
 		log_info(logger_LFS, "Hilo de recibir memorias creado");
+	}else{
+		log_error(logger_LFS, "Error al crear hilo recibir memorias");
 	}
+
 
 	pthread_join(hiloLeerDeConsola, NULL);
 	log_info(logger_LFS, "Hilo de consola finalizado");
 	pthread_join(hiloRecibirMemorias, NULL);
+	log_info(logger_LFS, "Hilo recibir memorias finalizado");
 
 	free(pathRaiz);
 	log_destroy(logger_LFS);
@@ -68,7 +75,8 @@ void* recibirMemorias(void* arg) {
 	while (1) {
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
 		if(memoria_fd > 0) {
-			if (pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria,	(void*) memoria_fd)) {
+
+			if(!pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria, (void*) memoria_fd)) {
 				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
 				log_info(logger_LFS, mensaje);
 				pthread_detach(hiloRequest);
@@ -99,7 +107,7 @@ void* conectarConMemoria(void* arg) {
 
 void interpretarRequest(cod_request palabraReservada, char* request, int memoria_fd) {
 	char** requestSeparada = separarRequest(request);
-	errorNo retorno;
+	errorNo retorno = SUCCESS;
 	switch (palabraReservada){
 		case SELECT:
 			log_info(logger_LFS, "Me llego un SELECT");
@@ -134,7 +142,8 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 	char* mensajeDeError;
 	switch(retorno){
 		case SUCCESS:
-			mensajeDeError = string_from_format("La tabla %s fue creada correctamente", requestSeparada[1]);
+			mensajeDeError = string_from_format("Request recibida correctamente");
+			//mensajeDeError = string_from_format("La tabla %s fue creada correctamente", requestSeparada[1]);
 			log_info(logger_LFS, mensajeDeError);
 			break;
 		case TABLA_EXISTE:
@@ -264,7 +273,7 @@ int obtenerBloqueDisponible() {
 	return 1;
 }
 
-/* procesarCreate() [API]
+/* inicializarLfs() [API]
  * Parametros:
  * Descripcion: crea el punto de montaje y crea los directorios de: tablas, metadata y bloques
  * Return: */
