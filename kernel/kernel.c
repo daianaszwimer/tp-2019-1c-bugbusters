@@ -213,12 +213,11 @@ void planificarReadyAExec(void) {
  * Return:
  * 	-> :: void  */
 void procesarRequest(request_procesada* request) {
-	t_paquete* respuesta;
-	respuesta = manejarRequest(request);
+	manejarRequest(request);
 	//printf("aa  ");
 	//fflush(stdout);
 	liberarRequestProcesada(request);
-	eliminar_paquete(respuesta);
+	// si no hay mas elementos en la cola, hago free(request)
 	sem_post(&semMultiprocesamiento);
 }
 
@@ -256,7 +255,7 @@ int validarRequest(char* mensaje) {
  * Descripcion: toma un request y se fija a quién delegarselo, toma la respuesta y la devuelve.
  * Return:
  * 	-> respuesta :: t_paquete*  */
-t_paquete* manejarRequest(request_procesada* request) {
+void manejarRequest(request_procesada* request) {
 	t_paquete* respuesta;
 	//devolver la respuesta para usarla en el run
 	switch(request->codigo) {
@@ -267,6 +266,8 @@ t_paquete* manejarRequest(request_procesada* request) {
 		case DROP:
 		case JOURNAL:
 			respuesta = enviarMensajeAMemoria(request->codigo, (char*) request->request);
+			// hacer algo con la rta
+			eliminar_paquete(respuesta);
 			break;
 		case ADD:
 			procesarAdd((char*) request->request);
@@ -281,7 +282,7 @@ t_paquete* manejarRequest(request_procesada* request) {
 			// la request. en tal caso se devuelve el t_paquete con error para cortar ejecucion
 			break;
 	}
-	return respuesta;
+	sleep(config_get_int_value(config, "RETARDO_CICLO_EJECUCION")/1000);
 }
 
 /* liberarMemoria()
@@ -313,11 +314,11 @@ void liberarMemoria(void) {
  * Return:
  * 	-> void  */
 void liberarRequestProcesada(request_procesada* request) {
-	if(request->codigo == RUN) {
-       queue_destroy_and_destroy_elements((t_queue*) request->request, (void*)liberarColaRequest);
-	} else {
+	if(request->codigo != RUN) {
        free((char*) request->request);
 	}
+	// en el caso del run ya se libera la cola en su funcion
+	// solo hacer este free si request fue a exit
 	free(request);
 }
 
@@ -328,6 +329,7 @@ void liberarRequestProcesada(request_procesada* request) {
  * Return:
  *     -> void  */
 void liberarColaRequest(request_procesada* requestCola) {
+	printf("Voy a liberar: %s    ", (char*) requestCola->request);
     free((char*) requestCola->request);
     free(requestCola);
 }
@@ -366,17 +368,20 @@ void procesarRun(t_queue* colaRun) {
 	int quantumActual = 0;
 	//el while va a ser fin de Q o fin de cola
 	while(!queue_is_empty(colaRun) && quantumActual < quantum) {
+		quantumActual++; //hacerlo al ppio o al final?
+
 		request = (request_procesada*) malloc(sizeof(request_procesada));
 		//request = (request_procesada*) realloc(request, sizeof(request_procesada));
 		request->codigo = ((request_procesada*) queue_peek(colaRun))->codigo;
 		request->request = strdup((char*)((request_procesada*)queue_peek(colaRun))->request);
 
+		fflush(stdout);
 		printf("%s    ", (char*)request->request);
 		//aca muere la 2da vez
 		queue_pop(colaRun);
 
-		//hacer free de elementos que vienen del pop porque hay void*
-		if (validarRequest((char*) request->request) == TRUE) {
+
+		/*if (validarRequest((char*) request->request) == TRUE) {
 			respuesta = manejarRequest(request);
 			if (respuesta->palabraReservada == NUESTRO_ERROR) {
 				eliminar_paquete(respuesta);
@@ -387,11 +392,10 @@ void procesarRun(t_queue* colaRun) {
 		} else {
 			break;
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
-		}
+		}*/
 		liberarRequestProcesada(request);
-		quantumActual++;
 	}
-	if(!queue_is_empty(colaRun)) {
+	if (quantumActual == quantum && queue_is_empty(colaRun) == FALSE) {
 		//termino por fin de q
 		request_procesada* _request = (request_procesada*)(malloc(sizeof(request_procesada)));
 		_request->request = (t_queue*) (malloc(sizeof(t_queue)));
@@ -401,10 +405,10 @@ void procesarRun(t_queue* colaRun) {
 		queue_push(ready, _request);
 		pthread_mutex_unlock(&semMColaReady);
 	} else {
-		// liberar recursos que ocupa el struct este con sus colas o sea el request
+		// si está aca es pq no tiene más elementos o porque rompió por otro motivo
+		queue_destroy_and_destroy_elements(colaRun, (void*)liberarColaRequest);
+		// liberar recursos que ocupa el struct este con sus colas o sea el request - es lo de arriba
 	}
-	//si llego aca es porque se quedo sin requests o fue fin de q,
-	//segun eso, ver si pasar la cola a ready o no
 }
 
 /* procesarAdd()
@@ -417,16 +421,16 @@ void procesarRun(t_queue* colaRun) {
 void procesarAdd(char* mensaje) {
 	memoriaSc.ip = config_get_string_value(config, "IP_MEMORIA");
 	memoriaSc.puerto = config_get_string_value(config, "PUERTO_MEMORIA");
-	/*
-	char** parametros = obtenerParametros(mensaje);
-	if (list_size(memorias) < (int)parametros[1]) {
+/*
+	char** requestDivida = separarRequest(mensaje);
+	if (list_size(memorias) < (int)requestDivida[1]) {
 		// error
 	}
 	config_memoria memoria;
 	consistencia _consistencia;
 	// la memoria n que se manda en el request es la n en la lista
-	memoria = list_get(memorias, (int)parametros[1] - 1);
-	_consistencia = obtenerEnumConsistencia(parametros[3]);
+	memoria = list_get(memorias, (int)requestDivida[1] - 1);
+	_consistencia = obtenerEnumConsistencia(requestDivida[3]);
 	if (_consistencia == CONSISTENCIA_INVALIDA) {
 		// error
 	}
@@ -443,7 +447,8 @@ void procesarAdd(char* mensaje) {
 			break;
 	}
 	free(mensaje);
-	*/
+	liberarArrayDeChar(requestDivida);
+*/
 	//validar que int sea menor al tamaño de mi lista -DONE
 	//en la lista se van a encontrar las memorias levantadas - HAY QUE HACER DESCRIBE GLOBAL Y AGREGARLAS
 	//y va a ser una lista de config_memoria

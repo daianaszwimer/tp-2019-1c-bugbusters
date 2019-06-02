@@ -61,7 +61,7 @@ void planificarReadyAExec(void);
 void reservarRecursos(char*);
 //validar + delegar requests
 int validarRequest(char *);
-t_paquete* manejarRequest(request_procesada*);
+void manejarRequest(request_procesada*);
 //funciones que procesan requests:
 t_paquete* enviarMensajeAMemoria(cod_request, char*);
 void procesarRun(t_queue*);
