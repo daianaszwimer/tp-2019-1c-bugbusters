@@ -39,8 +39,7 @@ typedef struct
 t_memtable* memtable;
 pthread_t hiloLeerDeConsola;
 pthread_t hiloRecibirMemorias;
-
-
+pthread_t hiloDumpeo;
 
 
 char* mensaje;
@@ -59,5 +58,7 @@ int mkdir_p(const char*);
 void inicializarLfs(void);
 void liberarString(char*);
 errorNo crearParticiones(char*, char*);
+void* hiloDump();
+errorNo dumpear();
 
 #endif /* LFS_H_ */
