@@ -3,3 +3,416 @@
 [INFO] 12:29:40:978 Lfs/(10658:10658): Lissandra lista para recibir a Memoria
 [INFO] 19:50:41:974 Lfs/(25205:25205): ----------------INICIO DE LISSANDRA FS--------------
 [INFO] 19:50:47:790 Lfs/(25205:25205): Lissandra lista para recibir a Memoria
+[INFO] 18:29:35:448 Lfs/(3361:3361): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:30:54:953 Lfs/(3395:3395): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:34:06:975 Lfs/(3485:3485): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:34:38:917 Lfs/(3517:3517): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:40:38:315 Lfs/(3640:3640): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:41:51:946 Lfs/(3703:3703): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:43:18:223 Lfs/(3756:3756): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:45:39:584 Lfs/(3849:3849): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:47:27:466 Lfs/(3950:3950): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:48:46:422 Lfs/(4040:4040): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:49:25:415 Lfs/(4119:4119): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:54:26:213 Lfs/(4303:4303): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:56:07:4 Lfs/(4402:4402): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:45:27:550 Lfs/(3250:3250): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:46:35:405 Lfs/(3306:3306): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:51:54:411 Lfs/(3355:3355): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:54:33:607 Lfs/(3472:3472): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:00:34:377 Lfs/(3768:3768): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:38:33:634 Lfs/(3692:3692): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:45:54:796 Lfs/(4126:4126): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:48:46:881 Lfs/(4274:4274): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:51:23:333 Lfs/(4394:4394): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:54:13:597 Lfs/(4608:4608): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:59:23:287 Lfs/(4792:4792): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:07:13:895 Lfs/(5275:5275): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:15:51:852 Lfs/(5628:5628): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:17:15:515 Lfs/(5678:5678): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 09:50:28:523 Lfs/(9337:9337): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 09:57:38:946 Lfs/(9583:9583): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:03:04:187 Lfs/(9813:9813): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:11:03:222 Lfs/(10135:10135): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:13:30:730 Lfs/(10342:10342): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:17:00:783 Lfs/(10587:10587): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:23:54:466 Lfs/(10742:10742): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:26:16:716 Lfs/(10922:10922): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:29:03:646 Lfs/(11048:11048): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:34:50:568 Lfs/(11189:11189): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:37:45:206 Lfs/(11323:11323): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:50:04:857 Lfs/(11488:11488): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:58:57:38 Lfs/(11690:11690): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:07:24:261 Lfs/(11864:11864): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:10:20:204 Lfs/(11933:11933): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:19:13:146 Lfs/(12122:12122): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:27:07:151 Lfs/(12280:12280): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:28:25:468 Lfs/(12360:12360): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:29:50:2 Lfs/(12456:12456): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:31:37:409 Lfs/(12545:12545): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:33:19:95 Lfs/(12671:12671): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:45:42:309 Lfs/(12831:12831): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:46:18:441 Lfs/(12883:12883): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:46:42:603 Lfs/(12932:12932): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:47:56:460 Lfs/(13029:13029): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:50:35:218 Lfs/(13136:13136): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:00:56:100 Lfs/(13329:13329): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:06:35:320 Lfs/(13525:13525): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:07:34:70 Lfs/(13618:13618): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:09:50:637 Lfs/(13735:13735): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:10:51:424 Lfs/(13817:13817): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:12:10:493 Lfs/(13912:13912): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:15:03:734 Lfs/(14042:14042): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:16:19:749 Lfs/(14129:14129): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:17:07:116 Lfs/(14222:14222): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:19:11:636 Lfs/(14305:14305): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:21:58:711 Lfs/(14420:14420): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:25:14:268 Lfs/(14531:14531): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:26:49:41 Lfs/(14671:14671): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:28:59:469 Lfs/(14797:14797): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:36:51:534 Lfs/(14985:14985): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:46:47:480 Lfs/(15294:15294): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:48:11:684 Lfs/(15405:15405): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:55:16:613 Lfs/(15636:15636): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:15:24:290 Lfs/(15941:15941): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:17:08:817 Lfs/(16044:16044): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:18:26:971 Lfs/(16130:16130): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:20:04:637 Lfs/(16233:16233): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:21:09:255 Lfs/(16288:16288): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:23:15:164 Lfs/(16351:16351): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:20:23:968 Lfs/(16615:16615): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:54:40:521 Lfs/(17150:17150): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:55:36:984 Lfs/(17219:17219): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:56:32:939 Lfs/(17277:17277): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:57:05:787 Lfs/(17340:17340): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:59:16:858 Lfs/(17425:17425): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:00:05:79 Lfs/(17480:17480): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:07:57:766 Lfs/(17577:17577): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:08:12:610 Lfs/(17602:17602): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:22:04:215 Lfs/(17930:17930): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:24:30:764 Lfs/(17996:17996): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:28:27:190 Lfs/(18101:18101): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:29:57:719 Lfs/(18164:18164): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:35:09:785 Lfs/(18303:18303): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:36:25:232 Lfs/(18352:18352): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:38:48:429 Lfs/(18472:18472): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:41:21:463 Lfs/(18569:18569): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:58:12:434 Lfs/(18768:18768): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:00:07:236 Lfs/(18825:18825): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:15:49:584 Lfs/(19284:19284): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:33:35:403 Lfs/(19692:19692): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:34:33:668 Lfs/(19779:19779): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:36:35:93 Lfs/(19863:19863): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:46:11:228 Lfs/(20199:20199): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:48:08:915 Lfs/(20510:20510): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:49:57:433 Lfs/(20591:20591): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:53:21:317 Lfs/(20655:20655): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:58:30:377 Lfs/(20814:20814): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:01:51:622 Lfs/(21006:21006): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:21:47:258 Lfs/(3586:3586): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:28:14:891 Lfs/(4163:4163): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:34:48:110 Lfs/(4394:4394): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:39:15:65 Lfs/(4504:4504): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:41:01:21 Lfs/(4608:4608): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:41:49:46 Lfs/(4700:4700): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:44:48:484 Lfs/(4994:4994): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:51:40:334 Lfs/(5377:5377): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:57:21:620 Lfs/(5534:5534): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:01:35:450 Lfs/(24847:24847): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:10:12:62 Lfs/(25053:25053): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:45:32:154 Lfs/(26802:26802): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:45:56:356 Lfs/(26873:26873): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:47:03:764 Lfs/(27040:27040): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:50:10:159 Lfs/(27186:27186): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:27:53:175 Lfs/(7884:7884): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:30:43:681 Lfs/(8035:8035): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:30:43:688 Lfs/(8035:8042): Lissandra lista para recibir Memorias
+[INFO] 15:39:02:335 Lfs/(10230:10230): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:39:07:363 Lfs/(10230:10244): Lissandra lista para recibir Memorias
+[INFO] 15:39:07:373 Lfs/(10230:10247): Me llego un SELECT
+[WARNING] 15:39:07:374 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:374 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:374 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:374 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:374 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:374 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:375 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:375 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:375 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:375 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:375 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:375 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:376 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:376 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:376 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:380 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:380 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:382 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:382 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:383 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:383 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:383 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:383 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:384 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:384 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:384 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:384 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:384 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:384 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:384 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:384 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:386 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:387 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:387 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:387 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:387 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:387 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:387 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:387 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:388 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:388 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:388 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:388 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:388 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:388 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:389 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:390 Lfs/(10230:10249): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:390 Lfs/(10230:10249): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:390 Lfs/(10230:10249): Operacion desconocida. No quieras meter la pata
+[INFO] 15:39:07:390 Lfs/(10230:10249): Me llego un SELECT
+[WARNING] 15:39:07:390 Lfs/(10230:10249): Operacion desconocida. No quieras meter la pata
+[INFO] 15:39:07:390 Lfs/(10230:10248): Me llego un SELECT
+[WARNING] 15:39:07:390 Lfs/(10230:10248): Operacion desconocida. No quieras meter la pata
+[INFO] 15:39:07:390 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:390 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:390 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:390 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:390 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:390 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:390 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:391 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:392 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:393 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:394 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:394 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:394 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:395 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:407 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:408 Lfs/(10230:10250): Me llego un SELECT
+[WARNING] 15:39:07:408 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:408 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:408 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:408 Lfs/(10230:10247): Operacion desconocida. No quieras meter la pata
+[INFO] 15:39:07:408 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:408 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:408 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:408 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:408 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:408 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:408 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:408 Lfs/(10230:10248): Me llego un SELECT
+[INFO] 15:39:07:408 Lfs/(10230:10248): Me llego un SELECT
+[WARNING] 15:39:07:408 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:408 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:408 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:408 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:408 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:408 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:409 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:411 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[WARNING] 15:39:07:411 Lfs/(10230:10250): Operacion desconocida. No quieras meter la pata
+[INFO] 16:00:52:44 Lfs/(25259:25259): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:00:59:975 Lfs/(25259:25259): Me llego un SELECT
+[INFO] 16:01:09:439 Lfs/(25259:25259): Me llego un SELECT
+[INFO] 16:02:02:209 Lfs/(25303:25303): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:04:36:326 Lfs/(25382:25382): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:22:42:870 Lfs/(25637:25637): ----------------INICIO DE LISSANDRA FS--------------
+[WARNING] 16:22:47:888 Lfs/(25637:25637): Operacion desconocida. No quieras meter la pata
+[INFO] 16:23:26:865 Lfs/(25667:25667): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:27:29:520 Lfs/(26063:26063): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:28:12:985 Lfs/(26063:26063): Me llego un INSERT
+[INFO] 18:26:38:849 Lfs/(13093:13093): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:27:55:249 Lfs/(13230:13230): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:29:02:10 Lfs/(13288:13288): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:32:16:252 Lfs/(13396:13396): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:32:53:439 Lfs/(13463:13463): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:34:18:498 Lfs/(13635:13635): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:35:37:974 Lfs/(13759:13759): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:39:54:775 Lfs/(13923:13923): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:40:50:421 Lfs/(13923:13978): Lissandra lista para recibir Memorias
+[INFO] 16:49:17:476 Lfs/(25478:25478): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:51:51:908 Lfs/(25665:25665): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:53:52:284 Lfs/(25831:25831): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:57:17:747 Lfs/(25972:25972): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:08:20:782 Lfs/(26628:26628): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:10:45:58 Lfs/(26813:26813): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:16:20:775 Lfs/(27255:27255): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:22:36:138 Lfs/(27728:27728): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:26:07:559 Lfs/(28057:28057): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:27:08:225 Lfs/(28161:28161): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:28:57:705 Lfs/(28304:28304): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:32:27:786 Lfs/(28739:28739): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:54:03:22 Lfs/(29976:29976): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:57:35:807 Lfs/(30215:30215): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:59:17:579 Lfs/(30404:30404): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:03:16:829 Lfs/(30817:30817): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:06:30:273 Lfs/(31063:31063): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:08:54:531 Lfs/(31307:31307): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:23:31:729 Lfs/(32011:32011): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:26:29:947 Lfs/(32285:32285): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:28:44:344 Lfs/(32524:32524): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:53:59:968 Lfs/(1605:1605): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:02:12:577 Lfs/(2454:2454): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:15:15:361 Lfs/(3038:3038): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:31:15:667 Lfs/(6564:6564): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:34:19:484 Lfs/(6806:6806): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:35:54:871 Lfs/(6895:6895): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:41:44:435 Lfs/(7042:7042): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:42:34:697 Lfs/(7083:7083): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:55:31:194 Lfs/(7477:7477): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:55:58:470 Lfs/(7568:7568): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:56:57:935 Lfs/(7724:7724): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:15:33:518 Lfs/(14757:14757): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:17:40:320 Lfs/(14891:14891): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:17:59:554 Lfs/(14891:14891): Me llego un CREATE
+[INFO] 18:55:54:487 Lfs/(16380:16380): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:57:24:832 Lfs/(16380:16380): Me llego un CREATE
+[INFO] 18:58:05:291 Lfs/(16441:16441): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:58:20:994 Lfs/(16441:16441): Me llego un CREATE
+[INFO] 18:58:51:292 Lfs/(16492:16492): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:59:02:647 Lfs/(16492:16492): Me llego un CREATE
+[INFO] 19:03:44:13 Lfs/(16676:16676): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:04:07:440 Lfs/(16676:16676): Me llego un CREATE
+[INFO] 12:07:53:295 Lfs/(6675:6675): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:08:32:722 Lfs/(6675:6675): Me llego un CREATE
+[INFO] 12:12:54:970 Lfs/(6832:6832): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:13:13:285 Lfs/(6832:6832): Me llego un CREATE
+[INFO] 12:28:50:772 Lfs/(7250:7250): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:31:06:21 Lfs/(7250:7250): Me llego un CREATE
+[INFO] 12:32:24:363 Lfs/(7373:7373): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:32:36:717 Lfs/(7373:7373): Me llego un CREATE
+[INFO] 12:35:31:544 Lfs/(7471:7471): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:36:16:300 Lfs/(7471:7471): Me llego un CREATE
+[INFO] 12:47:36:659 Lfs/(7726:7726): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:47:50:354 Lfs/(7726:7726): Me llego un CREATE
+[INFO] 12:50:25:414 Lfs/(7876:7876): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 12:50:35:823 Lfs/(7876:7876): Me llego un CREATE
+[INFO] 13:02:56:947 Lfs/(8069:8069): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:03:10:106 Lfs/(8069:8069): Me llego un CREATE
+[INFO] 14:33:53:967 Lfs/(8679:8679): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:34:06:693 Lfs/(8679:8679): Me llego un CREATE
+[INFO] 14:35:34:733 Lfs/(8783:8783): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:38:15:145 Lfs/(8831:8831): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:39:51:975 Lfs/(8923:8923): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:53:38:423 Lfs/(9142:9142): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:54:05:324 Lfs/(9142:9142): Me llego un CREATE
+[INFO] 15:00:09:327 Lfs/(9272:9272): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:00:22:501 Lfs/(9272:9272): Me llego un CREATE
+[INFO] 15:07:02:871 Lfs/(9502:9502): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:07:14:779 Lfs/(9502:9502): Me llego un CREATE
+[INFO] 16:54:20:90 Lfs/(11215:11215): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:54:38:804 Lfs/(11215:11215): Me llego un CREATE
+[ERROR] 16:54:38:805 Lfs/(11215:11215): 
+[INFO] 16:56:03:14 Lfs/(11215:11215): Me llego un CREATE
+[INFO] 16:56:03:15 Lfs/(11215:11215): 
+[INFO] 16:56:56:943 Lfs/(11215:11215): Me llego un INSERT
+[INFO] 16:58:03:472 Lfs/(11332:11332): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:58:44:20 Lfs/(11332:11332): Me llego un INSERT
+[INFO] 17:00:29:804 Lfs/(11332:11332): Me llego un INSERT
+[INFO] 17:01:59:833 Lfs/(11332:11332): Me llego un INSERT
+[INFO] 17:32:49:974 Lfs/(11883:11883): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:33:36:320 Lfs/(11883:11883): Me llego un INSERT
+[INFO] 17:38:49:94 Lfs/(11883:11883): Me llego un INSERT
+[INFO] 18:24:00:627 Lfs/(12534:12534): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:24:30:920 Lfs/(12534:12534): Me llego un INSERT
+[INFO] 18:25:59:743 Lfs/(12534:12534): Me llego un INSERT
+[INFO] 18:27:37:130 Lfs/(12697:12697): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:27:58:22 Lfs/(12697:12697): Me llego un INSERT
+[INFO] 18:28:58:352 Lfs/(12697:12697): Me llego un INSERT
+[INFO] 18:31:53:849 Lfs/(12914:12914): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:34:39:209 Lfs/(12914:12914): Me llego un INSERT
+[INFO] 18:35:31:783 Lfs/(12914:12914): Me llego un INSERT
+[INFO] 18:59:17:483 Lfs/(13881:13881): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:59:49:38 Lfs/(13881:13881): Me llego un INSERT
+[INFO] 19:00:47:207 Lfs/(13881:13881): Me llego un INSERT

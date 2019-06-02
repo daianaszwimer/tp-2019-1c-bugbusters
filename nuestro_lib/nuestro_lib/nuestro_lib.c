@@ -1,28 +1,5 @@
 #include "nuestro_lib.h"
 
-/* obtenerEnumConsistencia()
- * Parametros
- * -> consistencia :: char*
- * Descripcion: obtiene la consistencia y devuelve el enum correspondiente
- * Return: constante consistencia
- * -> consistencia
- * */
-consistencia obtenerEnumConsistencia(char* consistencia) {
-	if(string_equals_ignore_case(consistencia, "sc")) {
-		return SC;
-	} else if(string_equals_ignore_case(consistencia, "shc")) {
-		return SHC;
-	} else if(string_equals_ignore_case(consistencia, "ec")) {
-		return EC;
-	} else {
-		return CONSISTENCIA_INVALIDA;
-	}
-}
-
-void iterator(char* value) {
-	printf("%s\n", value);
-}
-
 /* convertirKey()
  * Parametros:
  * 	-> key ::  char*
@@ -57,6 +34,74 @@ int convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
 	return NUESTRO_ERROR;
 }
 
+/* obtenerEnumConsistencia()
+ * Parametros
+ * -> consistencia :: char*
+ * Descripcion: obtiene la consistencia y devuelve el enum correspondiente
+ * Return: constante consistencia
+ * -> consistencia
+ * */
+consistencia obtenerEnumConsistencia(char* consistencia) {
+	if(string_equals_ignore_case(consistencia, "sc")) {
+		return SC;
+	} else if(string_equals_ignore_case(consistencia, "shc")) {
+		return SHC;
+	} else if(string_equals_ignore_case(consistencia, "ec")) {
+		return EC;
+	} else {
+		return CONSISTENCIA_INVALIDA;
+	}
+}
+
+void iterator(char* value) {
+	printf("%s\n", value);
+}
+
+/* separarRequest()
+ * Parametros
+ * -> text :: char*
+ * Descripcion: version mejorada de string_split (de las commons) que recibe un char* y lo separa por espacios (tomando como un string entero aquello que este entre comillas)
+ * Return: char**
+ * */
+char** separarRequest(char* text) {
+	char **substrings = NULL;
+	int size = 0;
+
+	char *text_to_iterate = string_duplicate(text);
+
+	char *next = text_to_iterate;
+	char *str = text_to_iterate;
+	int freeToken = 0;
+
+	while(next[0] != '\0') {
+		char* token = strtok_r(str, " ", &next);
+		if(token == NULL) {
+			break;
+		}
+		if(*token == '"'){
+			token++;
+			token = string_from_format(token, " ", strtok_r(str, "\"", &next));
+			freeToken = 1;
+		}
+
+		str = NULL;
+		size++;
+		substrings = realloc(substrings, sizeof(char*) * size);
+		substrings[size - 1] = string_duplicate(token);
+		if(freeToken) {
+			free(token);
+			freeToken = 0;
+		}
+	}
+
+	size++;
+	substrings = realloc(substrings, sizeof(char*) * size);
+	substrings[size - 1] = NULL;
+
+	free(text_to_iterate);
+	return substrings;
+}
+
 /*obtenerHoraActual()
  * Parametros:
  * Descripcion: Hora actual en minutos y microsegundos
@@ -79,6 +124,8 @@ char** separarString(char* mensaje) {
 	return string_split(mensaje, " ");
 }
 
+
+//TODO abajo habia otra funcion que era obtener parametros, chequear diferencias y ver cual dejar.
 char** obtenerParametros(char* request) { //ojo con la memoria reservada
 	char** queryYParametros =string_n_split(request, 2, " ");
 	return string_split(queryYParametros[1], " ");
@@ -105,25 +152,25 @@ int longitudDeArrayDeStrings(char** array){
  * Se le debe pasar como ultimo parametro un NULL(indicando que se finalizo la entrada de parametros)
  * Se debe hacer un free de la variable retornada
  * Return: string concatenado*/
-char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de parametros variable
-	char* stringFinal;	// String donde se guarda el resultado de la concatenacion
-	va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
-	char* parametro;	// Este es un parametro solo
-
-	if (primerString == NULL)
-		return NULL;
-
-	stringFinal = strdup(primerString);
-	va_start(parametros, primerString);	// Inicalizo el va_list
-
-	while ((parametro = va_arg(parametros, char*)) != NULL) {	// Recorro la lista de parametros hasta encontrar un NULL
-		stringFinal = (char*) realloc(stringFinal, strlen(stringFinal) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
-		strcat(stringFinal, parametro); // Concateno el parametro con stringFinal
-	}
-
-	va_end(parametros); // Libero la va_list
-	return stringFinal;
-}
+//char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de parametros variable
+//	char* stringFinal;	// String donde se guarda el resultado de la concatenacion
+//	va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
+//	char* parametro;	// Este es un parametro solo
+//
+//	if (primerString == NULL)
+//		return NULL;
+//
+//	stringFinal = strdup(primerString);
+//	va_start(parametros, primerString);	// Inicalizo el va_list
+//
+//	while ((parametro = va_arg(parametros, char*)) != NULL) {	// Recorro la lista de parametros hasta encontrar un NULL
+//		stringFinal = (char*) realloc(stringFinal, strlen(stringFinal) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
+//		strcat(stringFinal, parametro); // Concateno el parametro con stringFinal
+//	}
+//
+//	va_end(parametros); // Libero la va_list
+//	return stringFinal;
+//}
 
 /* obtenerParametros()
  * Parametros:
@@ -132,9 +179,10 @@ char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de 
  *  Return:
  *   -> requestSeparada :: char**
  */
+
 //char** obtenerParametros(char* request) {
 //	char** requestSeparada;
-//	requestSeparada = separarString(request);
+//	requestSeparada = separarRequest(request, " ");
 //	//n = longitudDeArrayDeStrings(requestSeparada);
 //    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
 //	return requestSeparada;
@@ -225,11 +273,19 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 			}
 		}
 
-		char** parametros = separarString(request[1]);
+		char** parametros = separarRequest(request[1]);
 		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
+		for(int i=0; request[i] != NULL; i++){
+			free(request[i]);
+		}
+		free(request);
+		for(int i=0; parametros[i] != NULL; i++){
+			free(parametros[i]);
+		}
+		free(parametros);
 		//free(request);
 		//free(parametros);
-		if( validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger)== TRUE) {
+		if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == TRUE) {
 			return EXIT_SUCCESS;
 		}
 		else {
@@ -276,6 +332,11 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			case INSERT:
+				if(cantidadDeParametros == PARAMETROS_INSERT || cantidadDeParametros == PARAMETROS_INSERT_TIMESTAMP) {
+					retorno = EXIT_SUCCESS;
+				} else {
+					retorno = EXIT_FAILURE;
+				}
 				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : EXIT_FAILURE;
 				break;
 			case CREATE:
@@ -402,7 +463,7 @@ t_paquete* recibir(int socket)
 	return paquete;
 }
 
-////cliente
+//cliente
 
 int crearConexion(char* ip, char* puerto)
 {
