@@ -52,6 +52,7 @@ void* conectarConMemoria(void*);
 void interpretarRequest(cod_request, char*, int);
 errorNo procesarCreate(char*, char*, char*, char*);
 errorNo procesarInsert(char*, uint16_t, char*, unsigned long long);
+errorNo procesarSelect(char*, char*);
 int obtenerBloqueDisponible(void);
 int crearDirectorio(char*);
 int mkdir_p(const char*);

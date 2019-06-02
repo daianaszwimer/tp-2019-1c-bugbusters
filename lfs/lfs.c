@@ -111,6 +111,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 	switch (palabraReservada){
 		case SELECT:
 			log_info(logger_LFS, "Me llego un SELECT");
+			retorno = procesarSelect(requestSeparada[1], requestSeparada[2]);
 			break;
 		case INSERT:
 			log_info(logger_LFS, "Me llego un INSERT");
@@ -354,14 +355,16 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 		registro->value = strdup(value);
 		registro->timestamp = timestamp;
 		if (list_find(memtable->tabla, (void*) encontrarTabla) == NULL) {
-			puts("No existe");
+			log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
+			//puts("No existe");
 			t_tabla* tabla = (t_tabla*) malloc(sizeof(t_tabla));
 			tabla->nombreTabla = strdup(nombreTabla);
 			tabla->registro = list_create();
 			list_add(tabla->registro, registro);
 			list_add(memtable->tabla, tabla);
 		} else {
-			puts("Existe la tabla campeon");
+			//puts("Existe la tabla campeon");
+			log_info(logger_LFS, "Se agrego el registro");
 		}
 	} else {
 		error = TABLA_NO_EXISTE;
@@ -372,4 +375,30 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	return error;
 }
 
+errorNo procesarSelect(char* nombreTabla, char* key){
+	int encontrarTabla(t_tabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
 
+	int encontrarRegistro(t_registro* registro) {
+		return registro->key == convertirKey(key);
+	}
+
+
+	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
+	errorNo error = SUCCESS;
+
+	t_tabla* table = list_find(memtable->tabla, (void*) encontrarTabla);
+	if(table !=NULL){
+		t_registro* registro = list_find(table->registro, (void*) encontrarRegistro);
+		if(registro != NULL){
+			log_info(logger_LFS, "el valor encontrado es el de abajo vieja");
+			log_info(logger_LFS, registro->value);
+		}else{
+			log_info(logger_LFS, "no encontre el valor");
+		}
+	}else{
+		log_info(logger_LFS, "no encontre la tabla");
+	}
+	return error;
+}
