@@ -198,7 +198,7 @@ log_info(logger_MEMORIA,"entre a interpretarr request");
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
-//			procesarInsert(palabraReservada, request, caller);
+			procesarInsert(palabraReservada, request, caller);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
@@ -265,9 +265,9 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	char** parametros = obtenerParametros(request);
 	int resultadoCache;
 	t_paquete* valorDeLF=malloc(sizeof(t_paquete));
-	valorDeLF->palabraReservada= 6;
+	valorDeLF->palabraReservada= 0;
 	valorDeLF->tamanio=100;
-	valorDeLF->request=(" ");
+	valorDeLF->request=strdup("tablaA 2 CHAUCHAU 1324135");
 
 	switch(consistenciaMemoria){
 		case SC:
@@ -283,19 +283,15 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 			resultadoCache= estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado);
 			if(resultadoCache == EXIT_SUCCESS ) {
 				log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-				enviarAlDestinatarioCorrecto(palabraReservada,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
+				enviarAlDestinatarioCorrecto(SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 				free(elementoEncontrado);
 				free(parametros);
-			} else {
+			} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 				log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-				//TODO CUANDO LFS PUEDA HACER INSERT CORERCTAMENTE, HAY QUE DESCOMNTARLO
-				// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 				//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 				//TODO GUARDAR EN CACHE RTA DE LFS
-
-				enviarAlDestinatarioCorrecto(valorDeLF->palabraReservada,request, valorDeLF->request,caller, (int) list_get(descriptoresClientes,i));
-
-
+				enviarAlDestinatarioCorrecto(valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
+				guardarRespuestaDeLFSaCACHE(valorDeLF,resultadoCache);
 			}
 			break;
 		default:
@@ -373,56 +369,76 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
  * Return:
  * 	-> :: void */
  void enviarAlDestinatarioCorrecto(int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int socketKernel){
-	 //TODO reservar y liberar todo
+	 //TODO reservar y liberar
+	 char* errorTabla=strdup("");
+	 char* errorKey=strdup("");
 
-//	 char** valorLFSSeparado= separarRequest(valorAEnviar);
+	 //char** valorAEnviarSeparado= separarRequest(valorAEnviar);
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
 				enviar(codResultado, valorAEnviar->request, socketKernel);
 	 	 	 break;
 	 	 case(CONSOLE):
-			if(codResultado!= NUESTRO_ERROR){
+			if(codResultado == SUCCESS){
 				char *respuesta= strdup("");
-				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a: ",request," es ", valorAEnviar->request);
-				//string_append_with_format(&respuesta, "%s%s%s%s","La Respuesta a la request ",request,"es: ",valorAEnviar->request);
+				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorAEnviar->request);
 				log_info(logger_MEMORIA,respuesta);
+			}else{
+				//errorNo tipoDeError= (errorNo)valorAEnviarSeparado[0];
+				switch(codResultado){
+					case(KEY_NO_EXISTE):
+						string_append_with_format(&errorKey, "%s%s%s","La respuesta a: ",request," no es valida, KEY INEXISTENTE");
+						log_info(logger_MEMORIA,errorKey);
+						break;
+					case(TABLA_NO_EXISTE):
+						string_append_with_format(&errorTabla, "%s%s%s","La respuesta a: ",request," no es valida, TABLA INEXISTENTE");
+						log_info(logger_MEMORIA,errorTabla);
+						break;
+					default:
+						log_info(logger_MEMORIA,"No se ha podido encontrar respuesta a la request",request);
+						break;
+				}
 			}
-
-//			}else{
-//				char* rta = valorLFSSeparado[3];
-//				errorNo tipoDeError= (errorNo)valorLFSSeparado[1];
-//				switch(tipoDeError){
-//					case(KEY_NO_EXISTE):
-//						log_info(logger_MEMORIA,"La request",request,"no es valida, KEY INEXISTENTE");
-//						break;
-//					case(TABLA_NO_EXISTE):
-//						log_info(logger_MEMORIA,"La request",request,"no es valida, TABLA INEXISTENTE");
-//						break;
-//					default:
-//						log_info(logger_MEMORIA,"No se ha podido encontrar respuesta a la request",request);
-//						break;
-//				}
-//			}
 	}
  }
 
+void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoError){
 
-///* procesarInsert()
-// * Parametros:
-// * 	-> cod_request :: palabraReservada
-// *	-> char* :: request
-// *	->
-// * Descripcion: se va a fijar si existe el segmento de la tabla ,que se quiere hacer insert,
-// * 				en la memoria principal.
-// * 				Si Existe dicho segmento, busca la key (y de encontrarla,
-// * 				actualiza su valor insertando el timestap actual).Y si no encuentra, solicita pag
-// * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
-// * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
-// * Return:
-// * 	-> :: void */
+	switch(nuevoPaquete->palabraReservada){
+		case(TABLA_NO_EXISTE):
+		case(KEY_NO_EXISTE):
+			break;
+		case(SUCCESS):
+			if(tipoError== KEYINEXISTENTE){
+				char** requestSeparada= separarRequest(nuevoPaquete->request);
+				char* nuevaTabla= strdup(requestSeparada[0]);
+				uint16_t nuevaKey= convertirKey(requestSeparada[1]);
+				char* nuevoValor= strdup(requestSeparada[2]);
+				t_tablaDePaginas* tablaBuscada= malloc(sizeof(t_tablaDePaginas));
+				tablaBuscada= encontrarSegmento(nuevaTabla);
+				list_add(tablaBuscada->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey, nuevoValor));
+			}else{
+				//case SEGMENTOINEXISTENTE:
+			}
+		}
+}
+
+/* procesarInsert()
+ * Parametros:
+ * 	-> cod_request :: palabraReservada
+ *	-> char* :: request
+ *	->
+ * Descripcion: se va a fijar si existe el segmento de la tabla ,que se quiere hacer insert,
+ * 				en la memoria principal.
+ * 				Si Existe dicho segmento, busca la key (y de encontrarla,
+ * 				actualiza su valor insertando el timestap actual).Y si no encuentra, solicita pag
+ * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
+ * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
+ * Return:
+ * 	-> :: void */
 void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
 		t_elemTablaDePaginas* elementoEncontrado;
-		char* valorEncontrado;
+		t_paquete* valorEncontrado;
 		char** parametros = obtenerParametros(request);
 		char* newTabla = strdup(parametros[0]);
 		char* newKeyChar = strdup(parametros[1]);

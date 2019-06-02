@@ -111,6 +111,7 @@ void procesarSelect(cod_request,char*,t_caller, int);
 
 int estaEnMemoria(cod_request, char**, t_paquete**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(int, char*, t_paquete* , t_caller, int);
+void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresCache);
 
 void procesarInsert(cod_request, char*, t_caller);
 

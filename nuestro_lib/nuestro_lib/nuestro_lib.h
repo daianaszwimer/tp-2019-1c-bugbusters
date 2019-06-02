@@ -72,7 +72,7 @@ typedef enum
 
 typedef struct
 {
-	cod_request palabraReservada;
+	int palabraReservada;
 	int tamanio;
 	char* request;
 } t_paquete;
