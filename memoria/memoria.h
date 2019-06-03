@@ -115,13 +115,13 @@ void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresCache);
 
 void procesarInsert(cod_request, char*, t_caller);
 
-t_pagina* crearPagina(uint16_t, char*);
+t_pagina* crearPagina(uint16_t, char*,unsigned long long);
 void actualizarPagina (t_pagina*, char*);
 
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*);
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*,unsigned long long);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
-t_tablaDePaginas* crearTablaDePagina(char*, uint16_t, char*);
+t_tablaDePaginas* crearTablaDePagina(char*);
 
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
 void liberarMemoria();

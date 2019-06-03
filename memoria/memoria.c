@@ -267,7 +267,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	t_paquete* valorDeLF=malloc(sizeof(t_paquete));
 	valorDeLF->palabraReservada= 0;
 	valorDeLF->tamanio=100;
-	valorDeLF->request=strdup("tablaA 2 CHAUCHAU 1324135");
+	valorDeLF->request=strdup("tablaB 2 NOSVEMOENDISNEY 6765432");
 
 	switch(consistenciaMemoria){
 		case SC:
@@ -404,23 +404,25 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
 
 void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoError){
 
-	switch(nuevoPaquete->palabraReservada){
-		case(TABLA_NO_EXISTE):
-		case(KEY_NO_EXISTE):
-			break;
-		case(SUCCESS):
-			if(tipoError== KEYINEXISTENTE){
-				char** requestSeparada= separarRequest(nuevoPaquete->request);
-				char* nuevaTabla= strdup(requestSeparada[0]);
-				uint16_t nuevaKey= convertirKey(requestSeparada[1]);
-				char* nuevoValor= strdup(requestSeparada[2]);
-				t_tablaDePaginas* tablaBuscada= malloc(sizeof(t_tablaDePaginas));
-				tablaBuscada= encontrarSegmento(nuevaTabla);
-				list_add(tablaBuscada->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey, nuevoValor));
-			}else{
-				//case SEGMENTOINEXISTENTE:
-			}
+	if(nuevoPaquete->palabraReservada == SUCCESS){
+		char** requestSeparada= separarRequest(nuevoPaquete->request);
+		char* nuevaTabla= strdup(requestSeparada[0]);
+		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
+		char* nuevoValor= strdup(requestSeparada[2]);
+		unsigned long long nuevoTimestamp= convertirTimestamp(requestSeparada[3],&nuevoTimestamp);
+		if(tipoError== KEYINEXISTENTE){
+			t_tablaDePaginas* tablaBuscada= malloc(sizeof(t_tablaDePaginas));
+			tablaBuscada= encontrarSegmento(nuevaTabla);
+			list_add(tablaBuscada->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey, nuevoValor,nuevoTimestamp));
+		}else if(tipoError==SEGMENTOINEXISTENTE){
+			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
+			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
+			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 		}
+		}
+//		case(TABLA_NO_EXISTE):
+//		case(KEY_NO_EXISTE):
+
 }
 
 /* procesarInsert()
@@ -440,10 +442,12 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 		t_elemTablaDePaginas* elementoEncontrado;
 		t_paquete* valorEncontrado;
 		char** parametros = obtenerParametros(request);
-		char* newTabla = strdup(parametros[0]);
+		char* nuevaTabla = strdup(parametros[0]);
 		char* newKeyChar = strdup(parametros[1]);
-		int newKey = convertirKey(newKeyChar);
-		char* newValue = strdup(parametros[2]);
+		int nuevaKey = convertirKey(newKeyChar);
+		char* nuevoValor = strdup(parametros[2]);
+		unsigned long long nuevoTimestamp= convertirTimestamp(parametros[3],&nuevoTimestamp);
+
 
 		puts("ANTES DE IR A BUSCAR A CACHE");
 		int rtaCache= estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado);
@@ -452,27 +456,31 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 //			KEY encontrada	-> modifico timestamp
 //							-> modifico valor
 //							-> modifico flagTabla
-			actualizarElementoEnTablaDePagina(elementoEncontrado,newValue);
+			actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
 			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
-		}else if(KEYINEXISTENTE){
+		}else if(rtaCache == KEYINEXISTENTE){
 //			KEY no encontrada -> nueva pagina solicitada
 //TODO:							si faltaEspacio JOURNAL
-				list_add(tablaA->elementosDeTablaDePagina,crearElementoEnTablaDePagina(newKey,newValue));
+				list_add(tablaA->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 				log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
-		}else if(SEGMENTOINEXISTENTE){
+		}else if(rtaCache == SEGMENTOINEXISTENTE){
 //TODO:		TABLA no encontrada -> nuevo segmento
-			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(newTabla,newKey,newValue);
+			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
-			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(newKey,newValue));
+			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 			log_info(logger_MEMORIA, "TABLA no encontrada: nuevo segmento creado");
 		}
 }
 
-t_pagina* crearPagina(uint16_t newKey, char* newValue){
+t_pagina* crearPagina(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
 	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
-	nuevaPagina->timestamp = obtenerHoraActual();
-	nuevaPagina->key = newKey;
-	nuevaPagina->value = newValue;
+	if(nuevoTimesTamp!=NULL){
+		nuevaPagina->timestamp = nuevoTimesTamp;
+	}else{
+		nuevaPagina->timestamp = obtenerHoraActual();
+	}
+	nuevaPagina->key = nuevaKey;
+	nuevaPagina->value = nuevoValor;
 	return nuevaPagina;
 }
 
@@ -482,10 +490,10 @@ void actualizarPagina (t_pagina* pagina, char* newValue){
 	pagina->value = newValue;
 }
 
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t newKey, char* newValue){
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t newKey, char* newValue, unsigned long long timesTamp){
 	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
 	newElementoDePagina->numeroDePag = rand();
-	newElementoDePagina->pagina = crearPagina(newKey,newValue);
+	newElementoDePagina->pagina = crearPagina(newKey,newValue,timesTamp);
 	newElementoDePagina->modificado = SINMODIFICAR;
 	return newElementoDePagina;
 }
@@ -495,7 +503,7 @@ void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* new
 	elemento->modificado = MODIFICADO;
 }
 
-t_tablaDePaginas* crearTablaDePagina(char* nuevaTabla, uint16_t newKey, char* newValue){
+t_tablaDePaginas* crearTablaDePagina(char* nuevaTabla){
 	t_tablaDePaginas* newTablaDePagina = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
 	newTablaDePagina->nombre=strdup(nuevaTabla);
 	newTablaDePagina->elementosDeTablaDePagina=list_create();
