@@ -63,6 +63,7 @@ void iterator(char* value) {
  * Descripcion: version mejorada de string_split (de las commons) que recibe un char* y lo separa por espacios (tomando como un string entero aquello que este entre comillas)
  * Return: char**
  * */
+// TODO: que funcione bien cuando hay comillas
 char** separarRequest(char* text) {
 	char **substrings = NULL;
 	int size = 0;

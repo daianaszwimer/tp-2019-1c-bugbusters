@@ -28,12 +28,12 @@ typedef struct{
 typedef struct
 {
 	char* nombreTabla;
-	t_list* registro;
+	t_list* registros;
 } t_tabla;
 
 typedef struct
 {
-	t_list* tabla;
+	t_list* tablas;
 } t_memtable;
 
 t_memtable* memtable;
@@ -60,5 +60,6 @@ void liberarString(char*);
 errorNo crearParticiones(char*, char*);
 void* hiloDump();
 errorNo dumpear();
+void vaciarTabla(t_tabla*);
 
 #endif /* LFS_H_ */

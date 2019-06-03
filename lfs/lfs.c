@@ -282,7 +282,7 @@ void inicializarLfs() {
 
 	memtable = (t_memtable*) malloc(sizeof(t_memtable));
 	//tabla = (t_tabla*) malloc(sizeof(t_tabla));
-	memtable->tabla = list_create();
+	memtable->tablas = list_create();
 	//tabla->registro = list_create();
 
 
@@ -326,7 +326,7 @@ void inicializarLfs() {
 	free(pathBloques);
 }
 
-/* procesarInsert() [API]
+/* procesarInsert() [API] [VALGRINDEADO]
  * Parametros:
  * 	-> nombreTabla :: char*
  * 	-> key :: uint16_t
@@ -334,7 +334,6 @@ void inicializarLfs() {
  * 	-> timestamp :: unsigned long long
  * Descripcion: permite la creacion y/o actualizacion del valor de una key dentro de una tabla
  * Return:  */
-
 errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned long long timestamp) {
 	int encontrarTabla(t_tabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
@@ -350,15 +349,15 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 		registro->key = key;
 		registro->value = strdup(value);
 		registro->timestamp = timestamp;
-		t_tabla* tabla = list_find(memtable->tabla, (void*) encontrarTabla);
+		t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
 		if (tabla == NULL) {
 			log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
 			tabla = (t_tabla*) malloc(sizeof(t_tabla));
 			tabla->nombreTabla = strdup(nombreTabla);
-			tabla->registro = list_create();
-			list_add(memtable->tabla, tabla);
+			tabla->registros = list_create();
+			list_add(memtable->tablas, tabla);
 		}
-		list_add(tabla->registro, registro);
+		list_add(tabla->registros, registro);
 	} else {
 		error = TABLA_NO_EXISTE;
 	}
@@ -381,9 +380,9 @@ errorNo procesarSelect(char* nombreTabla, char* key){
 	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
 
-	t_tabla* table = list_find(memtable->tabla, (void*) encontrarTabla);
+	t_tabla* table = list_find(memtable->tablas, (void*) encontrarTabla);
 	if(table !=NULL){
-		t_registro* registro = list_find(table->registro, (void*) encontrarRegistro);
+		t_registro* registro = list_find(table->registros, (void*) encontrarRegistro);
 		if(registro != NULL){
 			log_info(logger_LFS, "el valor encontrado es el de abajo vieja");
 			log_info(logger_LFS, registro->value);
@@ -396,6 +395,10 @@ errorNo procesarSelect(char* nombreTabla, char* key){
 	return error;
 }
 
+/* hiloDump()
+ * Parametros: void
+ * Descripcion: ejecuta la funcion dumpear() cada cierta cantidad de tiempo (tiempoDump) definido en el config
+ * Return: void* */
 void* hiloDump() {
 	int tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
 	while(1) {
@@ -414,42 +417,70 @@ void* hiloDump() {
 	}
 }
 
+/* dumpear() [VALGRINDEADO]
+ * Parametros: void
+ * Descripcion: baja los datos de la memtable a disco
+ * Return: codigo de error definido en el enum errorNo */
 errorNo dumpear() {
 	t_tabla* tabla;
 	errorNo error;
 	char* pathTmp;
 
-	for(int i = 0; list_get(memtable->tabla,i) != NULL; i++) {
-		tabla = list_get(memtable->tabla,i);
+	for(int i = 0; list_get(memtable->tablas,i) != NULL; i++) { // Recorro las tablas de la memtable
+		tabla = list_get(memtable->tablas,i);
 		char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, tabla->nombreTabla);
 		DIR *dir = opendir(pathTabla);
-		if(dir) {
+		if(dir) { // Verificamos que exista la tabla (por si hubo un DROP en el medio)
 			int fdTmp = 1;
 			int numeroTemporal = 0;
-			while(fdTmp != -1) {
+			while(fdTmp != -1) { // Nos fijamos que numero de temporal crear
 				pathTmp = string_from_format("%s/%d.tmp", pathTabla, numeroTemporal);
 				fdTmp = open(pathTmp, O_RDONLY, S_IRWXU);
 				numeroTemporal++;
+				if(fdTmp != -1) {
+					free(pathTmp);
+				}
 				close(fdTmp);
 			}
+			free(pathTabla);
 			fdTmp = open(pathTmp, O_CREAT | O_RDWR, S_IRWXU);
+			free(pathTmp);
 			if (fdTmp == -1) {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
-				// Guardo lo de la tabla en el temporal y borro la tabla de la memtable
+				// Guardo lo de la tabla en el archivo temporal
 				char* datosADumpear = strdup("");
-				for(int j = 0; list_get(tabla->registro,j) != NULL; j++) {
-					t_registro* registro = list_get(tabla->registro,j);
+				for(int j = 0; list_get(tabla->registros,j) != NULL; j++) {
+					t_registro* registro = list_get(tabla->registros,j);
 					string_append_with_format(&datosADumpear, "%u;%s;%llu\n", registro->key, registro->value, registro->timestamp);
 				}
 				FILE *fileTmp = fdopen(fdTmp, "w");
 				fprintf(fileTmp, "%s", datosADumpear);
+				free(datosADumpear);
 				fclose(fileTmp);
 				close(fdTmp);
-				// TODO: vaciar la memtable
+				// Vacio la memtable
+				list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
 				error = SUCCESS;
 			}
 		}
+		closedir(dir);
 	}
 	return error;
+}
+
+/* vaciarTabla()
+  * Parametros:
+ * 	-> tabla :: t_tabla*
+ * Descripcion: vacia una tabla y todos sus registros
+ * Return: void */
+void vaciarTabla(t_tabla *tabla) {
+	void eliminarRegistros(t_registro* registro) {
+	    free(registro->value);
+	    free(registro);
+	}
+    free(tabla->nombreTabla);
+    list_clean_and_destroy_elements(tabla->registros, (void*) eliminarRegistros);
+    free(tabla->registros);
+    free(tabla);
 }
