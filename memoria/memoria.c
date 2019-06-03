@@ -463,12 +463,12 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 		}else if(rtaCache == KEYINEXISTENTE){
 //TODO:		KEY no encontrada -> nueva pagina solicitada (JOURNAL)
 			t_tablaDePaginas* tablaDestino = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
-			tablaDestino = encontrarSegmento(newTabla);
-			list_add(tablaDestino->elementosDeTablaDePagina,crearElementoEnTablaDePagina(newKey,newValue));
+			tablaDestino = encontrarSegmento(nuevaTabla);
+			list_add(tablaDestino->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor, nuevoTimestamp));
 			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
 		}else if(rtaCache == SEGMENTOINEXISTENTE){
 //			TABLA no encontrada -> nuevo segmento
-			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(newTabla,newKey,newValue);
+			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
 			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 			log_info(logger_MEMORIA, "TABLA no encontrada: nuevo segmento creado");
