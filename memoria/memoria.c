@@ -316,6 +316,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 int estaEnMemoria(cod_request palabraReservada, char** parametros,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
 	t_tablaDePaginas* tablaDeSegmentosEnCache = malloc(sizeof(t_tablaDePaginas));
 	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
+
 	char* segmentoABuscar=strdup(parametros[0]);
 	uint16_t keyABuscar= convertirKey(parametros[1]);
 
@@ -347,6 +348,7 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,t_paquete** va
 		return SEGMENTOINEXISTENTE;
 	}
 }
+
 
 t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
 	int encontrarTabla(t_tablaDePaginas* tablaDePaginas){
@@ -459,13 +461,14 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 			actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
 			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
 		}else if(rtaCache == KEYINEXISTENTE){
-//			KEY no encontrada -> nueva pagina solicitada
-//TODO:							si faltaEspacio JOURNAL
-				list_add(tablaA->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
-				log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
+//TODO:		KEY no encontrada -> nueva pagina solicitada (JOURNAL)
+			t_tablaDePaginas* tablaDestino = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
+			tablaDestino = encontrarSegmento(newTabla);
+			list_add(tablaDestino->elementosDeTablaDePagina,crearElementoEnTablaDePagina(newKey,newValue));
+			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
 		}else if(rtaCache == SEGMENTOINEXISTENTE){
-//TODO:		TABLA no encontrada -> nuevo segmento
-			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
+//			TABLA no encontrada -> nuevo segmento
+			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(newTabla,newKey,newValue);
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
 			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 			log_info(logger_MEMORIA, "TABLA no encontrada: nuevo segmento creado");
