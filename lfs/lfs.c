@@ -202,14 +202,14 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 		/* Creamos la carpeta de la tabla */
 		int resultadoCreacionDirectorio = mkdir(pathTabla, S_IRWXU);
 		if (resultadoCreacionDirectorio == -1) {
-			error = ERROR_CREANDO_ARCHIVO;
+			error = ERROR_CREANDO_DIRECTORIO;
 		} else {
 
 			char* metadataPath = string_from_format("%s/Metadata.bin", pathTabla);
 
 			/* Creamos el archivo Metadata */
-			int metadataFileDescriptor = open(metadataPath, O_CREAT, S_IRWXU);
-			if (metadataFileDescriptor == -1) {
+			FILE* metadataFile = fopen(metadataPath, "w");
+			if (metadataFile == NULL) {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				t_config *metadataConfig = config_create(metadataPath);
@@ -223,9 +223,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 
 
 			free(metadataPath);
-
-			close(metadataFileDescriptor);
-		//hiloRequest = malloc(sizeof(pthread_t));
+			fclose(metadataFile);
 		}
 	}
 	free(dir);
@@ -247,8 +245,8 @@ errorNo crearParticiones(char* pathTabla, char* numeroDeParticiones){
 	for (int i = 0; i < _numeroDeParticiones; i++) {
 		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, i);
 
-		int particionFileDescriptor = open(pathParticion, O_CREAT, S_IRWXU);
-		if (particionFileDescriptor == -1) {
+		FILE* particionFile = fopen(pathParticion, "w");
+		if (particionFile == NULL) {
 			errorNo = ERROR_CREANDO_ARCHIVO;
 		} else {
 			char* bloqueDisponible = string_itoa(obtenerBloqueDisponible());
@@ -260,7 +258,7 @@ errorNo crearParticiones(char* pathTabla, char* numeroDeParticiones){
 			free(bloqueDisponible);
 			config_destroy(configParticion);
 		}
-		close(particionFileDescriptor);
+		fclose(particionFile);
 		free(pathParticion);
 	}
 	return errorNo;
@@ -278,13 +276,11 @@ int obtenerBloqueDisponible() {
 void inicializarLfs() {
 	//TODO catchear todos los errores
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
+	//TODO path para las pruebas
 	pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);	
 
 	memtable = (t_memtable*) malloc(sizeof(t_memtable));
-	//tabla = (t_tabla*) malloc(sizeof(t_tabla));
 	memtable->tablas = list_create();
-	//tabla->registro = list_create();
-
 
 	//if error
 	mkdir(pathRaiz, S_IRWXU);
@@ -298,8 +294,8 @@ void inicializarLfs() {
 	mkdir(pathMetadata, S_IRWXU);
 	char* fileMetadata = string_from_format("%s/Metadata.bin", pathMetadata);
 
-	int metadataDescriptor = open(fileMetadata, O_CREAT, S_IRWXU);
-	close(metadataDescriptor);
+	FILE* metadata = fopen(fileMetadata, "w");
+	fclose(metadata);
 
 	t_config *configMetadata = config_create(fileMetadata);
 	config_set_value(configMetadata, "BLOCK_SIZE", "64");
@@ -313,8 +309,8 @@ void inicializarLfs() {
 	char* fileBloque;
 	for (int i = 1; i <= blocks; i++) {
 		fileBloque = string_from_format("%s/%d.bin", pathBloques, i);
-		int bloqueFileDescriptor = open(fileBloque, O_CREAT, S_IRWXU);
-		close(bloqueFileDescriptor);
+		FILE* bloqueFile = fopen(fileBloque, "w");
+		fclose(bloqueFile);
 		free(fileBloque);
 	}
 
@@ -338,7 +334,7 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	int encontrarTabla(t_tabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
-	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
+	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
 
 
@@ -425,27 +421,27 @@ errorNo dumpear() {
 	t_tabla* tabla;
 	errorNo error;
 	char* pathTmp;
+	FILE* fileTmp;
 
 	for(int i = 0; list_get(memtable->tablas,i) != NULL; i++) { // Recorro las tablas de la memtable
 		tabla = list_get(memtable->tablas,i);
 		char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, tabla->nombreTabla);
 		DIR *dir = opendir(pathTabla);
 		if(dir) { // Verificamos que exista la tabla (por si hubo un DROP en el medio)
-			int fdTmp = 1;
 			int numeroTemporal = 0;
-			while(fdTmp != -1) { // Nos fijamos que numero de temporal crear
+			do { // Nos fijamos que numero de temporal crear
 				pathTmp = string_from_format("%s/%d.tmp", pathTabla, numeroTemporal);
-				fdTmp = open(pathTmp, O_RDONLY, S_IRWXU);
+				fileTmp = fopen(pathTmp, "r");
 				numeroTemporal++;
-				if(fdTmp != -1) {
+				if(fileTmp != NULL) {
 					free(pathTmp);
+					fclose(fileTmp);
 				}
-				close(fdTmp);
-			}
+			} while(fileTmp != NULL);
 			free(pathTabla);
-			fdTmp = open(pathTmp, O_CREAT | O_RDWR, S_IRWXU);
+			fileTmp = fopen(pathTmp, "w+");
 			free(pathTmp);
-			if (fdTmp == -1) {
+			if (fileTmp == -1) {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				// Guardo lo de la tabla en el archivo temporal
@@ -454,11 +450,9 @@ errorNo dumpear() {
 					t_registro* registro = list_get(tabla->registros,j);
 					string_append_with_format(&datosADumpear, "%u;%s;%llu\n", registro->key, registro->value, registro->timestamp);
 				}
-				FILE *fileTmp = fdopen(fdTmp, "w");
 				fprintf(fileTmp, "%s", datosADumpear);
 				free(datosADumpear);
 				fclose(fileTmp);
-				close(fdTmp);
 				// Vacio la memtable
 				list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
 				error = SUCCESS;
@@ -483,4 +477,29 @@ void vaciarTabla(t_tabla *tabla) {
     list_clean_and_destroy_elements(tabla->registros, (void*) eliminarRegistros);
     free(tabla->registros);
     free(tabla);
+}
+
+void compactacion(char* pathTabla) {
+	int numeroTemporal = 0;
+	int tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
+	FILE* fileTmp;
+	do {
+		char* pathTmp = string_from_format("%s/%d.tmp", pathTabla, numeroTemporal);
+		fileTmp = fopen(pathTmp, "r");
+		if(fileTmp != NULL) { // Crear tmpc de los tmp
+			char* pathTmpC = string_from_format("%s/%d.tmpc", pathTabla, numeroTemporal);
+			FILE* fileTmpC = fopen(pathTmpC, "w");
+			char* datosDelArchivoTemporal = malloc((int) (sizeof(uint16_t) + tamanioValue + malloc(sizeof(unsigned long long))));
+			while(fscanf(fileTmp, "%s", datosDelArchivoTemporal) == 1) {
+				fprintf(fileTmpC, "%s", datosDelArchivoTemporal);
+				fputc('\n', fileTmpC);
+			}
+			fclose(fileTmpC);
+			fclose(fileTmp);
+			free(pathTmpC);
+			free(datosDelArchivoTemporal);
+		}
+		numeroTemporal++;
+		free(pathTmp);
+	} while(fileTmp != NULL);
 }

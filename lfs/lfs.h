@@ -61,5 +61,6 @@ errorNo crearParticiones(char*, char*);
 void* hiloDump();
 errorNo dumpear();
 void vaciarTabla(t_tabla*);
+void compactacion(char*);
 
 #endif /* LFS_H_ */
