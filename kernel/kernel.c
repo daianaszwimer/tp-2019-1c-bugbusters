@@ -123,17 +123,19 @@ void reservarRecursos(char* mensaje) {
 			_request->request = queue_create();
 			char letra;
 			char* request = NULL;
-			char** requestDividida = NULL;
+			char** requestDividida;
 			int i = 0;
 			while((letra = fgetc(archivoLql)) != EOF) {
 				if (letra != '\n') {
 					// concateno
+					// aca se esta haciendo un malloc de nada que es como un free por eso rompe el queue_pop
 					request = (char*) realloc(request, sizeof(letra));
 					request[i] = letra;
 					i++;
 				} else {
 					request[i] = '\0';
 					request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
+					requestDividida = NULL;
 					requestDividida = string_n_split(request, 2, " ");
 					cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
 					otraRequest->codigo = _codigo;
@@ -146,9 +148,8 @@ void reservarRecursos(char* mensaje) {
 					//free(requestDividida);
 					i = 0;
 					request = NULL;
-					// dejo este null?
-					requestDividida = NULL;
 				}
+				//todo: hacer que cuando salga guarde lo que tenga en request asi funciona cuando archivo no termina con salto de linea
 			}
 			fclose(archivoLql);
 			free(requestDividida);
@@ -282,7 +283,7 @@ void manejarRequest(request_procesada* request) {
 			// la request. en tal caso se devuelve el t_paquete con error para cortar ejecucion
 			break;
 	}
-	sleep(config_get_int_value(config, "RETARDO_CICLO_EJECUCION")/1000);
+	usleep(config_get_int_value(config, "RETARDO_CICLO_EJECUCION")*1000);
 }
 
 /* liberarMemoria()
