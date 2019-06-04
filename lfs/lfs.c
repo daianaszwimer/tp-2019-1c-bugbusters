@@ -489,7 +489,7 @@ void compactacion(char* pathTabla) {
 		if(fileTmp != NULL) { // Crear tmpc de los tmp
 			char* pathTmpC = string_from_format("%s/%d.tmpc", pathTabla, numeroTemporal);
 			FILE* fileTmpC = fopen(pathTmpC, "w");
-			char* datosDelArchivoTemporal = malloc((int) (sizeof(uint16_t) + tamanioValue + malloc(sizeof(unsigned long long))));
+			char* datosDelArchivoTemporal = malloc((int) (sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long)));
 			while(fscanf(fileTmp, "%s", datosDelArchivoTemporal) == 1) {
 				fprintf(fileTmpC, "%s", datosDelArchivoTemporal);
 				fputc('\n', fileTmpC);
