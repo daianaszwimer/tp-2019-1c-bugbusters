@@ -339,7 +339,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			t_paquete* paqueteAuxiliar=malloc(sizeof(t_paquete));
 			paqueteAuxiliar->palabraReservada=SUCCESS;
 			char* requestAEnviar= strdup("");
-			string_append_with_format(&requestAEnviar,"%s%s%s%s%s",segmentoABuscar," ",parametros[1]," ",elementoDePagEnCache->pagina->value);
+			string_append_with_format(&requestAEnviar,"%s%s%s%s%c%s%c",segmentoABuscar," ",parametros[2]," ",'"',elementoDePagEnCache->pagina->value,'"');
 			paqueteAuxiliar->request = strdup(requestAEnviar);
 			paqueteAuxiliar->tamanio=sizeof(elementoDePagEnCache->pagina->value);
 
@@ -421,7 +421,7 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
 	 	 break;
 		case(INSERT):
 			if(codResultado == SUCCESS){
-				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realiazo con exito");
+				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,respuesta);
 			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
@@ -527,6 +527,8 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 
 
 	if(resultadoCache == EXIT_SUCCESS){
+		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+
 		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
 
 		paqueteAEnviar->palabraReservada= SUCCESS;
@@ -584,7 +586,7 @@ t_pagina* crearPagina(uint16_t nuevaKey, char* nuevoValor, unsigned long long nu
 void actualizarPagina (t_pagina* pagina, char* newValue){
 	unsigned long long newTimes = obtenerHoraActual();
 	pagina->timestamp = newTimes;
-	pagina->value = newValue;
+	pagina->value =strdup(newValue);
 }
 
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t newKey, char* newValue, unsigned long long timesTamp){
