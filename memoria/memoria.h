@@ -69,6 +69,9 @@ typedef struct{
 	time_t tv_sec;
 	suseconds_t tv_usec;   /* microseconds */
 }t_timeval;
+//-------------CASO DE PRUEBA INSERTAR-------------------------
+t_paquete* valorDeLF;
+
 
 //-------------VARIABLES GLOBALES-------------------------
 
@@ -109,12 +112,15 @@ t_paquete* intercambiarConFileSystem(cod_request, char*);
 void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,t_caller, int);
 
-int estaEnMemoria(cod_request, char**, t_paquete**, t_elemTablaDePaginas**);
-void enviarAlDestinatarioCorrecto(int, char*, t_paquete* , t_caller, int);
+int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
+void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
+void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
 void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresCache);
 
-void procesarInsert(cod_request, char*, t_caller);
+void procesarInsert(cod_request, char*, t_caller,int);
+void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
 
+int validarInsertSC(errorNo);
 t_pagina* crearPagina(uint16_t, char*,unsigned long long);
 void actualizarPagina (t_pagina*, char*);
 

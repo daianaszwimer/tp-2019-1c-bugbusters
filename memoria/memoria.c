@@ -78,6 +78,7 @@ void leerDeConsola(void){
 //			pthread_mutex_unlock(&terminarHilo);
 //			break;
 //		}
+
 		validarRequest(mensaje);
 		free(mensaje);
 	}
@@ -198,7 +199,7 @@ log_info(logger_MEMORIA,"entre a interpretarr request");
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
-			procesarInsert(palabraReservada, request, caller);
+			procesarInsert(palabraReservada, request, caller, i);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
@@ -229,7 +230,6 @@ log_info(logger_MEMORIA,"entre a interpretarr request");
 			log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
 			break;
 	}
-	log_info(logger_MEMORIA, "(MENSAJE DE KERNEL)");
 }
 
 /*intercambiarConFileSystem()
@@ -258,40 +258,42 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
  * Return:
  * 	-> :: void */
 void procesarSelect(cod_request palabraReservada, char* request, t_caller caller, int i) {
-	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas));
-	t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
-	//char* valorDeLFS;
 
-	char** parametros = obtenerParametros(request);
-	int resultadoCache;
+//---------------CASOS DE PRUEBA------------------------------
+
 	t_paquete* valorDeLF=malloc(sizeof(t_paquete));
 	valorDeLF->palabraReservada= 0;
 	valorDeLF->tamanio=100;
-	valorDeLF->request=strdup("tablaB 2 NOSVEMOENDISNEY 6765432");
+	valorDeLF->request=strdup("tablaB 2 chau 454462636");
+//-------------------------------------------------------------
+	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas));
+	t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
+
+
+	int resultadoCache;
 
 	switch(consistenciaMemoria){
 		case SC:
 		case SHC:
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			//TODO CUANDO LFS PUEDA HACER INSERT CORERCTAMENTE, HAY QUE DESCOMNTARLO
-			// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-			//enviarAlDestinatarioCorrecto(palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-			//TODO GUARDAR EN CACHE RTA DE LFS
+			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
+			resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
+			guardarRespuestaDeLFSaCACHE(valorDeLF, resultadoCache);
 			break;
-		case EC:
-			resultadoCache= estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado);
+		case EC:		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
+			resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 			if(resultadoCache == EXIT_SUCCESS ) {
 				log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-				enviarAlDestinatarioCorrecto(SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
-				free(elementoEncontrado);
-				free(parametros);
+				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
+				//free(elementoEncontrado);
+				//free(parametros);
 			} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 				log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 				//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-				//TODO GUARDAR EN CACHE RTA DE LFS
-				enviarAlDestinatarioCorrecto(valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
-				guardarRespuestaDeLFSaCACHE(valorDeLF,resultadoCache);
+				enviarAlDestinatarioCorrecto(palabraReservada, valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
+				guardarRespuestaDeLFSaCACHE(valorDeLF, resultadoCache);
 			}
 			break;
 		default:
@@ -305,7 +307,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 /*estaEnMemoria()
  * Parametros:
  * 	-> cod_request :: palabraReservada
- * 	-> char** ::  parametros de la request
+ * 	-> char* :: request
  * 	-> char** :: valorEncontrado- se modifica por referencia
  * 	-> t_elemTablaDePaginas** :: elemento (que contiene el puntero a la pag econtrada)- se modifica por referecia.
  * Descripcion: Revisa si la tabla y key solicitada se encuentran que cache.
@@ -313,12 +315,13 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
  * 				En ccaso de que no exista la tabla||key devuelve el error correspondiente.
  * Return:
  * 	-> resultado de la operacion:: int */
-int estaEnMemoria(cod_request palabraReservada, char** parametros,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
+int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
 	t_tablaDePaginas* tablaDeSegmentosEnCache = malloc(sizeof(t_tablaDePaginas));
 	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
 
-	char* segmentoABuscar=strdup(parametros[0]);
-	uint16_t keyABuscar= convertirKey(parametros[1]);
+	char** parametros = separarRequest(request);
+	char* segmentoABuscar=strdup(parametros[1]);
+	uint16_t keyABuscar= convertirKey(parametros[2]);
 
 	int encontrarTabla(t_tablaDePaginas* tablaDePaginas){
 		return string_equals_ignore_case(tablaDePaginas->nombre, segmentoABuscar);
@@ -335,7 +338,9 @@ int estaEnMemoria(cod_request palabraReservada, char** parametros,t_paquete** va
 		if(elementoDePagEnCache !=NULL){ //registro = pagina
 			t_paquete* paqueteAuxiliar=malloc(sizeof(t_paquete));
 			paqueteAuxiliar->palabraReservada=SUCCESS;
-			paqueteAuxiliar->request = strdup(elementoDePagEnCache->pagina->value);
+			char* requestAEnviar= strdup("");
+			string_append_with_format(&requestAEnviar,"%s%s%s%s%s",segmentoABuscar," ",parametros[1]," ",elementoDePagEnCache->pagina->value);
+			paqueteAuxiliar->request = strdup(requestAEnviar);
 			paqueteAuxiliar->tamanio=sizeof(elementoDePagEnCache->pagina->value);
 
 			*elementoEncontrado=elementoDePagEnCache;
@@ -370,39 +375,66 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
  * 	-> :: void */
- void enviarAlDestinatarioCorrecto(int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int socketKernel){
+ void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int socketKernel){
 	 //TODO reservar y liberar
-	 char* errorTabla=strdup("");
-	 char* errorKey=strdup("");
-
-	 //char** valorAEnviarSeparado= separarRequest(valorAEnviar);
+	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
-				enviar(codResultado, valorAEnviar->request, socketKernel);
-	 	 	 break;
+			enviar(codResultado, valorAEnviar->request, socketKernel);
+	 	 	break;
 	 	 case(CONSOLE):
-			if(codResultado == SUCCESS){
-				char *respuesta= strdup("");
-				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorAEnviar->request);
+	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
+	 	  	break;
+	 	 default:
+	 		string_append_with_format(&errorDefault, "%s%s","No se ha encontrado a quien devolver la reques realizada",request);
+	 		 log_info(logger_MEMORIA,errorDefault);
+	 		 break;
+
+	}
+ }
+
+ void mostrarResultadoPorConsola(cod_request palabraReservada, int codResultado,char* request,t_paquete* valorAEnviar){
+	 char *respuesta= strdup("");
+	 char* error=strdup("");
+	 char** requestSeparada=separarRequest(valorAEnviar->request);
+	 char* valorEncontrado = requestSeparada[2];
+	 switch(palabraReservada){
+	 	 case(SELECT):
+	 		if(codResultado == SUCCESS){
+				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
 				log_info(logger_MEMORIA,respuesta);
-			}else{
-				//errorNo tipoDeError= (errorNo)valorAEnviarSeparado[0];
-				switch(codResultado){
+	 		}else{
+	 			switch(codResultado){
 					case(KEY_NO_EXISTE):
-						string_append_with_format(&errorKey, "%s%s%s","La respuesta a: ",request," no es valida, KEY INEXISTENTE");
-						log_info(logger_MEMORIA,errorKey);
+						string_append_with_format(&error, "%s%s%s","La respuesta a: ",request," no es valida, KEY INEXISTENTE");
+						log_info(logger_MEMORIA,error);
 						break;
 					case(TABLA_NO_EXISTE):
-						string_append_with_format(&errorTabla, "%s%s%s","La respuesta a: ",request," no es valida, TABLA INEXISTENTE");
-						log_info(logger_MEMORIA,errorTabla);
+						string_append_with_format(&error, "%s%s%s","La respuesta a: ",request," no es valida, TABLA INEXISTENTE");
+						log_info(logger_MEMORIA,error);
 						break;
 					default:
 						log_info(logger_MEMORIA,"No se ha podido encontrar respuesta a la request",request);
 						break;
-				}
+	 			}
 			}
-	}
- }
+	 	 break;
+		case(INSERT):
+			if(codResultado == SUCCESS){
+				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realiazo con exito");
+				log_info(logger_MEMORIA,respuesta);
+			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
+				log_info(logger_MEMORIA,error);
+			}
+			break;
+		default:
+			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
+			break;
+
+		}
+}
+
 
 void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoError){
 
@@ -411,17 +443,20 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
 		char* nuevaTabla= strdup(requestSeparada[0]);
 		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
 		char* nuevoValor= strdup(requestSeparada[2]);
-		unsigned long long nuevoTimestamp= convertirTimestamp(requestSeparada[3],&nuevoTimestamp);
+		unsigned long long nuevoTimestamp;
+		int rta=convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no checkeo, viene de LFS
 		if(tipoError== KEYINEXISTENTE){
 			t_tablaDePaginas* tablaBuscada= malloc(sizeof(t_tablaDePaginas));
 			tablaBuscada= encontrarSegmento(nuevaTabla);
 			list_add(tablaBuscada->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey, nuevoValor,nuevoTimestamp));
 		}else if(tipoError==SEGMENTOINEXISTENTE){
+
 			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
-			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
 			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
+			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
+
 		}
-		}
+	}
 //		case(TABLA_NO_EXISTE):
 //		case(KEY_NO_EXISTE):
 
@@ -440,48 +475,107 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
  * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
  * Return:
  * 	-> :: void */
-void procesarInsert(cod_request palabraReservada, char* request, t_caller caller) {
-		t_elemTablaDePaginas* elementoEncontrado;
-		t_paquete* valorEncontrado;
-		char** parametros = obtenerParametros(request);
-		char* nuevaTabla = strdup(parametros[0]);
-		char* newKeyChar = strdup(parametros[1]);
-		int nuevaKey = convertirKey(newKeyChar);
-		char* nuevoValor = strdup(parametros[2]);
-		unsigned long long nuevoTimestamp= convertirTimestamp(parametros[3],&nuevoTimestamp);
+void procesarInsert(cod_request palabraReservada, char* request, t_caller caller, int i) {
+		t_elemTablaDePaginas* elementoEncontrado= malloc(sizeof(t_elemTablaDePaginas));
+		t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
 
+//---------------CASOS DE PRUEBA------------------------------
+//en el .h para poder compartirlo con la funcion insertar
+		valorDeLF=malloc(sizeof(t_paquete));
+		valorDeLF->palabraReservada= 0;
+		valorDeLF->tamanio=100;
+		valorDeLF->request=strdup("tablaB  chau 123454657");
+
+//-------------------------------------------------------------
 
 		puts("ANTES DE IR A BUSCAR A CACHE");
-		int rtaCache= estaEnMemoria(palabraReservada, parametros,&valorEncontrado,&elementoEncontrado);
+		int resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
+		switch(consistenciaMemoria){
+			case SC:
+			case SHC:
+				//valorDeLFS = intercambiarConFileSystem(SELECT,consultaALFS);
+				if((consistenciaMemoria== SC && validarInsertSC(valorDeLF->palabraReservada)== EXIT_SUCCESS)){
+					insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
+				}else{
+					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLF->palabraReservada,request,valorDeLF,caller,i);
+				}
+				break;
+			case EC:
+				insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
+				break;
+		}
+}
 
-		if(rtaCache == EXIT_SUCCESS){
-//			KEY encontrada	-> modifico timestamp
-//							-> modifico valor
-//							-> modifico flagTabla
-			actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
-			log_info(logger_MEMORIA, "KEY encontrada: pagina modificada");
-		}else if(rtaCache == KEYINEXISTENTE){
-//TODO:		KEY no encontrada -> nueva pagina solicitada (JOURNAL)
+
+void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int i){
+	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
+
+	char** parametros = separarRequest(request);
+	char* nuevaTabla = strdup(parametros[1]);
+	char* nuevaKeyChar = strdup(parametros[2]);
+	int nuevaKey = convertirKey(nuevaKeyChar);
+	char* nuevoValor = strdup(parametros[3]);
+	unsigned long long nuevoTimestamp;
+
+	char *consultaALFS= strdup("");
+
+	if(parametros[4]!=NULL){
+		int rta	= convertirTimestamp(parametros[4],&nuevoTimestamp);
+	}else{
+		nuevoTimestamp= obtenerHoraActual();
+	}
+
+
+	if(resultadoCache == EXIT_SUCCESS){
+		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
+
+		paqueteAEnviar->palabraReservada= SUCCESS;
+		char** requestRespuesta= string_n_split(request,2," ");
+		paqueteAEnviar->request=strdup(requestRespuesta[1]);
+		paqueteAEnviar->tamanio=strlen(requestRespuesta[1]);
+		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,i);
+
+	}else if(resultadoCache == KEYINEXISTENTE){//TODO:		KEY no encontrada -> nueva pagina solicitada
+		int hayEspacio= EXIT_SUCCESS;
+		//TODO verficar realmente si se puede insertar
+		if(hayEspacio ==EXIT_SUCCESS){
 			t_tablaDePaginas* tablaDestino = (t_tablaDePaginas*)malloc(sizeof(t_tablaDePaginas));
 			tablaDestino = encontrarSegmento(nuevaTabla);
 			list_add(tablaDestino->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor, nuevoTimestamp));
-			log_info(logger_MEMORIA, "KEY no encontrada: nueva pagina creada");
-		}else if(rtaCache == SEGMENTOINEXISTENTE){
-//			TABLA no encontrada -> nuevo segmento
+
+			//TODO unificar desp cuando lfs este, con valorDeLF
+
+			paqueteAEnviar->palabraReservada= SUCCESS;
+			char** requestRespuesta= string_n_split(request,2," ");
+			paqueteAEnviar->request=strdup(requestRespuesta[1]);
+			paqueteAEnviar->tamanio=strlen(requestRespuesta[1]);
+
+
+			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,i);
+		}
+
+	}else if(resultadoCache == SEGMENTOINEXISTENTE){ //	TABLA no encontrada -> nuevo segmento
+
 			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
 			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
-			log_info(logger_MEMORIA, "TABLA no encontrada: nuevo segmento creado");
-		}
+			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorDeLF,caller,i);
+	}
+
+}
+
+
+int validarInsertSC(errorNo codRespuestaDeLFS){
+	if (codRespuestaDeLFS == SUCCESS){
+		return EXIT_SUCCESS;
+	}else{
+		return EXIT_FAILURE;
+	}
 }
 
 t_pagina* crearPagina(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
 	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
-	if(nuevoTimesTamp!=NULL){
-		nuevaPagina->timestamp = nuevoTimesTamp;
-	}else{
-		nuevaPagina->timestamp = obtenerHoraActual();
-	}
+	nuevaPagina->timestamp = nuevoTimesTamp;
 	nuevaPagina->key = nuevaKey;
 	nuevaPagina->value = nuevoValor;
 	return nuevaPagina;
