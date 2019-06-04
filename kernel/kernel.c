@@ -60,6 +60,7 @@ void leerDeConsola(void){
 		if (!strcmp(mensaje, "\0")) {
 			printf("sali de leer consola");
 			free(mensaje);
+			mensaje = NULL;
 			break;
 		}
 		pthread_mutex_lock(&semMColaNew);
@@ -122,18 +123,25 @@ void reservarRecursos(char* mensaje) {
 		} else {
 			_request->request = queue_create();
 			char letra;
-			char* request = NULL;
+			char* request;
 			char** requestDividida;
-			int i = 0;
+			int i = 1;
+			size_t posicion = 0;
+			request = (char*) malloc(sizeof(char));
+		    *request = '\0';
 			while((letra = fgetc(archivoLql)) != EOF) {
 				if (letra != '\n') {
 					// concateno
 					// aca se esta haciendo un malloc de nada que es como un free por eso rompe el queue_pop
-					request = (char*) realloc(request, sizeof(letra));
-					request[i] = letra;
 					i++;
+					request = (char*) realloc(request, i * sizeof(char));
+					if (request == NULL) {
+						printf("memory allocation failure\n");
+					}
+					posicion = strlen(request);
+					request[posicion] = letra;
+					request[posicion + 1] = '\0';
 				} else {
-					request[i] = '\0';
 					request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
 					requestDividida = NULL;
 					requestDividida = string_n_split(request, 2, " ");
@@ -143,16 +151,19 @@ void reservarRecursos(char* mensaje) {
 					queue_push(_request->request, otraRequest);
 					for (int j = 0; requestDividida[j] != NULL; j++) {
 						free(requestDividida[j]);
+						requestDividida[j] = NULL;
 					}
 					//cuando saco free me tira invalid free, cuando lo dejo dice invalid malloc
 					//free(requestDividida);
-					i = 0;
-					request = NULL;
+					i = 1;
+					request = (char*) malloc(sizeof(char));
+				    *request = '\0';
 				}
 				//todo: hacer que cuando salga guarde lo que tenga en request asi funciona cuando archivo no termina con salto de linea
 			}
 			fclose(archivoLql);
 			free(requestDividida);
+			requestDividida = NULL;
 		}
 		_request->codigo = RUN;
 		pthread_mutex_lock(&semMColaReady);
@@ -317,10 +328,12 @@ void liberarMemoria(void) {
 void liberarRequestProcesada(request_procesada* request) {
 	if(request->codigo != RUN) {
        free((char*) request->request);
+       request->request = NULL;
 	}
 	// en el caso del run ya se libera la cola en su funcion
 	// solo hacer este free si request fue a exit
 	free(request);
+	request = NULL;
 }
 
 /* liberarColaRequest()
@@ -332,7 +345,9 @@ void liberarRequestProcesada(request_procesada* request) {
 void liberarColaRequest(request_procesada* requestCola) {
 	printf("Voy a liberar: %s    ", (char*) requestCola->request);
     free((char*) requestCola->request);
+    requestCola->request = NULL;
     free(requestCola);
+    requestCola = NULL;
 }
 
 /*
@@ -382,18 +397,19 @@ void procesarRun(t_queue* colaRun) {
 		queue_pop(colaRun);
 
 
-		/*if (validarRequest((char*) request->request) == TRUE) {
-			respuesta = manejarRequest(request);
+		if (validarRequest((char*) request->request) == TRUE) {
+			manejarRequest(request);
+			/*respuesta = manejarRequest(request);
 			if (respuesta->palabraReservada == NUESTRO_ERROR) {
 				eliminar_paquete(respuesta);
 				// informar error
 				break;
 			}
-			eliminar_paquete(respuesta);
+			eliminar_paquete(respuesta);*/
 		} else {
 			break;
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
-		}*/
+		}
 		liberarRequestProcesada(request);
 	}
 	if (quantumActual == quantum && queue_is_empty(colaRun) == FALSE) {
