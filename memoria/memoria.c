@@ -497,7 +497,7 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 				if((consistenciaMemoria== SC && validarInsertSC(valorDeLF->palabraReservada)== EXIT_SUCCESS)){
 					insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
 				}else{
-					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLF->palabraReservada,request,valorDeLF,caller,i);
+					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLF->palabraReservada,request,valorDeLF,caller, (int) list_get(descriptoresClientes,i));
 				}
 				break;
 			case EC:
@@ -535,7 +535,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		char** requestRespuesta= string_n_split(request,2," ");
 		paqueteAEnviar->request=strdup(requestRespuesta[1]);
 		paqueteAEnviar->tamanio=strlen(requestRespuesta[1]);
-		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,i);
+		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 
 	}else if(resultadoCache == KEYINEXISTENTE){//TODO:		KEY no encontrada -> nueva pagina solicitada
 		int hayEspacio= EXIT_SUCCESS;
@@ -553,7 +553,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			paqueteAEnviar->tamanio=strlen(requestRespuesta[1]);
 
 
-			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,i);
+			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 		}
 
 	}else if(resultadoCache == SEGMENTOINEXISTENTE){ //	TABLA no encontrada -> nuevo segmento
@@ -561,7 +561,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
 			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
-			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorDeLF,caller,i);
+			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
 	}
 
 }
