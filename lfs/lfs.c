@@ -276,8 +276,8 @@ int obtenerBloqueDisponible() {
 void inicializarLfs() {
 	//TODO catchear todos los errores
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
-	//TODO path para las pruebas
-	pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);	
+	//pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);
+	pathRaiz = strdup(puntoDeMontaje);
 
 	memtable = (t_memtable*) malloc(sizeof(t_memtable));
 	memtable->tablas = list_create();
@@ -441,7 +441,7 @@ errorNo dumpear() {
 			free(pathTabla);
 			fileTmp = fopen(pathTmp, "w+");
 			free(pathTmp);
-			if (fileTmp == -1) {
+			if (fileTmp == NULL) {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				// Guardo lo de la tabla en el archivo temporal
