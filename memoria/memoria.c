@@ -81,6 +81,7 @@ void leerDeConsola(void){
 
 		validarRequest(mensaje);
 		free(mensaje);
+		mensaje=NULL;
 	}
 }
 
@@ -117,6 +118,8 @@ int validarRequest(char* mensaje){
 			return NUESTRO_ERROR;
 			break;
 	}
+	liberarArrayDeChar(request);
+	request =NULL;
 }
 
 /* conectarAFileSystem()
@@ -175,6 +178,8 @@ void escucharMultiplesClientes() {
 					printf("El codigo que recibi es: %s \n", request);
 					printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 					interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
+					free(request);
+					request=NULL;
 
 				}
 			}//fin for
@@ -186,6 +191,9 @@ void escucharMultiplesClientes() {
 			}
 	//	}
 	}
+	eliminar_paquete(paqueteRecibido);
+	paqueteRecibido=NULL;
+
 }
 
 void interpretarRequest(cod_request palabraReservada,char* request,t_caller caller, int i) {
@@ -302,7 +310,10 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 	}
 
 
+
 }
+
+
 
 /*estaEnMemoria()
  * Parametros:
@@ -318,6 +329,7 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
 	t_tablaDePaginas* tablaDeSegmentosEnCache = malloc(sizeof(t_tablaDePaginas));
 	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
+	t_paquete* paqueteAuxiliar;
 
 	char** parametros = separarRequest(request);
 	char* segmentoABuscar=strdup(parametros[1]);
@@ -336,7 +348,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 
 		elementoDePagEnCache= list_find(tablaDeSegmentosEnCache->elementosDeTablaDePagina,(void*)encontrarElemDePag);
 		if(elementoDePagEnCache !=NULL){ //registro = pagina
-			t_paquete* paqueteAuxiliar=malloc(sizeof(t_paquete));
+			paqueteAuxiliar=malloc(sizeof(t_paquete));
 			paqueteAuxiliar->palabraReservada=SUCCESS;
 			char* requestAEnviar= strdup("");
 			string_append_with_format(&requestAEnviar,"%s%s%s%s%c%s%c",segmentoABuscar," ",parametros[2]," ",'"',elementoDePagEnCache->pagina->value,'"');
@@ -352,6 +364,8 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 	}else{
 		return SEGMENTOINEXISTENTE;
 	}
+	eliminar_paquete(paqueteAuxiliar);
+
 }
 
 
@@ -617,4 +631,16 @@ void liberarMemoria(){
 		 free(self->pagina);
 	 }
 	list_clean_and_destroy_elements(tablaA->elementosDeTablaDePagina, (void*)liberarElementoDePag);
+}
+
+
+void eliminarElemTablaDePaginas(t_elemTablaDePaginas* elementoEncontrado){
+	eliminarPagina(elementoEncontrado->pagina);
+	free(elementoEncontrado);
+	elementoEncontrado=NULL;
+}
+void eliminarPagina(t_pagina* pag){
+	free(pag->value);
+	free(pag);
+	pag= NULL;
 }

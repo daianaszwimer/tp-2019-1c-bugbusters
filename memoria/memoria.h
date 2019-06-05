@@ -131,7 +131,8 @@ t_tablaDePaginas* crearTablaDePagina(char*);
 
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
 void liberarMemoria();
-
+void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
+void eliminarPagina(t_pagina*);
 
 
 #endif /* MEMORIA_H_ */
