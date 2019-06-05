@@ -256,6 +256,19 @@ int esperar_cliente(int socket_servidor)
 	return socket_cliente;
 }
 
+/* liberarArrayDeChar()
+ * Parametros:
+ *  -> char** :: arrayDeChar
+ *  Descripcion: tomar un char** y lo libera
+ * Return:
+ *  -> void
+ */
+void liberarArrayDeChar(char** arrayDeChar) {
+	for (int j = 0; arrayDeChar[j] != NULL; j++) {
+		free(arrayDeChar[j]);
+	}
+	free(arrayDeChar);
+}
 
 /* validarMensaje()
  * Parametros:
@@ -267,42 +280,40 @@ int esperar_cliente(int socket_servidor)
  * Return: success or failure
  * 	-> exit :: int */
 int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
-	char** request = string_n_split(mensaje, 2, " ");
+	char** requestDividida = string_n_split(mensaje, 2, " ");
 	int resultadoValidacionParametros;
-	int codPalabraReservada = obtenerCodigoPalabraReservada(request[0], componente);
-	if(validarPalabraReservada(codPalabraReservada, componente, logger)== TRUE){
-		if(request[1]==NULL && codPalabraReservada != SALIDA && codPalabraReservada != NUESTRO_ERROR){
-			if(cantDeParametrosEsCorrecta(0,codPalabraReservada)== TRUE){
-				free(request);
-				return EXIT_SUCCESS;
-			}else{
-				free(request);
-				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
-				return NUESTRO_ERROR;
-				/*if(codPalabraReservada == NUESTRO_ERROR){
-					return NUESTRO_ERROR;
-				}else if(codPalabraReservada == SALIDA){
-					return SALIDA;
-				}*/
-			}
-		}else if(codPalabraReservada != SALIDA && codPalabraReservada != NUESTRO_ERROR){
-			char** parametros = separarRequest(request[1]);
-			int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-			for(int i=0; request[i] != NULL; i++){
-				free(request[i]);
-			}
-			free(request);
-			for(int i=0; parametros[i] != NULL; i++){
-				free(parametros[i]);
-			}
-			free(parametros);
 
-			if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == TRUE) {
-				return EXIT_SUCCESS;
-			} else {
-				return NUESTRO_ERROR;
+	int codPalabraReservada = obtenerCodigoPalabraReservada(requestDividida[0], componente);
+	if(validarPalabraReservada(codPalabraReservada, componente, logger) == EXIT_SUCCESS){
+		if(codPalabraReservada != SALIDA && codPalabraReservada != NUESTRO_ERROR){
+			if(requestDividida[1]==NULL){
+				if(cantDeParametrosEsCorrecta(0,codPalabraReservada) == EXIT_SUCCESS){
+					liberarArrayDeChar(requestDividida);
+					return EXIT_SUCCESS;
+				}else{
+					liberarArrayDeChar(requestDividida);
+					log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
+					return NUESTRO_ERROR;
+					/*if(codPalabraReservada == NUESTRO_ERROR){
+						return NUESTRO_ERROR;
+					}else if(codPalabraReservada == SALIDA){
+						return SALIDA;
+					}*/
+				}
+			}else{
+				char** parametros = separarRequest(requestDividida[1]);
+				int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
+				liberarArrayDeChar(requestDividida);
+				liberarArrayDeChar(parametros);
+				if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == EXIT_SUCCESS) {
+					return EXIT_SUCCESS;
+				}
+				else {
+					return NUESTRO_ERROR;
+				}
 			}
 		}
+
 		return codPalabraReservada;
 
 	}else{
@@ -520,10 +531,11 @@ int crearConexion(char* ip, char* puerto)
 void enviar(int cod, char* mensaje, int socket_cliente)
 {
 	//armamos el paquete
-	t_paquete* paquete = malloc(sizeof(t_paquete));
+	t_paquete* paquete = (t_paquete*) malloc(sizeof(t_paquete));
 	paquete->palabraReservada = cod;
+
 	paquete->tamanio = strlen(mensaje)+1;
-	paquete->request = malloc(paquete->tamanio);
+	paquete->request = (char*) malloc(paquete->tamanio);
 	memcpy(paquete->request, mensaje, paquete->tamanio);
 	int tamanioPaquete = 2 * sizeof(int) + paquete->tamanio;
 	//serializamos
