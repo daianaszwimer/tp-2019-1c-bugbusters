@@ -570,19 +570,18 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 
 		puts("ANTES DE IR A BUSCAR A CACHE");
 		int resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
-		switch(consistenciaMemoria){
-			case EC:
+		if(consistenciaMemoria == EC || caller == CONSOLE){
 				insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
-				break;
-			case SC:
-			case SHC:
+		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
 				//valorDeLFS = intercambiarConFileSystem(SELECT,consultaALFS);
 				if((consistenciaMemoria== SC && validarInsertSC(valorDeLF->palabraReservada)== EXIT_SUCCESS)){
 					insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
 				}else{
 					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLF->palabraReservada,request,valorDeLF,caller, (int) list_get(descriptoresClientes,i));
 				}
-				break;
+		}else{
+			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
+
 		}
 }
 
