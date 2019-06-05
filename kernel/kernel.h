@@ -27,6 +27,8 @@ typedef struct
 	void* request;
 } request_procesada;
 
+consistencia consistenciaMemoria = SC;
+
 t_log* logger_KERNEL;
 int conexionMemoria;
 int quantum;
@@ -64,7 +66,7 @@ void reservarRecursos(char*);
 int validarRequest(char *);
 int manejarRequest(request_procesada*);
 //funciones que procesan requests:
-int enviarMensajeAMemoria(cod_request, char*);
+int enviarMensajeAMemoria(cod_request,consistencia, char*);
 void procesarRun(t_queue*);
 void procesarAdd(char*);
 void procesarRequest(request_procesada*);

@@ -283,7 +283,7 @@ int manejarRequest(request_procesada* request) {
 		case DESCRIBE:
 		case DROP:
 		case JOURNAL:
-			respuesta = enviarMensajeAMemoria(request->codigo, (char*) request->request);
+			respuesta = enviarMensajeAMemoria(request->codigo,consistenciaMemoria, (char*) request->request);
 			break;
 		case ADD:
 			procesarAdd((char*) request->request);
@@ -366,7 +366,7 @@ void liberarColaRequest(request_procesada* requestCola) {
  * Descripcion: recibe una request, se la manda a memoria y recibe la respuesta.
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
-int enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
+int enviarMensajeAMemoria(cod_request codRequest,consistencia consistenciaMemoria, char* mensaje) {
 	t_paquete* paqueteRecibido;
 	int respuesta;
 	//en enviar habria que enviar puerto para que memoria sepa a cual se le delega el request segun la consistency
