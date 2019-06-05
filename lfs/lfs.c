@@ -4,9 +4,11 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <sys/mman.h>
+
 
 int main(void) {
-	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
+	configLFS = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 
@@ -33,7 +35,8 @@ int main(void) {
 
 	free(pathRaiz);
 	log_destroy(logger_LFS);
-	config_destroy(config);
+	config_destroy(configMetadata);
+	config_destroy(configLFS);
 	return EXIT_SUCCESS;
 }
 
@@ -63,8 +66,8 @@ void* leerDeConsola(void* arg) {
 }
 
 void* recibirMemorias(void* arg) {
-	char* puerto = config_get_string_value(config, "PUERTO");
-	char* ip = config_get_string_value(config, "IP");
+	char* puerto = config_get_string_value(configLFS, "PUERTO");
+	char* ip = config_get_string_value(configLFS, "IP");
 	int lissandraFS_fd = iniciar_servidor(puerto, ip);
 	log_info(logger_LFS, "Lissandra lista para recibir Memorias");
 	free(puerto);
@@ -221,7 +224,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 				config_set_value(metadataConfig, "COMPACTION_TIME", tiempoDeCompactacion);
 				config_save(metadataConfig);
 				config_destroy(metadataConfig);
-				error = crearParticiones(pathTabla, numeroDeParticiones);
+				error = crearParticiones(pathTabla, strtol(numeroDeParticiones, NULL, 10));
 			}
 
 
@@ -242,26 +245,29 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
  * -> numeroDeParticiones :: char*
  * Descripcion: crea las particiones de una tabla
  * Return: codigo de error o success */
-errorNo crearParticiones(char* pathTabla, char* numeroDeParticiones){
+errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 	/* Creamos las particiones */
 	errorNo errorNo = SUCCESS;
 
-	int _numeroDeParticiones = strtol(numeroDeParticiones, NULL, 10);
-	for (int i = 0; i < _numeroDeParticiones; i++) {
+	for (int i = 0; i < numeroDeParticiones && errorNo == SUCCESS; i++) {
 		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, i);
 
 		int particionFileDescriptor = open(pathParticion, O_CREAT, S_IRWXU);
 		if (particionFileDescriptor == -1) {
 			errorNo = ERROR_CREANDO_PARTICIONES;
 		} else {
-			char* bloqueDisponible = string_itoa(obtenerBloqueDisponible());
-			t_config *configParticion = config_create(pathParticion);
-			config_set_value(configParticion, "SIZE", "0");
-			config_set_value(configParticion, "BLOCKS", bloqueDisponible);
-			config_save(configParticion);
-
-			free(bloqueDisponible);
-			config_destroy(configParticion);
+			int bloqueDeParticion = obtenerBloqueDisponible(&errorNo); //si hay un error se setea en errorNo
+			if(bloqueDeParticion == -1){
+				log_info(logger_LFS, "no hay bloques disponibles");
+			}else{
+				char* bloquesParticion = string_from_format("[%d]", bloqueDeParticion);
+				t_config *configParticion = config_create(pathParticion);
+				config_set_value(configParticion, "SIZE", "0");
+				config_set_value(configParticion, "BLOCKS", bloquesParticion);
+				config_save(configParticion);
+				free(bloquesParticion);
+				config_destroy(configParticion);
+			}
 		}
 		close(particionFileDescriptor);
 		free(pathParticion);
@@ -269,9 +275,32 @@ errorNo crearParticiones(char* pathTabla, char* numeroDeParticiones){
 	return errorNo;
 }
 
-int obtenerBloqueDisponible() {
-	//TODO retornar un bloque posta
-	return 1;
+int obtenerBloqueDisponible(errorNo* errorNo) {
+	//TODO sacar el hardcode de abajo xD
+	char* fileBitmap = string_from_format("%s/FS_LISSANDRA/Metadata/Bitmap.bin", PATH);
+	int index = 0;
+	int fdBitmap = open(fileBitmap, O_CREAT | O_RDWR, S_IRWXU);
+	if(fdBitmap == -1){
+		*errorNo = ERROR_CREANDO_ARCHIVO;
+		index = -1;
+	}else{
+		//TODO CAMBIAR SIZE en mmap y bitarray_create (segundo parametro de mmap y de bit array). se cambia teniendo las configo globales
+		char* bitmap = mmap(NULL, 2, PROT_READ | PROT_WRITE, MAP_SHARED, fdBitmap, 0);
+		t_bitarray* bitarray = bitarray_create_with_mode(bitmap, 2, LSB_FIRST);
+
+		//TODO CAMBIAR TODOS LOS CONFIG A GLOBALES
+		while(index < config_get_int_value(configMetadata, "BLOCKS") && bitarray_test_bit(bitarray, index)) index++;
+		if(index >= config_get_int_value(configMetadata, "BLOCKS")) {
+			index = -1;
+		}else{
+			bitarray_set_bit(bitarray, index);
+		}
+
+		bitarray_destroy(bitarray);
+	}
+	free(fileBitmap);
+	close(fdBitmap);
+	return index;
 }
 
 /* inicializarLfs() [API]
@@ -280,7 +309,7 @@ int obtenerBloqueDisponible() {
  * Return: */
 void inicializarLfs() {
 	//TODO catchear todos los errores
-	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
+	char* puntoDeMontaje = config_get_string_value(configLFS, "PUNTO_MONTAJE");
 	pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);	
 
 	memtable = (t_memtable*) malloc(sizeof(t_memtable));
@@ -296,6 +325,7 @@ void inicializarLfs() {
 	char* pathMetadata = string_from_format("%sMetadata", pathRaiz);
 	char* pathBloques = string_from_format("%sBloques", pathRaiz);
 
+
 	mkdir(pathTablas, S_IRWXU);
 
 	mkdir(pathMetadata, S_IRWXU);
@@ -304,9 +334,9 @@ void inicializarLfs() {
 	int metadataDescriptor = open(fileMetadata, O_CREAT, S_IRWXU);
 	close(metadataDescriptor);
 
-	t_config *configMetadata = config_create(fileMetadata);
+	configMetadata = config_create(fileMetadata);
 	config_set_value(configMetadata, "BLOCK_SIZE", "64");
-	config_set_value(configMetadata, "BLOCKS", "10");
+	config_set_value(configMetadata, "BLOCKS", "16");
 	config_set_value(configMetadata, "MAGIC_NUMBER", "LISSANDRA");
 	config_save(configMetadata);
 
@@ -321,12 +351,27 @@ void inicializarLfs() {
 		free(fileBloque);
 	}
 
-	config_destroy(configMetadata);
+
+	char* fileBitmap = string_from_format("%s/Bitmap.bin", pathMetadata);
+
+	int bitmapDescriptor = open(fileBitmap, O_CREAT | O_RDWR | O_TRUNC , S_IRWXU);
+	if(ftruncate(bitmapDescriptor, blocks/8)){
+		//todo error al truncar archivo
+	}
+	if(bitmapDescriptor == -1){
+		log_error(logger_LFS, "Error al crear bitmap");
+	}else{
+		char* bitmap = mmap(NULL, blocks/8, PROT_READ | PROT_WRITE, MAP_SHARED, bitmapDescriptor ,0);
+		t_bitarray* bitarray = bitarray_create_with_mode(bitmap, blocks/8, LSB_FIRST);
+		bitarray_destroy(bitarray);
+	}
+	close(bitmapDescriptor);
 
 	free(fileMetadata);
 	free(pathTablas);
 	free(pathMetadata);
 	free(pathBloques);
+	free(fileBitmap);
 }
 
 /* procesarInsert() [API]
@@ -402,3 +447,4 @@ errorNo procesarSelect(char* nombreTabla, char* key){
 	}
 	return error;
 }
+
