@@ -309,33 +309,28 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 
 	int resultadoCache;
 
-	switch(consistenciaMemoria){
-		case SC:
-		case SHC:
+	if(consistenciaMemoria == EC || caller == CONSOLE){		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
+		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
+		if(resultadoCache == EXIT_SUCCESS ) {
+			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
+			//free(elementoEncontrado);
+			//free(parametros);
+		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-			//TODO CUANDO LFS PUEDA HACER INSERT CORERCTAMENTE, HAY QUE DESCOMNTARLO
 			//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
-			resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 			guardarRespuestaDeLFSaCACHE(valorDeLF, resultadoCache);
-			break;
-		case EC:		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-			resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
-			if(resultadoCache == EXIT_SUCCESS ) {
-				log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
-				//free(elementoEncontrado);
-				//free(parametros);
-			} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-				log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-				//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-				enviarAlDestinatarioCorrecto(palabraReservada, valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
-				guardarRespuestaDeLFSaCACHE(valorDeLF, resultadoCache);
-			}
-			break;
-		default:
+		}
+	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
+		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
+		//TODO CUANDO LFS PUEDA HACER INSERT CORERCTAMENTE, HAY QUE DESCOMNTARLO
+		//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
+		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
+		guardarRespuestaDeLFSaCACHE(valorDeLF, resultadoCache);
+	}else{
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
-			break;
 	}
 
 

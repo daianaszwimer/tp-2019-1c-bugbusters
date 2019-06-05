@@ -75,7 +75,7 @@ t_paquete* valorDeLF;
 
 //-------------VARIABLES GLOBALES-------------------------
 
-consistencia consistenciaMemoria = EC;
+consistencia consistenciaMemoria = SC;
 
 t_log* logger_MEMORIA;
 t_config* config;
