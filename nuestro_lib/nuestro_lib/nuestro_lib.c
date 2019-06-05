@@ -57,6 +57,7 @@ void iterator(char* value) {
 	printf("%s\n", value);
 }
 
+//TODO: Comparar con separarString de memoria
 /* separarRequest()
  * Parametros
  * -> text :: char*
@@ -78,10 +79,16 @@ char** separarRequest(char* text) {
 		if(token == NULL) {
 			break;
 		}
-		if(*token == '"'){
-			token++;
-			token = string_from_format(token, " ", strtok_r(str, "\"", &next));
-			freeToken = 1;
+		if(*token == '"'){ //Si la palabra arranca con comillas, hay que agarrar todas las palabras hasta las siguientes comillas
+			token++; //Esto borra las primeras comillas del token
+			char* restOfToken = strtok_r(str, "\"", &next);
+			if(restOfToken != NULL){ //En el caso de que solo haya una palabra entre comillas, la siguiente vez lo que obtiene la funcion strtok es NULL, asi que solo concatenamos si es distinto de NULL
+				token = string_from_format("%s %s", token, restOfToken);
+				freeToken = 1; // Dado que string_from_format hace un malloc adentro, despues vamos a tener que liberar el token.
+			}
+			if(token[strlen(token)-1] == '"'){ //por ultimo si el ultimo caracter son comillas, lo removemos
+				token[strlen(token)-1] = 0;
+			}
 		}
 
 		str = NULL;
@@ -101,6 +108,7 @@ char** separarRequest(char* text) {
 	free(text_to_iterate);
 	return substrings;
 }
+
 
 /*obtenerHoraActual()
  * Parametros:
@@ -142,6 +150,7 @@ int longitudDeArrayDeStrings(char** array){
 		longitud++;
 	}
 	return longitud;
+
 }
 
 /* concatenar()
@@ -272,35 +281,43 @@ void liberarArrayDeChar(char** arrayDeChar) {
  * 	-> exit :: int */
 int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 	char** requestDividida = string_n_split(mensaje, 2, " ");
+	int resultadoValidacionParametros;
 
 	int codPalabraReservada = obtenerCodigoPalabraReservada(requestDividida[0], componente);
 	if(validarPalabraReservada(codPalabraReservada, componente, logger) == EXIT_SUCCESS){
-		if(requestDividida[1]==NULL){
-			if(cantDeParametrosEsCorrecta(0,codPalabraReservada) == EXIT_SUCCESS){
-				liberarArrayDeChar(requestDividida);
-				return EXIT_SUCCESS;
+		if(codPalabraReservada != SALIDA && codPalabraReservada != NUESTRO_ERROR){
+			if(requestDividida[1]==NULL){
+				if(cantDeParametrosEsCorrecta(0,codPalabraReservada) == EXIT_SUCCESS){
+					liberarArrayDeChar(requestDividida);
+					return EXIT_SUCCESS;
+				}else{
+					liberarArrayDeChar(requestDividida);
+					log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
+					return NUESTRO_ERROR;
+					/*if(codPalabraReservada == NUESTRO_ERROR){
+						return NUESTRO_ERROR;
+					}else if(codPalabraReservada == SALIDA){
+						return SALIDA;
+					}*/
+				}
 			}else{
+				char** parametros = separarRequest(requestDividida[1]);
+				int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
 				liberarArrayDeChar(requestDividida);
-				log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
-				return NUESTRO_ERROR;
+				liberarArrayDeChar(parametros);
+				if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == EXIT_SUCCESS) {
+					return EXIT_SUCCESS;
+				}
+				else {
+					return NUESTRO_ERROR;
+				}
 			}
 		}
 
-		char** parametros = separarRequest(requestDividida[1]);
-		int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-		liberarArrayDeChar(requestDividida);
-		liberarArrayDeChar(parametros);
-		//free(request);
-		//free(parametros);
-		if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == EXIT_SUCCESS) {
-			return EXIT_SUCCESS;
-		}
-		else {
-			return NUESTRO_ERROR;
-		}
-	}
-	else {
-		return NUESTRO_ERROR;
+		return codPalabraReservada;
+
+	}else{
+		return codPalabraReservada;
 	}
 }
 
@@ -315,12 +332,13 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
  * 	-> exit :: int */
 int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t_log* logger){
 	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
-	if(resultadoCantParametros == EXIT_FAILURE){
-		log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
-		return NUESTRO_ERROR;
-	}else{
+	if(resultadoCantParametros == EXIT_SUCCESS){
 		return EXIT_SUCCESS;
+	}else if(resultadoCantParametros == SALIDA){
+		return SALIDA;
 	}
+	log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
+	return NUESTRO_ERROR;
 }
 
 
@@ -336,7 +354,7 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 	int retorno;
 	switch(codPalabraReservada) {
 			case SELECT:
-				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case INSERT:
 				if(cantidadDeParametros == PARAMETROS_INSERT || cantidadDeParametros == PARAMETROS_INSERT_TIMESTAMP) {
@@ -344,28 +362,31 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				} else {
 					retorno = EXIT_FAILURE;
 				}
-				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case CREATE:
-				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case DESCRIBE:
-				retorno = (cantidadDeParametros == PARAMETROS_DESCRIBE) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_DESCRIBE) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case DROP:
-				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case JOURNAL:
-				retorno = (cantidadDeParametros == PARAMETROS_JOURNAL) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_JOURNAL) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case ADD:
-				retorno = (cantidadDeParametros == PARAMETROS_ADD) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_ADD) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case RUN:
-				retorno = (cantidadDeParametros == PARAMETROS_RUN) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_RUN) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case METRICS:
-				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : EXIT_FAILURE;
+				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				break;
+			case SALIDA:
+				retorno = SALIDA;
 				break;
 			default:
 				retorno = NUESTRO_ERROR;
@@ -384,11 +405,13 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
  * Return: success or failure
  * 	-> exit :: int */
 int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
-	if(codigoPalabraReservada == -1) {
-		log_info(logger, "Debe ingresar un request válido");
-		return NUESTRO_ERROR;
+	if(codigoPalabraReservada != -1) {
+		return EXIT_SUCCESS;
+	}else if(codigoPalabraReservada == 404){
+		return SALIDA;
 	}
-	return EXIT_SUCCESS;
+	log_info(logger, "Debe ingresar un request válido");
+	return NUESTRO_ERROR;
 }
 
 
@@ -429,6 +452,9 @@ int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente)
 	}
 	else if (!strcmp(palabraReservada, "METRICS")) {
 		codPalabraReservada = (componente == KERNEL) ? 8 : -1;
+	}
+	else if (!strcmp(palabraReservada, "SALIDA")) {
+		codPalabraReservada = 404;
 	}
 	else {
 		codPalabraReservada = NUESTRO_ERROR;
@@ -502,11 +528,12 @@ int crearConexion(char* ip, char* puerto)
  * 				y finalmente se libera el paquete que se envio.
  * Return:
  * 	-> :: void  */
-void enviar(cod_request palabraReservada, char* mensaje, int socket_cliente)
+void enviar(int cod, char* mensaje, int socket_cliente)
 {
 	//armamos el paquete
 	t_paquete* paquete = (t_paquete*) malloc(sizeof(t_paquete));
-	paquete->palabraReservada = palabraReservada;
+	paquete->palabraReservada = cod;
+
 	paquete->tamanio = strlen(mensaje)+1;
 	paquete->request = (char*) malloc(paquete->tamanio);
 	memcpy(paquete->request, mensaje, paquete->tamanio);
@@ -604,3 +631,21 @@ int maximo(t_list* descriptores, int descriptorServidor, int numeroDeClientes) {
 	}
 	return max;
 }
+
+/* validarValue()
+ * Parametros:
+ * 	-> char :: valor
+ * 	-> int :: tamanio Maximo
+ * Descripcion: devuelve el value sin "" (solo si el tamanio es valido)
+ * Return:
+ * 	->  char* :: valor  */
+char* validarValor(char* value, int tamMaximo) {
+	char* valorADevolver;
+	if(sizeof(string_length(value))<=tamMaximo){
+		valorADevolver =string_substring(value,value[1], tamMaximo-1);
+		return valorADevolver;
+	}
+	return EXIT_FAILURE;
+}
+
+

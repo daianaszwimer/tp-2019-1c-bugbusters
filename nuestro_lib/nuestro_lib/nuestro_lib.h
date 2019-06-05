@@ -51,7 +51,8 @@ typedef enum
 	TABLA_NO_EXISTE,
 	ERROR_CREANDO_DIRECTORIO,
 	ERROR_CREANDO_METADATA,
-	ERROR_CREANDO_PARTICIONES
+	ERROR_CREANDO_PARTICIONES,
+	KEY_NO_EXISTE
 } errorNo;
 
 typedef enum
@@ -65,14 +66,15 @@ typedef enum
 	ADD,
 	RUN,
 	METRICS,
-	NUESTRO_ERROR = -1
+	NUESTRO_ERROR = -1,
+	SALIDA = 404
 } cod_request;
 
 typedef struct
 {
-	cod_request palabraReservada;
+	int palabraReservada;
 	int tamanio;
-	void* request;
+	char* request;
 } t_paquete;
 
 typedef enum
@@ -101,23 +103,27 @@ int longitudDeArrayDeStrings(char**);
 int crearConexion(char*, char*);
 t_config* leer_config(char*);
 
-t_paquete* armar_paquete(cod_request, char*);
+t_paquete* armar_paquete(int, char*);
 
 int validarMensaje(char*, Componente, t_log*);
 int cantDeParametrosEsCorrecta(int,int);
 int validarPalabraReservada(int,Componente, t_log*);
 int validadCantDeParametros(int, int, t_log*);
-
 int obtenerCodigoPalabraReservada(char*, Componente);
+
+char* validarValor(char*, int);
+
+////servidor
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
+
 ////cliente
 
 void* serializar_paquete(t_paquete* , int);
-void enviar(cod_request, char*, int);
+void enviar(int, char*, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 void liberarArrayDeChar(char**);
