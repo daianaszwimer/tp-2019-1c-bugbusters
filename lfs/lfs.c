@@ -14,12 +14,11 @@ int main(void) {
 
 	inicializarLfs();
 
-	if(!pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL)){
+	if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
 		log_info(logger_LFS, "Hilo de consola creado");
 	}else{
 		log_error(logger_LFS, "Error al crear hilo de consola");
 	}
-
 
 	if(!pthread_create(&hiloRecibirMemorias, NULL, recibirMemorias, NULL)){
 		log_info(logger_LFS, "Hilo de recibir memorias creado");
@@ -27,6 +26,12 @@ int main(void) {
 		log_error(logger_LFS, "Error al crear hilo recibir memorias");
 	}
 
+	if(!pthread_create(&hiloDumpeo, NULL, hiloDump, NULL)){
+		log_info(logger_LFS, "Hilo de Dump iniciado");
+		pthread_detach(hiloDumpeo);
+	}else{
+		log_error(logger_LFS, "Error al crear hilo Dumpeo");
+	}
 
 	pthread_join(hiloLeerDeConsola, NULL);
 	log_info(logger_LFS, "Hilo de consola finalizado");
@@ -154,16 +159,8 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 			mensajeDeError = string_from_format("La tabla %s ya existe", requestSeparada[1]);
 			log_error(logger_LFS, mensajeDeError);
 			break;
-		case ERROR_CREANDO_DIRECTORIO:
-			mensajeDeError = string_from_format("Error al crear el directorio de la tabla %s", requestSeparada[1]);
-			log_error(logger_LFS, mensajeDeError);
-			break;
-		case ERROR_CREANDO_METADATA:
-			mensajeDeError = string_from_format("Error al crear el metadata de la tabla %s", requestSeparada[1]);
-			log_error(logger_LFS, mensajeDeError);
-			break;
-		case ERROR_CREANDO_PARTICIONES:
-			mensajeDeError = string_from_format("Error al crear las particiones de la tabla %s", requestSeparada[1]);
+		case ERROR_CREANDO_ARCHIVO:
+			mensajeDeError = string_from_format("Error al crear un archivo de la tabla %s", requestSeparada[1]);
 			log_error(logger_LFS, mensajeDeError);
 			break;
 		case TABLA_NO_EXISTE:
@@ -211,12 +208,12 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			error = ERROR_CREANDO_DIRECTORIO;
 		} else {
 
-			char* metadataPath = string_from_format("%s/Metatada.bin", pathTabla);
+			char* metadataPath = string_from_format("%s/Metadata.bin", pathTabla);
 
 			/* Creamos el archivo Metadata */
-			int metadataFileDescriptor = open(metadataPath, O_CREAT, S_IRWXU);
-			if (metadataFileDescriptor == -1) {
-				error = ERROR_CREANDO_METADATA;
+			FILE* metadataFile = fopen(metadataPath, "w");
+			if (metadataFile == NULL) {
+				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				t_config *metadataConfig = config_create(metadataPath);
 				config_set_value(metadataConfig, "CONSISTENCY",	tipoDeConsistencia);
@@ -229,9 +226,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 
 
 			free(metadataPath);
-
-			close(metadataFileDescriptor);
-		//hiloRequest = malloc(sizeof(pthread_t));
+			fclose(metadataFile);
 		}
 	}
 	free(dir);
@@ -252,9 +247,9 @@ errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 	for (int i = 0; i < numeroDeParticiones && errorNo == SUCCESS; i++) {
 		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, i);
 
-		int particionFileDescriptor = open(pathParticion, O_CREAT, S_IRWXU);
-		if (particionFileDescriptor == -1) {
-			errorNo = ERROR_CREANDO_PARTICIONES;
+		FILE* particionFile = fopen(pathParticion, "w");
+		if (particionFile == NULL) {
+			errorNo = ERROR_CREANDO_ARCHIVO;
 		} else {
 			int bloqueDeParticion = obtenerBloqueDisponible(&errorNo); //si hay un error se setea en errorNo
 			if(bloqueDeParticion == -1){
@@ -269,7 +264,7 @@ errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 				config_destroy(configParticion);
 			}
 		}
-		close(particionFileDescriptor);
+		fclose(particionFile);
 		free(pathParticion);
 	}
 	return errorNo;
@@ -313,10 +308,7 @@ void inicializarLfs() {
 	pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);	
 
 	memtable = (t_memtable*) malloc(sizeof(t_memtable));
-	//tabla = (t_tabla*) malloc(sizeof(t_tabla));
-	memtable->tabla = list_create();
-	//tabla->registro = list_create();
-
+	memtable->tablas = list_create();
 
 	//if error
 	mkdir(pathRaiz, S_IRWXU);
@@ -331,8 +323,8 @@ void inicializarLfs() {
 	mkdir(pathMetadata, S_IRWXU);
 	char* fileMetadata = string_from_format("%s/Metadata.bin", pathMetadata);
 
-	int metadataDescriptor = open(fileMetadata, O_CREAT, S_IRWXU);
-	close(metadataDescriptor);
+	FILE* metadata = fopen(fileMetadata, "w");
+	fclose(metadata);
 
 	configMetadata = config_create(fileMetadata);
 	config_set_value(configMetadata, "BLOCK_SIZE", "64");
@@ -346,8 +338,8 @@ void inicializarLfs() {
 	char* fileBloque;
 	for (int i = 1; i <= blocks; i++) {
 		fileBloque = string_from_format("%s/%d.bin", pathBloques, i);
-		int bloqueFileDescriptor = open(fileBloque, O_CREAT, S_IRWXU);
-		close(bloqueFileDescriptor);
+		FILE* bloqueFile = fopen(fileBloque, "w");
+		fclose(bloqueFile);
 		free(fileBloque);
 	}
 
@@ -374,7 +366,7 @@ void inicializarLfs() {
 	free(fileBitmap);
 }
 
-/* procesarInsert() [API]
+/* procesarInsert() [API] [VALGRINDEADO]
  * Parametros:
  * 	-> nombreTabla :: char*
  * 	-> key :: uint16_t
@@ -382,12 +374,11 @@ void inicializarLfs() {
  * 	-> timestamp :: unsigned long long
  * Descripcion: permite la creacion y/o actualizacion del valor de una key dentro de una tabla
  * Return:  */
-
 errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned long long timestamp) {
 	int encontrarTabla(t_tabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
-	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
+	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
 
 
@@ -395,22 +386,18 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	DIR *dir = opendir(pathTabla);
 	if (dir) {
 		t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
-
 		registro->key = key;
 		registro->value = strdup(value);
 		registro->timestamp = timestamp;
-		if (list_find(memtable->tabla, (void*) encontrarTabla) == NULL) {
+		t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
+		if (tabla == NULL) {
 			log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
-			//puts("No existe");
-			t_tabla* tabla = (t_tabla*) malloc(sizeof(t_tabla));
+			tabla = (t_tabla*) malloc(sizeof(t_tabla));
 			tabla->nombreTabla = strdup(nombreTabla);
-			tabla->registro = list_create();
-			list_add(tabla->registro, registro);
-			list_add(memtable->tabla, tabla);
-		} else {
-			//puts("Existe la tabla campeon");
-			log_info(logger_LFS, "Se agrego el registro");
+			tabla->registros = list_create();
+			list_add(memtable->tablas, tabla);
 		}
+		list_add(tabla->registros, registro);
 	} else {
 		error = TABLA_NO_EXISTE;
 	}
@@ -433,9 +420,9 @@ errorNo procesarSelect(char* nombreTabla, char* key){
 	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
 
-	t_tabla* table = list_find(memtable->tabla, (void*) encontrarTabla);
+	t_tabla* table = list_find(memtable->tablas, (void*) encontrarTabla);
 	if(table !=NULL){
-		t_registro* registro = list_find(table->registro, (void*) encontrarRegistro);
+		t_registro* registro = list_find(table->registros, (void*) encontrarRegistro);
 		if(registro != NULL){
 			log_info(logger_LFS, "el valor encontrado es el de abajo vieja");
 			log_info(logger_LFS, registro->value);
@@ -448,3 +435,133 @@ errorNo procesarSelect(char* nombreTabla, char* key){
 	return error;
 }
 
+/* hiloDump()
+ * Parametros: void
+ * Descripcion: ejecuta la funcion dumpear() cada cierta cantidad de tiempo (tiempoDump) definido en el config
+ * Return: void* */
+void* hiloDump() {
+	int tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
+	while(1) {
+		sleep(tiempoDump/1000);
+		log_info(logger_LFS, "Dump iniciado");
+		errorNo resultado = dumpear();
+		switch(resultado) {
+			case ERROR_CREANDO_ARCHIVO:
+				log_info(logger_LFS, "Error creando archivo temporal");
+				break;
+			case SUCCESS:
+				log_info(logger_LFS, "Dump exitoso");
+				break;
+			default: break;
+		}
+	}
+}
+
+/* dumpear() [VALGRINDEADO]
+ * Parametros: void
+ * Descripcion: baja los datos de la memtable a disco
+ * Return: codigo de error definido en el enum errorNo */
+errorNo dumpear() {
+	t_tabla* tabla;
+	errorNo error;
+	char* pathTmp;
+	FILE* fileTmp;
+
+	// Refactor list_iterate
+	for(int i = 0; list_get(memtable->tablas,i) != NULL; i++) { // Recorro las tablas de la memtable
+		tabla = list_get(memtable->tablas,i);
+		char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, tabla->nombreTabla);
+		DIR *dir = opendir(pathTabla);
+		if(dir) { // Verificamos que exista la tabla (por si hubo un DROP en el medio)
+			int numeroTemporal = 0;
+			do { // Nos fijamos que numero de temporal crear
+				pathTmp = string_from_format("%s/%d.tmp", pathTabla, numeroTemporal);
+				fileTmp = fopen(pathTmp, "r");
+				numeroTemporal++;
+				if(fileTmp != NULL) {
+					free(pathTmp);
+					fclose(fileTmp);
+				}
+			} while(fileTmp != NULL);
+			free(pathTabla);
+			fileTmp = fopen(pathTmp, "w+");
+			free(pathTmp);
+			if (fileTmp == NULL) {
+				error = ERROR_CREANDO_ARCHIVO;
+			} else {
+				// Guardo lo de la tabla en el archivo temporal
+				char* datosADumpear = strdup("");
+				for(int j = 0; list_get(tabla->registros,j) != NULL; j++) {
+					t_registro* registro = list_get(tabla->registros,j);
+					string_append_with_format(&datosADumpear, "%u;%s;%llu\n", registro->key, registro->value, registro->timestamp);
+				}
+				fprintf(fileTmp, "%s", datosADumpear);
+				free(datosADumpear);
+				fclose(fileTmp);
+				// Vacio la memtable
+				list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
+				error = SUCCESS;
+			}
+		}
+		closedir(dir);
+	}
+	return error;
+}
+
+/* vaciarTabla()
+  * Parametros:
+ * 	-> tabla :: t_tabla*
+ * Descripcion: vacia una tabla y todos sus registros
+ * Return: void */
+void vaciarTabla(t_tabla *tabla) {
+	void eliminarRegistros(t_registro* registro) {
+	    free(registro->value);
+	    free(registro);
+	}
+    free(tabla->nombreTabla);
+    list_clean_and_destroy_elements(tabla->registros, (void*) eliminarRegistros);
+    free(tabla->registros);
+    free(tabla);
+}
+
+void compactacion(char* pathTabla) {
+	int numeroTemporal = 0;
+	int tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
+	FILE* fileTmp;
+	do {
+		char* pathTmp = string_from_format("%s/%d.tmp", pathTabla, numeroTemporal);
+		fileTmp = fopen(pathTmp, "r");
+		if(fileTmp != NULL) { // Crear tmpc de los tmp
+			t_list* listaDeDatosDelTmp = list_create();
+			char* pathTmpC = string_from_format("%s/%d.tmpc", pathTabla, numeroTemporal);
+			FILE* fileTmpC = fopen(pathTmpC, "w");
+			char* datosDelArchivoTemporal = malloc((int) (sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long)));
+			while(fscanf(fileTmp, "%s", datosDelArchivoTemporal) == 1) {
+				fprintf(fileTmpC, "%s", datosDelArchivoTemporal);
+				char** dato = string_split(datosDelArchivoTemporal, ";");
+				t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
+				registro->key = convertirKey(dato[0]);
+				registro->value = strdup(dato[1]);
+				convertirTimestamp(dato[2], &registro->timestamp);
+				list_add(listaDeDatosDelTmp, registro);
+				fputc('\n', fileTmpC);
+			}
+			fclose(fileTmpC);
+			fclose(fileTmp);
+			free(pathTmpC);
+			free(datosDelArchivoTemporal);
+		}
+		numeroTemporal++;
+		free(pathTmp);
+	} while(fileTmp != NULL);
+
+	// TODO: Separar la lista de datos del tmp en particiones
+	// TODO: Comparar con los .bin (leer primero el bin y guardarlo en una lista para comparar listas es mas rapido?
+	// TODO: Quedarse con los timestamps mas recientes
+	// TODO: Bloquear la tabla: (chmod o mutex?)
+	// TODO: Liberar bloques
+	// TODO: Pedir mas bloques
+	// TODO: Generar nuevo .bin
+	// TODO: Desbloquear la tabla y dejar un registro de cuanto tardo la compactacion
+
+}

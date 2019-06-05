@@ -30,19 +30,18 @@ typedef struct{
 typedef struct
 {
 	char* nombreTabla;
-	t_list* registro;
+	t_list* registros;
 } t_tabla;
 
 typedef struct
 {
-	t_list* tabla;
+	t_list* tablas;
 } t_memtable;
 
 t_memtable* memtable;
 pthread_t hiloLeerDeConsola;
 pthread_t hiloRecibirMemorias;
-
-
+pthread_t hiloDumpeo;
 
 
 char* mensaje;
@@ -61,5 +60,9 @@ int mkdir_p(const char*);
 void inicializarLfs(void);
 void liberarString(char*);
 errorNo crearParticiones(char*, int);
+void* hiloDump();
+errorNo dumpear();
+void vaciarTabla(t_tabla*);
+void compactacion(char*);
 
 #endif /* LFS_H_ */
