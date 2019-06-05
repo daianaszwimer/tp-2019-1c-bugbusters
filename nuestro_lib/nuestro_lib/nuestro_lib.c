@@ -636,16 +636,18 @@ int maximo(t_list* descriptores, int descriptorServidor, int numeroDeClientes) {
  * Parametros:
  * 	-> char :: valor
  * 	-> int :: tamanio Maximo
- * Descripcion: devuelve el value sin "" (solo si el tamanio es valido)
+ * Descripcion: devuelve si el value corresponde con el tamanio maximo
  * Return:
  * 	->  char* :: valor  */
-char* validarValor(char* value, int tamMaximo) {
-	char* valorADevolver;
-	if(sizeof(string_length(value))<=tamMaximo){
-		valorADevolver =string_substring(value,value[1], tamMaximo-1);
-		return valorADevolver;
+int validarValue(char* request,char* value, int tamMaximo,t_log* logger) {
+	if((sizeof(value))<=tamMaximo){
+		return EXIT_SUCCESS;
 	}
-	return EXIT_FAILURE;
+	char* mensajeError= strdup("");
+	string_append_with_format(&mensajeError,"%s%s%s%i","No es posible realizar la request: ",request," dado a que el value ingresado supera el tamanio maximo ",tamMaximo);
+	log_info(logger,mensajeError);
+	free(mensajeError);
+	return NUESTRO_ERROR;
 }
 
 

@@ -97,12 +97,18 @@ void leerDeConsola(void){
  * 	-> resultadoVlidacion :: int
  * VALGRIND:: NO */
 int validarRequest(char* mensaje){
+	int tamanioMax = 10; //TODO lo pasa LFS X HANDSHAKE
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
+	char** requestSeparada= separarRequest(mensaje);
 	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
 	cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
 	switch(codValidacion){
 		case EXIT_SUCCESS:
+			if(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],tamanioMax,logger_MEMORIA) == NUESTRO_ERROR){
+				return NUESTRO_ERROR;
+				break;
+			}
 			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
 			return EXIT_SUCCESS;
 			break;
