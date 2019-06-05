@@ -102,7 +102,7 @@ int validarRequest(char* mensaje){
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
 	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
-	cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
+	int palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
 	switch(codValidacion){
 		case EXIT_SUCCESS:
 			if(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],tamanioMax,logger_MEMORIA) == NUESTRO_ERROR){
@@ -214,18 +214,27 @@ void escucharMultiplesClientes() {
  * Return:
  * 	-> :: void
  * VALGRIND:: SI */
-void interpretarRequest(cod_request palabraReservada,char* request,t_caller caller, int i) {
+void interpretarRequest(int palabraReservada,char* request,t_caller caller, int i) {
 
-log_info(logger_MEMORIA,"entre a interpretarr request");
+	consistencia consistenciaMemoria;
+	if(caller== ANOTHER_COMPONENT){
+		consistenciaMemoria = palabraReservada;
+	}else{
+		consistenciaMemoria = EC;
+	}
+	char** requestSeparada = string_n_split(request, 2, " ");
+	int codRequest = obtenerCodigoPalabraReservada(requestSeparada[0],MEMORIA);
+
+	log_info(logger_MEMORIA,"entre a interpretarr request");
 	switch(palabraReservada) {
 
 		case SELECT:
 			log_info(logger_MEMORIA, "Me llego un SELECT");
-			procesarSelect(palabraReservada, request, caller, i);
+			procesarSelect(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
-			procesarInsert(palabraReservada, request, caller, i);
+			procesarInsert(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
@@ -294,7 +303,8 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
  * Return:
  * 	-> :: void
  * VALGRIND:: NO */
-void procesarSelect(cod_request palabraReservada, char* request, t_caller caller, int i) {
+void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int i) {
+
 
 //---------------CASOS DE PRUEBA------------------------------
 
@@ -555,7 +565,7 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
  * Return:
  * 	-> :: void
  * 	VALGRIND :: NO*/
-void procesarInsert(cod_request palabraReservada, char* request, t_caller caller, int i) {
+void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int i) {
 		t_elemTablaDePaginas* elementoEncontrado= malloc(sizeof(t_elemTablaDePaginas));
 		t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
 

@@ -75,7 +75,7 @@ t_paquete* valorDeLF;
 
 //-------------VARIABLES GLOBALES-------------------------
 
-consistencia consistenciaMemoria = SC;
+
 
 t_log* logger_MEMORIA;
 t_config* config;
@@ -106,18 +106,18 @@ void leerDeConsola(void);
 int validarRequest(char*);
 
 void escucharMultiplesClientes(void);
-void interpretarRequest(cod_request, char*,t_caller, int);
+void interpretarRequest(int, char*,t_caller, int);
 t_paquete* intercambiarConFileSystem(cod_request, char*);
 
 void conectarAFileSystem(void);
-void procesarSelect(cod_request,char*,t_caller, int);
+void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
 void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresCache);
 
-void procesarInsert(cod_request, char*, t_caller,int);
+void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 int validarInsertSC(errorNo);
