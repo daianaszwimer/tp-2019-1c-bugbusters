@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 
 t_log* logger_LFS;
-t_config* configLFS;
+t_config* config;
 t_config *configMetadata;
 t_list* descriptoresClientes;
 fd_set descriptoresDeInteres;			// Coleccion de descriptores de interes para select

@@ -8,7 +8,7 @@
 
 
 int main(void) {
-	configLFS = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
+	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 
@@ -41,7 +41,7 @@ int main(void) {
 	free(pathRaiz);
 	log_destroy(logger_LFS);
 	config_destroy(configMetadata);
-	config_destroy(configLFS);
+	config_destroy(config);
 	return EXIT_SUCCESS;
 }
 
@@ -71,8 +71,8 @@ void* leerDeConsola(void* arg) {
 }
 
 void* recibirMemorias(void* arg) {
-	char* puerto = config_get_string_value(configLFS, "PUERTO");
-	char* ip = config_get_string_value(configLFS, "IP");
+	char* puerto = config_get_string_value(config, "PUERTO");
+	char* ip = config_get_string_value(config, "IP");
 	int lissandraFS_fd = iniciar_servidor(puerto, ip);
 	log_info(logger_LFS, "Lissandra lista para recibir Memorias");
 	free(puerto);
@@ -304,7 +304,7 @@ int obtenerBloqueDisponible(errorNo* errorNo) {
  * Return: */
 void inicializarLfs() {
 	//TODO catchear todos los errores
-	char* puntoDeMontaje = config_get_string_value(configLFS, "PUNTO_MONTAJE");
+	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
 	pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);	
 
 	memtable = (t_memtable*) malloc(sizeof(t_memtable));
