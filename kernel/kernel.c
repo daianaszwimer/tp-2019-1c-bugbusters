@@ -1,23 +1,9 @@
 #include "kernel.h"
 
 int main(void) {
-	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
-	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
-	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
-	int multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
-	//Semáforos
-	sem_init(&semRequestNew, 0, 0);
-	sem_init(&semRequestReady, 0, 0);
-	sem_init(&semMultiprocesamiento, 0, multiprocesamiento);
-	pthread_mutex_init(&semMColaNew, NULL);
-	pthread_mutex_init(&semMColaReady, NULL);
+	inicializarVariables();
 
-	// inicializo variables -> todo: mover a una funcion
-	new = queue_create();
-	ready = queue_create();
-	memoriasEc = list_create();
-	memoriasShc = list_create();
-	memorias = list_create();
+	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 
 	//Hilos
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)conectarAMemoria, NULL);
@@ -33,6 +19,32 @@ int main(void) {
 	liberarMemoria();
 
 	return EXIT_SUCCESS;
+}
+
+/* inicializarVariables()
+ * Parametros:
+ * 	-> void
+ * Descripcion: inicializa todas las variables que se van a usar.
+ * Return:
+ * 	-> :: void  */
+void inicializarVariables() {
+	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
+	// Configs
+	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
+	int multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
+	quantum = config_get_int_value(config, "QUANTUM");
+	// Semáforos
+	sem_init(&semRequestNew, 0, 0);
+	sem_init(&semRequestReady, 0, 0);
+	sem_init(&semMultiprocesamiento, 0, multiprocesamiento);
+	pthread_mutex_init(&semMColaNew, NULL);
+	pthread_mutex_init(&semMColaReady, NULL);
+	// Listas y colas
+	new = queue_create();
+	ready = queue_create();
+	memoriasEc = list_create();
+	memoriasShc = list_create();
+	memorias = list_create();
 }
 
 /* conectarAMemoria()
@@ -57,12 +69,12 @@ void leerDeConsola(void){
 	while (1) {
 		mensaje = readline(">");
 		//todo: usar exit
-		if (!strcmp(mensaje, "\0")) {
+		/*if (!strcmp(mensaje, "\0")) {
 			printf("sali de leer consola");
 			free(mensaje);
 			mensaje = NULL;
 			break;
-		}
+		}*/
 		pthread_mutex_lock(&semMColaNew);
 		//agregar request a la cola de new
 		queue_push(new, mensaje);
@@ -261,8 +273,8 @@ int validarRequest(char* mensaje) {
  * Descripcion: toma un request y se fija a quién delegarselo, toma la respuesta y la devuelve.
  * Return:
  * 	-> respuesta :: t_paquete*  */
-void manejarRequest(request_procesada* request) {
-	t_paquete* respuesta;
+int manejarRequest(request_procesada* request) {
+	int respuesta = 0;
 	//devolver la respuesta para usarla en el run
 	switch(request->codigo) {
 		case SELECT:
@@ -272,8 +284,6 @@ void manejarRequest(request_procesada* request) {
 		case DROP:
 		case JOURNAL:
 			respuesta = enviarMensajeAMemoria(request->codigo, (char*) request->request);
-			// hacer algo con la rta
-			eliminar_paquete(respuesta);
 			break;
 		case ADD:
 			procesarAdd((char*) request->request);
@@ -288,7 +298,8 @@ void manejarRequest(request_procesada* request) {
 			// la request. en tal caso se devuelve el t_paquete con error para cortar ejecucion
 			break;
 	}
-	usleep(config_get_int_value(config, "RETARDO_CICLO_EJECUCION")*1000);
+	usleep(config_get_int_value(config, "SLEEP_EJECUCION")*1000);
+	return respuesta;
 }
 
 /* liberarMemoria()
@@ -337,7 +348,7 @@ void liberarRequestProcesada(request_procesada* request) {
  * Return:
  *     -> void  */
 void liberarColaRequest(request_procesada* requestCola) {
-	printf("Voy a liberar: %s    ", (char*) requestCola->request);
+	//printf("Voy a liberar: %s    ", (char*) requestCola->request);
     free((char*) requestCola->request);
     requestCola->request = NULL;
     free(requestCola);
@@ -355,13 +366,18 @@ void liberarColaRequest(request_procesada* requestCola) {
  * Descripcion: recibe una request, se la manda a memoria y recibe la respuesta.
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
-t_paquete* enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
+int enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 	t_paquete* paqueteRecibido;
+	int respuesta;
 	//en enviar habria que enviar puerto para que memoria sepa a cual se le delega el request segun la consistency
 	enviar(codRequest, mensaje, conexionMemoria);
 	paqueteRecibido = recibir(conexionMemoria);
-	log_info(logger_KERNEL, "Recibi de memoria %s \n", paqueteRecibido->request);
-	return paqueteRecibido;
+	respuesta = paqueteRecibido->palabraReservada;
+	if (respuesta == SUCCESS) {
+		log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
+	}
+	eliminar_paquete(paqueteRecibido);
+	return respuesta;
 }
 
 /* procesarRun()
@@ -374,25 +390,19 @@ t_paquete* enviarMensajeAMemoria(cod_request codRequest, char* mensaje) {
 void procesarRun(t_queue* colaRun) {
 	// usar inotify por si cambia Q
 	t_paquete* respuesta;
-	request_procesada* request ;//= NULL;
+	request_procesada* request;
 	int quantumActual = 0;
-	//el while va a ser fin de Q o fin de cola
+	//el while es fin de Q o fin de cola
 	while(!queue_is_empty(colaRun) && quantumActual < quantum) {
-		quantumActual++; //hacerlo al ppio o al final?
-
 		request = (request_procesada*) malloc(sizeof(request_procesada));
-		//request = (request_procesada*) realloc(request, sizeof(request_procesada));
 		request->codigo = ((request_procesada*) queue_peek(colaRun))->codigo;
 		request->request = strdup((char*)((request_procesada*)queue_peek(colaRun))->request);
 
-		fflush(stdout);
-		printf("%s    ", (char*)request->request);
-		//aca muere la 2da vez
-		queue_pop(colaRun);
-
-
 		if (validarRequest((char*) request->request) == TRUE) {
-			manejarRequest(request);
+			if (manejarRequest(request) != SUCCESS) {
+				break;
+				//libero recursos, mato hilo, lo saco de la cola, e informo error
+			}
 			/*respuesta = manejarRequest(request);
 			if (respuesta->palabraReservada == NUESTRO_ERROR) {
 				eliminar_paquete(respuesta);
@@ -404,10 +414,13 @@ void procesarRun(t_queue* colaRun) {
 			break;
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
 		}
+		queue_pop(colaRun);
 		liberarRequestProcesada(request);
+		quantumActual++;
 	}
 	if (quantumActual == quantum && queue_is_empty(colaRun) == FALSE) {
 		//termino por fin de q
+		log_info(logger_KERNEL, "Vuelvo a ready");
 		request_procesada* _request = (request_procesada*)(malloc(sizeof(request_procesada)));
 		_request->request = (t_queue*) (malloc(sizeof(t_queue)));
 		_request->request = colaRun;
@@ -416,8 +429,13 @@ void procesarRun(t_queue* colaRun) {
 		queue_push(ready, _request);
 		pthread_mutex_unlock(&semMColaReady);
 		sem_post(&semRequestReady);
+	} else if (queue_is_empty(colaRun) == TRUE){
+		// si estoy aca es porque ya ejecuto toda la cola
+		log_info(logger_KERNEL, "Finalizó la ejecución del script");
+		queue_destroy(colaRun);
 	} else {
-		// si está aca es pq no tiene más elementos o porque rompió por otro motivo
+		log_error(logger_KERNEL, "Se rompio porque la request %s no es válida", (char*) request->request);
+		liberarRequestProcesada(request);
 		queue_destroy_and_destroy_elements(colaRun, (void*)liberarColaRequest);
 		// liberar recursos que ocupa el struct este con sus colas o sea el request - es lo de arriba
 	}
