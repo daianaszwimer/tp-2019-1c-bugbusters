@@ -541,10 +541,16 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
  * Descripcion: EC:
  * 					1)se va a fijar si EXISTE SEGMENTO Y EXISTE KEY en memoria.
  	 	 	 	 	 si es correcto , se ACTUALIZA la pag (valor y timestamp)
- * 				Si Existe dicho segmento, busca la key (y de encontrarla,
- * 				actualiza su valor insertando el timestap actual).Y si no encuentra, solicita pag
- * 				y la crea. Pero de no haber pag suficientes, se hace journaling.
- * 				Si no se encuentra el segmento,solicita un segment para crearlo y lo hace.Y, en
+ * 					2)si no encuentra NO EXISTE KEY Pero si EXISTE SEGMENTO.Solicitar PAGINA LIBRE:
+ * 					*si la hay,se guarda una nueva pag con los valores obtenido en el
+ * 						segmento existente.
+ * 					*Si NO hay espacio libre => ALGORITMO DE REEMPLAZO (Y si MEMORIA == FULL) =>JOURNALING
+ * 					3)Si NO EXISTE SEGMENTO,solicita un segmento y solictar PAGINA LIBRE(siguiendo la logica de keyinexistente)
+ *
+ *				SC || SHC:
+ *					1)Le pregunta  LFS si existe la tabla en la que se desea insertar.
+ *					2)Si no existe, se notifica error al destinatario correspondiente
+ *					3)Si existe en lisandra=>se inserta siguiendo los pasos de EC
  * Return:
  * 	-> :: void
  * 	VALGRIND :: NO*/
@@ -579,7 +585,21 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 		}
 }
 
-
+/* insertar()
+ * Parametros:
+ * 	-> int :: resultadoCache
+ * 	-> cod_request :: palabraReservada
+ *	-> char* :: request
+ *	-> t_elemTablaDePaginas* :: elementoEncontrado
+ *	-> t_caller :: caller
+ *	-> int :: i (socket kernel)
+ * Descripcion: Dependiendo del resultado arrojado por estaEnCache, inserta en memoria.
+ * 				Si EXISTE SEGMENTO Y EXISTE VALUR => ACTUALIZA
+ * 				Si EXISTE SEGMENTO Y NO EXISTE KEY => solicita pagina libre (+algoritmo de reemplazo+jounaling en caso de ser necesario)
+ * 				SI NO EXISTE LE SEGMENTO => se solicita agregar un nuevo segmento y se siguen los pasos de keyinexistente
+ * Return:
+ * 	-> :: void
+ * 	VALGRIND :: NO*/
 void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int i){
 	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
 
@@ -620,7 +640,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 		}
 
-	}else if(resultadoCache == SEGMENTOINEXISTENTE){ //	TABLA no encontrada -> nuevo segmento
+	}else if(resultadoCache == SEGMENTOINEXISTENTE){ //	TODO hay q solicitar si hay o no espacio??
 
 			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
@@ -630,6 +650,14 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 
 }
 
+/* armarPaqueteDeRtaAEnviar()
+ * Parametros:
+ *	-> char* :: request
+ * Descripcion: Cuando el resultado del insert fue EXITOSO,
+ * 				arma un paquete para enviarse (a quien solicito un insert)
+ * Return:
+ * 	-> paqueteAEnviar:: t_paquete*
+ * 	VALGRIND :: NO*/
 t_paquete* armarPaqueteDeRtaAEnviar(char* request){
 	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
 
@@ -641,6 +669,14 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
 	return paqueteAEnviar;
 }
 
+/* validarInsertSC()
+ * Parametros:
+ *	-> errorNo :: codRespuestaDeLFS
+ * Descripcion: En SC||SHC, para insertar debe existir la tabla en LFS.Esta funcion valida si el resultado
+ * 				devuelto del select hecho a LFS es SUCCESS o NO
+ * Return:
+ * 	-> int :: resulltado de validacion
+ * 	VALGRIND :: SI*/
 int validarInsertSC(errorNo codRespuestaDeLFS){
 	if (codRespuestaDeLFS == SUCCESS){
 		return EXIT_SUCCESS;
