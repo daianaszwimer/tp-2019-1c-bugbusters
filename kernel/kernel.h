@@ -29,7 +29,7 @@ typedef struct
 
 t_log* logger_KERNEL;
 int conexionMemoria;
-int quantum = 4; //hardcodeado por ahora
+int quantum;
 t_config* config;
 t_queue* new;
 t_queue* ready;
@@ -50,6 +50,7 @@ pthread_t hiloPlanificarNew;		//hilo para planificar requests de new a ready
 pthread_t hiloPlanificarExec;		//hilo para planificar requests de ready a exec y viceversa
 //todo: hilo que loguea cada x tiempo
 
+void inicializarVariables(void);
 void conectarAMemoria(void);
 void liberarMemoria(void);
 void liberarRequestProcesada(request_procesada*);
@@ -61,9 +62,9 @@ void planificarReadyAExec(void);
 void reservarRecursos(char*);
 //validar + delegar requests
 int validarRequest(char *);
-void manejarRequest(request_procesada*);
+int manejarRequest(request_procesada*);
 //funciones que procesan requests:
-t_paquete* enviarMensajeAMemoria(cod_request, char*);
+int enviarMensajeAMemoria(cod_request, char*);
 void procesarRun(t_queue*);
 void procesarAdd(char*);
 void procesarRequest(request_procesada*);
