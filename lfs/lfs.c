@@ -423,6 +423,7 @@ errorNo dumpear() {
 	char* pathTmp;
 	FILE* fileTmp;
 
+	// Refactor list_iterate
 	for(int i = 0; list_get(memtable->tablas,i) != NULL; i++) { // Recorro las tablas de la memtable
 		tabla = list_get(memtable->tablas,i);
 		char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, tabla->nombreTabla);
@@ -487,11 +488,18 @@ void compactacion(char* pathTabla) {
 		char* pathTmp = string_from_format("%s/%d.tmp", pathTabla, numeroTemporal);
 		fileTmp = fopen(pathTmp, "r");
 		if(fileTmp != NULL) { // Crear tmpc de los tmp
+			t_list* listaDeDatosDelTmp = list_create();
 			char* pathTmpC = string_from_format("%s/%d.tmpc", pathTabla, numeroTemporal);
 			FILE* fileTmpC = fopen(pathTmpC, "w");
 			char* datosDelArchivoTemporal = malloc((int) (sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long)));
 			while(fscanf(fileTmp, "%s", datosDelArchivoTemporal) == 1) {
 				fprintf(fileTmpC, "%s", datosDelArchivoTemporal);
+				char** dato = string_split(datosDelArchivoTemporal, ";");
+				t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
+				registro->key = convertirKey(dato[0]);
+				registro->value = strdup(dato[1]);
+				convertirTimestamp(dato[2], &registro->timestamp);
+				list_add(listaDeDatosDelTmp, registro);
 				fputc('\n', fileTmpC);
 			}
 			fclose(fileTmpC);
@@ -502,4 +510,14 @@ void compactacion(char* pathTabla) {
 		numeroTemporal++;
 		free(pathTmp);
 	} while(fileTmp != NULL);
+
+	// TODO: Separar la lista de datos del tmp en particiones
+	// TODO: Comparar con los .bin (leer primero el bin y guardarlo en una lista para comparar listas es mas rapido?
+	// TODO: Quedarse con los timestamps mas recientes
+	// TODO: Bloquear la tabla: (chmod o mutex?)
+	// TODO: Liberar bloques
+	// TODO: Pedir mas bloques
+	// TODO: Generar nuevo .bin
+	// TODO: Desbloquear la tabla y dejar un registro de cuanto tardo la compactacion
+
 }
