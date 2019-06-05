@@ -132,38 +132,32 @@ void reservarRecursos(char* mensaje) {
 			while((letra = fgetc(archivoLql)) != EOF) {
 				if (letra != '\n') {
 					// concateno
-					// aca se esta haciendo un malloc de nada que es como un free por eso rompe el queue_pop
 					i++;
 					request = (char*) realloc(request, i * sizeof(char));
-					if (request == NULL) {
-						printf("memory allocation failure\n");
-					}
 					posicion = strlen(request);
 					request[posicion] = letra;
 					request[posicion + 1] = '\0';
 				} else {
 					request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
-					requestDividida = NULL;
 					requestDividida = string_n_split(request, 2, " ");
 					cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
 					otraRequest->codigo = _codigo;
 					otraRequest->request = strdup(request);
 					queue_push(_request->request, otraRequest);
-					for (int j = 0; requestDividida[j] != NULL; j++) {
-						free(requestDividida[j]);
-						requestDividida[j] = NULL;
-					}
-					//cuando saco free me tira invalid free, cuando lo dejo dice invalid malloc
-					//free(requestDividida);
+					liberarArrayDeChar(requestDividida);
 					i = 1;
 					request = (char*) malloc(sizeof(char));
 				    *request = '\0';
 				}
-				//todo: hacer que cuando salga guarde lo que tenga en request asi funciona cuando archivo no termina con salto de linea
 			}
-			fclose(archivoLql);
-			free(requestDividida);
-			requestDividida = NULL;
+			//esto esta para la ultima linea, porque como no tiene salto de linea no entra al else y no se guarda sino
+			request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
+			requestDividida = string_n_split(request, 2, " ");
+			cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
+			otraRequest->codigo = _codigo;
+			otraRequest->request = strdup(request);
+			queue_push(_request->request, otraRequest);
+			liberarArrayDeChar(requestDividida);fclose(archivoLql);
 		}
 		_request->codigo = RUN;
 		pthread_mutex_lock(&semMColaReady);
