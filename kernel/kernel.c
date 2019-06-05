@@ -157,14 +157,14 @@ void reservarRecursos(char* mensaje) {
 			otraRequest->codigo = _codigo;
 			otraRequest->request = strdup(request);
 			queue_push(_request->request, otraRequest);
-			liberarArrayDeChar(requestDividida);fclose(archivoLql);
+			liberarArrayDeChar(requestDividida);
+			fclose(archivoLql);
 		}
 		_request->codigo = RUN;
 		pthread_mutex_lock(&semMColaReady);
 		queue_push(ready, _request);
 		pthread_mutex_unlock(&semMColaReady);
 	} else {
-		//esto lo debuggeo y en _request está todo bien
 		_request->request = strdup(mensaje);
 		_request->codigo = codigo;
 		pthread_mutex_lock(&semMColaReady);
@@ -415,6 +415,7 @@ void procesarRun(t_queue* colaRun) {
 		pthread_mutex_lock(&semMColaReady);
 		queue_push(ready, _request);
 		pthread_mutex_unlock(&semMColaReady);
+		sem_post(&semRequestReady);
 	} else {
 		// si está aca es pq no tiene más elementos o porque rompió por otro motivo
 		queue_destroy_and_destroy_elements(colaRun, (void*)liberarColaRequest);
