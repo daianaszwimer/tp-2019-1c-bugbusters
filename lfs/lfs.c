@@ -19,7 +19,7 @@ int main(void) {
 	}else{
 		log_error(logger_LFS, "Error al crear hilo de consola");
 	}
-
+/*
 	if(!pthread_create(&hiloRecibirMemorias, NULL, recibirMemorias, NULL)){
 		log_info(logger_LFS, "Hilo de recibir memorias creado");
 	}else{
@@ -31,7 +31,7 @@ int main(void) {
 		pthread_detach(hiloDumpeo);
 	}else{
 		log_error(logger_LFS, "Error al crear hilo Dumpeo");
-	}
+	}*/
 
 	pthread_join(hiloLeerDeConsola, NULL);
 	log_info(logger_LFS, "Hilo de consola finalizado");
@@ -272,7 +272,7 @@ errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 
 int obtenerBloqueDisponible(errorNo* errorNo) {
 	//TODO sacar el hardcode de abajo xD
-	char* fileBitmap = string_from_format("%s/FS_LISSANDRA/Metadata/Bitmap.bin", PATH);
+	char* fileBitmap = string_from_format("%s/Metadata/Bitmap.bin", pathRaiz);
 	int index = 0;
 	int fdBitmap = open(fileBitmap, O_CREAT | O_RDWR, S_IRWXU);
 	if(fdBitmap == -1){
@@ -280,8 +280,8 @@ int obtenerBloqueDisponible(errorNo* errorNo) {
 		index = -1;
 	}else{
 		//TODO CAMBIAR SIZE en mmap y bitarray_create (segundo parametro de mmap y de bit array). se cambia teniendo las configo globales
-		char* bitmap = mmap(NULL, 2, PROT_READ | PROT_WRITE, MAP_SHARED, fdBitmap, 0);
-		t_bitarray* bitarray = bitarray_create_with_mode(bitmap, 2, LSB_FIRST);
+		char* bitmap = mmap(NULL, 512, PROT_READ | PROT_WRITE, MAP_SHARED, fdBitmap, 0);
+		t_bitarray* bitarray = bitarray_create_with_mode(bitmap, 512, LSB_FIRST);
 
 		//TODO CAMBIAR TODOS LOS CONFIG A GLOBALES
 		while(index < config_get_int_value(configMetadata, "BLOCKS") && bitarray_test_bit(bitarray, index)) index++;
@@ -324,14 +324,10 @@ void inicializarLfs() {
 	mkdir(pathMetadata, S_IRWXU);
 	char* fileMetadata = string_from_format("%s/Metadata.bin", pathMetadata);
 
-	FILE* metadata = fopen(fileMetadata, "w");
-	fclose(metadata);
+//	FILE* metadata = fopen(fileMetadata, "w");
+//	fclose(metadata);
 
 	configMetadata = config_create(fileMetadata);
-	config_set_value(configMetadata, "BLOCK_SIZE", "64");
-	config_set_value(configMetadata, "BLOCKS", "16");
-	config_set_value(configMetadata, "MAGIC_NUMBER", "LISSANDRA");
-	config_save(configMetadata);
 
 	mkdir(pathBloques, S_IRWXU);
 
@@ -409,31 +405,45 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 }
 
 errorNo procesarSelect(char* nombreTabla, char* key){
+
+
+	errorNo error = SUCCESS;
+
+	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
+	DIR* dir = opendir(pathTabla);
+	if(dir){
+		t_list* listaDeRegistros = obtenerRegistrosDeMemtable(nombreTabla, key);
+	}
+
+	free(dir);
+	return error;
+}
+
+t_list* obtenerRegistrosDeMemtable(char* nombreTabla, char* key){
+
+	//TODO validar q onda la funcion convertirKey, retorna -1 si hay error
+	int _key = convertirKey(key);
+
 	int encontrarTabla(t_tabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
 
 	int encontrarRegistro(t_registro* registro) {
-		return registro->key == convertirKey(key);
+		return registro->key == _key;
 	}
 
-
-	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
-	errorNo error = SUCCESS;
+	t_list* listaDeRegistros = NULL;
 
 	t_tabla* table = list_find(memtable->tablas, (void*) encontrarTabla);
-	if(table !=NULL){
-		t_registro* registro = list_find(table->registros, (void*) encontrarRegistro);
-		if(registro != NULL){
-			log_info(logger_LFS, "el valor encontrado es el de abajo vieja");
-			log_info(logger_LFS, registro->value);
-		}else{
-			log_info(logger_LFS, "no encontre el valor");
-		}
+	if(table == NULL){
+		log_info(logger_LFS, "No se encontro nada en la memtable");
 	}else{
-		log_info(logger_LFS, "no encontre la tabla");
+		listaDeRegistros = list_filter(table->registros, (void*) encontrarRegistro);
+		if(listaDeRegistros == NULL){
+			log_info(logger_LFS, "No se encontro nada en la memtable");
+		}
 	}
-	return error;
+	return listaDeRegistros;
 }
 
 /* hiloDump()

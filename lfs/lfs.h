@@ -64,5 +64,6 @@ void* hiloDump();
 errorNo dumpear();
 void vaciarTabla(t_tabla*);
 void compactacion(char*);
+t_list* obtenerRegistrosDeMemtable(char*, char*);
 
 #endif /* LFS_H_ */
