@@ -295,22 +295,25 @@ void procesarSelect(cod_request palabraReservada, char* request, t_caller caller
 			if(resultadoCache == EXIT_SUCCESS ) {
 				log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
-				//free(elementoEncontrado);
-				//free(parametros);
+				free(valorEncontrado);
+				valorEncontrado=NULL;
 			} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 				log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 				//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 				enviarAlDestinatarioCorrecto(palabraReservada, valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
 				guardarRespuestaDeLFSaCACHE(valorDeLF, resultadoCache);
+				free(valorEncontrado);
+				valorEncontrado=NULL;
 			}
 			break;
 		default:
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
+			free(elementoEncontrado);
+			elementoEncontrado=NULL;
 			break;
 	}
-
-
-
+	free(valorDeLF);
+	valorDeLF=NULL;
 }
 
 
@@ -357,15 +360,46 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 
 			*elementoEncontrado=elementoDePagEnCache;
 			*valorEncontrado = paqueteAuxiliar;
+//			free(tablaDeSegmentosEnCache);
+//			tablaDeSegmentosEnCache=NULL;
+//			free(elementoDePagEnCache);
+//			elementoDePagEnCache=NULL;
+			free(segmentoABuscar);
+			segmentoABuscar=NULL;
+			free(requestAEnviar);
+			requestAEnviar=NULL;
 			return EXIT_SUCCESS;
 		}else{
+//			free(tablaDeSegmentosEnCache);
+//			tablaDeSegmentosEnCache=NULL;
+			free(elementoDePagEnCache);
+			elementoDePagEnCache=NULL;
+			free(segmentoABuscar);
+			segmentoABuscar=NULL;
 			return KEYINEXISTENTE;
 		}
+		free(tablaDeSegmentosEnCache);
+		tablaDeSegmentosEnCache=NULL;
+		free(elementoDePagEnCache);
+		elementoDePagEnCache=NULL;
+		free(segmentoABuscar);
+		segmentoABuscar=NULL;
 	}else{
+		free(tablaDeSegmentosEnCache);
+		tablaDeSegmentosEnCache=NULL;
+		free(elementoDePagEnCache);
+		elementoDePagEnCache=NULL;
+		free(segmentoABuscar);
+		segmentoABuscar=NULL;
 		return SEGMENTOINEXISTENTE;
 	}
+	free(tablaDeSegmentosEnCache);
+	tablaDeSegmentosEnCache=NULL;
+	free(elementoDePagEnCache);
+	elementoDePagEnCache=NULL;
+	free(segmentoABuscar);
+	segmentoABuscar=NULL;
 	eliminar_paquete(paqueteAuxiliar);
-
 }
 
 
@@ -405,10 +439,12 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
 	 		 break;
 
 	}
+	free(errorDefault);
+	errorDefault=NULL;
  }
 
  void mostrarResultadoPorConsola(cod_request palabraReservada, int codResultado,char* request,t_paquete* valorAEnviar){
-	 char *respuesta= strdup("");
+	 char* respuesta= strdup("");
 	 char* error=strdup("");
 	 char** requestSeparada=separarRequest(valorAEnviar->request);
 	 char* valorEncontrado = requestSeparada[2];
@@ -417,6 +453,10 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
 	 		if(codResultado == SUCCESS){
 				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
 				log_info(logger_MEMORIA,respuesta);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
 	 		}else{
 	 			switch(codResultado){
 					case(KEY_NO_EXISTE):
@@ -431,21 +471,36 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
 						log_info(logger_MEMORIA,"No se ha podido encontrar respuesta a la request",request);
 						break;
 	 			}
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
 			}
 	 	 break;
 		case(INSERT):
 			if(codResultado == SUCCESS){
 				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,respuesta);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
 			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
 				log_info(logger_MEMORIA,error);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
 			}
 			break;
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
+ 			free(respuesta);
+ 			respuesta=NULL;
+ 			free(error);
+ 			error=NULL;
 			break;
-
 		}
 }
 
@@ -463,12 +518,20 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
 			t_tablaDePaginas* tablaBuscada= malloc(sizeof(t_tablaDePaginas));
 			tablaBuscada= encontrarSegmento(nuevaTabla);
 			list_add(tablaBuscada->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey, nuevoValor,nuevoTimestamp));
+			free(tablaBuscada);
+			tablaBuscada=NULL;
+			free(nuevaTabla);
+			nuevaTabla=NULL;
+			free(nuevoValor);
+			nuevoValor=NULL;
 		}else if(tipoError==SEGMENTOINEXISTENTE){
-
 			t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
 			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
-
+			free(nuevaTabla);
+			nuevaTabla=NULL;
+			free(nuevoValor);
+			nuevoValor=NULL;
 		}
 	}
 //		case(TABLA_NO_EXISTE):
@@ -510,14 +573,28 @@ void procesarInsert(cod_request palabraReservada, char* request, t_caller caller
 				//valorDeLFS = intercambiarConFileSystem(SELECT,consultaALFS);
 				if((consistenciaMemoria== SC && validarInsertSC(valorDeLF->palabraReservada)== EXIT_SUCCESS)){
 					insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
+					free(elementoEncontrado);
+					elementoEncontrado=NULL;
+					free(valorEncontrado);
+					valorEncontrado=NULL;
 				}else{
 					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLF->palabraReservada,request,valorDeLF,caller, (int) list_get(descriptoresClientes,i));
+					free(elementoEncontrado);
+					elementoEncontrado=NULL;
+					free(valorEncontrado);
+					valorEncontrado=NULL;
 				}
 				break;
 			case EC:
 				insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
+//				free(elementoEncontrado);
+//				elementoEncontrado=NULL;
+				free(valorEncontrado);
+				valorEncontrado=NULL;
 				break;
 		}
+		free(valorDeLF);
+		valorDeLF=NULL;
 }
 
 
@@ -550,7 +627,11 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		paqueteAEnviar->request=strdup(requestRespuesta[1]);
 		paqueteAEnviar->tamanio=strlen(requestRespuesta[1]);
 		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
-
+		//free(paqueteAEnviar)
+		free(nuevaTabla);
+		nuevaTabla=NULL;
+		free(nuevoValor);
+		nuevoValor=NULL;
 	}else if(resultadoCache == KEYINEXISTENTE){//TODO:		KEY no encontrada -> nueva pagina solicitada
 		int hayEspacio= EXIT_SUCCESS;
 		//TODO verficar realmente si se puede insertar
@@ -568,6 +649,16 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 
 
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+
+			//free(paqueteAEnviar) TODO
+			free(nuevaTabla);
+			nuevaTabla=NULL;
+			free(nuevoValor);
+			nuevoValor=NULL;
+//			free(tablaDestino);
+//			tablaDestino=NULL;
+			free(requestRespuesta);
+			requestRespuesta=NULL;
 		}
 
 	}else if(resultadoCache == SEGMENTOINEXISTENTE){ //	TABLA no encontrada -> nuevo segmento
@@ -576,8 +667,12 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
 			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
+			//free(paqueteAEnviar) TODO
+			free(nuevaTabla);
+			nuevaTabla=NULL;
+			free(nuevoValor);
+			nuevoValor=NULL;
 	}
-
 }
 
 
