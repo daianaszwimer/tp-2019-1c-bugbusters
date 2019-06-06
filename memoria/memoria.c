@@ -738,7 +738,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			list_add(nuevaTablaDePagina->elementosDeTablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
 
-			eliminar_paquete(paqueteAEnviar);
+//			eliminar_paquete(paqueteAEnviar);
 			free(nuevaTabla);
 			nuevaTabla=NULL;
 			free(nuevoValor);
