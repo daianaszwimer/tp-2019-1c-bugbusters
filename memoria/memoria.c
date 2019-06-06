@@ -226,7 +226,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 	int codRequest = obtenerCodigoPalabraReservada(requestSeparada[0],MEMORIA);
 
 	log_info(logger_MEMORIA,"entre a interpretarr request");
-	switch(palabraReservada) {
+	switch(codRequest) {
 
 		case SELECT:
 			log_info(logger_MEMORIA, "Me llego un SELECT");
