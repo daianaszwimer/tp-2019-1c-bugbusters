@@ -305,7 +305,8 @@ int obtenerBloqueDisponible(errorNo* errorNo) {
 void inicializarLfs() {
 	//TODO catchear todos los errores
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
-	pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);	
+	//pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);
+	pathRaiz = strdup(puntoDeMontaje);
 
 	memtable = (t_memtable*) malloc(sizeof(t_memtable));
 	memtable->tablas = list_create();
