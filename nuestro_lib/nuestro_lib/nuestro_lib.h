@@ -81,13 +81,10 @@ typedef enum
 } t_caller;
 
 int convertirKey(char*);
-int convertirTimestamp(char*, unsigned long long*);
+void convertirTimestamp(char*, unsigned long long*);
 void iterator(char*);
 
 char** separarRequest(char*);
-
-int convertirKey(char*);
-int convertirTimestamp(char*, unsigned long long*);
 
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
