@@ -37,6 +37,7 @@ typedef enum
 
 typedef enum
 {
+	SEGMENTOEXISTENTE = 99,
 	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101
 } t_erroresCache;
@@ -126,8 +127,12 @@ void actualizarPagina (t_pagina*, char*);
 
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*,unsigned long long);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
-
 t_tablaDePaginas* crearTablaDePagina(char*);
+
+
+void procesarCreate(cod_request, char*,consistencia, t_caller, int);
+void create(cod_request,char*);
+errorNo existeSegentoEnMemoria(cod_request,char*);
 
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
 void liberarMemoria();

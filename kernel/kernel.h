@@ -27,7 +27,7 @@ typedef struct
 	void* request;
 } request_procesada;
 
-consistencia consistenciaMemoria = SC;
+consistencia consistenciaMemoria = EC;
 
 t_log* logger_KERNEL;
 int conexionMemoria;
