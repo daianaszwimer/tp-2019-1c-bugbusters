@@ -111,7 +111,7 @@ int validarPalabraReservada(int,Componente, t_log*);
 int validadCantDeParametros(int, int, t_log*);
 int obtenerCodigoPalabraReservada(char*, Componente);
 
-char* validarValor(char*, int);
+int validarValue(char*,char*, int, t_log*);
 
 ////servidor
 
