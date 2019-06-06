@@ -744,18 +744,15 @@ t_tablaDePaginas* crearTablaDePagina(char* nuevaTabla){
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
 	//TODO, si lfs dio ok, igual calcular en mem?
 	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
-	if(consistencia == EC || caller == CONSOLE){
-		if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
-			create(codRequest, request);
-			enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,socketKernel);
-		}else{
-			enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,socketKernel);
 
-		}
-	}else if (consistencia == SC || consistencia == SHC){
+	if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
 		create(codRequest, request);
 		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,socketKernel);
+	}else{
+		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,socketKernel);
+
 	}
+
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS= NULL;
 }
