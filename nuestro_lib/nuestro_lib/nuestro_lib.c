@@ -27,10 +27,14 @@ int convertirKey(char* key) {
  * Return:
  * 	-> :: int */
 int convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
+	//int largoTimestamp = strlen(timestamp);
 	if(timestamp < obtenerHoraActual()) {
+//		*timestampLong = stoi(timestamp);//,timestamp[largoTimestamp],10);
 	    *timestampLong = strtol(timestamp,NULL,10);
+	    puts("1");
 	    return EXIT_SUCCESS;
 	}
+	puts("0");
 	return NUESTRO_ERROR;
 }
 

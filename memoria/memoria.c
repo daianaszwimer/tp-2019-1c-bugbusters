@@ -30,7 +30,7 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 //--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-	conectarAFileSystem();
+	//conectarAFileSystem();
 
 //--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
@@ -312,7 +312,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 	t_paquete* valorDeLF=malloc(sizeof(t_paquete));
 	valorDeLF->palabraReservada= 0;
 	valorDeLF->tamanio=100;
-	valorDeLF->request=strdup("tablaB 2 chau 454462636");
+	valorDeLF->request=strdup("tablaB 2 chau 123456");
 //-------------------------------------------------------------
 	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas));
 	t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
@@ -343,8 +343,8 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 	}else{
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 	}
-	free(valorDeLF);
-	valorDeLF=NULL;
+//	free(valorDeLF);
+//	valorDeLF=NULL;
 }
 
 
@@ -580,7 +580,12 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
 		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
 		char* nuevoValor= strdup(requestSeparada[2]);
 		unsigned long long nuevoTimestamp;
-		int rta=convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no checkeo, viene de LFS
+		if(requestSeparada[3]!=NULL){
+			int rta=convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no checkeo, viene de LFS
+		}
+		else{
+			nuevoTimestamp=obtenerHoraActual();
+		}
 		if(tipoError== KEYINEXISTENTE){
 			t_tablaDePaginas* tablaBuscada= malloc(sizeof(t_tablaDePaginas));
 			tablaBuscada= encontrarSegmento(nuevaTabla);
@@ -635,7 +640,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 		valorDeLF=malloc(sizeof(t_paquete));
 		valorDeLF->palabraReservada= 0;
 		valorDeLF->tamanio=100;
-		valorDeLF->request=strdup("tablaB  chau 123454657");
+		valorDeLF->request=strdup("tablaB 2 chau 1234567");
 
 //-------------------------------------------------------------
 
