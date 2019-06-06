@@ -170,9 +170,9 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 	free(mensajeDeError);
 
 	if (memoria_fd != NULL) {
-		char* retorno_string = string_itoa(retorno);
-		enviar(palabraReservada, retorno_string, memoria_fd);
-		free(retorno_string);
+		//char* retorno_string = string_itoa(retorno);
+		enviar(retorno, request, memoria_fd);
+		//free(retorno_string);
 	}
 
 	for (int i = 0; requestSeparada[i] != NULL; i++) {

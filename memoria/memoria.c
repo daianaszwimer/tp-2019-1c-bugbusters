@@ -30,7 +30,7 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 //--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-	//conectarAFileSystem();
+	conectarAFileSystem();
 
 //--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
@@ -238,6 +238,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
+			procesarCreate(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case DESCRIBE:
 			log_info(logger_MEMORIA, "Me llego un DESCRIBE");
@@ -353,7 +354,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
  * Parametros:
  * 	-> cod_request :: palabraReservada
  * 	-> char* :: request
- * 	-> char** :: valorEncontrado- se modifica por referencia
+ * 	-> t_paquete** :: valorEncontrado- se modifica por referencia
  * 	-> t_elemTablaDePaginas** :: elemento (que contiene el puntero a la pag econtrada)- se modifica por referecia.
  * Descripcion: Revisa si la tabla y key solicitada se encuentran que cache.
  * 				En caso de que sea cierto, guarda valorEncontrado y elementoEncontrado; devolviendo operacion exitosa.
@@ -495,6 +496,15 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
 				log_info(logger_MEMORIA,error);
 			}
 			break;
+		case(CREATE):
+			if(codResultado == SUCCESS || codResultado == TABLA_EXISTE){
+				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
+				log_info(logger_MEMORIA,respuesta);
+			}else{
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				log_info(logger_MEMORIA,error);
+			}
+			break;
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
 			break;
@@ -613,17 +623,17 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int i){
 	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
 
-	char** parametros = separarRequest(request);
-	char* nuevaTabla = strdup(parametros[1]);
-	char* nuevaKeyChar = strdup(parametros[2]);
+	char** requestSeparada = separarRequest(request);
+	char* nuevaTabla = strdup(requestSeparada[1]);
+	char* nuevaKeyChar = strdup(requestSeparada[2]);
 	int nuevaKey = convertirKey(nuevaKeyChar);
-	char* nuevoValor = strdup(parametros[3]);
+	char* nuevoValor = strdup(requestSeparada[3]);
 	unsigned long long nuevoTimestamp;
 
-	char *consultaALFS= strdup("");
+	//char *consultaALFS= strdup("");
 
-	if(parametros[4]!=NULL){
-		int rta	= convertirTimestamp(parametros[4],&nuevoTimestamp);
+	if(requestSeparada[4]!=NULL){
+		int rta	= convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
 	}else{
 		nuevoTimestamp= obtenerHoraActual();
 	}
@@ -727,6 +737,58 @@ t_tablaDePaginas* crearTablaDePagina(char* nuevaTabla){
 	newTablaDePagina->nombre=strdup(nuevaTabla);
 	newTablaDePagina->elementosDeTablaDePagina=list_create();
 	return newTablaDePagina;
+}
+
+
+
+void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
+	//TODO, si lfs dio ok, igual calcular en mem?
+	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
+	if(consistencia == EC || caller == CONSOLE){
+		if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
+			create(codRequest, request);
+			enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,socketKernel);
+		}else{
+			enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,socketKernel);
+
+		}
+	}else if (consistencia == SC || consistencia == SHC){
+		create(codRequest, request);
+		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,socketKernel);
+	}
+	eliminar_paquete(valorDeLFS);
+	valorDeLFS= NULL;
+}
+
+void create(cod_request codRequest,char* request){
+	errorNo rtaCache = existeSegentoEnMemoria(codRequest,request);
+
+	if(rtaCache == SEGMENTOINEXISTENTE){
+		char** requestSeparada = separarRequest(request);
+		t_tablaDePaginas* nuevaTablaDePagina = crearTablaDePagina(requestSeparada[1]);
+		list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
+	}
+}
+
+errorNo existeSegentoEnMemoria(cod_request palabraReservada, char* request){
+	t_tablaDePaginas* tablaDeSegmentosEnCache = malloc(sizeof(t_tablaDePaginas));
+	char** parametros = separarRequest(request);
+	char* segmentoABuscar=strdup(parametros[1]);
+	int encontrarTabla(t_tablaDePaginas* tablaDePaginas){
+		return string_equals_ignore_case(tablaDePaginas->nombre, segmentoABuscar);
+	}
+
+	tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	if(tablaDeSegmentosEnCache!= NULL){
+		return SEGMENTOEXISTENTE;
+	}else{
+		return SEGMENTOINEXISTENTE;
+	}
+	free(tablaDeSegmentosEnCache); //TODO hay q hace uno q libere bien
+	free(segmentoABuscar);
+	segmentoABuscar =NULL;
+	liberarArrayDeChar(parametros);
+	parametros=NULL;
 }
 
 
