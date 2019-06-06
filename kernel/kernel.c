@@ -370,7 +370,7 @@ int enviarMensajeAMemoria(cod_request codRequest,consistencia consistenciaMemori
 	t_paquete* paqueteRecibido;
 	int respuesta;
 	//en enviar habria que enviar puerto para que memoria sepa a cual se le delega el request segun la consistency
-	enviar(codRequest, mensaje, conexionMemoria);
+	enviar(consistenciaMemoria, mensaje, conexionMemoria);
 	paqueteRecibido = recibir(conexionMemoria);
 	respuesta = paqueteRecibido->palabraReservada;
 	if (respuesta == SUCCESS) {
