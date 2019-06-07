@@ -17,13 +17,13 @@ int main(void) {
 	tablaA->nombre= strdup("tablaA");
 	tablaA->tablaDePagina = list_create();	//list_create() HACE UN MALLOC
 
-	elementoA1->numeroDePag=1;
-	elementoA1->pagina= pag;
-	elementoA1->modificado = SINMODIFICAR;
-
 	pag->timestamp = 123456789;
 	pag->key=1;
 	pag->value=strdup("hola");
+
+	elementoA1->numeroDePag=1;
+	elementoA1->pagina= pag;
+	elementoA1->modificado = SINMODIFICAR;
 
 	list_add(tablaA->tablaDePagina, elementoA1);
 	list_add(tablaDeSegmentos->segmentos,tablaA);
@@ -365,7 +365,6 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
  * 	-> int :: resultado de la operacion
  * 	VALGRIND :NO */
 int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
-	t_tablaDeSegmentos* tablaDeSegmentosEnCache = malloc(sizeof(t_tablaDeSegmentos));
 	t_segmento* segmentoEnCache = malloc(sizeof(t_segmento));
 	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
 	t_paquete* paqueteAuxiliar;
@@ -378,7 +377,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 		return string_equals_ignore_case(segmento->nombre, segmentoABuscar);
 	}
 
-	segmentoEnCache = list_find(tablaDeSegmentosEnCache->segmentos,(void*)encontrarTabla);
+	segmentoEnCache = list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
 	if(segmentoEnCache!= NULL){
 
 		int encontrarElemTablaDePag(t_elemTablaDePaginas* elemDePagina){
@@ -408,23 +407,23 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			segmentoABuscar=NULL;
 			return KEYINEXISTENTE;
 		}
-		free(tablaDeSegmentosEnCache);
-		tablaDeSegmentosEnCache=NULL;
+		free(tablaDeSegmentos);
+		tablaDeSegmentos=NULL;
 		free(elementoDePagEnCache);
 		elementoDePagEnCache=NULL;
 		free(segmentoABuscar);
 		segmentoABuscar=NULL;
 	}else{
-		free(tablaDeSegmentosEnCache);
-		tablaDeSegmentosEnCache=NULL;
+		free(tablaDeSegmentos);
+		tablaDeSegmentos=NULL;
 		free(elementoDePagEnCache);
 		elementoDePagEnCache=NULL;
 		free(segmentoABuscar);
 		segmentoABuscar=NULL;
 		return SEGMENTOINEXISTENTE;
 	}
-	free(tablaDeSegmentosEnCache);
-	tablaDeSegmentosEnCache=NULL;
+	free(tablaDeSegmentos);
+	tablaDeSegmentos=NULL;
 	free(elementoDePagEnCache);
 	elementoDePagEnCache=NULL;
 	free(segmentoABuscar);
@@ -713,10 +712,9 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 	if(resultadoCache == EXIT_SUCCESS){ // es decir que EXISTE SEGMENTO y EXISTE KEY
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
-
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-
 		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+
 		eliminar_paquete(paqueteAEnviar);
 		free(nuevaTabla);
 		nuevaTabla=NULL;
@@ -741,12 +739,11 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 
 	}else if(resultadoCache == SEGMENTOINEXISTENTE){ //	TODO hay q solicitar si hay o no espacio??
 
-			t_segmento* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
-			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
-			list_add(nuevaTablaDePagina->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
+			t_segmento* nuevoSegmento = crearTablaDePagina(nuevaTabla);
+			list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
+			list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
 
-//			eliminar_paquete(paqueteAEnviar);
 			free(nuevaTabla);
 			nuevaTabla=NULL;
 			free(nuevoValor);
