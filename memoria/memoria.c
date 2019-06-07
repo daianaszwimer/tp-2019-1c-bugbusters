@@ -6,7 +6,7 @@ int main(void) {
 //--------------------------------RESERVA DE MEMORIA------------------------------------------------------------
 	//TODO solo se debe reservar el tam max y DELEGARSE A UNA FUNCION
 	pag =(t_pagina*) malloc(sizeof(t_pagina));
-	elementoA1 =malloc(sizeof(t_elemTablaDePaginas));
+	elementoA1 = malloc(sizeof(t_elemTablaDePaginas));
 	tablaA = malloc(sizeof(t_segmento));
 	tablaDeSegmentos = malloc(sizeof(t_tablaDeSegmentos));
 
@@ -14,8 +14,8 @@ int main(void) {
 
 	tablaDeSegmentos->segmentos =list_create();
 
+	tablaA->nombre= strdup("tablaA");
 	tablaA->tablaDePagina = list_create();	//list_create() HACE UN MALLOC
-	tablaA->nombre= strdup("TablaA");
 
 	elementoA1->numeroDePag=1;
 	elementoA1->pagina= pag;
@@ -379,7 +379,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 	}
 
 	segmentoEnCache = list_find(tablaDeSegmentosEnCache->segmentos,(void*)encontrarTabla);
-	if(tablaDeSegmentosEnCache!= NULL){
+	if(segmentoEnCache!= NULL){
 
 		int encontrarElemTablaDePag(t_elemTablaDePaginas* elemDePagina){
 			return (elemDePagina->pagina->key == keyABuscar);
@@ -589,7 +589,7 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
 		else{
 			nuevoTimestamp=obtenerHoraActual();
 		}
-		if(tipoError== KEYINEXISTENTE){
+		if(tipoError == KEYINEXISTENTE){
 			t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
 			tablaBuscada= encontrarSegmento(nuevaTabla);
 			list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey, nuevoValor,nuevoTimestamp));
@@ -597,7 +597,7 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
 //			nuevaTabla=NULL;
 //			free(nuevoValor);
 //			nuevoValor=NULL;
-		}else if(tipoError==SEGMENTOINEXISTENTE){
+		}else if(tipoError == SEGMENTOINEXISTENTE){
 			t_segmento* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
 			list_add(nuevaTablaDePagina->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
