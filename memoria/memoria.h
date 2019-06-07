@@ -52,39 +52,40 @@ typedef struct{
 
 typedef struct{
 	int numeroDePag;
+	int numeroMarco;
 	t_pagina* pagina;
 	t_flagModificado modificado;
 }t_elemTablaDePaginas;
 
 typedef struct{
 	char* nombre;
-	t_list* elementosDeTablaDePagina;
-}t_tablaDePaginas;
+	t_list* tablaDePagina;
+}t_segmento;
 
 typedef struct{
-	t_list* segmentos;//TODO por ahora cada segmento es una tablaDePagias pero faltan agregar conceptos
-}t_segmentos;
-//TODO: revisar teoria para esto ultimo
+	t_list* segmentos;
+}t_tablaDeSegmentos;
+
 
 typedef struct{
 	time_t tv_sec;
 	suseconds_t tv_usec;   /* microseconds */
 }t_timeval;
+
 //-------------CASO DE PRUEBA INSERTAR-------------------------
 t_paquete* valorDeLF;
 
 
 //-------------VARIABLES GLOBALES-------------------------
 
-
-
 t_log* logger_MEMORIA;
 t_config* config;
 
-t_tablaDePaginas* tablaA;
-t_pagina* pag;
+t_tablaDeSegmentos* tablaDeSegmentos;
+t_segmento* tablaA;
 t_elemTablaDePaginas* elementoA1;
-t_segmentos* tablaDeSegmentos;
+t_pagina* pag;
+
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
@@ -127,7 +128,7 @@ void actualizarPagina (t_pagina*, char*);
 
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*,unsigned long long);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
-t_tablaDePaginas* crearTablaDePagina(char*);
+t_segmento* crearTablaDePagina(char*);
 
 
 void procesarCreate(cod_request, char*,consistencia, t_caller, int);
