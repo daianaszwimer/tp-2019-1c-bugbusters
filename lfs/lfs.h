@@ -7,6 +7,7 @@
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
+#include <commons/bitarray.h>
 #include <readline/readline.h>
 #include <nuestro_lib/nuestro_lib.h>
 #include <pthread.h>
@@ -14,6 +15,7 @@
 
 t_log* logger_LFS;
 t_config* config;
+t_config *configMetadata;
 t_list* descriptoresClientes;
 fd_set descriptoresDeInteres;			// Coleccion de descriptores de interes para select
 #define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"
@@ -52,12 +54,12 @@ void interpretarRequest(cod_request, char*, int);
 errorNo procesarCreate(char*, char*, char*, char*);
 errorNo procesarInsert(char*, uint16_t, char*, unsigned long long);
 errorNo procesarSelect(char*, char*);
-int obtenerBloqueDisponible(void);
+int obtenerBloqueDisponible(errorNo*);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
 void inicializarLfs(void);
 void liberarString(char*);
-errorNo crearParticiones(char*, char*);
+errorNo crearParticiones(char*, int);
 void* hiloDump();
 errorNo dumpear();
 void vaciarTabla(t_tabla*);
