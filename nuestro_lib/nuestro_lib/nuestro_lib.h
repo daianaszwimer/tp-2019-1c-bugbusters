@@ -79,6 +79,14 @@ typedef struct
 	char* request;
 } t_paquete;
 
+typedef struct
+{
+	char* puertos;
+	char* ips;
+	int tamanioIps;
+	int tamanioPuertos;
+} t_handshake_memoria;
+
 typedef enum
 {
 	CONSOLE,
@@ -94,7 +102,6 @@ char** separarRequest(char*);
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
-//char* concatenar(char*, ...);
 char** obtenerParametros(char*);
 int longitudDeArrayDeStrings(char**);
 
@@ -118,11 +125,14 @@ void* recibir_buffer(int*, int);
 int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
+t_handshake_memoria* recibirHandshakeMemoria(int);
 
 ////cliente
 
+void* serializar_handshake_memoria(t_handshake_memoria*, int);
 void* serializar_paquete(t_paquete* , int);
-void enviar(int, char*, int);
+void enviar(cod_request, char*, int);
+void enviarHandshakeMemoria(char*, char*, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 void liberarArrayDeChar(char**);

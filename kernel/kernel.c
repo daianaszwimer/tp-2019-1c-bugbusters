@@ -54,7 +54,10 @@ void inicializarVariables() {
  * Return:
  * 	-> :: void  */
 void conectarAMemoria(void) {
+	t_handshake_memoria* handshake;
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+	handshake = recibirHandshakeMemoria(conexionMemoria);
+	//printf("  puertos  %s   ips   %s  ", handshake->puertos, handshake->ips);
 	procesarAdd("");
 }
 
@@ -286,7 +289,7 @@ int manejarRequest(request_procesada* request) {
 			respuesta = enviarMensajeAMemoria(request->codigo,consistenciaMemoria, (char*) request->request);
 			break;
 		case ADD:
-			procesarAdd((char*) request->request);
+			//procesarAdd((char*) request->request);
 			break;
 		case RUN:
 			procesarRun((t_queue*) request->request);
