@@ -360,15 +360,18 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				if(cantidadDeParametros == PARAMETROS_INSERT || cantidadDeParametros == PARAMETROS_INSERT_TIMESTAMP) {
 					retorno = EXIT_SUCCESS;
 				} else {
-					retorno = EXIT_FAILURE;
+					retorno = NUESTRO_ERROR;
 				}
-				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case CREATE:
 				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case DESCRIBE:
-				retorno = (cantidadDeParametros == PARAMETROS_DESCRIBE) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				if(cantidadDeParametros == PARAMETROS_DESCRIBE_GLOBAL || cantidadDeParametros == PARAMETROS_DESCRIBE_TABLA) {
+					retorno = EXIT_SUCCESS;
+				} else {
+					retorno = NUESTRO_ERROR;
+				}
 				break;
 			case DROP:
 				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : NUESTRO_ERROR;
