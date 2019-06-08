@@ -77,7 +77,10 @@ typedef struct
 
 typedef struct
 {
-	int memorias;
+	char* puertos;
+	char* ips;
+	int tamanioIps;
+	int tamanioPuertos;
 } t_handshake_memoria;
 
 typedef enum
@@ -124,7 +127,7 @@ t_handshake_memoria* recibirHandshakeMemoria(int);
 void* serializar_handshake_memoria(t_handshake_memoria*, int);
 void* serializar_paquete(t_paquete* , int);
 void enviar(cod_request, char*, int);
-void enviarHandshakeMemoria(t_list*, int);
+void enviarHandshakeMemoria(char*, char*, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 
