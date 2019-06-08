@@ -289,7 +289,7 @@ int manejarRequest(request_procesada* request) {
 			respuesta = enviarMensajeAMemoria(request->codigo,consistenciaMemoria, (char*) request->request);
 			break;
 		case ADD:
-			procesarAdd((char*) request->request);
+			//procesarAdd((char*) request->request);
 			break;
 		case RUN:
 			procesarRun((t_queue*) request->request);
