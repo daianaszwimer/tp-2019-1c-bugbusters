@@ -72,3 +72,13 @@
 [INFO] 18:27:16:648 Memoria/(26951:26951): SE CONECTO CN LFS
 [INFO] 18:27:16:662 Memoria/(26951:26963): Vamos a leer de consola
 [INFO] 18:27:16:666 Memoria/(26951:26965): Memoria lista para recibir al kernel
+[INFO] 03:28:25:188 Memoria/(17244:17244): SE CONECTO CN LFS
+[INFO] 03:28:25:240 Memoria/(17244:17288): Vamos a leer de consola
+[INFO] 03:28:25:256 Memoria/(17244:17289): Memoria lista para recibir al kernel
+[INFO] 03:28:53:406 Memoria/(17244:17288): entre a interpretarr request
+[INFO] 03:28:53:407 Memoria/(17244:17288): Me llego un SELECT
+[INFO] 03:28:57:427 Memoria/(17244:17288): ME LO TIENE QUE DECIR LFS
+[INFO] 03:29:05:124 Memoria/(17244:17288): La respuesta a: SELECT tabla564 5 no es valida, TABLA INEXISTENTE
+[INFO] 03:30:18:293 Memoria/(17244:17288): entre a interpretarr request
+[INFO] 03:30:18:293 Memoria/(17244:17288): Me llego un SELECT
+[INFO] 03:30:37:46 Memoria/(17244:17288): ME LO TIENE QUE DECIR LFS

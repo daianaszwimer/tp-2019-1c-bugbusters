@@ -105,9 +105,7 @@ void* conectarConMemoria(void* arg) {
 		printf("De la memoria nro: %d \n", memoria_fd);
 		//TODO ver de interpretar si es -1 q onda
 		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
-		if (palabraReservada == -1) break;
-		enviar(palabraReservada, paqueteRecibido->request, memoria_fd);
-	}
+		if (palabraReservada == -1) break;	}
 	return NULL;
 }
 
@@ -159,8 +157,9 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	char* mensajeDeError;
 	switch(retorno){
 		case SUCCESS:
-			string_append_with_format(&mensajeDeError,"%s%s%s%s",requestSeparada[1]," ",requestSeparada[2]," ","value"); // TODO necesito el valor posta
-			log_info(logger_LFS, mensajeDeError);
+//			string_append_with_format(&mensajeDeError,"%s%s%s%s",requestSeparada[1]," ",requestSeparada[2]," ","value"); // TODO necesito el valor posta
+//			log_info(logger_LFS, mensajeDeError);
+			mensajeDeError=strdup("");
 			break;
 		case TABLA_EXISTE:
 			mensajeDeError = string_from_format("La tabla %s ya existe", requestSeparada[1]);

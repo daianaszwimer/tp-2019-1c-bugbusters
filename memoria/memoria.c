@@ -138,8 +138,8 @@ int validarRequest(char* mensaje){
  * VALGRIND:: SI */
 void conectarAFileSystem() {
 	conexionLfs = crearConexion(
-			config_get_string_value(config, "IP_LFS"),
-			config_get_string_value(config, "PUERTO_LFS"));
+			config_get_string_value(config, "IP_FS"),
+			config_get_string_value(config, "PUERTO_FS"));
 	log_info(logger_MEMORIA, "SE CONECTO CN LFS");
 }
 
@@ -282,6 +282,7 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 
 	enviar(palabraReservada, request, conexionLfs);
 	//sem_post(&semLeerDeConsola);
+	sleep(config_get_int_value(config, "RETARDO_FS")/1000);
 	paqueteRecibido = recibir(conexionLfs);
 
 	return paqueteRecibido;
