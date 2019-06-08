@@ -82,3 +82,49 @@
 [INFO] 03:30:18:293 Memoria/(17244:17288): entre a interpretarr request
 [INFO] 03:30:18:293 Memoria/(17244:17288): Me llego un SELECT
 [INFO] 03:30:37:46 Memoria/(17244:17288): ME LO TIENE QUE DECIR LFS
+[INFO] 10:12:30:417 Memoria/(7928:7953): Vamos a leer de consola
+[INFO] 10:12:30:419 Memoria/(7928:7954): Memoria lista para recibir al kernel
+[INFO] 10:13:08:232 Memoria/(7928:7954): entre a interpretarr request
+[INFO] 10:13:08:232 Memoria/(7928:7954): Me llego un SELECT
+[INFO] 10:13:08:232 Memoria/(7928:7954): ME LO TIENE QUE DECIR LFS
+[INFO] 10:13:55:106 Memoria/(7928:7954): entre a interpretarr request
+[INFO] 10:13:56:316 Memoria/(7928:7954): Me llego un SELECT
+[INFO] 10:13:56:761 Memoria/(7928:7954): LO ENCONTRE EN CACHEE!
+[INFO] 10:14:44:396 Memoria/(7928:7954): entre a interpretarr request
+[INFO] 10:14:45:369 Memoria/(7928:7954): Me llego un SELECT
+[INFO] 10:14:45:905 Memoria/(7928:7954): LO ENCONTRE EN CACHEE!
+[INFO] 10:20:12:382 Memoria/(8417:8417): SE CONECTO CN LFS
+[INFO] 10:20:12:392 Memoria/(8417:8429): Vamos a leer de consola
+[INFO] 10:20:12:398 Memoria/(8417:8430): Memoria lista para recibir al kernel
+[INFO] 10:20:57:825 Memoria/(8417:8430): entre a interpretarr request
+[INFO] 10:20:57:825 Memoria/(8417:8430): Me llego un SELECT
+[INFO] 10:20:57:825 Memoria/(8417:8430): LO ENCONTRE EN CACHEE!
+[INFO] 10:22:09:224 Memoria/(8559:8559): SE CONECTO CN LFS
+[INFO] 10:22:09:229 Memoria/(8559:8570): Vamos a leer de consola
+[INFO] 10:22:09:232 Memoria/(8559:8571): Memoria lista para recibir al kernel
+[INFO] 10:22:46:865 Memoria/(8559:8571): entre a interpretarr request
+[INFO] 10:22:46:866 Memoria/(8559:8571): Me llego un SELECT
+[INFO] 10:22:46:866 Memoria/(8559:8571): LO ENCONTRE EN CACHEE!
+[INFO] 10:23:22:608 Memoria/(8676:8676): SE CONECTO CN LFS
+[INFO] 10:23:22:614 Memoria/(8676:8686): Vamos a leer de consola
+[INFO] 10:23:22:626 Memoria/(8676:8687): Memoria lista para recibir al kernel
+[INFO] 10:24:14:394 Memoria/(8776:8776): SE CONECTO CN LFS
+[INFO] 10:24:14:412 Memoria/(8776:8786): Vamos a leer de consola
+[INFO] 10:24:14:418 Memoria/(8776:8787): Memoria lista para recibir al kernel
+[INFO] 10:24:51:726 Memoria/(8776:8787): entre a interpretarr request
+[INFO] 10:24:55:787 Memoria/(8776:8787): Me llego un SELECT
+[INFO] 10:25:45:871 Memoria/(8776:8787): LO ENCONTRE EN CACHEE!
+[INFO] 10:29:52:410 Memoria/(9149:9149): SE CONECTO CN LFS
+[INFO] 10:29:52:416 Memoria/(9149:9164): Vamos a leer de consola
+[INFO] 10:29:52:424 Memoria/(9149:9165): Memoria lista para recibir al kernel
+[INFO] 10:30:06:429 Memoria/(9149:9165): entre a interpretarr request
+[INFO] 10:30:06:429 Memoria/(9149:9165): Me llego un SELECT
+[INFO] 10:30:06:429 Memoria/(9149:9165): LO ENCONTRE EN CACHEE!
+[INFO] 10:30:12:667 Memoria/(9149:9165): entre a interpretarr request
+[INFO] 10:30:12:667 Memoria/(9149:9165): Me llego un SELECT
+[INFO] 10:30:12:667 Memoria/(9149:9165): LO ENCONTRE EN CACHEE!
+[INFO] 10:30:24:887 Memoria/(9149:9165): entre a interpretarr request
+[INFO] 10:30:24:887 Memoria/(9149:9165): Me llego un SELECT
+[INFO] 10:30:24:887 Memoria/(9149:9165): LO ENCONTRE EN CACHEE!
+[INFO] 10:30:39:730 Memoria/(9149:9165): entre a interpretarr request
+[ERROR] 10:30:39:730 Memoria/(9149:9165): el cliente se desconecto. Terminando servidor

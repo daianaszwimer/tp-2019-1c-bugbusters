@@ -54,9 +54,9 @@ void inicializarVariables() {
  * Return:
  * 	-> :: void  */
 void conectarAMemoria(void) {
-	t_handshake_memoria* handshake;
+	//t_handshake_memoria* handshake;
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
-	handshake = recibirHandshakeMemoria(conexionMemoria);
+	//handshake = recibirHandshakeMemoria(conexionMemoria);
 	//printf("  puertos  %s   ips   %s  ", handshake->puertos, handshake->ips);
 	procesarAdd("");
 }

@@ -192,7 +192,7 @@ void escucharMultiplesClientes() {
 
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
-				enviarHandshakeMemoria("1, 2, 3", "4, 5, 6", descriptorCliente);
+				//enviarHandshakeMemoria("1, 2, 3", "4, 5, 6", descriptorCliente);
 				numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 				numeroDeClientes++;
 			}
@@ -346,7 +346,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 	}
 
-	eliminar_paquete(valorDeLFS);
+	//eliminar_paquete(valorDeLFS);
 	valorDeLFS=NULL;
 
 }
@@ -441,7 +441,10 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
+					 printf("1 %s \n", valorAEnviar->request);
+
 			enviar(codResultado, valorAEnviar->request, socketKernel);
+			 printf("2 %s \n", valorAEnviar->request);
 	 	 	break;
 	 	 case(CONSOLE):
 	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
