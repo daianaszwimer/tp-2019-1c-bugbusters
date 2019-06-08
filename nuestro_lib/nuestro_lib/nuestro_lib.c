@@ -26,12 +26,8 @@ int convertirKey(char* key) {
  * 				Es posible cuando el timestamp es menor al del milisegundo en que se entro a la funcion,
  * Return:
  * 	-> :: int */
-int convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
-	if(timestamp < obtenerHoraActual()) {
-	    *timestampLong = strtol(timestamp,NULL,10);
-	    return EXIT_SUCCESS;
-	}
-	return NUESTRO_ERROR;
+void convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
+	*timestampLong = strtol(timestamp,NULL,10);
 }
 
 /* obtenerEnumConsistencia()

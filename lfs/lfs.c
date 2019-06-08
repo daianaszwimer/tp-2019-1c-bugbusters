@@ -130,7 +130,8 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			log_info(logger_LFS, "Me llego un INSERT");
 			unsigned long long timestamp;
 			if(longitudDeArrayDeStrings(requestSeparada) == 5) { //4 parametros + INSERT
-				retorno = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], convertirTimestamp(requestSeparada[4], &timestamp));
+				convertirTimestamp(requestSeparada[4], &timestamp);
+				retorno = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], timestamp);
 			} else {
 				retorno = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], obtenerHoraActual());
 			}
