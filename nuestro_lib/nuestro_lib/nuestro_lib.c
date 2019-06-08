@@ -495,19 +495,6 @@ void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
 	desplazamiento += handshake->tamanioIps;
 	memcpy(buffer + desplazamiento, handshake->puertos, handshake->tamanioPuertos);
 	return buffer;
-	/*
-	 *
-	void * buffer = malloc(tamanioPaquete);
-	int desplazamiento = 0;
-
-	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
-	// destino es un string
-	memcpy(buffer + desplazamiento, &paquete->palabraReservada, sizeof(int));
-	desplazamiento += sizeof(int);
-	memcpy(buffer + desplazamiento, &paquete->tamanio, sizeof(int));
-	desplazamiento += sizeof(int);
-	memcpy(buffer + desplazamiento, paquete->request, paquete->tamanio);
-	return buffer;*/
 }
 
 /* enviar()
