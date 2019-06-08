@@ -535,7 +535,7 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
 		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
 		char* nuevoValor= strdup(requestSeparada[2]);
 		unsigned long long nuevoTimestamp;
-		int rta=convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no checkeo, viene de LFS
+		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no checkeo, viene de LFS
 		if(tipoError== KEYINEXISTENTE){
 			t_tablaDePaginas* tablaBuscada= malloc(sizeof(t_tablaDePaginas));
 			tablaBuscada= encontrarSegmento(nuevaTabla);
@@ -633,7 +633,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 	//char *consultaALFS= strdup("");
 
 	if(requestSeparada[4]!=NULL){
-		int rta	= convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
+		convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
 	}else{
 		nuevoTimestamp= obtenerHoraActual();
 	}
