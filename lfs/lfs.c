@@ -159,7 +159,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	char* mensajeDeError;
 	switch(retorno){
 		case SUCCESS:
-			mensajeDeError = string_from_format("Request recibida correctamente");
+			string_append_with_format(&mensajeDeError,"%s%s%s%s",requestSeparada[1]," ",requestSeparada[2]," ","value"); // TODO necesito el valor posta
 			log_info(logger_LFS, mensajeDeError);
 			break;
 		case TABLA_EXISTE:
@@ -172,6 +172,10 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			break;
 		case TABLA_NO_EXISTE:
 			mensajeDeError = string_from_format("La tabla %s no existe", requestSeparada[1]);
+			log_info(logger_LFS, mensajeDeError);
+			break;
+		case KEY_NO_EXISTE:
+			mensajeDeError = string_from_format("La KEY %s no existe", requestSeparada[2]); // ODO mostrar bien mensaje de error
 			log_info(logger_LFS, mensajeDeError);
 			break;
 		default:
@@ -432,10 +436,14 @@ errorNo procesarSelect(char* nombreTabla, char* key, t_registro** registro){
 		//t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
 		//list_add_all(listaDeRegistros, listaDeRegistrosDeTmp);
-	}
-	if(!list_is_empty(listaDeRegistros)){
-		list_sort(listaDeRegistros, (void*) ordenarRegistrosPorTimestamp);
-		*registro = (t_registro*)listaDeRegistros->head->data;
+		if(!list_is_empty(listaDeRegistros)){
+			list_sort(listaDeRegistros, (void*) ordenarRegistrosPorTimestamp);
+			*registro = (t_registro*)listaDeRegistros->head->data;
+		}else{
+			error = KEY_NO_EXISTE;
+		}
+	}else{
+		error = TABLA_NO_EXISTE;
 	}
 
 	free(dir);
