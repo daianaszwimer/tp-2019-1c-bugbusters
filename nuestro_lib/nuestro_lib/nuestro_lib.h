@@ -81,10 +81,10 @@ typedef struct
 
 typedef struct
 {
-	char* puertos;
-	char* ips;
 	int tamanioIps;
+	char* ips;
 	int tamanioPuertos;
+	char* puertos;
 } t_handshake_memoria;
 
 typedef enum

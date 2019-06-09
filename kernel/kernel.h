@@ -18,7 +18,7 @@ typedef struct
 {
 	char* ip;
 	char* puerto;
-	consistencia criterio; //puede tener mas de uno
+	char* numero;
 } config_memoria;
 
 typedef struct
@@ -54,6 +54,7 @@ pthread_t hiloPlanificarExec;		//hilo para planificar requests de ready a exec y
 
 void inicializarVariables(void);
 void conectarAMemoria(void);
+void procesarHandshake(t_handshake_memoria*);
 void liberarMemoria(void);
 void liberarRequestProcesada(request_procesada*);
 void liberarColaRequest(request_procesada*);
@@ -66,7 +67,7 @@ void reservarRecursos(char*);
 int validarRequest(char *);
 int manejarRequest(request_procesada*);
 //funciones que procesan requests:
-int enviarMensajeAMemoria(cod_request,consistencia, char*);
+int enviarMensajeAMemoria(consistencia, char*);
 void procesarRun(t_queue*);
 void procesarAdd(char*);
 void procesarRequest(request_procesada*);

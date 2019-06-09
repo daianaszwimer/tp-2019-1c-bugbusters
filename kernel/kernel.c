@@ -28,7 +28,7 @@ int main(void) {
  * Return:
  * 	-> :: void  */
 void inicializarVariables() {
-	logger_KERNEL = log_create("kernel.log", "Kernel", 0, LOG_LEVEL_DEBUG);
+	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
 	// Configs
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 	int multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
@@ -54,11 +54,33 @@ void inicializarVariables() {
  * Return:
  * 	-> :: void  */
 void conectarAMemoria(void) {
-	//t_handshake_memoria* handshake;
+	t_handshake_memoria* handshake;
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
-	//handshake = recibirHandshakeMemoria(conexionMemoria);
-	//printf("  puertos  %s   ips   %s  ", handshake->puertos, handshake->ips);
+	handshake = recibirHandshakeMemoria(conexionMemoria);
+	procesarHandshake(handshake);
 	procesarAdd("");
+}
+
+/* procesarHandshake()
+ * Parametros:
+ * 	-> t_handshake_memoria* :: handshakeRecibido
+ * Descripcion: guarda las memorias levantadas en una lista.
+ * Return:
+ * 	-> :: void  */
+void procesarHandshake(t_handshake_memoria* handshakeRecibido) {
+	size_t i = 0;
+	char** ips = string_split(handshakeRecibido->ips, ",");
+	char** puertos = string_split(handshakeRecibido->puertos, ",");
+	//char** numeros = string_split(handshakeRecibido->numeros, ",");
+	for( i = 0; ips[i] != NULL; i++)
+	{
+		config_memoria* memoriaNueva = (config_memoria*) malloc(sizeof(config_memoria));
+		memoriaNueva->ip = ips[i];
+		memoriaNueva->puerto = puertos[i];
+		memoriaNueva->numero = "1";
+		log_info(logger_KERNEL, "ip %s, puerto %s", memoriaNueva->ip, memoriaNueva->puerto);
+		list_add(memorias, memoriaNueva);
+	}
 }
 
 /* leerDeConsola()
@@ -175,6 +197,7 @@ void reservarRecursos(char* mensaje) {
 				queue_push(_request->request, otraRequest);
 				liberarArrayDeChar(requestDividida);
 			}
+			liberarArrayDeChar(parametros);
 			fclose(archivoLql);
 		}
 		_request->codigo = RUN;
@@ -287,8 +310,10 @@ int manejarRequest(request_procesada* request) {
 		case CREATE:
 		case DESCRIBE:
 		case DROP:
+			respuesta = enviarMensajeAMemoria(consistenciaMemoria, (char*) request->request);
+			break;
 		case JOURNAL:
-			respuesta = enviarMensajeAMemoria(request->codigo,consistenciaMemoria, (char*) request->request);
+			// solo a memorias que tengan un criterio
 			break;
 		case ADD:
 			//procesarAdd((char*) request->request);
@@ -306,7 +331,11 @@ int manejarRequest(request_procesada* request) {
 	usleep(config_get_int_value(config, "SLEEP_EJECUCION")*1000);
 	return respuesta;
 }
+/*
+config_memoria* encontrarMemoriaSegunTabla(char* tabla) {
 
+}
+*/
 /* liberarMemoria()
  * Parametros:
  * 	-> void
@@ -371,10 +400,13 @@ void liberarColaRequest(request_procesada* requestCola) {
  * Descripcion: recibe una request, se la manda a memoria y recibe la respuesta.
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
-int enviarMensajeAMemoria(cod_request codRequest,consistencia consistenciaMemoria, char* mensaje) {
+int enviarMensajeAMemoria(consistencia consistenciaMemoria, char* mensaje) {
 	t_paquete* paqueteRecibido;
 	int respuesta;
-	//en enviar habria que enviar puerto para que memoria sepa a cual se le delega el request segun la consistency
+	char** parametros = obtenerParametros(mensaje);
+	//config_memoria* memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1]);
+	//buscar a que memoria mandarle el dato, crear conexion, mandarselo y cerrar conexion, sii no es la ppal
+	//int conexionTemporanea = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 	enviar(consistenciaMemoria, mensaje, conexionMemoria);
 	paqueteRecibido = recibir(conexionMemoria);
 	respuesta = paqueteRecibido->palabraReservada;
@@ -408,13 +440,6 @@ void procesarRun(t_queue* colaRun) {
 				break;
 				//libero recursos, mato hilo, lo saco de la cola, e informo error
 			}
-			/*respuesta = manejarRequest(request);
-			if (respuesta->palabraReservada == NUESTRO_ERROR) {
-				eliminar_paquete(respuesta);
-				// informar error
-				break;
-			}
-			eliminar_paquete(respuesta);*/
 		} else {
 			break;
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
