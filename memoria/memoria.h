@@ -52,7 +52,7 @@ typedef struct{
 
 typedef struct{
 	int numeroDePag;
-	int numeroMarco;
+	t_marco* marco;
 	t_flagModificado modificado;
 }t_elemTablaDePaginas;
 
@@ -92,6 +92,8 @@ pthread_t hiloEnviarMensajeAFileSystem;	// hilo para enviar mensaje a file syste
 //pthread_attr_t attr;
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
+void* memoria;
+int marcosDisponibles;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 
 
@@ -136,7 +138,7 @@ errorNo existeSegmentoEnMemoria(cod_request,char*);
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
 void liberarMemoria();
 void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
-void eliminarPagina(t_pagina*);
+//void eliminarPagina(t_pagina*);
 
 
 #endif /* MEMORIA_H_ */
