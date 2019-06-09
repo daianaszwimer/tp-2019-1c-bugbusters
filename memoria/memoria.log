@@ -128,3 +128,10 @@
 [INFO] 10:30:24:887 Memoria/(9149:9165): LO ENCONTRE EN CACHEE!
 [INFO] 10:30:39:730 Memoria/(9149:9165): entre a interpretarr request
 [ERROR] 10:30:39:730 Memoria/(9149:9165): el cliente se desconecto. Terminando servidor
+[INFO] 21:06:31:841 Memoria/(5911:5911): SE CONECTO CN LFS
+[INFO] 21:06:31:845 Memoria/(5911:5921): Vamos a leer de consola
+[INFO] 21:06:31:852 Memoria/(5911:5922): Memoria lista para recibir al kernel
+[INFO] 21:08:30:291 Memoria/(5911:5922): entre a interpretarr request
+[INFO] 21:08:30:291 Memoria/(5911:5922): Me llego un CREATE
+[INFO] 21:11:53:445 Memoria/(5911:5922): entre a interpretarr request
+[ERROR] 21:11:53:445 Memoria/(5911:5922): el cliente se desconecto. Terminando servidor

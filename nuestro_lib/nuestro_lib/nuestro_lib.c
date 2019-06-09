@@ -434,7 +434,6 @@ t_paquete* recibir(int socket)
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	int recibido = 0;
 	recibido = recv(socket, &paquete->palabraReservada, sizeof(int), MSG_WAITALL);
-
 	if(recibido == 0) {
 		printf("ERROR \n");
 		paquete->palabraReservada = -1;

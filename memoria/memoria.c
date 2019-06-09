@@ -441,10 +441,7 @@ t_tablaDePaginas* encontrarSegmento(char* segmentoABuscar){
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
-					 printf("1 %s \n", valorAEnviar->request);
-
 			enviar(codResultado, valorAEnviar->request, socketKernel);
-			 printf("2 %s \n", valorAEnviar->request);
 	 	 	break;
 	 	 case(CONSOLE):
 	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
@@ -756,9 +753,9 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 
 	if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
 		create(codRequest, request);
-		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,socketKernel);
+		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
 	}else{
-		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,socketKernel);
+		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
 
 	}
 

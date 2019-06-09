@@ -50,3 +50,11 @@
 [INFO] 18:44:19:946 Kernel/(27682:27682): ----------------INICIO DE KERNEL--------------
 [INFO] 18:45:35:809 Kernel/(27770:27770): ----------------INICIO DE KERNEL--------------
 [INFO] 19:00:55:879 Kernel/(28247:28247): ----------------INICIO DE KERNEL--------------
+[INFO] 21:02:11:278 Kernel/(5792:5792): ----------------INICIO DE KERNEL--------------
+[INFO] 21:12:41:168 Kernel/(6131:6131): ----------------INICIO DE KERNEL--------------
+[INFO] 21:16:12:587 Kernel/(6220:6220): ----------------INICIO DE KERNEL--------------
+[INFO] 21:26:01:592 Kernel/(6364:6364): ----------------INICIO DE KERNEL--------------
+[INFO] 21:31:43:990 Kernel/(6554:6554): ----------------INICIO DE KERNEL--------------
+[INFO] 21:33:08:457 Kernel/(6623:6623): ----------------INICIO DE KERNEL--------------
+[INFO] 21:33:32:26 Kernel/(6623:6641): La respuesta del request SELECT tablaA 1 es tablaA 1 "hola" 
+
