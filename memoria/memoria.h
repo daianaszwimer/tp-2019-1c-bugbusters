@@ -120,17 +120,18 @@ void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 int validarInsertSC(errorNo);
+
 t_pagina* crearPagina(uint16_t, char*,unsigned long long);
 void actualizarPagina (t_pagina*, char*);
 
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*,unsigned long long);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
-t_segmento* crearTablaDePagina(char*);
+t_segmento* crearSegmento(char*);
 
 
 void procesarCreate(cod_request, char*,consistencia, t_caller, int);
 void create(cod_request,char*);
-errorNo existeSegentoEnMemoria(cod_request,char*);
+errorNo existeSegmentoEnMemoria(cod_request,char*);
 
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
 void liberarMemoria();
