@@ -72,9 +72,6 @@ typedef struct{
 	suseconds_t tv_usec;   /* microseconds */
 }t_timeval;
 
-//-------------CASO DE PRUEBA INSERTAR-------------------------
-t_paquete* valorDeLF;
-
 
 //-------------VARIABLES GLOBALES-------------------------
 

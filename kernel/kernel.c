@@ -54,7 +54,10 @@ void inicializarVariables() {
  * Return:
  * 	-> :: void  */
 void conectarAMemoria(void) {
+	//t_handshake_memoria* handshake;
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+	//handshake = recibirHandshakeMemoria(conexionMemoria);
+	//printf("  puertos  %s   ips   %s  ", handshake->puertos, handshake->ips);
 	procesarAdd("");
 }
 
@@ -162,14 +165,16 @@ void reservarRecursos(char* mensaje) {
 				    *request = '\0';
 				}
 			}
-			//esto esta para la ultima linea, porque como no tiene salto de linea no entra al else y no se guarda sino
-			request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
-			requestDividida = string_n_split(request, 2, " ");
-			cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
-			otraRequest->codigo = _codigo;
-			otraRequest->request = strdup(request);
-			queue_push(_request->request, otraRequest);
-			liberarArrayDeChar(requestDividida);
+			if (i != 1) { //hack horrible para que funcione cuando los lql tienen salto de linea al final y cuando no tmb
+				//esto esta para la ultima linea, porque como no tiene salto de linea no entra al else y no se guarda sino
+				request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
+				requestDividida = string_n_split(request, 2, " ");
+				cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
+				otraRequest->codigo = _codigo;
+				otraRequest->request = strdup(request);
+				queue_push(_request->request, otraRequest);
+				liberarArrayDeChar(requestDividida);
+			}
 			fclose(archivoLql);
 		}
 		_request->codigo = RUN;
@@ -286,7 +291,7 @@ int manejarRequest(request_procesada* request) {
 			respuesta = enviarMensajeAMemoria(request->codigo,consistenciaMemoria, (char*) request->request);
 			break;
 		case ADD:
-			procesarAdd((char*) request->request);
+			//procesarAdd((char*) request->request);
 			break;
 		case RUN:
 			procesarRun((t_queue*) request->request);

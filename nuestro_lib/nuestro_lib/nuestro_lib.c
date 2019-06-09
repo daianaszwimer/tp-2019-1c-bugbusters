@@ -26,16 +26,8 @@ int convertirKey(char* key) {
  * 				Es posible cuando el timestamp es menor al del milisegundo en que se entro a la funcion,
  * Return:
  * 	-> :: int */
-int convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
-	//int largoTimestamp = strlen(timestamp);
-	if(timestamp < obtenerHoraActual()) {
-//		*timestampLong = stoi(timestamp);//,timestamp[largoTimestamp],10);
-	    *timestampLong = strtol(timestamp,NULL,10);
-	    puts("1");
-	    return EXIT_SUCCESS;
-	}
-	puts("0");
-	return NUESTRO_ERROR;
+void convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
+	*timestampLong = strtol(timestamp,NULL,10);
 }
 
 /* obtenerEnumConsistencia()
@@ -68,6 +60,7 @@ void iterator(char* value) {
  * Descripcion: version mejorada de string_split (de las commons) que recibe un char* y lo separa por espacios (tomando como un string entero aquello que este entre comillas)
  * Return: char**
  * */
+// TODO: que funcione bien cuando hay comillas
 char** separarRequest(char* text) {
 	char **substrings = NULL;
 	int size = 0;
@@ -157,50 +150,6 @@ int longitudDeArrayDeStrings(char** array){
 
 }
 
-/* concatenar()
- * Parametros:
- * 	-> primerString :: char*
- * 	-> ... :: n char*
- * Descripcion: concatena n strings
- * Se le debe pasar como ultimo parametro un NULL(indicando que se finalizo la entrada de parametros)
- * Se debe hacer un free de la variable retornada
- * Return: string concatenado*/
-//char* concatenar(char* primerString, ...) { // los 3 puntos indican cantidad de parametros variable
-//	char* stringFinal;	// String donde se guarda el resultado de la concatenacion
-//	va_list parametros; // va_list es una lista que entiende los 3 puntos que se pasan como parametro
-//	char* parametro;	// Este es un parametro solo
-//
-//	if (primerString == NULL)
-//		return NULL;
-//
-//	stringFinal = strdup(primerString);
-//	va_start(parametros, primerString);	// Inicalizo el va_list
-//
-//	while ((parametro = va_arg(parametros, char*)) != NULL) {	// Recorro la lista de parametros hasta encontrar un NULL
-//		stringFinal = (char*) realloc(stringFinal, strlen(stringFinal) + strlen(parametro) + 1); // Alojo memoria para el string concatenado
-//		strcat(stringFinal, parametro); // Concateno el parametro con stringFinal
-//	}
-//
-//	va_end(parametros); // Libero la va_list
-//	return stringFinal;
-//}
-
-/* obtenerParametros()
- * Parametros:
- *  -> request :: char*
- *  Descripcion: recibe un request (ej: SELECT Tabla 4) y devuelve los parametros ([Tabla, 4])
- *  Return:
- *   -> requestSeparada :: char**
- */
-
-//char** obtenerParametros(char* request) {
-//	char** requestSeparada;
-//	requestSeparada = separarRequest(request, " ");
-//	//n = longitudDeArrayDeStrings(requestSeparada);
-//    memmove(requestSeparada, requestSeparada+1, strlen(requestSeparada));
-//	return requestSeparada;
-//}
-
 /* leer_config()
  * Parametros:
  * 	-> nombreArchivo ::  char*
@@ -254,7 +203,7 @@ int esperar_cliente(int socket_servidor)
 	unsigned int tam_direccion = sizeof(struct sockaddr_in);
 
 	int socket_cliente = accept(socket_servidor, (void*) &dir_cliente, &tam_direccion);
-
+	// enviar
 	//log_info(logger, "Se conecto un cliente!");
 
 	return socket_cliente;
@@ -364,15 +313,18 @@ int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada
 				if(cantidadDeParametros == PARAMETROS_INSERT || cantidadDeParametros == PARAMETROS_INSERT_TIMESTAMP) {
 					retorno = EXIT_SUCCESS;
 				} else {
-					retorno = EXIT_FAILURE;
+					retorno = NUESTRO_ERROR;
 				}
-				retorno = (cantidadDeParametros == PARAMETROS_INSERT) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case CREATE:
 				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : NUESTRO_ERROR;
 				break;
 			case DESCRIBE:
-				retorno = (cantidadDeParametros == PARAMETROS_DESCRIBE) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				if(cantidadDeParametros == PARAMETROS_DESCRIBE_GLOBAL || cantidadDeParametros == PARAMETROS_DESCRIBE_TABLA) {
+					retorno = EXIT_SUCCESS;
+				} else {
+					retorno = NUESTRO_ERROR;
+				}
 				break;
 			case DROP:
 				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : NUESTRO_ERROR;
@@ -482,7 +434,6 @@ t_paquete* recibir(int socket)
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	int recibido = 0;
 	recibido = recv(socket, &paquete->palabraReservada, sizeof(int), MSG_WAITALL);
-
 	if(recibido == 0) {
 		printf("ERROR \n");
 		paquete->palabraReservada = -1;
@@ -522,6 +473,60 @@ int crearConexion(char* ip, char* puerto)
 	freeaddrinfo(server_info);
 
 	return socket_cliente;
+}
+
+/*
+ *
+ *
+ */
+void enviarHandshakeMemoria(char* puertos, char* ips, int socket_cliente)
+{
+	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
+	handshake->tamanioIps = strlen(ips) + 1;
+	handshake->tamanioPuertos = strlen(puertos) + 1;
+	handshake->ips = malloc(handshake->tamanioIps);
+	memcpy(handshake->ips, ips, handshake->tamanioIps);
+	handshake->puertos = malloc(handshake->tamanioPuertos);
+	memcpy(handshake->puertos, puertos, handshake->tamanioPuertos);
+	int tamanioPaquete = 2 * sizeof(int) + handshake->tamanioIps + handshake->tamanioPuertos;
+	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanioPaquete);
+	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
+	free(handshake->ips);
+	free(handshake->puertos);
+	free(handshake);
+}
+
+t_handshake_memoria* recibirHandshakeMemoria(int socket)
+{
+	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
+	recv(socket, &handshake->tamanioIps, sizeof(int), MSG_WAITALL);
+	recv(socket, &handshake->tamanioPuertos, sizeof(int), MSG_WAITALL);
+	char* puertosRecibidos = malloc(handshake->tamanioPuertos);
+	char* ipsRecibidos = malloc(handshake->tamanioIps);
+	recv(socket, puertosRecibidos, handshake->tamanioPuertos, MSG_WAITALL);
+	recv(socket, ipsRecibidos, handshake->tamanioIps, MSG_WAITALL);
+
+	handshake->puertos = puertosRecibidos;
+	handshake->ips = ipsRecibidos;
+
+	return handshake;
+}
+
+void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
+{
+	void * buffer = malloc(tamanio);
+	int desplazamiento = 0;
+
+	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
+	// destino es un string
+	memcpy(buffer + desplazamiento, &handshake->tamanioIps, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, &handshake->tamanioPuertos, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, handshake->ips, handshake->tamanioIps);
+	desplazamiento += handshake->tamanioIps;
+	memcpy(buffer + desplazamiento, handshake->puertos, handshake->tamanioPuertos);
+	return buffer;
 }
 
 /* enviar()

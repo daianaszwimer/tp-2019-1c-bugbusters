@@ -33,7 +33,7 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 //--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-	//conectarAFileSystem();
+	conectarAFileSystem();
 
 //--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
@@ -141,8 +141,8 @@ int validarRequest(char* mensaje){
  * VALGRIND:: SI */
 void conectarAFileSystem() {
 	conexionLfs = crearConexion(
-			config_get_string_value(config, "IP_LFS"),
-			config_get_string_value(config, "PUERTO_LFS"));
+			config_get_string_value(config, "IP_FS"),
+			config_get_string_value(config, "PUERTO_FS"));
 	log_info(logger_MEMORIA, "SE CONECTO CN LFS");
 }
 
@@ -195,6 +195,7 @@ void escucharMultiplesClientes() {
 
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
+				//enviarHandshakeMemoria("1, 2, 3", "4, 5, 6", descriptorCliente);
 				numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 				numeroDeClientes++;
 			}
@@ -284,6 +285,7 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 
 	enviar(palabraReservada, request, conexionLfs);
 	//sem_post(&semLeerDeConsola);
+	sleep(config_get_int_value(config, "RETARDO_FS")/1000);
 	paqueteRecibido = recibir(conexionLfs);
 
 	return paqueteRecibido;
@@ -312,10 +314,10 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 
 //---------------CASOS DE PRUEBA------------------------------
 
-	t_paquete* valorDeLF=malloc(sizeof(t_paquete));
-	valorDeLF->palabraReservada= 0;
-	valorDeLF->tamanio=100;
-	valorDeLF->request=strdup("tablaB 2 chau 123456");
+	t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
+//valorDeLF->palabraReservada= 0;
+//valorDeLF->tamanio=100;
+//valorDeLF->request=strdup("tablaB 2 chau 454462636");
 //-------------------------------------------------------------
 	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas));
 	t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
@@ -332,22 +334,24 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 			//free(parametros);
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-			//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
-			guardarRespuestaDeLFSaCACHE(valorDeLF, resultadoCache);
+			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+			guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
 		}
 	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		//TODO CUANDO LFS PUEDA HACER INSERT CORERCTAMENTE, HAY QUE DESCOMNTARLO
-		//valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLF->palabraReservada,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
+		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
-		guardarRespuestaDeLFSaCACHE(valorDeLF, resultadoCache);
+		guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
 	}else{
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 	}
-//	free(valorDeLF);
-//	valorDeLF=NULL;
+
+	//eliminar_paquete(valorDeLFS);
+	valorDeLFS=NULL;
+
 }
 
 
@@ -582,28 +586,17 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
 		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
 		char* nuevoValor= strdup(requestSeparada[2]);
 		unsigned long long nuevoTimestamp;
-		if(requestSeparada[3]!=NULL){
-			int rta=convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no checkeo, viene de LFS
-		}
-		else{
-			nuevoTimestamp=obtenerHoraActual();
-		}
-		if(tipoError == KEYINEXISTENTE){
+		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no checkeo, viene de LFS
+		if(tipoError== KEYINEXISTENTE){
 			t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
 			tablaBuscada= encontrarSegmento(nuevaTabla);
 			list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey, nuevoValor,nuevoTimestamp));
-//			free(nuevaTabla);
-//			nuevaTabla=NULL;
-//			free(nuevoValor);
-//			nuevoValor=NULL;
+
 		}else if(tipoError == SEGMENTOINEXISTENTE){
 			t_segmento* nuevaTablaDePagina = crearTablaDePagina(nuevaTabla);
 			list_add(nuevaTablaDePagina->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
 			list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
-//			free(nuevaTabla);
-//			nuevaTabla=NULL;
-//			free(nuevoValor);
-//			nuevoValor=NULL;
+
 		}
 	}
 //		case(TABLA_NO_EXISTE):
@@ -636,13 +629,13 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
 void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int i) {
 		t_elemTablaDePaginas* elementoEncontrado= malloc(sizeof(t_elemTablaDePaginas));
 		t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
-
+		char* requestSeparada = separarRequest(request);
 //---------------CASOS DE PRUEBA------------------------------
 //en el .h para poder compartirlo con la funcion insertar
-		valorDeLF=malloc(sizeof(t_paquete));
-		valorDeLF->palabraReservada= 0;
-		valorDeLF->tamanio=100;
-		valorDeLF->request=strdup("tablaB 2 chau 1234567");
+		t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
+//		valorDeLF->palabraReservada= 0;
+//		valorDeLF->tamanio=100;
+//		valorDeLF->request=strdup("tablaB  chau 123454657");
 
 //-------------------------------------------------------------
 
@@ -650,20 +643,19 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 		if(consistenciaMemoria == EC || caller == CONSOLE){
 				insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
-				//valorDeLFS = intercambiarConFileSystem(SELECT,consultaALFS);
-				if((consistenciaMemoria== SC && validarInsertSC(valorDeLF->palabraReservada)== EXIT_SUCCESS)){
+				char* consultaALFS=malloc(sizeof(char*));
+				string_append_with_format(&consultaALFS,"%s%s%s%s%s","SELECT"," ",requestSeparada[1]," ",requestSeparada[2]);
+				valorDeLFS = intercambiarConFileSystem(SELECT,consultaALFS);
+				if((consistenciaMemoria== SC && validarInsertSC(valorDeLFS->palabraReservada)== EXIT_SUCCESS)){
 					insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
 					free(elementoEncontrado);
 					elementoEncontrado=NULL;
 					free(valorEncontrado);
 					valorEncontrado=NULL;
 				}else{
-					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLF->palabraReservada,request,valorDeLF,caller, (int) list_get(descriptoresClientes,i));
-					free(elementoEncontrado);
-					elementoEncontrado=NULL;
-					free(valorEncontrado);
-					valorEncontrado=NULL;
+					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 				}
+				free(consultaALFS);
 		}else{
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 			free(elementoEncontrado);
@@ -671,8 +663,6 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			free(valorEncontrado);
 			valorEncontrado=NULL;
 		}
-		free(valorDeLF);
-		valorDeLF=NULL;
 }
 
 /* insertar()
@@ -700,10 +690,10 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 	char* nuevoValor = strdup(requestSeparada[3]);
 	unsigned long long nuevoTimestamp;
 
-	//char *consultaALFS= strdup("");
+//	char *consultaALFS= strdup("");
 
 	if(requestSeparada[4]!=NULL){
-		int rta	= convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
+		convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
 	}else{
 		nuevoTimestamp= obtenerHoraActual();
 	}
@@ -742,7 +732,8 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			t_segmento* nuevoSegmento = crearTablaDePagina(nuevaTabla);
 			list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
 			list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
-			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorDeLF,caller, (int) list_get(descriptoresClientes,i));
+			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+
 
 			free(nuevaTabla);
 			nuevaTabla=NULL;
@@ -825,18 +816,15 @@ t_segmento* crearTablaDePagina(char* nuevaTabla){
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
 	//TODO, si lfs dio ok, igual calcular en mem?
 	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
-	if(consistencia == EC || caller == CONSOLE){
-		if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
-			create(codRequest, request);
-			enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,socketKernel);
-		}else{
-			enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,socketKernel);
 
-		}
-	}else if (consistencia == SC || consistencia == SHC){
+	if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
 		create(codRequest, request);
-		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,socketKernel);
+		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
+	}else{
+		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
+
 	}
+
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS= NULL;
 }

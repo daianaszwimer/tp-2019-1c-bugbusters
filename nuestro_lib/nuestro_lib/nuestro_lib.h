@@ -22,7 +22,8 @@
 #define PARAMETROS_INSERT 3
 #define PARAMETROS_INSERT_TIMESTAMP 4
 #define PARAMETROS_CREATE 4
-#define PARAMETROS_DESCRIBE 1
+#define PARAMETROS_DESCRIBE_GLOBAL 0
+#define PARAMETROS_DESCRIBE_TABLA 1
 #define PARAMETROS_DROP 1
 #define PARAMETROS_JOURNAL 0
 #define PARAMETROS_ADD 4
@@ -49,6 +50,7 @@ typedef enum
 	SUCCESS,
 	TABLA_EXISTE,
 	TABLA_NO_EXISTE,
+	ERROR_CREANDO_ARCHIVO,
 	ERROR_CREANDO_DIRECTORIO,
 	ERROR_CREANDO_METADATA,
 	ERROR_CREANDO_PARTICIONES,
@@ -77,6 +79,14 @@ typedef struct
 	char* request;
 } t_paquete;
 
+typedef struct
+{
+	char* puertos;
+	char* ips;
+	int tamanioIps;
+	int tamanioPuertos;
+} t_handshake_memoria;
+
 typedef enum
 {
 	CONSOLE,
@@ -84,18 +94,14 @@ typedef enum
 } t_caller;
 
 int convertirKey(char*);
-int convertirTimestamp(char*, unsigned long long*);
+void convertirTimestamp(char*, unsigned long long*);
 void iterator(char*);
 
 char** separarRequest(char*);
 
-int convertirKey(char*);
-int convertirTimestamp(char*, unsigned long long*);
-
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
-//char* concatenar(char*, ...);
 char** obtenerParametros(char*);
 int longitudDeArrayDeStrings(char**);
 
@@ -119,11 +125,14 @@ void* recibir_buffer(int*, int);
 int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
+t_handshake_memoria* recibirHandshakeMemoria(int);
 
 ////cliente
 
+void* serializar_handshake_memoria(t_handshake_memoria*, int);
 void* serializar_paquete(t_paquete* , int);
-void enviar(int, char*, int);
+void enviar(cod_request, char*, int);
+void enviarHandshakeMemoria(char*, char*, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 void liberarArrayDeChar(char**);
