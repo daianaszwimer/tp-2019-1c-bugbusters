@@ -165,14 +165,16 @@ void reservarRecursos(char* mensaje) {
 				    *request = '\0';
 				}
 			}
-			//esto esta para la ultima linea, porque como no tiene salto de linea no entra al else y no se guarda sino
-			request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
-			requestDividida = string_n_split(request, 2, " ");
-			cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
-			otraRequest->codigo = _codigo;
-			otraRequest->request = strdup(request);
-			queue_push(_request->request, otraRequest);
-			liberarArrayDeChar(requestDividida);
+			if (i != 1) { //hack horrible para que funcione cuando los lql tienen salto de linea al final y cuando no tmb
+				//esto esta para la ultima linea, porque como no tiene salto de linea no entra al else y no se guarda sino
+				request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
+				requestDividida = string_n_split(request, 2, " ");
+				cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
+				otraRequest->codigo = _codigo;
+				otraRequest->request = strdup(request);
+				queue_push(_request->request, otraRequest);
+				liberarArrayDeChar(requestDividida);
+			}
 			fclose(archivoLql);
 		}
 		_request->codigo = RUN;
