@@ -106,11 +106,16 @@ void* conectarConMemoria(void* arg) {
 	while (1) {
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
+		if (palabraReservada == -1){
+			eliminar_paquete(paqueteRecibido);
+			log_error(logger_LFS, "el cliente se desconecto. Terminando servidor");
+			break;
+		}
 		printf("De la memoria nro: %d \n", memoria_fd);
 		//TODO ver de interpretar si es -1 q onda
 		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
 		eliminar_paquete(paqueteRecibido);
-		if (palabraReservada == -1) break;	}
+	}
 	return NULL;
 }
 
