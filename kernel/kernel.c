@@ -28,7 +28,7 @@ int main(void) {
  * Return:
  * 	-> :: void  */
 void inicializarVariables() {
-	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
+	logger_KERNEL = log_create("kernel.log", "Kernel", 0, LOG_LEVEL_DEBUG);
 	// Configs
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 	int multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");

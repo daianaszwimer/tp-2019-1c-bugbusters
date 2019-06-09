@@ -475,10 +475,14 @@ int crearConexion(char* ip, char* puerto)
 	return socket_cliente;
 }
 
-/*
- *
- *
- */
+/* enviarHandshakeMemoria()
+ * Parametros:
+ * 	-> char* :: puertos
+ * 	-> char* :: ips
+ * 	-> int :: socket_cliente
+ * Descripcion: recibe la data a enviar, la serializa y la manda
+ * Return:
+ * 	-> :: void  */
 void enviarHandshakeMemoria(char* puertos, char* ips, int socket_cliente)
 {
 	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
@@ -496,6 +500,12 @@ void enviarHandshakeMemoria(char* puertos, char* ips, int socket_cliente)
 	free(handshake);
 }
 
+/* recibirHandshakeMemoria()
+ * Parametros:
+ * 	-> int :: socket
+ * Descripcion: recibe el handshake que le llega de memoria y lo deserealiza
+ * Return:
+ * 	-> handshake :: t_handshake_memoria  */
 t_handshake_memoria* recibirHandshakeMemoria(int socket)
 {
 	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
@@ -512,6 +522,13 @@ t_handshake_memoria* recibirHandshakeMemoria(int socket)
 	return handshake;
 }
 
+/* serializar_handshake_memoria()
+ * Parametros:
+ * 	-> t_handshake_memoria* ::  handshake
+ * 	-> int :: tamanio
+ * Descripcion: serializa un t_handshake_memoria.
+ * Return:
+ * 	-> buffer :: void*  */
 void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
 {
 	void * buffer = malloc(tamanio);
