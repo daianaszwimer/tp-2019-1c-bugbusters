@@ -46,13 +46,19 @@ int main(void) {
 }
 
 
+
+
 void* leerDeConsola(void* arg) {
 	while (1) {
 		mensaje = readline(">");
 		if (!(strncmp(mensaje, "", 1) != 0)) {
+			//signal(hiloRecibirMemorias, )
+			pthread_cancel(hiloRecibirMemorias);
+			free(mensaje);
+			break;
 			//dumpear();
 		}
-		if(!(strncmp(mensaje, "", 1)) == 0 && !validarMensaje(mensaje, LFS, logger_LFS)){
+		if(!validarMensaje(mensaje, LFS, logger_LFS)){
 			char** request = string_n_split(mensaje, 2, " ");
 			cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0], LFS);
 			interpretarRequest(palabraReservada, mensaje, NULL);
@@ -73,8 +79,6 @@ void* recibirMemorias(void* arg) {
 	char* ip = config_get_string_value(config, "IP");
 	int lissandraFS_fd = iniciar_servidor(puerto, ip);
 	log_info(logger_LFS, "Lissandra lista para recibir Memorias");
-	free(puerto);
-	free(ip);
 
 	pthread_t hiloRequest;
 
@@ -102,10 +106,16 @@ void* conectarConMemoria(void* arg) {
 	while (1) {
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
+		if (palabraReservada == -1){
+			eliminar_paquete(paqueteRecibido);
+			log_error(logger_LFS, "el cliente se desconecto. Terminando servidor");
+			break;
+		}
 		printf("De la memoria nro: %d \n", memoria_fd);
 		//TODO ver de interpretar si es -1 q onda
 		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
-		if (palabraReservada == -1) break;	}
+		eliminar_paquete(paqueteRecibido);
+	}
 	return NULL;
 }
 

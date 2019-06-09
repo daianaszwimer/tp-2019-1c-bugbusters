@@ -88,7 +88,6 @@ sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
 pthread_mutex_t terminarHilo;
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
-pthread_t hiloEnviarMensajeAFileSystem;	// hilo para enviar mensaje a file system
 //pthread_attr_t attr;
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 

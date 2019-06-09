@@ -71,6 +71,13 @@ void leerDeConsola(void){
 	char* mensaje;
 	while (1) {
 		mensaje = readline(">");
+		if (!strcmp(mensaje, "\0")) {
+			pthread_cancel(hiloConectarAMemoria);
+			pthread_cancel(hiloPlanificarNew);
+			pthread_cancel(hiloPlanificarExec);
+			free(mensaje);
+			break;
+		}
 		//todo: usar exit
 		/*if (!strcmp(mensaje, "\0")) {
 			printf("sali de leer consola");

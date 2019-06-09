@@ -49,7 +49,7 @@ int main(void) {
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
 
-	pthread_detach(hiloLeerDeConsola);
+	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
 
 //-------------------------------- -PARTE FINAL DE MEMORIA---------------------------------------------------------
@@ -77,6 +77,8 @@ void leerDeConsola(void){
 		//sem_wait(&semLeerDeConsola);
 		mensaje = readline(">");
 		if (!strcmp(mensaje, "\0")) {
+			pthread_cancel(hiloEscucharMultiplesClientes);
+			free(mensaje);
 			break;
 		}
 //		if(validarRequest(mensaje)== SALIDA){
