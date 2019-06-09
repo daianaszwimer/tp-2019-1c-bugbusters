@@ -3,9 +3,11 @@
 
 int main(void) {
 
-//--------------------------------RESERVA DE MEMORIA------------------------------------------------------------
+//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
+	void* memoria = malloc(config_get_string_value(config, "TAM_MEM"));
+
 	//TODO solo se debe reservar el tam max y DELEGARSE A UNA FUNCION
-	pag =(t_pagina*) malloc(sizeof(t_pagina));
+	frame0 =(t_marco*) malloc(sizeof(t_marco));
 	elementoA1 = malloc(sizeof(t_elemTablaDePaginas));
 	tablaA = malloc(sizeof(t_segmento));
 	tablaDeSegmentos = malloc(sizeof(t_tablaDeSegmentos));
@@ -17,16 +19,17 @@ int main(void) {
 	tablaA->nombre= strdup("tablaA");
 	tablaA->tablaDePagina = list_create();	//list_create() HACE UN MALLOC
 
-	pag->timestamp = 123456789;
-	pag->key=1;
-	pag->value=strdup("hola");
-
 	elementoA1->numeroDePag=1;
-	elementoA1->pagina= pag;
+	elementoA1->numeroMarco=0;
 	elementoA1->modificado = SINMODIFICAR;
 
 	list_add(tablaA->tablaDePagina, elementoA1);
 	list_add(tablaDeSegmentos->segmentos,tablaA);
+
+	frame0->timestamp = 123456789;
+	frame0->key=1;
+	frame0->value=strdup("hola");
+
 
 //--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
@@ -838,22 +841,24 @@ errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
 
 
 // FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
-void liberarMemoria(){
-	void liberarElementoDePag(t_elemTablaDePaginas* self){
-		 free(self->pagina->value);
-		 free(self->pagina);
-	 }
-	list_clean_and_destroy_elements(tablaA->tablaDePagina, (void*)liberarElementoDePag);
-}
+//void liberarMemoria(){
+//	void liberarElementoDePag(t_elemTablaDePaginas* self){
+//		 free(self->pagina->value);
+//		 free(self->pagina);
+//	 }
+//	list_clean_and_destroy_elements(tablaA->tablaDePagina, (void*)liberarElementoDePag);
+//}
+//
+//
+//void eliminarElemTablaDePaginas(t_elemTablaDePaginas* elementoEncontrado){
+//	eliminarPagina(elementoEncontrado->pagina);
+//	free(elementoEncontrado);
+//	elementoEncontrado=NULL;
+//}
+//void eliminarPagina(t_pagina* pag){
+//	free(pag->value);
+//	free(pag);
+//	pag= NULL;
+//}
 
 
-void eliminarElemTablaDePaginas(t_elemTablaDePaginas* elementoEncontrado){
-	eliminarPagina(elementoEncontrado->pagina);
-	free(elementoEncontrado);
-	elementoEncontrado=NULL;
-}
-void eliminarPagina(t_pagina* pag){
-	free(pag->value);
-	free(pag);
-	pag= NULL;
-}

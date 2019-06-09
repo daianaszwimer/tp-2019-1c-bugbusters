@@ -48,12 +48,11 @@ typedef struct{
 	unsigned long long timestamp;
 	uint16_t key;
 	char* value; // al inicializarse, lfs me tiene q decir el tamanio
-}t_pagina;
+}t_marco;
 
 typedef struct{
 	int numeroDePag;
 	int numeroMarco;
-	t_pagina* pagina;
 	t_flagModificado modificado;
 }t_elemTablaDePaginas;
 
@@ -81,7 +80,7 @@ t_config* config;
 t_tablaDeSegmentos* tablaDeSegmentos;
 t_segmento* tablaA;
 t_elemTablaDePaginas* elementoA1;
-t_pagina* pag;
+t_marco* frame0;
 
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
@@ -94,6 +93,7 @@ pthread_t hiloEnviarMensajeAFileSystem;	// hilo para enviar mensaje a file syste
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
+
 
 t_list* descriptoresClientes ;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
@@ -121,8 +121,8 @@ void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_call
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 int validarInsertSC(errorNo);
 
-t_pagina* crearPagina(uint16_t, char*,unsigned long long);
-void actualizarPagina (t_pagina*, char*);
+t_marco* crearPagina(uint16_t, char*,unsigned long long);
+void actualizarPagina (t_marco*, char*);
 
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*,unsigned long long);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
