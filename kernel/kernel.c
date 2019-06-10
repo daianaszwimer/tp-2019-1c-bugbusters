@@ -39,9 +39,10 @@ void inicializarVariables() {
 	sem_init(&semMultiprocesamiento, 0, multiprocesamiento);
 	pthread_mutex_init(&semMColaNew, NULL);
 	pthread_mutex_init(&semMColaReady, NULL);
-	// Listas y colas
+	// Colas de planificacion
 	new = queue_create();
 	ready = queue_create();
+	// Memorias
 	memoriasEc = list_create();
 	memoriasShc = list_create();
 	memorias = list_create();
@@ -421,6 +422,7 @@ void liberarColaRequest(request_procesada* requestCola) {
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
 int enviarMensajeAMemoria(cod_request codigo, consistencia consistenciaMemoria, char* mensaje) {
+	//codigo se va a usar para el describe? para cuando es global?
 	t_paquete* paqueteRecibido;
 	int respuesta;
 	int conexionTemporanea;
