@@ -333,6 +333,22 @@ int manejarRequest(request_procesada* request) {
 	return respuesta;
 }
 
+/* actualizarTablas()
+ * Parametros:
+ * 	-> char* :: respuesta
+ * Descripcion: toma una rta del DESCRIBE y actualiza data de las tablas.
+ * Return:
+ * 	-> void */
+void actualizarTablas(char* respuesta) {
+
+}
+
+/* encontrarMemoriaSegunTabla()
+ * Parametros:
+ * 	-> char* :: tabla
+ * Descripcion: toma una tabla y devuelve la memoria según el criterio
+ * Return:
+ * 	-> memoriaCorrespondiente :: config_memoria*  */
 config_memoria* encontrarMemoriaSegunTabla(char* tabla) {
 	//busco en mi estructura de tablas el tipo
 	consistencia consistenciaDeTabla = SC;
@@ -347,8 +363,10 @@ config_memoria* encontrarMemoriaSegunTabla(char* tabla) {
 			}
 			break;
 		case SHC:
+			// funcion hash
 			break;
 		case EC:
+			// funcion random
 			break;
 		default:
 			//error
@@ -422,7 +440,6 @@ void liberarColaRequest(request_procesada* requestCola) {
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
 int enviarMensajeAMemoria(cod_request codigo, consistencia consistenciaMemoria, char* mensaje) {
-	//codigo se va a usar para el describe? para cuando es global?
 	t_paquete* paqueteRecibido;
 	int respuesta;
 	int conexionTemporanea;
@@ -444,6 +461,9 @@ int enviarMensajeAMemoria(cod_request codigo, consistencia consistenciaMemoria, 
 		respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
 			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
+			if (codigo == DESCRIBE) {
+				actualizarTablas(paqueteRecibido->request);
+			}
 		} else {
 			log_error(logger_KERNEL, "El request %s no es válido", mensaje);
 		}

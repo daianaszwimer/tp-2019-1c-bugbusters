@@ -59,16 +59,18 @@ void liberarMemoria(void);
 void liberarRequestProcesada(request_procesada*);
 void liberarColaRequest(request_procesada*);
 void leerDeConsola(void);
-//planificar requests
+// planificar requests
 void planificarNewAReady(void);
 void planificarReadyAExec(void);
 void reservarRecursos(char*);
-//validar + delegar requests
+// validar + delegar requests
 int validarRequest(char *);
 int manejarRequest(request_procesada*);
-//funciones que procesan requests:
+// se usa para procesar requests
 int enviarMensajeAMemoria(cod_request, consistencia, char*);
 config_memoria* encontrarMemoriaSegunTabla(char*);
+void actualizarTablas(char*);
+// procesan requests
 void procesarRun(t_queue*);
 int procesarAdd(char*);
 void procesarRequest(request_procesada*);
