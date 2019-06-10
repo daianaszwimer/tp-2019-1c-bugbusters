@@ -54,7 +54,8 @@ void* conectarConMemoria(void*);
 void interpretarRequest(cod_request, char*, int*);
 errorNo procesarCreate(char*, char*, char*, char*);
 errorNo procesarInsert(char*, uint16_t, char*, unsigned long long);
-errorNo procesarSelect(char*, char*, t_registro**);
+errorNo procesarSelect(char*, char*, char**);
+errorNo procesarDescribe(char*, char**);
 int obtenerBloqueDisponible(errorNo*);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
@@ -67,5 +68,6 @@ void vaciarTabla(t_tabla*);
 void compactacion(char*);
 t_list* obtenerRegistrosDeMemtable(char*, int);
 t_list* obtenerRegistrosDeTmp(char*, int);
+char* obtenerMetadata(char*);
 
 #endif /* LFS_H_ */
