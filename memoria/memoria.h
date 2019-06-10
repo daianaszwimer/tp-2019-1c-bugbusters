@@ -92,7 +92,8 @@ pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
 void* memoria;
-int marcosDisponibles;
+int marcosTotales;
+int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 
 
@@ -122,7 +123,7 @@ void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_call
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 int validarInsertSC(errorNo);
 
-t_marco* crearPagina(uint16_t, char*,unsigned long long);
+t_marco* crearMarco(uint16_t, char*,unsigned long long);
 void actualizarPagina (t_marco*, char*);
 
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*,unsigned long long);

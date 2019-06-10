@@ -34,7 +34,7 @@ int main(void) {
 
 //--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 	void* memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	marcosDisponibles = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
+	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
 
 //--------------------------------CONEXION CON LFS ---------------------------------------------------------------
 	conectarAFileSystem();
@@ -760,14 +760,6 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 //	}
 //}
 //
-//t_pagina* crearPagina(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
-//	t_pagina* nuevaPagina= (t_pagina*)malloc(sizeof(t_pagina));
-//	nuevaPagina->timestamp = nuevoTimesTamp;
-//	nuevaPagina->key = nuevaKey;
-//	nuevaPagina->value = nuevoValor;
-//	return nuevaPagina;
-//}
-//
 //void actualizarPagina (t_pagina* pagina, char* newValue){
 //	unsigned long long newTimes = obtenerHoraActual();
 //	pagina->timestamp = newTimes;
@@ -864,3 +856,38 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 ////	free(pag);
 ////	pag= NULL;
 ////}
+
+/*
+t_marco* crearMarco(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
+	t_marco* nuevoMarco= (t_marco*)malloc(sizeof(t_marco)); //TODO: VER SI ESTA BIEN
+	if(buscarMarcoDisponible(&nuevoMarco)==0){
+		nuevoMarco->timestamp = nuevoTimesTamp;
+		nuevoMarco->key = nuevaKey;
+		nuevoMarco->value = nuevoValor;
+		return nuevoMarco;
+	}
+}
+
+int buscarMarcoDisponible(t_marco* marco){
+	marco=memoria;
+	for(int i=0;i<marcosTotales;i++){	//TODO: ver marcosUsados
+		if(frameDisponible(marco)){
+			return EXIT_SUCCESS;
+		}
+		*marco = marco+sizeof(t_marco)*i;
+	}
+	return EXIT_FAILURE;
+}
+
+int frameDisponible(t_marco* marco){
+	if(marco->key == 0){
+		return TRUE;
+	}else{
+		return FALSE;
+	}
+}
+
+void agregarMarcoAMemoria(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
+
+}
+*/
