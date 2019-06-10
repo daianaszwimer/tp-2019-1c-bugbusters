@@ -212,6 +212,7 @@ void reservarRecursos(char* mensaje) {
 		queue_push(ready, _request);
 		pthread_mutex_unlock(&semMColaReady);
 	}
+	liberarArrayDeChar(request);
 	sem_post(&semRequestReady);
 }
 
@@ -261,10 +262,7 @@ void planificarReadyAExec(void) {
  * 	-> :: void  */
 void procesarRequest(request_procesada* request) {
 	manejarRequest(request);
-	//printf("aa  ");
-	//fflush(stdout);
 	liberarRequestProcesada(request);
-	// si no hay mas elementos en la cola, hago free(request)
 	sem_post(&semMultiprocesamiento);
 }
 
