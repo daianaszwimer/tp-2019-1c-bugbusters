@@ -35,7 +35,7 @@ int quantum;
 t_config* config;
 t_queue* new;
 t_queue* ready;
-config_memoria memoriaSc;
+config_memoria* memoriaSc;
 t_list* memoriasShc;
 t_list* memoriasEc;
 t_list* memorias;
@@ -67,9 +67,10 @@ void reservarRecursos(char*);
 int validarRequest(char *);
 int manejarRequest(request_procesada*);
 //funciones que procesan requests:
-int enviarMensajeAMemoria(consistencia, char*);
+int enviarMensajeAMemoria(cod_request, consistencia, char*);
+config_memoria* encontrarMemoriaSegunTabla(char*);
 void procesarRun(t_queue*);
-void procesarAdd(char*);
+int procesarAdd(char*);
 void procesarRequest(request_procesada*);
 
 

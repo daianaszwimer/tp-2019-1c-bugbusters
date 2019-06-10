@@ -54,7 +54,8 @@ typedef enum
 	ERROR_CREANDO_DIRECTORIO,
 	ERROR_CREANDO_METADATA,
 	ERROR_CREANDO_PARTICIONES,
-	KEY_NO_EXISTE
+	KEY_NO_EXISTE,
+	ERROR_GENERICO = -1
 } errorNo;
 
 typedef enum
@@ -104,7 +105,7 @@ char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
 char** obtenerParametros(char*);
 int longitudDeArrayDeStrings(char**);
-
+consistencia obtenerEnumConsistencia(char*);
 
 int crearConexion(char*, char*);
 t_config* leer_config(char*);

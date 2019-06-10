@@ -45,6 +45,8 @@ void inicializarVariables() {
 	memoriasEc = list_create();
 	memoriasShc = list_create();
 	memorias = list_create();
+	memoriaSc = (config_memoria*) malloc(sizeof(config_memoria));
+	memoriaSc = NULL;
 }
 
 /* conectarAMemoria()
@@ -58,7 +60,6 @@ void conectarAMemoria(void) {
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 	handshake = recibirHandshakeMemoria(conexionMemoria);
 	procesarHandshake(handshake);
-	procesarAdd("");
 }
 
 /* procesarHandshake()
@@ -75,10 +76,9 @@ void procesarHandshake(t_handshake_memoria* handshakeRecibido) {
 	for( i = 0; ips[i] != NULL; i++)
 	{
 		config_memoria* memoriaNueva = (config_memoria*) malloc(sizeof(config_memoria));
-		memoriaNueva->ip = ips[i];
-		memoriaNueva->puerto = puertos[i];
+		memoriaNueva->ip = config_get_string_value(config, "IP_MEMORIA"); //ips[i];
+		memoriaNueva->puerto = config_get_string_value(config, "PUERTO_MEMORIA"); //puertos[i];
 		memoriaNueva->numero = "1";
-		log_info(logger_KERNEL, "ip %s, puerto %s", memoriaNueva->ip, memoriaNueva->puerto);
 		list_add(memorias, memoriaNueva);
 	}
 }
@@ -153,8 +153,8 @@ void reservarRecursos(char* mensaje) {
 		//desarmo archivo y lo pongo en una cola
 		FILE *archivoLql;
 		char** parametros;
-		parametros = obtenerParametros(mensaje);
-		archivoLql = fopen(parametros[0], "r");
+		parametros = separarRequest(mensaje);
+		archivoLql = fopen(parametros[1], "r");
 		if (archivoLql == NULL) {
 			log_error(logger_KERNEL, "No existe un archivo en esa ruta");
 		} else {
@@ -310,13 +310,13 @@ int manejarRequest(request_procesada* request) {
 		case CREATE:
 		case DESCRIBE:
 		case DROP:
-			respuesta = enviarMensajeAMemoria(consistenciaMemoria, (char*) request->request);
+			respuesta = enviarMensajeAMemoria(request->codigo, consistenciaMemoria, (char*) request->request);
 			break;
 		case JOURNAL:
 			// solo a memorias que tengan un criterio
 			break;
 		case ADD:
-			//procesarAdd((char*) request->request);
+			respuesta = procesarAdd((char*) request->request);
 			break;
 		case RUN:
 			procesarRun((t_queue*) request->request);
@@ -331,11 +331,31 @@ int manejarRequest(request_procesada* request) {
 	usleep(config_get_int_value(config, "SLEEP_EJECUCION")*1000);
 	return respuesta;
 }
-/*
-config_memoria* encontrarMemoriaSegunTabla(char* tabla) {
 
+config_memoria* encontrarMemoriaSegunTabla(char* tabla) {
+	//busco en mi estructura de tablas el tipo
+	consistencia consistenciaDeTabla = SC;
+	config_memoria* memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));
+	switch(consistenciaDeTabla) {
+		case SC:
+			if (memoriaSc == NULL) {
+				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio SC");
+				memoriaCorrespondiente->ip = strdup("-1");
+			} else {
+				memoriaCorrespondiente = memoriaSc;
+			}
+			break;
+		case SHC:
+			break;
+		case EC:
+			break;
+		default:
+			//error
+			break;
+	}
+	return memoriaCorrespondiente;
 }
-*/
+
 /* liberarMemoria()
  * Parametros:
  * 	-> void
@@ -400,20 +420,38 @@ void liberarColaRequest(request_procesada* requestCola) {
  * Descripcion: recibe una request, se la manda a memoria y recibe la respuesta.
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
-int enviarMensajeAMemoria(consistencia consistenciaMemoria, char* mensaje) {
+int enviarMensajeAMemoria(cod_request codigo, consistencia consistenciaMemoria, char* mensaje) {
 	t_paquete* paqueteRecibido;
 	int respuesta;
-	char** parametros = obtenerParametros(mensaje);
-	//config_memoria* memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1]);
+	int conexionTemporanea;
+	char** parametros = separarRequest(mensaje);
+	config_memoria* memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1]);
 	//buscar a que memoria mandarle el dato, crear conexion, mandarselo y cerrar conexion, sii no es la ppal
-	//int conexionTemporanea = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
-	enviar(consistenciaMemoria, mensaje, conexionMemoria);
-	paqueteRecibido = recibir(conexionMemoria);
-	respuesta = paqueteRecibido->palabraReservada;
-	if (respuesta == SUCCESS) {
-		log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
+	if(string_equals_ignore_case(memoriaCorrespondiente->ip, "-1")) {
+		respuesta = ERROR_GENERICO;
+		free(memoriaCorrespondiente->ip);
+	} else {
+		if (string_equals_ignore_case(memoriaCorrespondiente->ip, config_get_string_value(config, "IP_MEMORIA"))
+			&& string_equals_ignore_case(memoriaCorrespondiente->puerto, config_get_string_value(config, "PUERTO_MEMORIA"))) {
+			conexionTemporanea = conexionMemoria;
+		} else {
+			conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
+		}
+		enviar(consistenciaMemoria, mensaje, conexionTemporanea);
+		paqueteRecibido = recibir(conexionTemporanea);
+		respuesta = paqueteRecibido->palabraReservada;
+		if (respuesta == SUCCESS) {
+			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
+		} else {
+			log_error(logger_KERNEL, "El request %s no es válido", mensaje);
+		}
+		if (conexionTemporanea != conexionMemoria) {
+			liberar_conexion(conexionTemporanea);
+		}
+		eliminar_paquete(paqueteRecibido);
 	}
-	eliminar_paquete(paqueteRecibido);
+	//free(memoriaCorrespondiente);
+	liberarArrayDeChar(parametros);
 	return respuesta;
 }
 
@@ -426,7 +464,6 @@ int enviarMensajeAMemoria(consistencia consistenciaMemoria, char* mensaje) {
  * 	-> void  */
 void procesarRun(t_queue* colaRun) {
 	// usar inotify por si cambia Q
-	t_paquete* respuesta;
 	request_procesada* request;
 	int quantumActual = 0;
 	//el while es fin de Q o fin de cola
@@ -464,7 +501,7 @@ void procesarRun(t_queue* colaRun) {
 		log_info(logger_KERNEL, "Finalizó la ejecución del script");
 		queue_destroy(colaRun);
 	} else {
-		log_error(logger_KERNEL, "Se rompio porque la request %s no es válida", (char*) request->request);
+		log_error(logger_KERNEL, "Se cancelo el script");
 		liberarRequestProcesada(request);
 		queue_destroy_and_destroy_elements(colaRun, (void*)liberarColaRequest);
 		// liberar recursos que ocupa el struct este con sus colas o sea el request - es lo de arriba
@@ -478,42 +515,40 @@ void procesarRun(t_queue* colaRun) {
  * Luego le informa a memoria que se le asignó ese criterio.
  * Return:
  * 	-> void  */
-void procesarAdd(char* mensaje) {
-	memoriaSc.ip = config_get_string_value(config, "IP_MEMORIA");
-	memoriaSc.puerto = config_get_string_value(config, "PUERTO_MEMORIA");
-/*
-	char** requestDivida = separarRequest(mensaje);
-	if (list_size(memorias) < (int)requestDivida[1]) {
-		// error
-	}
-	config_memoria memoria;
+int procesarAdd(char* mensaje) {
+	int estado = SUCCESS;
+	char** requestDividida = separarRequest(mensaje);
+	config_memoria* memoria = (config_memoria*) malloc(sizeof(config_memoria));
 	consistencia _consistencia;
-	// la memoria n que se manda en el request es la n en la lista
-	memoria = list_get(memorias, (int)requestDivida[1] - 1);
-	_consistencia = obtenerEnumConsistencia(requestDivida[3]);
+	_consistencia = obtenerEnumConsistencia(requestDividida[4]);
 	if (_consistencia == CONSISTENCIA_INVALIDA) {
-		// error
+		estado = ERROR_GENERICO;
+		log_error(logger_KERNEL, "El criterio %s no es válido", requestDividida[4]);
 	}
-	switch (_consistencia) {
-		case SC:
-			memoriaSc.ip = memoria.ip;
-			memoriaSc.puerto = memoria.puerto;
-			break;
-		case SHC:
-			list_add(memoriasShc, memoria);
-			break;
-		case EC:
-			list_add(memoriasEc, memoria);
-			break;
+	int esMemoriaCorrecta(config_memoria* memoriaActual) {
+		return string_equals_ignore_case(memoriaActual->numero, requestDividida[2]);
 	}
-	free(mensaje);
-	liberarArrayDeChar(requestDivida);
-*/
-	//validar que int sea menor al tamaño de mi lista -DONE
-	//en la lista se van a encontrar las memorias levantadas - HAY QUE HACER DESCRIBE GLOBAL Y AGREGARLAS
-	//y va a ser una lista de config_memoria
-	//hacer switch con cada case un criterio - DONE
-	//crear tipo de dato criterio que tenga los 3 criterios - DONE
-	//para esta iteracion vamos a llamar al add en el conectar
-	//y guardar en SC la memoria que se encuentra en el config
+	memoria = (config_memoria*) list_find(memorias, (void*)esMemoriaCorrecta);
+	if (memoria == NULL) {
+		estado = ERROR_GENERICO;
+		log_error(logger_KERNEL, "No encontré la memoria %s", requestDividida[2]);
+	} else {
+		switch (_consistencia) {
+			case SC:
+				memoriaSc = memoria;
+				break;
+			case SHC:
+				list_add(memoriasShc, memoria);
+				break;
+			case EC:
+				list_add(memoriasEc, memoria);
+				break;
+			default:
+				break;
+		}
+	}
+	//free(mensaje);
+	liberarArrayDeChar(requestDividida);
+	//free(memoria); hay que hacer este free???
+	return estado;
 }

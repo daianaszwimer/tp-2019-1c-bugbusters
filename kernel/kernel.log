@@ -9,3 +9,26 @@
 [INFO] 15:15:35:654 Kernel/(14928:14928): ----------------INICIO DE KERNEL--------------
 [INFO] 15:16:06:979 Kernel/(15006:15006): ----------------INICIO DE KERNEL--------------
 [INFO] 15:16:46:273 Kernel/(15091:15091): ----------------INICIO DE KERNEL--------------
+[INFO] 22:42:05:243 Kernel/(6313:6313): ----------------INICIO DE KERNEL--------------
+[INFO] 22:44:02:922 Kernel/(6313:6363): la memoria es 1 y estoy en la 1 con ip 127.0.0.1
+[INFO] 22:44:02:922 Kernel/(6313:6363): la memoria es 1 y estoy en la 1 con ip 127.0.0.1
+[INFO] 22:44:02:922 Kernel/(6313:6363): la memoria es 1 y estoy en la 1 con ip 127.0.0.1
+[INFO] 22:44:02:922 Kernel/(6313:6363): la memoria es 1 y estoy en la 1 con ip 127.0.0.1
+[ERROR] 22:44:20:893 Kernel/(6313:6363): rompi
+[INFO] 22:45:11:401 Kernel/(6313:6394): la memoria es 1 y estoy en la 1 con ip 127.0.0.1
+[INFO] 22:50:58:349 Kernel/(6689:6689): ----------------INICIO DE KERNEL--------------
+[INFO] 22:51:23:509 Kernel/(6689:6716): se encontro la memoria 127.0.0.1 8001 a SC
+[INFO] 23:11:46:444 Kernel/(7499:7499): ----------------INICIO DE KERNEL--------------
+[INFO] 23:14:26:177 Kernel/(7635:7635): ----------------INICIO DE KERNEL--------------
+[INFO] 23:20:55:647 Kernel/(7932:7932): ----------------INICIO DE KERNEL--------------
+[INFO] 23:35:07:435 Kernel/(8464:8464): ----------------INICIO DE KERNEL--------------
+[ERROR] 23:36:06:64 Kernel/(8464:8506): No se puede resolver el request porque no hay memorias asociadas al criterio SC
+[INFO] 23:38:56:353 Kernel/(8628:8628): ----------------INICIO DE KERNEL--------------
+[ERROR] 23:39:09:150 Kernel/(8628:8646): No se puede resolver el request porque no hay memorias asociadas al criterio SC
+[INFO] 23:40:18:910 Kernel/(8754:8754): ----------------INICIO DE KERNEL--------------
+[ERROR] 23:40:35:196 Kernel/(8754:8783): No se puede resolver el request porque no hay memorias asociadas al criterio SC
+[INFO] 23:41:55:719 Kernel/(8894:8894): ----------------INICIO DE KERNEL--------------
+[ERROR] 23:42:10:234 Kernel/(8894:8908): No se puede resolver el request porque no hay memorias asociadas al criterio SC
+[INFO] 23:50:03:893 Kernel/(9102:9102): ----------------INICIO DE KERNEL--------------
+[INFO] 23:50:48:318 Kernel/(9102:9122): La respuesta del request CREATE MARINOS SC 1 10000 es  
+
