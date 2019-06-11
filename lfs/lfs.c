@@ -8,6 +8,7 @@
 
 
 int main(void) {
+
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
 	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
@@ -31,7 +32,6 @@ int main(void) {
 
 	if(!pthread_create(&hiloDumpeo, NULL, hiloDump, NULL)){
 		log_info(logger_LFS, "Hilo de Dump iniciado");
-		pthread_detach(hiloDumpeo);
 	}else{
 		log_error(logger_LFS, "Error al crear hilo Dumpeo");
 	}
@@ -39,7 +39,9 @@ int main(void) {
 	pthread_join(hiloLeerDeConsola, NULL);
 	log_info(logger_LFS, "Hilo de consola finalizado");
 	pthread_join(hiloRecibirMemorias, NULL);
-	log_info(logger_LFS, "Hilo recibir memorias finalizado");*/
+	log_info(logger_LFS, "Hilo recibir memorias finalizado");
+	pthread_join(hiloDumpeo, NULL);
+	log_info(logger_LFS, "Hilo dumpeo finalizado");*/
 
 	free(pathRaiz);
 	log_destroy(logger_LFS);
@@ -49,11 +51,14 @@ int main(void) {
 }
 
 
+
+
 void* leerDeConsola(void* arg) {
 	while (1) {
-		log_info(logger_LFS, "Mete algo vieja");
 		mensaje = readline(">");
 		if (!(strncmp(mensaje, "", 1) != 0)) {
+			pthread_cancel(hiloRecibirMemorias);
+			pthread_cancel(hiloDumpeo);
 			free(mensaje);
 			break;
 		}
@@ -61,10 +66,8 @@ void* leerDeConsola(void* arg) {
 			char** request = string_n_split(mensaje, 2, " ");
 			cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0], LFS);
 			interpretarRequest(palabraReservada, mensaje, NULL);
-			for(int i = 0; request[i] != NULL; i++){
-				free(request[i]);
-			}
-			free(request);
+			liberarArrayDeChar(request);
+
 		}else{
 			log_error(logger_LFS, "Request invalida");
 		}
@@ -78,15 +81,12 @@ void* recibirMemorias(void* arg) {
 	char* ip = config_get_string_value(config, "IP");
 	int lissandraFS_fd = iniciar_servidor(puerto, ip);
 	log_info(logger_LFS, "Lissandra lista para recibir Memorias");
-	free(puerto);
-	free(ip);
 
 	pthread_t hiloRequest;
 
 	while (1) {
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
 		if(memoria_fd > 0) {
-
 			if(!pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria, (void*) memoria_fd)) {
 				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
 				log_info(logger_LFS, mensaje);
@@ -107,39 +107,52 @@ void* conectarConMemoria(void* arg) {
 	while (1) {
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
+		//si viene -1 es porque se desconecto la memoria
+		if (palabraReservada == -1){
+			eliminar_paquete(paqueteRecibido);
+			log_error(logger_LFS, "el cliente se desconecto. Terminando servidor");
+			close(memoria_fd);
+			break;
+		}
 		printf("De la memoria nro: %d \n", memoria_fd);
-		//TODO ver de interpretar si es -1 q onda
-		interpretarRequest(palabraReservada, paqueteRecibido->request, memoria_fd);
-		if (palabraReservada == -1) break;
-		enviar(palabraReservada, paqueteRecibido->request, memoria_fd);
+		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
+		eliminar_paquete(paqueteRecibido);
 	}
 	return NULL;
 }
 
-void interpretarRequest(cod_request palabraReservada, char* request, int memoria_fd) {
+void interpretarRequest(cod_request palabraReservada, char* request, int* memoria_fd) {
 	char** requestSeparada = separarRequest(request);
-	errorNo retorno = SUCCESS;
+	errorNo errorNo = SUCCESS;
+	char* mensaje = strdup("");
+	//TODO case memoria se desconecto
 	switch (palabraReservada){
 		case SELECT:
 			log_info(logger_LFS, "Me llego un SELECT");
-			retorno = procesarSelect(requestSeparada[1], requestSeparada[2]);
+			errorNo = procesarSelect(requestSeparada[1], requestSeparada[2], &mensaje);
 			break;
 		case INSERT:
 			log_info(logger_LFS, "Me llego un INSERT");
 			unsigned long long timestamp;
 			if(longitudDeArrayDeStrings(requestSeparada) == 5) { //4 parametros + INSERT
 				convertirTimestamp(requestSeparada[4], &timestamp);
-				retorno = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], timestamp);
+				errorNo = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], timestamp);
 			} else {
-				retorno = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], obtenerHoraActual());
+				errorNo = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], obtenerHoraActual());
 			}
 			break;
 		case CREATE:
 			log_info(logger_LFS, "Me llego un CREATE");
 			//TODO validar los tipos de los parametros (ejemplo, SC, cantidad de particiones, etc.)
-			retorno = procesarCreate(requestSeparada[1], requestSeparada[2], requestSeparada[3], requestSeparada[4]);
+			errorNo = procesarCreate(requestSeparada[1], requestSeparada[2], requestSeparada[3], requestSeparada[4]);
 			break;
 		case DESCRIBE:
+			if(longitudDeArrayDeStrings(requestSeparada) == 2){
+				errorNo = procesarDescribe(requestSeparada[1], &mensaje);
+			}else{
+				errorNo = procesarDescribe(NULL, &mensaje);
+			}
+
 			log_info(logger_LFS, "Me llego un DESCRIBE");
 			break;
 		case DROP:
@@ -150,14 +163,15 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 				log_error(logger_LFS, "El cliente se desconecto");
 			}
 			break;
+		default:
+			break;
 	}
 
 	char* mensajeDeError;
-	switch(retorno){
+	//TODO case memoria se desconecto
+	switch(errorNo){
 		case SUCCESS:
-			mensajeDeError = string_from_format("Request recibida correctamente");
-			//mensajeDeError = string_from_format("La tabla %s fue creada correctamente", requestSeparada[1]);
-			log_info(logger_LFS, mensajeDeError);
+			mensajeDeError=strdup("Request ejecutada correctamente");
 			break;
 		case TABLA_EXISTE:
 			mensajeDeError = string_from_format("La tabla %s ya existe", requestSeparada[1]);
@@ -170,21 +184,26 @@ void interpretarRequest(cod_request palabraReservada, char* request, int memoria
 		case TABLA_NO_EXISTE:
 			mensajeDeError = string_from_format("La tabla %s no existe", requestSeparada[1]);
 			log_info(logger_LFS, mensajeDeError);
+			break;
+		case KEY_NO_EXISTE:
+			mensajeDeError = string_from_format("La KEY %s no existe", requestSeparada[2]); // ODO mostrar bien mensaje de error
+			log_info(logger_LFS, mensajeDeError);
+			break;
+		default:
+			break;
 	}
 
 	free(mensajeDeError);
 
-	if (memoria_fd != NULL) {
-		char* retorno_string = string_itoa(retorno);
-		enviar(palabraReservada, retorno_string, memoria_fd);
-		free(retorno_string);
-	}
 
-	for (int i = 0; requestSeparada[i] != NULL; i++) {
-		free(requestSeparada[i]);
+
+	if (memoria_fd != NULL) {
+		enviar(errorNo, mensaje, *memoria_fd);
+	}else{
+		log_info(logger_LFS, mensaje);
 	}
-	free(requestSeparada);
-	puts("\n");
+	free(mensaje);
+	liberarArrayDeChar(requestSeparada);
 }
 
 /* procesarCreate() [API]
@@ -275,21 +294,18 @@ errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 }
 
 int obtenerBloqueDisponible(errorNo* errorNo) {
-	//TODO sacar el hardcode de abajo xD
-	char* fileBitmap = string_from_format("%s/FS_LISSANDRA/Metadata/Bitmap.bin", PATH);
+	char* fileBitmap = string_from_format("%s/Metadata/Bitmap.bin", pathRaiz);
 	int index = 0;
 	int fdBitmap = open(fileBitmap, O_CREAT | O_RDWR, S_IRWXU);
 	if(fdBitmap == -1){
 		*errorNo = ERROR_CREANDO_ARCHIVO;
 		index = -1;
 	}else{
-		//TODO CAMBIAR SIZE en mmap y bitarray_create (segundo parametro de mmap y de bit array). se cambia teniendo las configo globales
-		char* bitmap = mmap(NULL, 2, PROT_READ | PROT_WRITE, MAP_SHARED, fdBitmap, 0);
-		t_bitarray* bitarray = bitarray_create_with_mode(bitmap, 2, LSB_FIRST);
 
-		//TODO CAMBIAR TODOS LOS CONFIG A GLOBALES
-		while(index < config_get_int_value(configMetadata, "BLOCKS") && bitarray_test_bit(bitarray, index)) index++;
-		if(index >= config_get_int_value(configMetadata, "BLOCKS")) {
+		char* bitmap = mmap(NULL, blocks/8, PROT_READ | PROT_WRITE, MAP_SHARED, fdBitmap, 0);
+		t_bitarray* bitarray = bitarray_create_with_mode(bitmap, blocks/8, LSB_FIRST);
+		while(index < blocks && bitarray_test_bit(bitarray, index)) index++;
+		if(index >= blocks) {
 			index = -1;
 		}else{
 			bitarray_set_bit(bitarray, index);
@@ -328,18 +344,11 @@ void inicializarLfs() {
 	mkdir(pathMetadata, S_IRWXU);
 	char* fileMetadata = string_from_format("%s/Metadata.bin", pathMetadata);
 
-	FILE* metadata = fopen(fileMetadata, "w");
-	fclose(metadata);
-
 	configMetadata = config_create(fileMetadata);
-	config_set_value(configMetadata, "BLOCK_SIZE", "64");
-	config_set_value(configMetadata, "BLOCKS", "16");
-	config_set_value(configMetadata, "MAGIC_NUMBER", "LISSANDRA");
-	config_save(configMetadata);
 
 	mkdir(pathBloques, S_IRWXU);
 
-	int blocks = config_get_int_value(configMetadata, "BLOCKS");
+	blocks = config_get_int_value(configMetadata, "BLOCKS");
 	char* fileBloque;
 	for (int i = 1; i <= blocks; i++) {
 		fileBloque = string_from_format("%s/%d.bin", pathBloques, i);
@@ -412,39 +421,183 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	return error;
 }
 
-errorNo procesarSelect(char* nombreTabla, char* key){
+//falta buscar en los bloques posta
+errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
+
+	int ordenarRegistrosPorTimestamp(t_registro* registro1, t_registro* registro2){
+		return registro1->timestamp > registro2->timestamp;
+	}
+
+	void eliminarRegistro(t_registro* registro) {
+		free(registro->value);
+		free(registro);
+	}
+
+	errorNo error = SUCCESS;
+	t_list* listaDeRegistros = list_create();
+
+	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
+	DIR* dir = opendir(pathTabla);
+	free(pathTabla);
+	if(dir){
+		//TODO validar q onda la funcion convertirKey, retorna -1 si hay error
+		int _key = convertirKey(key);
+		t_list* listaDeRegistrosDeMemtable = obtenerRegistrosDeMemtable(nombreTabla, _key);
+		t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);
+		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
+		list_add_all(listaDeRegistros, listaDeRegistrosDeTmp);
+		if(!list_is_empty(listaDeRegistros)){
+			list_sort(listaDeRegistros, (void*) ordenarRegistrosPorTimestamp);
+			t_registro* registro = (t_registro*)listaDeRegistros->head->data;
+			string_append_with_format(&*mensaje, "%s %u %s %llu", nombreTabla, registro->key, registro->value, registro->timestamp);
+		}else{
+			error = KEY_NO_EXISTE;
+		}
+		list_destroy(listaDeRegistrosDeMemtable);
+		list_destroy_and_destroy_elements(listaDeRegistrosDeTmp, (void*)eliminarRegistro);
+	}else{
+		error = TABLA_NO_EXISTE;
+	}
+	list_destroy(listaDeRegistros);
+	free(dir);
+	return error;
+}
+
+t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
+
+	FILE* fileTmp;
+	int numeroTemporal = 0;
+	char* pathTmp;
+	t_list* listaDeRegistros = list_create();
+	char* datos;
+	pathTmp = string_from_format("%sTablas/%s/%d.tmp", pathRaiz, nombreTabla, numeroTemporal);
+	fileTmp = fopen(pathTmp, "r");
+
+	while(fileTmp != NULL){
+		free(pathTmp);
+		//validar si el datos de abajo se libera si el archivo esta vacio
+		datos = (char*) malloc(sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE") + sizeof(unsigned long long));
+		strcpy(datos, "");
+		while(fscanf(fileTmp, "%s", datos) != EOF){
+			char** dato = string_split(datos, ";");
+			free(datos);
+			int _key = convertirKey(dato[0]);
+			if(_key == key){
+				t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
+				registro->key = key;
+				registro->value = strdup(dato[1]);
+				registro->timestamp = strtoull(dato[2], NULL, 10);
+				list_add(listaDeRegistros, registro);
+			}
+			liberarArrayDeChar(dato);
+			datos = (char*) malloc(sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE") + sizeof(unsigned long long));
+			strcpy(datos, "");
+		}
+		free(datos);
+		fclose(fileTmp);
+		numeroTemporal++;
+		pathTmp = string_from_format("%sTablas/%s/%d.tmp", pathRaiz, nombreTabla, numeroTemporal);
+		fileTmp = fopen(pathTmp, "r");
+	}
+	free(pathTmp);
+	return listaDeRegistros;
+}
+
+t_list* obtenerRegistrosDeMemtable(char* nombreTabla, int key){
 	int encontrarTabla(t_tabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
 
 	int encontrarRegistro(t_registro* registro) {
-		return registro->key == convertirKey(key);
+		return registro->key == key;
 	}
 
-
-	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
-	errorNo error = SUCCESS;
-
+	t_list* listaDeRegistros;
 	t_tabla* table = list_find(memtable->tablas, (void*) encontrarTabla);
-	if(table !=NULL){
-		t_registro* registro = list_find(table->registros, (void*) encontrarRegistro);
-		if(registro != NULL){
-			log_info(logger_LFS, "el valor encontrado es el de abajo vieja");
-			log_info(logger_LFS, registro->value);
-		}else{
-			log_info(logger_LFS, "no encontre el valor");
-		}
+	if(table == NULL){
+		listaDeRegistros = list_create();
 	}else{
-		log_info(logger_LFS, "no encontre la tabla");
+		listaDeRegistros = list_filter(table->registros, (void*) encontrarRegistro);
 	}
+	return listaDeRegistros;
+}
+
+errorNo procesarDescribe(char* nombreTabla, char** mensaje){
+	errorNo error = SUCCESS;
+	char* pathTablas = string_from_format("%sTablas", pathRaiz);
+	char* pathTabla;
+	if(nombreTabla != NULL){
+		pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
+		char* metadata = obtenerMetadata(pathTabla);
+		string_append_with_format(&*mensaje, "%s %s", nombreTabla, metadata);
+		free(metadata);
+		free(pathTabla);
+	}else{
+		DIR *dir;
+		struct dirent* tabla;
+		if ((dir = opendir(pathTablas)) != NULL) {
+			while ((tabla = readdir (dir)) != NULL) {
+				struct stat st;
+
+				//ignora . y ..
+				if(strcmp(tabla->d_name, ".") == 0 || strcmp(tabla->d_name, "..") == 0) continue;
+
+				//esta funcion carga en st la informacion del file "tabla", que esta dentro de "dir"
+				if (fstatat(dirfd(dir), tabla->d_name, &st, 0) < 0) continue;
+
+				if (S_ISDIR(st.st_mode)) {
+					pathTabla = string_from_format("%s/%s", pathTablas, tabla->d_name);
+					char* metadata = obtenerMetadata(pathTabla);
+					string_append_with_format(&*mensaje,"%s %s;", tabla->d_name, metadata);
+					free(metadata);
+					metadata = NULL;
+					free(pathTabla);
+				}
+			}
+
+			closedir (dir);
+			(*mensaje)[strlen(*mensaje) - 1] = 0;
+		} else {
+			// todo error desconocido, no pudo abrir Tablas
+
+		}
+	}
+	free(pathTablas);
 	return error;
 }
+
+char* obtenerMetadata(char* pathTabla){
+	char* mensaje;
+	DIR* dir = opendir(pathTabla);
+	if(dir != NULL){
+		closedir(dir);
+		char* pathMetadata = string_from_format("%s/%s", pathTabla, "Metadata.bin");
+		t_config* metadata = config_create(pathMetadata);
+		free(pathMetadata);
+		if(metadata != NULL){
+			if(config_has_property(metadata, "CONSISTENCY") && config_has_property(metadata, "PARTITIONS") && config_has_property(metadata, "COMPACTION_TIME")){
+				mensaje = string_from_format("%s %i %i", config_get_string_value(metadata, "CONSISTENCY"), config_get_int_value(metadata, "PARTITIONS"), config_get_int_value(metadata, "COMPACTION_TIME"));
+			}else{
+				//todo no posee alguna de las keys
+			}
+			config_destroy(metadata);
+		}else{
+			//todo no se pudo levantar la metadata XD
+		}
+	}else{
+		//TODO tabla no existe o error
+	}
+	return mensaje;
+}
+
+
+
 
 /* hiloDump()
  * Parametros: void
  * Descripcion: ejecuta la funcion dumpear() cada cierta cantidad de tiempo (tiempoDump) definido en el config
  * Return: void* */
-void* hiloDump() {
+void* hiloDump(void* args) {
 	int tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
 	while(1) {
 		sleep(tiempoDump/1000);
@@ -468,7 +621,7 @@ void* hiloDump() {
  * Return: codigo de error definido en el enum errorNo */
 errorNo dumpear() {
 	t_tabla* tabla;
-	errorNo error;
+	errorNo error = SUCCESS;
 	char* pathTmp;
 	FILE* fileTmp;
 
@@ -495,7 +648,10 @@ errorNo dumpear() {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				// Guardo lo de la tabla en el archivo temporal
-				char* datosADumpear = strdup("");
+				//char* datosADumpear = strdup("");
+//				TODO NICO: ver si lo de abajo sirve
+				char* datosADumpear = malloc(sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE") + sizeof(unsigned long long));
+				strcpy(datosADumpear, "");
 				for(int j = 0; list_get(tabla->registros,j) != NULL; j++) {
 					t_registro* registro = list_get(tabla->registros,j);
 					string_append_with_format(&datosADumpear, "%u;%s;%llu\n", registro->key, registro->value, registro->timestamp);
@@ -505,7 +661,6 @@ errorNo dumpear() {
 				fclose(fileTmp);
 				// Vacio la memtable
 				list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
-				error = SUCCESS;
 			}
 		}
 		closedir(dir);

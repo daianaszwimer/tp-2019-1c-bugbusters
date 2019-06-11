@@ -15,14 +15,15 @@
 #include<string.h>
 #include<readline/readline.h>
 
-#define TRUE 0
-#define FALSE 1
+#define TRUE 1
+#define FALSE 0
 
 #define PARAMETROS_SELECT 2
 #define PARAMETROS_INSERT 3
 #define PARAMETROS_INSERT_TIMESTAMP 4
 #define PARAMETROS_CREATE 4
-#define PARAMETROS_DESCRIBE 1
+#define PARAMETROS_DESCRIBE_GLOBAL 0
+#define PARAMETROS_DESCRIBE_TABLA 1
 #define PARAMETROS_DROP 1
 #define PARAMETROS_JOURNAL 0
 #define PARAMETROS_ADD 4
@@ -50,7 +51,10 @@ typedef enum
 	TABLA_EXISTE,
 	TABLA_NO_EXISTE,
 	ERROR_CREANDO_ARCHIVO,
-	ERROR_CREANDO_DIRECTORIO
+	ERROR_CREANDO_DIRECTORIO,
+	ERROR_CREANDO_METADATA,
+	ERROR_CREANDO_PARTICIONES,
+	KEY_NO_EXISTE
 } errorNo;
 
 typedef enum
@@ -64,15 +68,24 @@ typedef enum
 	ADD,
 	RUN,
 	METRICS,
-	NUESTRO_ERROR = -1
+	NUESTRO_ERROR = -1,
+	SALIDA = 404
 } cod_request;
 
 typedef struct
 {
-	cod_request palabraReservada;
+	int palabraReservada;
 	int tamanio;
-	void* request;
+	char* request;
 } t_paquete;
+
+typedef struct
+{
+	char* puertos;
+	char* ips;
+	int tamanioIps;
+	int tamanioPuertos;
+} t_handshake_memoria;
 
 typedef enum
 {
@@ -89,7 +102,6 @@ char** separarRequest(char*);
 unsigned long long obtenerHoraActual();
 char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
-//char* concatenar(char*, ...);
 char** obtenerParametros(char*);
 int longitudDeArrayDeStrings(char**);
 
@@ -97,25 +109,33 @@ int longitudDeArrayDeStrings(char**);
 int crearConexion(char*, char*);
 t_config* leer_config(char*);
 
-t_paquete* armar_paquete(cod_request, char*);
+t_paquete* armar_paquete(int, char*);
 
 int validarMensaje(char*, Componente, t_log*);
 int cantDeParametrosEsCorrecta(int,int);
 int validarPalabraReservada(int,Componente, t_log*);
 int validadCantDeParametros(int, int, t_log*);
-
 int obtenerCodigoPalabraReservada(char*, Componente);
+
+int validarValue(char*,char*, int, t_log*);
+
+////servidor
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
+t_handshake_memoria* recibirHandshakeMemoria(int);
+
 ////cliente
 
+void* serializar_handshake_memoria(t_handshake_memoria*, int);
 void* serializar_paquete(t_paquete* , int);
 void enviar(cod_request, char*, int);
+void enviarHandshakeMemoria(char*, char*, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
+void liberarArrayDeChar(char**);
 
 /* Multiplexacion */
 void eliminarClientesCerrados(t_list*, int*);
