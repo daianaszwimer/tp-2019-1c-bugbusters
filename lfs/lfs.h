@@ -20,6 +20,10 @@ t_list* descriptoresClientes;
 fd_set descriptoresDeInteres;			// Coleccion de descriptores de interes para select
 #define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"
 char* pathRaiz;
+char* pathTablas;
+char* pathMetadata;
+char* pathBloques;
+char* pathBitmap;
 int blocks;
 
 typedef struct{
@@ -48,6 +52,8 @@ pthread_t hiloDumpeo;
 char* mensaje;
 int codValidacion;
 
+void iniciarLFS(int, char**);
+
 void* leerDeConsola(void*);
 void* recibirMemorias(void*);
 void* conectarConMemoria(void*);
@@ -59,7 +65,7 @@ errorNo procesarDescribe(char*, char**);
 int obtenerBloqueDisponible(errorNo*);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
-void inicializarLfs(void);
+void crearFS(void);
 void liberarString(char*);
 errorNo crearParticiones(char*, int);
 void* hiloDump();

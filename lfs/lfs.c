@@ -7,13 +7,15 @@
 #include <sys/mman.h>
 
 
-int main(void) {
+/*
+ * Parametros del main:
+ * 1. Char*: Path del config
+ * 2. bool (0 o 1): inicializar LFS
+ * */
+int main(int argc, char* argv[]) {
+	iniciarLFS(argc, argv);
+	levantarFS();
 
-	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
-	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
-	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
-
-	inicializarLfs();
 	if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
 		log_info(logger_LFS, "Hilo de consola creado");
 	}else{
@@ -39,15 +41,124 @@ int main(void) {
 	pthread_join(hiloDumpeo, NULL);
 	log_info(logger_LFS, "Hilo dumpeo finalizado");
 
-	free(pathRaiz);
-	log_destroy(logger_LFS);
-	config_destroy(configMetadata);
-	config_destroy(config);
+
+	liberarMemoriaLFS();
 	return EXIT_SUCCESS;
 }
 
 
+void iniciarLFS(int argc, char* argv[]){
 
+	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
+	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
+
+	if(argv[1] != NULL){
+		char* configPath = argv[0];
+		config = config_create(configPath);
+	}else{
+		config = config_create("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
+	}
+
+	if(config == NULL){
+		log_error(logger_LFS, "Error al leer archivo de configuracion");
+		log_info(logger_LFS, "Finalizando Lissandra File System");
+		exit(EXIT_FAILURE);
+	}
+	if(!config_has_property(config, "PUNTO_MONTAJE")){
+		log_error(logger_LFS, "Key \"PUNTO_MONTAJE\" no encontrada en config");
+		log_info(logger_LFS, "Finalizando Lissandra File System");
+		exit(EXIT_FAILURE);
+	}
+	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
+
+	pathRaiz = strdup(puntoDeMontaje);
+	pathTablas = string_from_format("%sTablas", pathRaiz);
+	pathMetadata = string_from_format("%sMetadata", pathRaiz);
+	pathBloques = string_from_format("%sBloques", pathRaiz);
+	pathBitmap = string_from_format("%s/Bitmap.bin", pathMetadata);
+	char* pathFileMetadata = string_from_format("%s/Metadata.bin", pathMetadata);
+	configMetadata = config_create(pathFileMetadata);
+	free(pathFileMetadata);
+
+	if(configMetadata != NULL){
+		if(!config_has_property(configMetadata, "BLOCKS")){
+			log_error(logger_LFS, "Key \"BLOCKS\" no encontrada en el metadata");
+			log_info(logger_LFS, "Finalizando Lissandra File System");
+			exit(EXIT_FAILURE);
+		}
+
+		blocks = config_get_int_value(configMetadata, "BLOCKS");
+	}
+
+	if(argv[2] != NULL){
+		if(atoi(argv[2])){
+			crearFS();
+		}
+	}
+}
+
+void crearFS() {
+	//TODO catchear todos los errores
+	if(configMetadata == NULL){
+		log_error(logger_LFS, "Archivo metadata no se pudo levantar correctamente");
+		log_info(logger_LFS, "Finalizando Lissandra File System");
+		exit(EXIT_FAILURE);
+	}
+
+	if(!config_has_property(configMetadata, "BLOCKS")){
+		log_error(logger_LFS, "Key \"BLOCKS\" no encontrada en el metadata");
+		log_info(logger_LFS, "Finalizando Lissandra File System");
+		exit(EXIT_FAILURE);
+	}
+
+	blocks = config_get_int_value(configMetadata, "BLOCKS");
+
+	char* fileBloque;
+	for (int i = 1; i <= blocks; i++) {
+		fileBloque = string_from_format("%s/%d.bin", pathBloques, i);
+		FILE* bloqueFile = fopen(fileBloque, "w");
+		fclose(bloqueFile);
+		free(fileBloque);
+	}
+
+	int bitmapDescriptor = open(pathBitmap, O_RDWR | O_TRUNC , S_IRWXU);
+	if(ftruncate(bitmapDescriptor, blocks/8)){
+		//todo error al truncar archivo
+	}
+	if(bitmapDescriptor == -1){
+		log_error(logger_LFS, "Error al crear bitmap");
+		log_info(logger_LFS, "Finalizando Lissandra File System");
+		exit(EXIT_FAILURE);
+	}else{
+		char* bitmap = mmap(NULL, blocks/8, PROT_READ | PROT_WRITE, MAP_SHARED, bitmapDescriptor ,0);
+		t_bitarray* bitarray = bitarray_create_with_mode(bitmap, blocks/8, LSB_FIRST);
+		bitarray_destroy(bitarray);
+	}
+	close(bitmapDescriptor);
+	free(pathBitmap);
+}
+/*
+ *
+ *
+ *
+ *
+ *
+*/
+void levantarFS(){
+	memtable = (t_memtable*) malloc(sizeof(t_memtable));
+	memtable->tablas = list_create();
+}
+
+void liberarMemoriaLFS(){
+	log_info(logger_LFS, "Finalizando LFS");
+	free(pathTablas);
+	free(pathMetadata);
+	free(pathBloques);
+	free(pathRaiz);
+	log_destroy(logger_LFS);
+	config_destroy(configMetadata);
+	config_destroy(config);
+}
 
 void* leerDeConsola(void* arg) {
 	while (1) {
@@ -292,12 +403,11 @@ errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 int obtenerBloqueDisponible(errorNo* errorNo) {
 	char* fileBitmap = string_from_format("%s/Metadata/Bitmap.bin", pathRaiz);
 	int index = 0;
-	int fdBitmap = open(fileBitmap, O_CREAT | O_RDWR, S_IRWXU);
+	int fdBitmap = open(fileBitmap, O_RDWR);
 	if(fdBitmap == -1){
 		*errorNo = ERROR_CREANDO_ARCHIVO;
 		index = -1;
 	}else{
-
 		char* bitmap = mmap(NULL, blocks/8, PROT_READ | PROT_WRITE, MAP_SHARED, fdBitmap, 0);
 		t_bitarray* bitarray = bitarray_create_with_mode(bitmap, blocks/8, LSB_FIRST);
 		while(index < blocks && bitarray_test_bit(bitarray, index)) index++;
@@ -312,68 +422,6 @@ int obtenerBloqueDisponible(errorNo* errorNo) {
 	free(fileBitmap);
 	close(fdBitmap);
 	return index;
-}
-
-/* inicializarLfs() [API]
- * Parametros:
- * Descripcion: crea el punto de montaje y crea los directorios de: tablas, metadata y bloques
- * Return: */
-void inicializarLfs() {
-	//TODO catchear todos los errores
-	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
-	//pathRaiz = string_from_format("%s%s", PATH , puntoDeMontaje);
-	pathRaiz = strdup(puntoDeMontaje);
-
-	memtable = (t_memtable*) malloc(sizeof(t_memtable));
-	memtable->tablas = list_create();
-
-	//if error
-	mkdir(pathRaiz, S_IRWXU);
-
-	char* pathTablas = string_from_format("%sTablas", pathRaiz);
-	char* pathMetadata = string_from_format("%sMetadata", pathRaiz);
-	char* pathBloques = string_from_format("%sBloques", pathRaiz);
-
-
-	mkdir(pathTablas, S_IRWXU);
-
-	mkdir(pathMetadata, S_IRWXU);
-	char* fileMetadata = string_from_format("%s/Metadata.bin", pathMetadata);
-
-	configMetadata = config_create(fileMetadata);
-
-	mkdir(pathBloques, S_IRWXU);
-
-	blocks = config_get_int_value(configMetadata, "BLOCKS");
-	char* fileBloque;
-	for (int i = 1; i <= blocks; i++) {
-		fileBloque = string_from_format("%s/%d.bin", pathBloques, i);
-		FILE* bloqueFile = fopen(fileBloque, "w");
-		fclose(bloqueFile);
-		free(fileBloque);
-	}
-
-
-	char* fileBitmap = string_from_format("%s/Bitmap.bin", pathMetadata);
-
-	int bitmapDescriptor = open(fileBitmap, O_CREAT | O_RDWR | O_TRUNC , S_IRWXU);
-	if(ftruncate(bitmapDescriptor, blocks/8)){
-		//todo error al truncar archivo
-	}
-	if(bitmapDescriptor == -1){
-		log_error(logger_LFS, "Error al crear bitmap");
-	}else{
-		char* bitmap = mmap(NULL, blocks/8, PROT_READ | PROT_WRITE, MAP_SHARED, bitmapDescriptor ,0);
-		t_bitarray* bitarray = bitarray_create_with_mode(bitmap, blocks/8, LSB_FIRST);
-		bitarray_destroy(bitarray);
-	}
-	close(bitmapDescriptor);
-
-	free(fileMetadata);
-	free(pathTablas);
-	free(pathMetadata);
-	free(pathBloques);
-	free(fileBitmap);
 }
 
 /* procesarInsert() [API] [VALGRINDEADO]
