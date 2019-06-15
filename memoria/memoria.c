@@ -36,6 +36,8 @@ int main(void) {
 	void* memoria = malloc(config_get_int_value(config, "TAM_MEM"));
 	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
 
+//	maxValue=handshack(lfs);
+
 //--------------------------------CONEXION CON LFS ---------------------------------------------------------------
 	conectarAFileSystem();
 
@@ -857,8 +859,8 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 ////	pag= NULL;
 ////}
 
-/*
-t_marco* crearMarco(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
+
+t_marco* actualizarMarco(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
 	t_marco* nuevoMarco= (t_marco*)malloc(sizeof(t_marco)); //TODO: VER SI ESTA BIEN
 	if(buscarMarcoDisponible(&nuevoMarco)==0){
 		nuevoMarco->timestamp = nuevoTimesTamp;
@@ -870,11 +872,15 @@ t_marco* crearMarco(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuev
 
 int buscarMarcoDisponible(t_marco* marco){
 	marco=memoria;
+	t_marco* marcoSiguiente = (t_marco*)malloc(sizeof(t_marco)); //TODO: VER SI ESTA BIEN
 	for(int i=0;i<marcosTotales;i++){	//TODO: ver marcosUsados
 		if(frameDisponible(marco)){
 			return EXIT_SUCCESS;
+			break;
 		}
-		*marco = marco+sizeof(t_marco)*i;
+		else{
+			marco = marco+sizeof(t_marco)*i;
+		}
 	}
 	return EXIT_FAILURE;
 }
@@ -890,4 +896,4 @@ int frameDisponible(t_marco* marco){
 void agregarMarcoAMemoria(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
 
 }
-*/
+

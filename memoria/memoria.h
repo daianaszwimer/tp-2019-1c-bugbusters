@@ -47,7 +47,7 @@ typedef enum
 typedef struct{
 	unsigned long long timestamp;
 	uint16_t key;
-	char* value; // al inicializarse, lfs me tiene q decir el tamanio
+	char value[maxValue]; // al inicializarse, lfs me tiene q decir el tamanio
 }t_marco;
 
 typedef struct{
@@ -94,6 +94,7 @@ pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 void* memoria;
 int marcosTotales;
 int marcosUtilizados=0;
+int maxValue;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 
 
@@ -123,7 +124,7 @@ void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_call
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 int validarInsertSC(errorNo);
 
-t_marco* crearMarco(uint16_t, char*,unsigned long long);
+t_marco* actualizarMarco(uint16_t, char*,unsigned long long);
 void actualizarPagina (t_marco*, char*);
 
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*,unsigned long long);
@@ -139,6 +140,10 @@ errorNo existeSegmentoEnMemoria(cod_request,char*);
 void liberarMemoria();
 void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
 //void eliminarPagina(t_pagina*);
+
+int buscarMarcoDisponible(t_marco*);
+int frameDisponible(t_marco*);
+
 
 
 #endif /* MEMORIA_H_ */
