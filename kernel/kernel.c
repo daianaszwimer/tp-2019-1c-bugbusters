@@ -48,6 +48,10 @@ void inicializarVariables() {
 	memorias = list_create();
 	memoriaSc = (config_memoria*) malloc(sizeof(config_memoria));
 	memoriaSc = NULL;
+	// Tablas
+	tablasSC = list_create();
+	tablasSHC = list_create();
+	tablasEC = list_create();
 }
 
 /* conectarAMemoria()
@@ -79,7 +83,7 @@ void procesarHandshake(t_handshake_memoria* handshakeRecibido) {
 		config_memoria* memoriaNueva = (config_memoria*) malloc(sizeof(config_memoria));
 		memoriaNueva->ip = config_get_string_value(config, "IP_MEMORIA"); //ips[i];
 		memoriaNueva->puerto = config_get_string_value(config, "PUERTO_MEMORIA"); //puertos[i];
-		memoriaNueva->numero = "1";
+		memoriaNueva->numero = "5";
 		list_add(memorias, memoriaNueva);
 	}
 }
@@ -134,6 +138,43 @@ void planificarNewAReady(void) {
 			reservarRecursos(request);
 		} else {
 			//error
+		}
+	}
+}
+
+/* planificarReadyAExec()
+ * Parametros:
+ * 	-> void
+ * Descripcion: hilo que, luego de que un request es agregado a la cola de ready, lo toma
+ * y si no se superó el nivel de multiprocesamiento, lo ejecuta y lo agrega a la cola de exec.
+ * Return:
+ * 	-> :: void  */
+void planificarReadyAExec(void) {
+	pthread_t hiloRequest;
+	pthread_attr_t attr;
+	request_procesada* request;
+	int threadProcesar;
+	while(1) {
+		sem_wait(&semRequestReady);
+		sem_wait(&semMultiprocesamiento);
+		request = (request_procesada*) malloc(sizeof(request_procesada));
+		pthread_mutex_lock(&semMColaReady);
+		request->codigo = ((request_procesada*) queue_peek(ready))->codigo;
+		if(request->codigo == RUN) {
+			request->request = (t_queue*) malloc(sizeof(((request_procesada*)queue_peek(ready))->request));
+			request->request = ((request_procesada*)queue_peek(ready))->request;
+		} else {
+			request->request = strdup((char*)((request_procesada*)queue_peek(ready))->request);
+		}
+		queue_pop(ready);
+		pthread_mutex_unlock(&semMColaReady);
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequest, request);
+		if(threadProcesar == 0){
+			pthread_attr_destroy(&attr);
+		} else {
+			//informar error
 		}
 	}
 }
@@ -216,42 +257,60 @@ void reservarRecursos(char* mensaje) {
 	sem_post(&semRequestReady);
 }
 
-
-/* planificarReadyAExec()
+/* liberarMemoria()
  * Parametros:
  * 	-> void
- * Descripcion: hilo que, luego de que un request es agregado a la cola de ready, lo toma
- * y si no se superó el nivel de multiprocesamiento, lo ejecuta y lo agrega a la cola de exec.
+ * Descripcion: libera los recursos.
  * Return:
- * 	-> :: void  */
-void planificarReadyAExec(void) {
-	pthread_t hiloRequest;
-	pthread_attr_t attr;
-	request_procesada* request;
-	int threadProcesar;
-	while(1) {
-		sem_wait(&semRequestReady);
-		sem_wait(&semMultiprocesamiento);
-		request = (request_procesada*) malloc(sizeof(request_procesada));
-		pthread_mutex_lock(&semMColaReady);
-		request->codigo = ((request_procesada*) queue_peek(ready))->codigo;
-		if(request->codigo == RUN) {
-			request->request = (t_queue*) malloc(sizeof(((request_procesada*)queue_peek(ready))->request));
-			request->request = ((request_procesada*)queue_peek(ready))->request;
-		} else {
-			request->request = strdup((char*)((request_procesada*)queue_peek(ready))->request);
-		}
-		queue_pop(ready);
-		pthread_mutex_unlock(&semMColaReady);
-		pthread_attr_init(&attr);
-		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-		threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequest, request);
-		if(threadProcesar == 0){
-			pthread_attr_destroy(&attr);
-		} else {
-			//informar error
-		}
+ * 	-> void  */
+void liberarMemoria(void) {
+	liberar_conexion(conexionMemoria);
+	config_destroy(config);
+	log_destroy(logger_KERNEL);
+	pthread_mutex_destroy(&semMColaNew);
+	pthread_mutex_destroy(&semMColaReady);
+	sem_destroy(&semRequestNew);
+	sem_destroy(&semRequestReady);
+	sem_destroy(&semMultiprocesamiento);
+	queue_destroy(new);
+	queue_destroy(ready);
+	list_destroy(memorias);
+	list_destroy(memoriasShc);
+	list_destroy(memoriasEc);
+	list_destroy(tablasSC);
+	list_destroy(tablasSHC);
+	list_destroy(tablasEC);
+}
+
+/* liberarRequestProcesada()
+ * Parametros:
+ * 	-> request_procesada* :: request
+ * Descripcion: libera los recursos de la request.
+ * Return:
+ * 	-> void  */
+void liberarRequestProcesada(request_procesada* request) {
+	if(request->codigo != RUN) {
+       free((char*) request->request);
+       request->request = NULL;
 	}
+	// en el caso del run ya se libera la cola en su funcion
+	// solo hacer este free si request fue a exit
+	free(request);
+	request = NULL;
+}
+
+/* liberarColaRequest()
+ * Parametros:
+ *     -> request_procesada* :: requestCola
+ * Descripcion: recibe una request que se encuentra dentro de una cola y la libera.
+ * Return:
+ *     -> void  */
+void liberarColaRequest(request_procesada* requestCola) {
+	//printf("Voy a liberar: %s    ", (char*) requestCola->request);
+    free((char*) requestCola->request);
+    requestCola->request = NULL;
+    free(requestCola);
+    requestCola = NULL;
 }
 
 /* procesarRequest()
@@ -309,7 +368,7 @@ int manejarRequest(request_procesada* request) {
 		case CREATE:
 		case DESCRIBE:
 		case DROP:
-			respuesta = enviarMensajeAMemoria(request->codigo, consistenciaMemoria, (char*) request->request);
+			respuesta = enviarMensajeAMemoria(request->codigo, (char*) request->request);
 			break;
 		case JOURNAL:
 			// solo a memorias que tengan un criterio
@@ -338,24 +397,93 @@ int manejarRequest(request_procesada* request) {
  * Return:
  * 	-> void */
 void actualizarTablas(char* respuesta) {
+	// en cada describe actualizo toda la data?
+	// deberia limpiar las listas antes?
+	// formato de rta: tabla consistencia particiones tiempoDeCompactacion;
+	// separo por ; y despues itero sobre eso
+	char** respuestaParseada = string_split(respuesta, ";");
+	// que devuelve si no hay ningun ; ?
+	list_clean_and_destroy_elements(tablasSC, (void*)liberarTabla);
+	list_clean_and_destroy_elements(tablasSHC, (void*)liberarTabla);
+	list_clean_and_destroy_elements(tablasEC, (void*)liberarTabla);
+	string_iterate_lines(respuestaParseada, (void*)recorrerTabla);
+	liberarArrayDeChar(respuestaParseada);
+}
 
+/* recorrerTabla()
+ * Parametros:
+ * 	-> char* :: tabla
+ * Descripcion: toma una tabla, se fija que consistencia tiene y la guarda donde corresponde.
+ * Return:
+ * 	-> void */
+void recorrerTabla(char* tabla) {
+	// divido tabla
+	// la libero
+	char** tablaParseada = string_split(tabla, " ");
+	char* nombreTabla = strdup(tablaParseada[0]);
+	char* consistenciaTabla = strdup(tablaParseada[1]);
+	consistencia tipoConsistencia = obtenerEnumConsistencia(consistenciaTabla);
+	switch(tipoConsistencia) {
+		case SC:
+			list_add(tablasSC, nombreTabla);
+			log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
+			break;
+		case SHC:
+			list_add(tablasSHC, nombreTabla);
+			log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
+			break;
+		case EC:
+			list_add(tablasEC, nombreTabla);
+			log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
+			break;
+		default:
+			log_error(logger_KERNEL, "La tabla %s no tiene asociada un criterio válido y no se actualizó en la estructura de datos",
+					nombreTabla);
+			break;
+	}
+	free(consistenciaTabla);
+	liberarArrayDeChar(tablaParseada);
+}
+
+/* liberarTabla()
+ * Parametros:
+ * 	-> char* :: tabla
+ * Descripcion: toma una tabla y la libera.
+ * Return:
+ * 	-> void */
+void liberarTabla(char* tabla) {
+	free(tabla);
+	tabla = NULL;
+}
+
+/* obtenerConsistenciaTabla()
+ * Parametros:
+ * 	-> char* :: tabla
+ * Descripcion: toma una tabla y devuelve el criterio correspondiente.
+ * Return:
+ * 	-> consistenciaCorrespondiente :: consistencia*  */
+consistencia obtenerConsistenciaTabla(char* tabla) {
+	consistencia consistenciaCorrespondiente = SC;
+	return consistenciaCorrespondiente;
 }
 
 /* encontrarMemoriaSegunTabla()
  * Parametros:
  * 	-> char* :: tabla
- * Descripcion: toma una tabla y devuelve la memoria según el criterio
+ * 	-> char* :: key
+ * Descripcion: toma una tabla y devuelve la memoria según el criterio.
+ * En el caso de SHC necesita la key para calcular a qué memoria redirigir.
  * Return:
  * 	-> memoriaCorrespondiente :: config_memoria*  */
-config_memoria* encontrarMemoriaSegunTabla(char* tabla) {
+config_memoria* encontrarMemoriaSegunTabla(char* tabla, char* key) {
 	//busco en mi estructura de tablas el tipo
-	consistencia consistenciaDeTabla = SC;
+	consistencia consistenciaDeTabla = obtenerConsistenciaTabla(tabla);
 	config_memoria* memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));
+	memoriaCorrespondiente = NULL;
 	switch(consistenciaDeTabla) {
 		case SC:
 			if (memoriaSc == NULL) {
 				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio SC");
-				memoriaCorrespondiente->ip = strdup("-1");
 			} else {
 				memoriaCorrespondiente = memoriaSc;
 			}
@@ -368,62 +496,10 @@ config_memoria* encontrarMemoriaSegunTabla(char* tabla) {
 			break;
 		default:
 			//error
+			log_error(logger_KERNEL, "No se puede resolver el request porque no tengo la metadata de la tabla %s", tabla);
 			break;
 	}
 	return memoriaCorrespondiente;
-}
-
-/* liberarMemoria()
- * Parametros:
- * 	-> void
- * Descripcion: libera los recursos.
- * Return:
- * 	-> void  */
-void liberarMemoria(void) {
-	liberar_conexion(conexionMemoria);
-	config_destroy(config);
-	log_destroy(logger_KERNEL);
-	pthread_mutex_destroy(&semMColaNew);
-	pthread_mutex_destroy(&semMColaReady);
-	sem_destroy(&semRequestNew);
-	sem_destroy(&semRequestReady);
-	sem_destroy(&semMultiprocesamiento);
-	queue_destroy(new);
-	queue_destroy(ready);
-	list_destroy(memorias);
-	list_destroy(memoriasShc);
-	list_destroy(memoriasEc);
-}
-
-/* liberarRequestProcesada()
- * Parametros:
- * 	-> request_procesada* :: request
- * Descripcion: libera los recursos de la request.
- * Return:
- * 	-> void  */
-void liberarRequestProcesada(request_procesada* request) {
-	if(request->codigo != RUN) {
-       free((char*) request->request);
-       request->request = NULL;
-	}
-	// en el caso del run ya se libera la cola en su funcion
-	// solo hacer este free si request fue a exit
-	free(request);
-	request = NULL;
-}
-
-/* liberarColaRequest()
- * Parametros:
- *     -> request_procesada* :: requestCola
- * Descripcion: recibe una request que se encuentra dentro de una cola y la libera.
- * Return:
- *     -> void  */
-void liberarColaRequest(request_procesada* requestCola) {
-	//printf("Voy a liberar: %s    ", (char*) requestCola->request);
-    free((char*) requestCola->request);
-    requestCola->request = NULL;
-    free(requestCola);
-    requestCola = NULL;
 }
 
 /*
@@ -437,33 +513,45 @@ void liberarColaRequest(request_procesada* requestCola) {
  * Descripcion: recibe una request, se la manda a memoria y recibe la respuesta.
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
-int enviarMensajeAMemoria(cod_request codigo, consistencia consistenciaMemoria, char* mensaje) {
+int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	t_paquete* paqueteRecibido;
 	int respuesta;
-	int conexionTemporanea;
+	consistencia consistenciaTabla = NINGUNA;
+	int conexionTemporanea = conexionMemoria;
 	char** parametros = separarRequest(mensaje);
-	config_memoria* memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1]);
-	//buscar a que memoria mandarle el dato, crear conexion, mandarselo y cerrar conexion, sii no es la ppal
-	if(string_equals_ignore_case(memoriaCorrespondiente->ip, "-1")) {
-		respuesta = ERROR_GENERICO;
-		free(memoriaCorrespondiente->ip);
+	// si es un describe global o journal no hay tabla
+	int cantidadParametros = longitudDeArrayDeStrings(parametros);
+	if ((codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) ||
+			(codigo == JOURNAL && cantidadParametros == PARAMETROS_JOURNAL)) {
+
 	} else {
-		if (string_equals_ignore_case(memoriaCorrespondiente->ip, config_get_string_value(config, "IP_MEMORIA"))
-			&& string_equals_ignore_case(memoriaCorrespondiente->puerto, config_get_string_value(config, "PUERTO_MEMORIA"))) {
-			conexionTemporanea = conexionMemoria;
+		config_memoria* memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1], parametros[2]);
+		if(memoriaCorrespondiente == NULL) {
+			respuesta = ERROR_GENERICO;
+			liberarArrayDeChar(parametros);
+			return respuesta;
 		} else {
-			conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
+			consistenciaTabla = obtenerConsistenciaTabla(parametros[1]);
+			if (!string_equals_ignore_case(memoriaCorrespondiente->ip, config_get_string_value(config, "IP_MEMORIA"))
+				&& !string_equals_ignore_case(memoriaCorrespondiente->puerto, config_get_string_value(config, "PUERTO_MEMORIA"))) {
+				conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
+			}
 		}
-		enviar(consistenciaMemoria, mensaje, conexionTemporanea);
+	}
+	if (codigo == JOURNAL) {
+		procesarJournal(FALSE);
+	} else {
+		enviar(consistenciaTabla, mensaje, conexionTemporanea);
 		paqueteRecibido = recibir(conexionTemporanea);
 		respuesta = paqueteRecibido->palabraReservada;
+		// todo: si la respuesta es full, forzar journal y mandar request de vuelta?
 		if (respuesta == SUCCESS) {
 			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
 			if (codigo == DESCRIBE) {
 				actualizarTablas(paqueteRecibido->request);
 			}
 		} else {
-			log_error(logger_KERNEL, "El request %s no es válido", mensaje);
+			log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 		}
 		if (conexionTemporanea != conexionMemoria) {
 			liberar_conexion(conexionTemporanea);
@@ -473,6 +561,62 @@ int enviarMensajeAMemoria(cod_request codigo, consistencia consistenciaMemoria, 
 	//free(memoriaCorrespondiente);
 	liberarArrayDeChar(parametros);
 	return respuesta;
+}
+
+/* procesarJournal()
+ * Parametros:
+ * 	-> soloASHC :: int
+ * Descripcion: manda journal a todas las memorias que estén asociadas a un criterio.
+ * En el caso de que una memoria es agregada al criterio SHC, se manda
+ * un JOURNAL solo a esas memorias.
+ * Return:
+ * 	-> void */
+void procesarJournal(int soloASHC) {
+	// ahora recorro la lista filtrada y creo las conexiones para mandar journal
+	// si la memoria es la ppal que ya estoy conectada, no me tengo que conectar
+	void enviarJournal(config_memoria* memoriaAConectarse) {
+		int conexionTemporanea = conexionMemoria;
+		if (!string_equals_ignore_case(memoriaAConectarse->ip, config_get_string_value(config, "IP_MEMORIA"))
+			&& !string_equals_ignore_case(memoriaAConectarse->puerto, config_get_string_value(config, "PUERTO_MEMORIA"))) {
+			conexionTemporanea = crearConexion(memoriaAConectarse->ip, memoriaAConectarse->puerto);
+		}
+		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		t_paquete* paqueteRecibido = recibir(conexionTemporanea);
+		int respuesta = paqueteRecibido->palabraReservada;
+		if (respuesta == SUCCESS) {
+			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", "JOURNAL", paqueteRecibido->request);
+		} else {
+			log_error(logger_KERNEL, "El request %s no es válido", "JOURNAL");
+		}
+		if (conexionTemporanea != conexionMemoria) {
+			liberar_conexion(conexionTemporanea);
+		}
+		eliminar_paquete(paqueteRecibido);
+	}
+	if(soloASHC == TRUE) {
+		list_iterate(memoriasShc, (void*)enviarJournal);
+	} else {
+		t_list* memoriasSinRepetir = list_create();
+		void agregarMemoriaSinRepetir(config_memoria* memoria) {
+			int existeUnaIgual(config_memoria* memoriaAgregada) {
+				return string_equals_ignore_case(memoriaAgregada->ip, memoria->ip) &&
+						string_equals_ignore_case(memoriaAgregada->puerto, memoria->puerto);
+			}
+			if (!list_any_satisfy(memoriasSinRepetir, (void*)existeUnaIgual)) {
+				list_add(memoriasSinRepetir, memoria);
+			}
+		}
+		// me guardo una lista con puerto e ip sii no existe en la lista
+		// porque una memoria puede tener + de 1 criterio
+		if(memoriaSc != NULL) {
+			list_add(memoriasSinRepetir, memoriaSc);
+		}
+		list_iterate(memoriasShc,(void*)agregarMemoriaSinRepetir);
+		list_iterate(memoriasEc,(void*)agregarMemoriaSinRepetir);
+		list_iterate(memoriasSinRepetir, (void*)enviarJournal);
+		list_destroy(memoriasSinRepetir);
+	}
+
 }
 
 /* procesarRun()
@@ -559,6 +703,7 @@ int procesarAdd(char* mensaje) {
 				break;
 			case SHC:
 				list_add(memoriasShc, memoria);
+				procesarJournal(TRUE);
 				break;
 			case EC:
 				list_add(memoriasEc, memoria);

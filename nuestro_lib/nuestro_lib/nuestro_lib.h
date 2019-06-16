@@ -42,6 +42,7 @@ typedef enum
 	SC,
 	SHC,
 	EC,
+	NINGUNA,
 	CONSISTENCIA_INVALIDA = -1
 } consistencia;
 

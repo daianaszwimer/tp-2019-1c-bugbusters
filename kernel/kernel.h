@@ -18,7 +18,7 @@ typedef struct
 {
 	char* ip;
 	char* puerto;
-	char* numero;
+	char* numero;//todo: es mejor y mas facil si esto es solo un int
 } config_memoria;
 
 typedef struct
@@ -26,8 +26,6 @@ typedef struct
 	cod_request codigo;
 	void* request;
 } request_procesada;
-
-consistencia consistenciaMemoria = EC;
 
 t_log* logger_KERNEL;
 int conexionMemoria;
@@ -39,6 +37,9 @@ config_memoria* memoriaSc;
 t_list* memoriasShc;
 t_list* memoriasEc;
 t_list* memorias;
+t_list* tablasSC;
+t_list* tablasSHC;
+t_list* tablasEC;
 
 sem_t semRequestNew;				// semaforo para planificar requests en new
 pthread_mutex_t semMColaNew;		// semafoto mutex para cola de new
@@ -50,7 +51,8 @@ pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		//hilo que conecta a memoria
 pthread_t hiloPlanificarNew;		//hilo para planificar requests de new a ready
 pthread_t hiloPlanificarExec;		//hilo para planificar requests de ready a exec y viceversa
-//todo: hilo que loguea cada x tiempo
+// todo: hilo que loguea cada x tiempo
+// todo: hilo que hace describe cada x tiempo
 
 void inicializarVariables(void);
 void conectarAMemoria(void);
@@ -67,13 +69,16 @@ void reservarRecursos(char*);
 int validarRequest(char *);
 int manejarRequest(request_procesada*);
 // se usa para procesar requests
-int enviarMensajeAMemoria(cod_request, consistencia, char*);
-config_memoria* encontrarMemoriaSegunTabla(char*);
+int enviarMensajeAMemoria(cod_request, char*);
+config_memoria* encontrarMemoriaSegunTabla(char*, char*);
 void actualizarTablas(char*);
+void recorrerTabla(char*);
+void liberarTabla(char*);
+consistencia obtenerConsistenciaTabla(char*);
 // procesan requests
+void procesarJournal(int);
 void procesarRun(t_queue*);
 int procesarAdd(char*);
 void procesarRequest(request_procesada*);
-
 
 #endif /* KERNEL_H_*/
