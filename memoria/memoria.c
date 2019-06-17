@@ -583,7 +583,7 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoErro
 void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int i) {
 		t_elemTablaDePaginas* elementoEncontrado= malloc(sizeof(t_elemTablaDePaginas));
 		t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
-		char* requestSeparada = separarRequest(request);
+		char** requestSeparada = separarRequest(request);
 //---------------CASOS DE PRUEBA------------------------------
 //en el .h para poder compartirlo con la funcion insertar
 		t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
@@ -599,7 +599,9 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 				insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
 				char* consultaALFS=malloc(sizeof(char*));
+				*consultaALFS = '\0';
 				string_append_with_format(&consultaALFS,"%s%s%s%s%s","SELECT"," ",requestSeparada[1]," ",requestSeparada[2]);
+				log_info(logger_MEMORIA,"%s", consultaALFS);
 				valorDeLFS = intercambiarConFileSystem(SELECT,consultaALFS);
 				if((consistenciaMemoria== SC && validarInsertSC(valorDeLFS->palabraReservada)== EXIT_SUCCESS)){
 					insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
@@ -706,8 +708,8 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
  * 	-> int :: resulltado de validacion
  * 	VALGRIND :: SI*/
 int validarInsertSC(errorNo codRespuestaDeLFS){
-	if (codRespuestaDeLFS == SUCCESS){
 		return EXIT_SUCCESS;
+	if (codRespuestaDeLFS == SUCCESS || codRespuestaDeLFS == KEY_NO_EXISTE ){
 	}else{
 		return EXIT_FAILURE;
 	}
