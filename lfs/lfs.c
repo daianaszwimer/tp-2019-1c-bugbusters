@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-
+#include <math.h>
 
 int main(void) {
 
@@ -15,10 +15,7 @@ int main(void) {
 
 	inicializarLfs();
 
-	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, "PELICULAS");
-	compactacion(pathTabla);
-
-	/*if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
+	if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
 		log_info(logger_LFS, "Hilo de consola creado");
 	}else{
 		log_error(logger_LFS, "Error al crear hilo de consola");
@@ -41,7 +38,7 @@ int main(void) {
 	pthread_join(hiloRecibirMemorias, NULL);
 	log_info(logger_LFS, "Hilo recibir memorias finalizado");
 	pthread_join(hiloDumpeo, NULL);
-	log_info(logger_LFS, "Hilo dumpeo finalizado");*/
+	log_info(logger_LFS, "Hilo dumpeo finalizado");
 
 	free(pathRaiz);
 	log_destroy(logger_LFS);
@@ -49,9 +46,6 @@ int main(void) {
 	config_destroy(config);
 	return EXIT_SUCCESS;
 }
-
-
-
 
 void* leerDeConsola(void* arg) {
 	while (1) {
@@ -615,7 +609,7 @@ void* hiloDump(void* args) {
 	}
 }
 
-/* dumpear() [VALGRINDEADO]
+/* dumpear()
  * Parametros: void
  * Descripcion: baja los datos de la memtable a disco
  * Return: codigo de error definido en el enum errorNo */
@@ -624,6 +618,10 @@ errorNo dumpear() {
 	errorNo error = SUCCESS;
 	char* pathTmp;
 	FILE* fileTmp;
+	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
+	char* pathMetadata = string_from_format("%sMetadata/Metadata.bin", puntoDeMontaje);
+	t_config* configMetadata = config_create(pathMetadata);
+	int tamanioBloque = config_get_int_value(configMetadata, "BLOCK_SIZE");
 
 	// Refactor list_iterate
 	for(int i = 0; list_get(memtable->tablas,i) != NULL; i++) { // Recorro las tablas de la memtable
@@ -642,21 +640,50 @@ errorNo dumpear() {
 				}
 			} while(fileTmp != NULL);
 			free(pathTabla);
-			fileTmp = fopen(pathTmp, "w+");
-			free(pathTmp);
+			fileTmp = fopen(pathTmp, "a+");
 			if (fileTmp == NULL) {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				// Guardo lo de la tabla en el archivo temporal
-				//char* datosADumpear = strdup("");
-//				TODO NICO: ver si lo de abajo sirve
 				char* datosADumpear = malloc(sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE") + sizeof(unsigned long long));
 				strcpy(datosADumpear, "");
 				for(int j = 0; list_get(tabla->registros,j) != NULL; j++) {
 					t_registro* registro = list_get(tabla->registros,j);
 					string_append_with_format(&datosADumpear, "%u;%s;%llu\n", registro->key, registro->value, registro->timestamp);
 				}
-				fprintf(fileTmp, "%s", datosADumpear);
+				int cantidadDeBloquesAPedir = strlen(datosADumpear) / tamanioBloque;
+				if(strlen(datosADumpear) % tamanioBloque != 0) {
+					cantidadDeBloquesAPedir++;
+				}
+				char* tamanioTmp = string_from_format("SIZE=%d", strlen(datosADumpear));
+				char* bloques = strdup("BLOCKS=[");
+				for(int i=0; i<cantidadDeBloquesAPedir;i++) {
+					int bloqueDeParticion = obtenerBloqueDisponible(&error); //si hay un error se setea en errorNo
+					if(bloqueDeParticion == -1){
+						log_info(logger_LFS, "no hay bloques disponibles");
+					} else {
+						if(i==cantidadDeBloquesAPedir-1) {
+							bloques = string_from_format("%s%d", bloques, bloqueDeParticion);
+						} else {
+							bloques = string_from_format("%s%d,", bloques, bloqueDeParticion);
+						}
+						char* pathBloque = string_from_format("%sBloques/%d.bin", puntoDeMontaje, bloqueDeParticion);
+						FILE* bloque = fopen(pathBloque, "a+");
+						if(cantidadDeBloquesAPedir != 1 && i < cantidadDeBloquesAPedir - 1) {
+							char* registrosAEscribir = string_substring_until(datosADumpear, tamanioBloque);
+							datosADumpear = string_substring_from(datosADumpear, tamanioBloque);
+							fprintf(bloque, "%s", registrosAEscribir);
+						} else {
+							fprintf(bloque, "%s", datosADumpear);
+						}
+						fclose(bloque);
+						free(pathBloque);
+					}
+				}
+				bloques = string_from_format("%s]", bloques);
+				fprintf(fileTmp, "%s\n%s", tamanioTmp, bloques);
+				free(tamanioTmp);
+				free(bloques);
 				free(datosADumpear);
 				fclose(fileTmp);
 				// Vacio la memtable
@@ -686,6 +713,7 @@ void vaciarTabla(t_tabla *tabla) {
 
 void compactacion(char* pathTabla) {
 	int numeroTemporal = 0;
+	char caracter;
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
 	char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
 	char* pathMetadata = string_from_format("%sMetadata/Metadata.bin", puntoDeMontaje);
@@ -694,6 +722,7 @@ void compactacion(char* pathTabla) {
 	int tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
 	int numeroDeParticiones = config_get_int_value(configMetadataTabla, "PARTITIONS");
 	FILE* fileTmp;
+	FILE* fileTmpC;
 
 	DIR *tabla;
 	struct dirent *archivoDeLaTabla;
@@ -702,20 +731,43 @@ void compactacion(char* pathTabla) {
 		perror("opendir");
 	}
 
+	// Crear tmpc de los tmp
 	while((archivoDeLaTabla = readdir(tabla)) != NULL) {
 		if(string_ends_with(archivoDeLaTabla->d_name, ".tmp")) {
 			char* pathTmp = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
+			char* pathTmpC = string_from_format("%s%c", pathTmp, 'c');
+			rename(pathTmp, pathTmpC);
+			perror("Error");
+			/*char* pathTmp = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 			fileTmp = fopen(pathTmp, "r");
-			if (fileTmp != NULL) { // Crear tmpc de los tmp
+			if (fileTmp != NULL) {
 				char* pathTmpC = string_from_format("%s%c", pathTmp, 'c');
 				FILE* fileTmpC = fopen(pathTmpC, "w+");
-				char* datosDelArchivoTemporal = malloc((int) (sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long)));
-				while (fscanf(fileTmp, "%s", datosDelArchivoTemporal) == 1) {
-					fprintf(fileTmpC, "%s", datosDelArchivoTemporal);
-					fputc('\n', fileTmpC);
+				char* datosDelArchivoTemporal = malloc(sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long));
+				int i = 0;
+				int linea = 1;
+				while((caracter = fgetc(fileTmp)) != EOF) {
+					if(caracter == '\n') {
+						datosDelArchivoTemporal = realloc(datosDelArchivoTemporal, (sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long))*(linea+1));
+						linea++;
+					}
+					datosDelArchivoTemporal[i] = caracter;
+					i++;
 				}
+				fprintf(fileTmpC, "%s", datosDelArchivoTemporal);
 				fclose(fileTmp);
-				rewind(fileTmpC);
+				fclose(fileTmpC);
+				free(datosDelArchivoTemporal);
+			}*/
+		}
+	}
+
+	while((archivoDeLaTabla = readdir(tabla)) != NULL) {
+		if(string_ends_with(archivoDeLaTabla->d_name, ".tmpc")) {
+			char* pathTmpC = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
+			fileTmpC = fopen(pathTmpC, "r");
+			while((caracter = fgetc(fileTmpC)) != EOF) {
+
 			}
 		}
 	}
