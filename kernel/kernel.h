@@ -87,6 +87,7 @@ void liberarMemoria(void);
 void liberarRequestProcesada(request_procesada*);
 void liberarColaRequest(request_procesada*);
 void leerDeConsola(void);
+void hacerDescribe(void);
 void loguearMetricas(void);
 void informarMetricas(int);
 void liberarEstadisticaMemoria(estadisticaMemoria*);
