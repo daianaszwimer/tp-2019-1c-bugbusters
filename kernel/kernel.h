@@ -90,7 +90,7 @@ void leerDeConsola(void);
 void loguearMetricas(void);
 void informarMetricas(int);
 void liberarEstadisticaMemoria(estadisticaMemoria*);
-void aumentarContadores(consistencia, char*, cod_request, float);
+void aumentarContadores(consistencia, char*, cod_request, double);
 // planificar requests
 void planificarNewAReady(void);
 void planificarReadyAExec(void);
@@ -104,6 +104,7 @@ config_memoria* encontrarMemoriaSegunTabla(char*, char*);
 void actualizarTablas(char*);
 void recorrerTabla(char*);
 void liberarTabla(char*);
+int encontrarMemoriaPpal(config_memoria*);
 consistencia obtenerConsistenciaTabla(char*);
 // procesan requests
 void procesarJournal(int);

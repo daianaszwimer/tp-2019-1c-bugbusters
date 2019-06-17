@@ -702,7 +702,7 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
 config_memoria* encontrarMemoriaSegunTabla(char* tabla, char* key) {
 	//busco en mi estructura de tablas el tipo
 	consistencia consistenciaDeTabla = obtenerConsistenciaTabla(tabla);
-	config_memoria* memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));
+	config_memoria* memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));//todo: hace falta malloc?
 	memoriaCorrespondiente = NULL;
 	switch(consistenciaDeTabla) {
 		case SC:
@@ -726,6 +726,16 @@ config_memoria* encontrarMemoriaSegunTabla(char* tabla, char* key) {
 	return memoriaCorrespondiente;
 }
 
+/* encontrarMemoriaPpal()
+ * Parametros:
+ * 	-> config_memoria* :: memoria
+ * Descripcion: devuelve TRUE cuando encuentra la memoria ppal;
+ * Return:
+ * 	-> int  */
+int encontrarMemoriaPpal(config_memoria* memoria) {
+	return string_equals_ignore_case(memoria->ip, config_get_string_value(config, "IP_MEMORIA"))
+			&& string_equals_ignore_case(memoria->puerto, config_get_string_value(config, "PUERTO_MEMORIA"));
+}
 /*
  * Funciones que procesan requests
 */
@@ -752,9 +762,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	int cantidadParametros = longitudDeArrayDeStrings(parametros);
 	config_memoria* memoriaCorrespondiente;
 	if (codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) {
-		memoriaCorrespondiente->ip = config_get_string_value(config, "IP_MEMORIA");
-		memoriaCorrespondiente->puerto = config_get_string_value(config, "PUERTO_MEMORIA");
-		// no hago nada porque se lo mando siempre a la mem ppal
+		// describe global va siempre a la ppal
+		memoriaCorrespondiente = list_find(memorias, (void*)encontrarMemoriaPpal);
 	} else {
 		memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1], parametros[2]);
 		// todo: falta free
