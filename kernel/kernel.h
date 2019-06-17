@@ -51,20 +51,20 @@ t_list* tablasSHC;
 t_list* tablasEC;
 
 // variables de metricas
-double tiempoSelectSC;
-double tiempoInsertSC;
-int cantidadSelectSC;
-int cantidadInsertSC;
+double tiempoSelectSC = 0.0;
+double tiempoInsertSC = 0.0;
+int cantidadSelectSC = 0;
+int cantidadInsertSC = 0;
 t_list* cargaMemoriaSC;
-double tiempoSelectSHC;
-double tiempoInsertSHC;
-int cantidadSelectSHC;
-int cantidadInsertSHC;
+double tiempoSelectSHC = 0.0;
+double tiempoInsertSHC = 0.0;
+int cantidadSelectSHC = 0;
+int cantidadInsertSHC = 0;
 t_list* cargaMemoriaSHC;
-double tiempoSelectEC;
-double tiempoInsertEC;
-int cantidadSelectEC;
-int cantidadInsertEC;
+double tiempoSelectEC = 0.0;
+double tiempoInsertEC = 0.0;
+int cantidadSelectEC = 0;
+int cantidadInsertEC = 0;
 t_list* cargaMemoriaEC;
 
 sem_t semRequestNew;				// semaforo para planificar requests en new
@@ -72,6 +72,7 @@ pthread_mutex_t semMColaNew;		// semafoto mutex para cola de new
 sem_t semRequestReady;				// semaforo para planificar requests en ready
 pthread_mutex_t semMColaReady;		// semafoto mutex para cola de ready
 sem_t semMultiprocesamiento;		// semaforo contador para limitar requests en exec
+pthread_mutex_t semMMetricas;		// semaforo mutex para evitar concurrencia en metricas
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		// hilo que conecta a memoria

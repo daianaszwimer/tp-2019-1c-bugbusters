@@ -18,6 +18,7 @@ int main(void) {
 	pthread_join(hiloPlanificarNew, NULL);
 	pthread_join(hiloPlanificarExec, NULL);
 	pthread_join(hiloMetricas, NULL);
+	pthread_join(hiloDescribe, NULL);
 
 	liberarMemoria();
 
@@ -43,6 +44,7 @@ void inicializarVariables() {
 	sem_init(&semMultiprocesamiento, 0, multiprocesamiento);
 	pthread_mutex_init(&semMColaNew, NULL);
 	pthread_mutex_init(&semMColaReady, NULL);
+	pthread_mutex_init(&semMMetricas, NULL);
 	// Colas de planificacion
 	new = queue_create();
 	ready = queue_create();
@@ -56,6 +58,10 @@ void inicializarVariables() {
 	tablasSC = list_create();
 	tablasSHC = list_create();
 	tablasEC = list_create();
+	// Metricas
+	cargaMemoriaSC = list_create();
+	cargaMemoriaSHC = list_create();
+	cargaMemoriaEC = list_create();
 }
 
 /* liberarMemoria()
@@ -65,12 +71,14 @@ void inicializarVariables() {
  * Return:
  * 	-> void  */
 void liberarMemoria(void) {
+	log_info(logger_KERNEL, "Estoy liberando toda la memoria, chau");
 	liberar_conexion(conexionMemoria);
 	config_destroy(config);
 	log_destroy(logger_KERNEL);
 	log_destroy(logger_METRICAS_KERNEL);
 	pthread_mutex_destroy(&semMColaNew);
 	pthread_mutex_destroy(&semMColaReady);
+	pthread_mutex_destroy(&semMMetricas);
 	sem_destroy(&semRequestNew);
 	sem_destroy(&semRequestReady);
 	sem_destroy(&semMultiprocesamiento);
@@ -135,6 +143,8 @@ void leerDeConsola(void){
 			pthread_cancel(hiloConectarAMemoria);
 			pthread_cancel(hiloPlanificarNew);
 			pthread_cancel(hiloPlanificarExec);
+			pthread_cancel(hiloMetricas);
+			pthread_cancel(hiloDescribe);
 			free(mensaje);
 			break;
 		}
@@ -154,6 +164,7 @@ void leerDeConsola(void){
  * 	-> :: void  */
 void hacerDescribe(void) {
 	while(1) {
+		break;
 		int segundos = config_get_int_value(config, "METADATA_REFRESH"); //todo: esto es en segundos?
 		sleep(segundos);
 	}
@@ -170,21 +181,29 @@ void loguearMetricas(void) {
 		log_info(logger_KERNEL, "pasaron 30s");
 		informarMetricas(FALSE);
 		// limpio variables para empezar a contar de nuevo
+		pthread_mutex_lock(&semMMetricas);
 		tiempoSelectSC = 0;
 		tiempoInsertSC = 0;
 		cantidadSelectSC = 0;
 		cantidadInsertSC = 0;
-		list_clean_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
+		if (list_size(cargaMemoriaSC) > 0) {
+			list_clean_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
+		}
 		tiempoSelectSHC = 0;
 		tiempoInsertSHC = 0;
 		cantidadSelectSHC = 0;
 		cantidadInsertSHC = 0;
-		list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
+		if (list_size(cargaMemoriaSHC) > 0) {
+			list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
+		}
 		tiempoSelectEC = 0;
 		tiempoInsertEC = 0;
 		cantidadSelectEC = 0;
 		cantidadInsertEC = 0;
-		list_clean_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
+		if (list_size(cargaMemoriaEC) > 0) {
+			list_clean_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
+		}
+		pthread_mutex_unlock(&semMMetricas);
 		sleep(30);
 	}
 }
@@ -197,6 +216,8 @@ void loguearMetricas(void) {
  * Return:
  * 	-> :: void  */
 void informarMetricas(int mostrarPorConsola) {
+	// si es vacio no mostrar basura
+	pthread_mutex_lock(&semMMetricas);
 	double readLatencySC = tiempoSelectSC/cantidadSelectSC;
 	double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
 	double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
@@ -204,12 +225,13 @@ void informarMetricas(int mostrarPorConsola) {
 	double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
 	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
 	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
+		log_info(logger_KERNEL, "select insert %d y total %d", estadisticaAMostrar->cantidadSelectInsert, estadisticaAMostrar->cantidadTotal);
 		int estadistica = estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
 		if (mostrarPorConsola == TRUE) {
-			log_info(logger_KERNEL, "La cantidad de Select - Insert respescto del resto de las operaciones de la memoria %s es %d",
+			log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
 					estadisticaAMostrar->numeroMemoria, estadistica);
 		} else {
-			log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respescto del resto de las operaciones de la memoria %s es %d",
+			log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
 					estadisticaAMostrar->numeroMemoria, estadistica);
 		}
 	}
@@ -252,6 +274,7 @@ void informarMetricas(int mostrarPorConsola) {
 		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
 		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
 	}
+	pthread_mutex_unlock(&semMMetricas);
 }
 
 /* liberarEstadisticaMemoria()
@@ -275,7 +298,7 @@ void liberarEstadisticaMemoria(estadisticaMemoria* memoria) {
  * Return:
  * 	-> :: void  */
 void aumentarContadores(consistencia consistenciaRequest, char* numeroMemoria, cod_request codigo, double cantidadTiempo) {
-	estadisticaMemoria* memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+	estadisticaMemoria* memoriaCorrespondiente;
 	// si es un describe global va a entrar al "NINGUNA"
 	// cargo en el criterio segun el request o segun la memoria?
 	// o sea si tengo una memory que es SC y EC y le hago dos select que son de una tabla
@@ -284,43 +307,54 @@ void aumentarContadores(consistencia consistenciaRequest, char* numeroMemoria, c
 	int encontrarTabla(estadisticaMemoria* memoria) {
 		return string_equals_ignore_case(memoria->numeroMemoria, numeroMemoria);
 	}
+	int cantidadASumarSelectInsert = codigo == SELECT || codigo == INSERT;
+	pthread_mutex_lock(&semMMetricas);
 	switch (consistenciaRequest) {
 		case SC:
 			memoriaCorrespondiente = list_find(cargaMemoriaSC, (void*)encontrarTabla);
 			if (memoriaCorrespondiente == NULL) {
-				memoriaCorrespondiente->cantidadSelectInsert = 0;
+				memoriaCorrespondiente = NULL;
+				memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+				memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
 				memoriaCorrespondiente->cantidadTotal = 1;
 				memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
 				list_add(cargaMemoriaSC, memoriaCorrespondiente);
 			} else {
 				// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+				memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
 				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
 			}
+			log_info(logger_KERNEL, "voy a sumarle a select insert %d", cantidadASumarSelectInsert);
 			break;
 		case SHC:
 			memoriaCorrespondiente = list_find(cargaMemoriaSHC, (void*)encontrarTabla);
 			if (memoriaCorrespondiente == NULL) {
-				memoriaCorrespondiente->cantidadSelectInsert = 0;
+				memoriaCorrespondiente = NULL;
+				memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+				memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
 				memoriaCorrespondiente->cantidadTotal = 1;
 				memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
 				list_add(cargaMemoriaSHC, memoriaCorrespondiente);
 			} else {
 				// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+				memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
 				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
 			}
 			break;
 		case EC:
 			memoriaCorrespondiente = list_find(cargaMemoriaEC, (void*)encontrarTabla);
 			if (memoriaCorrespondiente == NULL) {
-				memoriaCorrespondiente->cantidadSelectInsert = 0;
+				memoriaCorrespondiente = NULL;
+				memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+				memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
 				memoriaCorrespondiente->cantidadTotal = 1;
 				memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
 				list_add(cargaMemoriaEC, memoriaCorrespondiente);
 			} else {
 				// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+				memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
 				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
 			}
-			break;
 			break;
 		case NINGUNA:
 			// se agrega en todos los criterios? o en el criterio de la memoria? PREGUNTAR
@@ -370,10 +404,7 @@ void aumentarContadores(consistencia consistenciaRequest, char* numeroMemoria, c
 			break;
 		}
 	}
-
-	free(memoriaCorrespondiente->numeroMemoria);
-	// esta bien o me libera la memoria de mi listas? ademas en algunos casos lo agrego por 1era vez
-	free(memoriaCorrespondiente);
+	pthread_mutex_unlock(&semMMetricas);
 }
 
 /*
@@ -621,7 +652,7 @@ int manejarRequest(request_procesada* request) {
 			break;
 		default:
 			// aca puede entrar solo si viene de run, porque sino antes siempre fue validada
-			// la request. en tal caso se devuelve el t_paquete con error para cortar ejecucion
+			// la request. en tal caso se devuelve error para cortar ejecucion
 			break;
 	}
 	usleep(config_get_int_value(config, "SLEEP_EJECUCION")*1000);
@@ -640,6 +671,7 @@ void actualizarTablas(char* respuesta) {
 	// formato de rta: tabla consistencia particiones tiempoDeCompactacion;
 	// separo por ; y despues itero sobre eso
 	char** respuestaParseada = string_split(respuesta, ";");
+	// solo limpiar cuando es global!!!
 	// que devuelve si no hay ningun ; ?
 	list_clean_and_destroy_elements(tablasSC, (void*)liberarTabla);
 	list_clean_and_destroy_elements(tablasSHC, (void*)liberarTabla);
@@ -763,7 +795,7 @@ int encontrarMemoriaPpal(config_memoria* memoria) {
  * 	-> paqueteRecibido :: t_paquete*  */
 int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	clock_t tiempo;
-	double tiempoQueTardo;
+	double tiempoQueTardo = 0.0;
 	if (codigo == SELECT || codigo == INSERT) {
 		tiempo = clock();
 	}
