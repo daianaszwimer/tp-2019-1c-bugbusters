@@ -89,6 +89,11 @@ typedef struct
 	char* puertos;
 } t_handshake_memoria;
 
+typedef struct
+{
+	int tamanioValue;
+} t_handshake_lfs;
+
 typedef enum
 {
 	CONSOLE,
@@ -128,13 +133,16 @@ int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
 t_handshake_memoria* recibirHandshakeMemoria(int);
+t_handshake_lfs* recibirHandshakeLFS(int);
 
 ////cliente
 
 void* serializar_handshake_memoria(t_handshake_memoria*, int);
+void* serializar_handshake_lfs(t_handshake_lfs*, int);
 void* serializar_paquete(t_paquete* , int);
 void enviar(cod_request, char*, int);
 void enviarHandshakeMemoria(char*, char*, int);
+void enviarHandshakeLFS(int, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 void liberarArrayDeChar(char**);
