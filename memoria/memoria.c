@@ -604,6 +604,9 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 				log_info(logger_MEMORIA,"%s", consultaALFS);
 				valorDeLFS = intercambiarConFileSystem(SELECT,consultaALFS);
 				if((consistenciaMemoria== SC && validarInsertSC(valorDeLFS->palabraReservada)== EXIT_SUCCESS)){
+					t_paquete* insertALFS = malloc(sizeof(t_paquete));
+					insertALFS = intercambiarConFileSystem(palabraReservada,request);
+					log_info(logger_MEMORIA, "%s %d",request,palabraReservada);
 					insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
 				}else{
 					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
