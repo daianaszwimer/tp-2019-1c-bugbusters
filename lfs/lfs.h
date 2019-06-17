@@ -23,7 +23,6 @@ char* pathRaiz;
 char* pathTablas;
 char* pathMetadata;
 char* pathBloques;
-char* pathBitmap;
 int blocks;
 
 typedef struct{
@@ -51,8 +50,15 @@ pthread_t hiloDumpeo;
 
 char* mensaje;
 int codValidacion;
+char* bitmap;
+t_bitarray* bitarray;
+int bitmapDescriptor;
 
-void iniciarLFS(int, char**);
+void iniciarLFS(char**);
+void crearFSMetadata(char*, char*);
+void levantarFS();
+void crearBloques();
+void liberarMemoriaLFS();
 
 void* leerDeConsola(void*);
 void* recibirMemorias(void*);
@@ -65,7 +71,7 @@ errorNo procesarDescribe(char*, char**);
 int obtenerBloqueDisponible(errorNo*);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
-void crearFS(void);
+void crearFS(char*, char*);
 void liberarString(char*);
 errorNo crearParticiones(char*, int);
 void* hiloDump();
