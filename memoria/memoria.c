@@ -3,43 +3,18 @@
 
 int main(void) {
 
-	//TODO solo se debe reservar el tam max y DELEGARSE A UNA FUNCION
-	frame0 =(t_marco*) malloc(sizeof(t_marco));
-	elementoA1 = malloc(sizeof(t_elemTablaDePaginas));
-	tablaA = malloc(sizeof(t_segmento));
-	tablaDeSegmentos = malloc(sizeof(t_tablaDeSegmentos));
-
-//--------------------------------AUXILIAR: creacion de tabla/pag/elemento --------------------------------------
-
-	tablaDeSegmentos->segmentos =list_create();
-
-	tablaA->nombre= strdup("tablaA");
-	tablaA->tablaDePagina = list_create();	//list_create() HACE UN MALLOC
-
-	elementoA1->numeroDePag=1;
-	elementoA1->marco=frame0;
-	elementoA1->modificado = SINMODIFICAR;
-
-	list_add(tablaA->tablaDePagina, elementoA1);
-	list_add(tablaDeSegmentos->segmentos,tablaA);
-
-	frame0->timestamp = 123456789;
-	frame0->key=1;
-	frame0->value=strdup("hola");
-
-
 //--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
-//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
-	void* memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
-
-//	maxValue=handshack(lfs);
-
 //--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-	conectarAFileSystem();
+//	conectarAFileSystem();
+
+//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
+
+	inicializacionDeMemoria();
+	log_info(logger_MEMORIA,"INICIO DE MEMORIA");
+
 
 //--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
@@ -64,6 +39,62 @@ int main(void) {
 	return 0;
 }
 
+
+/* conectarAFileSystem()
+ * Parametros:
+ * 	->  :: void
+ * Descripcion: Se crea la conexion con lissandraFileSystem
+ *
+ * Return:
+ * 	-> :: void
+ * VALGRIND:: SI */
+void conectarAFileSystem() {
+	conexionLfs = crearConexion(
+			config_get_string_value(config, "IP_FS"),
+			config_get_string_value(config, "PUERTO_FS"));
+	//log_info(logger_MEMORIA, "SE CONECTO CN LFS");
+}
+
+void inicializacionDeMemoria(){
+
+	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
+	//maxValue = handshakeConLFS(); TODO handshake posta
+	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
+	int bitArray[marcosTotales];
+	inicializarBitArray(bitArray);
+
+	frame0 =(t_marco*) malloc(sizeof(t_marco));
+	elementoA1 = malloc(sizeof(t_elemTablaDePaginas));
+	tablaA = malloc(sizeof(t_segmento));
+	tablaDeSegmentos = malloc(sizeof(t_tablaDeSegmentos));
+
+//--------------------------------AUXILIAR: creacion de tabla/pag/elemento --------------------------------------
+
+	tablaDeSegmentos->segmentos =list_create();
+
+	tablaA->path= strdup("tablaA");
+	tablaA->tablaDePagina = list_create();	//list_create() HACE UN MALLOC
+
+	elementoA1->numeroDePag=1;
+	elementoA1->marco=frame0;
+	elementoA1->modificado = SINMODIFICAR;
+
+	list_add(tablaA->tablaDePagina, elementoA1);
+	list_add(tablaDeSegmentos->segmentos,tablaA);
+
+	frame0->timestamp = 123456789;
+	frame0->key=1;
+	strcpy(frame0->value,"hola");
+
+}
+
+void inicializarBitArray(int* bitArray){
+	int i=0;
+	while(bitArray[i]!= '/0'){
+		bitArray[i]=0;
+		i++;
+	}
+}
 /* leerDeConsola()
  * Parametros:
  * 	->  ::  void
@@ -137,21 +168,6 @@ int validarRequest(char* mensaje){
 	}
 	liberarArrayDeChar(request);
 	request =NULL;
-}
-
-/* conectarAFileSystem()
- * Parametros:
- * 	->  :: void
- * Descripcion: Se crea la conexion con lissandraFileSystem
- *
- * Return:
- * 	-> :: void
- * VALGRIND:: SI */
-void conectarAFileSystem() {
-	conexionLfs = crearConexion(
-			config_get_string_value(config, "IP_FS"),
-			config_get_string_value(config, "PUERTO_FS"));
-	log_info(logger_MEMORIA, "SE CONECTO CN LFS");
 }
 
 void escucharMultiplesClientes() {
@@ -865,7 +881,8 @@ t_marco* actualizarMarco(uint16_t nuevaKey, char* nuevoValor, unsigned long long
 	if(buscarMarcoDisponible(&nuevoMarco)==0){
 		nuevoMarco->timestamp = nuevoTimesTamp;
 		nuevoMarco->key = nuevaKey;
-		nuevoMarco->value = nuevoValor;
+		strcpy(nuevoMarco->value , nuevoValor);
+		//nuevoMarco->value = nuevoValor;
 		return nuevoMarco;
 	}
 }

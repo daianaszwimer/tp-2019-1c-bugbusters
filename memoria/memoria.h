@@ -16,6 +16,12 @@
 #include <semaphore.h>
 #include <sys/time.h>
 
+size_t y;
+
+const size_t x(){
+	return y;
+}
+
 //---DESCRIPCION FUNCIONALIDADES ACTUALES---
 /*funcionalidades actuales de MEMORIA:
 (obseracion1: la memoria oseee un atributo en el .h con su consistencia
@@ -43,11 +49,12 @@ typedef enum
 } t_erroresCache;
 
 //-----------------STRUCTS------------------
+//int maxValue = 20;
 
 typedef struct{
 	unsigned long long timestamp;
 	uint16_t key;
-	char value[maxValue]; // al inicializarse, lfs me tiene q decir el tamanio
+	char value[20]; // al inicializarse, lfs me tiene q decir el tamanio
 }t_marco;
 
 typedef struct{
@@ -57,7 +64,7 @@ typedef struct{
 }t_elemTablaDePaginas;
 
 typedef struct{
-	char* nombre;
+	char* path;
 	t_list* tablaDePagina;
 }t_segmento;
 
@@ -94,7 +101,6 @@ pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 void* memoria;
 int marcosTotales;
 int marcosUtilizados=0;
-int maxValue;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 
 
@@ -104,6 +110,10 @@ fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para s
 
 //------------------ --- FUNCIONES--------------------------------
 
+void conectarAFileSystem(void);
+void inicializacionDeMemoria(void);
+void inicializarBitArray(int*);
+
 void leerDeConsola(void);
 int validarRequest(char*);
 
@@ -111,7 +121,6 @@ void escucharMultiplesClientes(void);
 void interpretarRequest(int, char*,t_caller, int);
 t_paquete* intercambiarConFileSystem(cod_request, char*);
 
-void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
