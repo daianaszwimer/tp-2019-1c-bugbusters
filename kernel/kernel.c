@@ -183,12 +183,12 @@ void loguearMetricas(void) {
  * Return:
  * 	-> :: void  */
 void informarMetricas(int mostrarPorConsola) {
-	int readLatencySC = tiempoSelectSC/cantidadSelectSC;
-	int readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
-	int readLatencyEC = tiempoSelectEC/cantidadSelectEC;
-	int writeLatencySC = tiempoInsertSC/cantidadInsertSC;
-	int writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
-	int writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
+	double readLatencySC = tiempoSelectSC/cantidadSelectSC;
+	double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
+	double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
+	double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
+	double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
+	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
 	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
 		int estadistica = estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
 		if (mostrarPorConsola == TRUE) {
@@ -200,12 +200,12 @@ void informarMetricas(int mostrarPorConsola) {
 		}
 	}
 	if (mostrarPorConsola == TRUE) {
-		log_info(logger_KERNEL, "Read Latency de SC: %d", readLatencySC);
-		log_info(logger_KERNEL, "Read Latency de SHC: %d", readLatencySHC);
-		log_info(logger_KERNEL, "Read Latency de EC: %d", readLatencyEC);
-		log_info(logger_KERNEL, "Write Latency de SC: %d", writeLatencySC);
-		log_info(logger_KERNEL, "Write Latency de SHC: %d", writeLatencySHC);
-		log_info(logger_KERNEL, "Write Latency de EC: %d", writeLatencyEC);
+		log_info(logger_KERNEL, "Read Latency de SC: %f", readLatencySC);
+		log_info(logger_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+		log_info(logger_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+		log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+		log_info(logger_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+		log_info(logger_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
 		log_info(logger_KERNEL, "El memory load de SC es:");
 		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
 		log_info(logger_KERNEL, "El memory load de SHC es:");
@@ -219,12 +219,12 @@ void informarMetricas(int mostrarPorConsola) {
 		log_info(logger_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
 		log_info(logger_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
 	} else {
-		log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %d", readLatencySC);
-		log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %d", readLatencySHC);
-		log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %d", readLatencyEC);
-		log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %d", writeLatencySC);
-		log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %d", writeLatencySHC);
-		log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %d", writeLatencyEC);
+		log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %f", readLatencySC);
+		log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+		log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
 		log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
 		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
 		log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
@@ -260,7 +260,7 @@ void liberarEstadisticaMemoria(estadisticaMemoria* memoria) {
  * Descripcion: aumenta las variables para las métricas.
  * Return:
  * 	-> :: void  */
-void aumentarContadores(consistencia consistenciaRequest, char* numeroMemoria, cod_request codigo, int cantidadTiempo) {
+void aumentarContadores(consistencia consistenciaRequest, char* numeroMemoria, cod_request codigo, double cantidadTiempo) {
 	estadisticaMemoria* memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
 	// si es un describe global va a entrar al "NINGUNA"
 	// cargo en el criterio segun el request o segun la memoria?
@@ -738,6 +738,11 @@ config_memoria* encontrarMemoriaSegunTabla(char* tabla, char* key) {
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
 int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
+	clock_t tiempo;
+	double tiempoQueTardo;
+	if (codigo == SELECT || codigo == INSERT) {
+		tiempo = clock();
+	}
 	t_paquete* paqueteRecibido;
 	int respuesta;
 	consistencia consistenciaTabla = NINGUNA;
@@ -745,10 +750,14 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	char** parametros = separarRequest(mensaje);
 	// si es un describe global o journal no hay tabla
 	int cantidadParametros = longitudDeArrayDeStrings(parametros);
+	config_memoria* memoriaCorrespondiente;
 	if (codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) {
+		memoriaCorrespondiente->ip = config_get_string_value(config, "IP_MEMORIA");
+		memoriaCorrespondiente->puerto = config_get_string_value(config, "PUERTO_MEMORIA");
 		// no hago nada porque se lo mando siempre a la mem ppal
 	} else {
-		config_memoria* memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1], parametros[2]);
+		memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1], parametros[2]);
+		// todo: falta free
 		if(memoriaCorrespondiente == NULL) {
 			respuesta = ERROR_GENERICO;
 			liberarArrayDeChar(parametros);
@@ -779,6 +788,11 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	eliminar_paquete(paqueteRecibido);
 	//free(memoriaCorrespondiente);
 	liberarArrayDeChar(parametros);
+	if (codigo == SELECT || codigo == INSERT) {
+		tiempo = clock() - tiempo;
+		tiempoQueTardo = ((double)tiempo)/CLOCKS_PER_SEC; // in seconds
+	}
+	aumentarContadores(consistenciaTabla, memoriaCorrespondiente->numero, codigo, tiempoQueTardo);
 	return respuesta;
 }
 

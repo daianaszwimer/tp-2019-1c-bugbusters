@@ -13,6 +13,7 @@
 #include <nuestro_lib/nuestro_lib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <time.h>
 
 typedef struct
 {
@@ -50,18 +51,18 @@ t_list* tablasSHC;
 t_list* tablasEC;
 
 // variables de metricas
-int tiempoSelectSC;
-int tiempoInsertSC;
+double tiempoSelectSC;
+double tiempoInsertSC;
 int cantidadSelectSC;
 int cantidadInsertSC;
 t_list* cargaMemoriaSC;
-int tiempoSelectSHC;
-int tiempoInsertSHC;
+double tiempoSelectSHC;
+double tiempoInsertSHC;
 int cantidadSelectSHC;
 int cantidadInsertSHC;
 t_list* cargaMemoriaSHC;
-int tiempoSelectEC;
-int tiempoInsertEC;
+double tiempoSelectEC;
+double tiempoInsertEC;
 int cantidadSelectEC;
 int cantidadInsertEC;
 t_list* cargaMemoriaEC;
@@ -89,7 +90,7 @@ void leerDeConsola(void);
 void loguearMetricas(void);
 void informarMetricas(int);
 void liberarEstadisticaMemoria(estadisticaMemoria*);
-void aumentarContadores(consistencia, char*, cod_request, int);
+void aumentarContadores(consistencia, char*, cod_request, float);
 // planificar requests
 void planificarNewAReady(void);
 void planificarReadyAExec(void);
