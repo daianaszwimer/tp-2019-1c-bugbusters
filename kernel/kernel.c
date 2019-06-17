@@ -11,6 +11,7 @@ int main(void) {
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
 	pthread_create(&hiloMetricas, NULL, (void*)loguearMetricas, NULL);
+	pthread_create(&hiloDescribe, NULL, (void*)hacerDescribe, NULL);
 
 	pthread_join(hiloConectarAMemoria, NULL);
 	pthread_join(hiloLeerDeConsola, NULL);
@@ -142,6 +143,19 @@ void leerDeConsola(void){
 		queue_push(new, mensaje);
 		pthread_mutex_unlock(&semMColaNew);
 		sem_post(&semRequestNew);
+	}
+}
+
+/* hacerDescribe()
+ * Parametros:
+ * 	-> void
+ * Descripcion: cada x segundos hace describe global.
+ * Return:
+ * 	-> :: void  */
+void hacerDescribe(void) {
+	while(1) {
+		int segundos = config_get_int_value(config, "METADATA_REFRESH"); //todo: esto es en segundos?
+		sleep(segundos);
 	}
 }
 

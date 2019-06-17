@@ -78,7 +78,7 @@ pthread_t hiloConectarAMemoria;		// hilo que conecta a memoria
 pthread_t hiloPlanificarNew;		// hilo para planificar requests de new a ready
 pthread_t hiloPlanificarExec;		// hilo para planificar requests de ready a exec y viceversa
 pthread_t hiloMetricas;				// hilo para loguear metricas cada 30 secs
-// todo: hilo que hace describe cada x tiempo
+pthread_t hiloDescribe;				// hilo para hacer describe cada x secs
 
 void inicializarVariables(void);
 void conectarAMemoria(void);
