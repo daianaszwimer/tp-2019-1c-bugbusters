@@ -27,7 +27,15 @@ typedef struct
 	void* request;
 } request_procesada;
 
+typedef struct
+{
+	int cantidadSelectInsert;
+	int cantidadTotal;
+	char* numeroMemoria;
+} estadisticaMemoria;
+
 t_log* logger_KERNEL;
+t_log* logger_METRICAS_KERNEL;
 int conexionMemoria;
 int quantum;
 t_config* config;
@@ -41,6 +49,23 @@ t_list* tablasSC;
 t_list* tablasSHC;
 t_list* tablasEC;
 
+// variables de metricas
+int tiempoSelectSC;
+int tiempoInsertSC;
+int cantidadSelectSC;
+int cantidadInsertSC;
+t_list* cargaMemoriaSC;
+int tiempoSelectSHC;
+int tiempoInsertSHC;
+int cantidadSelectSHC;
+int cantidadInsertSHC;
+t_list* cargaMemoriaSHC;
+int tiempoSelectEC;
+int tiempoInsertEC;
+int cantidadSelectEC;
+int cantidadInsertEC;
+t_list* cargaMemoriaEC;
+
 sem_t semRequestNew;				// semaforo para planificar requests en new
 pthread_mutex_t semMColaNew;		// semafoto mutex para cola de new
 sem_t semRequestReady;				// semaforo para planificar requests en ready
@@ -48,10 +73,10 @@ pthread_mutex_t semMColaReady;		// semafoto mutex para cola de ready
 sem_t semMultiprocesamiento;		// semaforo contador para limitar requests en exec
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
-pthread_t hiloConectarAMemoria;		//hilo que conecta a memoria
-pthread_t hiloPlanificarNew;		//hilo para planificar requests de new a ready
-pthread_t hiloPlanificarExec;		//hilo para planificar requests de ready a exec y viceversa
-// todo: hilo que loguea cada x tiempo
+pthread_t hiloConectarAMemoria;		// hilo que conecta a memoria
+pthread_t hiloPlanificarNew;		// hilo para planificar requests de new a ready
+pthread_t hiloPlanificarExec;		// hilo para planificar requests de ready a exec y viceversa
+pthread_t hiloMetricas;				// hilo para loguear metricas cada 30 secs
 // todo: hilo que hace describe cada x tiempo
 
 void inicializarVariables(void);
@@ -61,6 +86,10 @@ void liberarMemoria(void);
 void liberarRequestProcesada(request_procesada*);
 void liberarColaRequest(request_procesada*);
 void leerDeConsola(void);
+void loguearMetricas(void);
+void informarMetricas(int);
+void liberarEstadisticaMemoria(estadisticaMemoria*);
+void aumentarContadores(consistencia, char*, cod_request, int);
 // planificar requests
 void planificarNewAReady(void);
 void planificarReadyAExec(void);

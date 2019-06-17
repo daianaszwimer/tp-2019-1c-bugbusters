@@ -10,11 +10,13 @@ int main(void) {
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
+	pthread_create(&hiloMetricas, NULL, (void*)loguearMetricas, NULL);
 
 	pthread_join(hiloConectarAMemoria, NULL);
 	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloPlanificarNew, NULL);
 	pthread_join(hiloPlanificarExec, NULL);
+	pthread_join(hiloMetricas, NULL);
 
 	liberarMemoria();
 
@@ -29,6 +31,7 @@ int main(void) {
  * 	-> :: void  */
 void inicializarVariables() {
 	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
+	logger_METRICAS_KERNEL = log_create("metricas.log", "MetricasKernel", 0, LOG_LEVEL_DEBUG);
 	// Configs
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 	int multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
@@ -52,6 +55,35 @@ void inicializarVariables() {
 	tablasSC = list_create();
 	tablasSHC = list_create();
 	tablasEC = list_create();
+}
+
+/* liberarMemoria()
+ * Parametros:
+ * 	-> void
+ * Descripcion: libera los recursos.
+ * Return:
+ * 	-> void  */
+void liberarMemoria(void) {
+	liberar_conexion(conexionMemoria);
+	config_destroy(config);
+	log_destroy(logger_KERNEL);
+	log_destroy(logger_METRICAS_KERNEL);
+	pthread_mutex_destroy(&semMColaNew);
+	pthread_mutex_destroy(&semMColaReady);
+	sem_destroy(&semRequestNew);
+	sem_destroy(&semRequestReady);
+	sem_destroy(&semMultiprocesamiento);
+	queue_destroy(new);
+	queue_destroy(ready);
+	list_destroy(memorias);
+	list_destroy(memoriasShc);
+	list_destroy(memoriasEc);
+	list_destroy(tablasSC);
+	list_destroy(tablasSHC);
+	list_destroy(tablasEC);
+	list_destroy(cargaMemoriaSC);
+	list_destroy(cargaMemoriaSHC);
+	list_destroy(cargaMemoriaEC);
 }
 
 /* conectarAMemoria()
@@ -105,19 +137,229 @@ void leerDeConsola(void){
 			free(mensaje);
 			break;
 		}
-		//todo: usar exit
-		/*if (!strcmp(mensaje, "\0")) {
-			printf("sali de leer consola");
-			free(mensaje);
-			mensaje = NULL;
-			break;
-		}*/
 		pthread_mutex_lock(&semMColaNew);
 		//agregar request a la cola de new
 		queue_push(new, mensaje);
 		pthread_mutex_unlock(&semMColaNew);
 		sem_post(&semRequestNew);
 	}
+}
+
+/* loguearMetricas()
+ * Parametros:
+ * 	-> void
+ * Descripcion: cada 30 segundos loguea data.
+ * Return:
+ * 	-> :: void  */
+void loguearMetricas(void) {
+	while(1) {
+		log_info(logger_KERNEL, "pasaron 30s");
+		informarMetricas(FALSE);
+		// limpio variables para empezar a contar de nuevo
+		tiempoSelectSC = 0;
+		tiempoInsertSC = 0;
+		cantidadSelectSC = 0;
+		cantidadInsertSC = 0;
+		list_clean_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
+		tiempoSelectSHC = 0;
+		tiempoInsertSHC = 0;
+		cantidadSelectSHC = 0;
+		cantidadInsertSHC = 0;
+		list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
+		tiempoSelectEC = 0;
+		tiempoInsertEC = 0;
+		cantidadSelectEC = 0;
+		cantidadInsertEC = 0;
+		list_clean_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
+		sleep(30);
+	}
+}
+
+/* informarMetricas()
+ * Parametros:
+ * 	-> int :: mostrarPorConsola
+ * Descripcion: si parametro es true muestra metricas actuales por consola,
+ * sino en archivo de log de métricas.
+ * Return:
+ * 	-> :: void  */
+void informarMetricas(int mostrarPorConsola) {
+	int readLatencySC = tiempoSelectSC/cantidadSelectSC;
+	int readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
+	int readLatencyEC = tiempoSelectEC/cantidadSelectEC;
+	int writeLatencySC = tiempoInsertSC/cantidadInsertSC;
+	int writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
+	int writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
+	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
+		int estadistica = estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
+		if (mostrarPorConsola == TRUE) {
+			log_info(logger_KERNEL, "La cantidad de Select - Insert respescto del resto de las operaciones de la memoria %s es %d",
+					estadisticaAMostrar->numeroMemoria, estadistica);
+		} else {
+			log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respescto del resto de las operaciones de la memoria %s es %d",
+					estadisticaAMostrar->numeroMemoria, estadistica);
+		}
+	}
+	if (mostrarPorConsola == TRUE) {
+		log_info(logger_KERNEL, "Read Latency de SC: %d", readLatencySC);
+		log_info(logger_KERNEL, "Read Latency de SHC: %d", readLatencySHC);
+		log_info(logger_KERNEL, "Read Latency de EC: %d", readLatencyEC);
+		log_info(logger_KERNEL, "Write Latency de SC: %d", writeLatencySC);
+		log_info(logger_KERNEL, "Write Latency de SHC: %d", writeLatencySHC);
+		log_info(logger_KERNEL, "Write Latency de EC: %d", writeLatencyEC);
+		log_info(logger_KERNEL, "El memory load de SC es:");
+		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+		log_info(logger_KERNEL, "El memory load de SHC es:");
+		list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+		log_info(logger_KERNEL, "El memory load de EC es:");
+		list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+		log_info(logger_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+		log_info(logger_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+		log_info(logger_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+		log_info(logger_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+		log_info(logger_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+	} else {
+		log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %d", readLatencySC);
+		log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %d", readLatencySHC);
+		log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %d", readLatencyEC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %d", writeLatencySC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %d", writeLatencySHC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %d", writeLatencyEC);
+		log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
+		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+		log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
+		list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+		log_info(logger_METRICAS_KERNEL, "El memory load de EC es:");
+		list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+	}
+}
+
+/* liberarEstadisticaMemoria()
+ * Parametros:
+ * 	-> estadisticaMemoria* :: memoria
+ * Descripcion: recibe una estadisticaMemoria y la libera.
+ * Return:
+ * 	-> :: void  */
+void liberarEstadisticaMemoria(estadisticaMemoria* memoria) {
+	free(memoria->numeroMemoria);
+	free(memoria);
+}
+
+/* aumentarContadores()
+ * Parametros:
+ * 	-> consistencia :: consistenciaRequest
+ * 	-> char* :: numeroMemoria
+ * 	-> cod_request* :: codigo
+ * 	-> int :: cantidadTiempo
+ * Descripcion: aumenta las variables para las métricas.
+ * Return:
+ * 	-> :: void  */
+void aumentarContadores(consistencia consistenciaRequest, char* numeroMemoria, cod_request codigo, int cantidadTiempo) {
+	estadisticaMemoria* memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+	// si es un describe global va a entrar al "NINGUNA"
+	// cargo en el criterio segun el request o segun la memoria?
+	// o sea si tengo una memory que es SC y EC y le hago dos select que son de una tabla
+	// EC, en la cantidad total de request en mi lista de SC de esa memoria es de 2 o 0? porque
+	// no se hizo nada SC pero si se hizo a esa memoria PREGUNTAR
+	int encontrarTabla(estadisticaMemoria* memoria) {
+		return string_equals_ignore_case(memoria->numeroMemoria, numeroMemoria);
+	}
+	switch (consistenciaRequest) {
+		case SC:
+			memoriaCorrespondiente = list_find(cargaMemoriaSC, (void*)encontrarTabla);
+			if (memoriaCorrespondiente == NULL) {
+				memoriaCorrespondiente->cantidadSelectInsert = 0;
+				memoriaCorrespondiente->cantidadTotal = 1;
+				memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
+				list_add(cargaMemoriaSC, memoriaCorrespondiente);
+			} else {
+				// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+			}
+			break;
+		case SHC:
+			memoriaCorrespondiente = list_find(cargaMemoriaSHC, (void*)encontrarTabla);
+			if (memoriaCorrespondiente == NULL) {
+				memoriaCorrespondiente->cantidadSelectInsert = 0;
+				memoriaCorrespondiente->cantidadTotal = 1;
+				memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
+				list_add(cargaMemoriaSHC, memoriaCorrespondiente);
+			} else {
+				// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+			}
+			break;
+		case EC:
+			memoriaCorrespondiente = list_find(cargaMemoriaEC, (void*)encontrarTabla);
+			if (memoriaCorrespondiente == NULL) {
+				memoriaCorrespondiente->cantidadSelectInsert = 0;
+				memoriaCorrespondiente->cantidadTotal = 1;
+				memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
+				list_add(cargaMemoriaEC, memoriaCorrespondiente);
+			} else {
+				// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+			}
+			break;
+			break;
+		case NINGUNA:
+			// se agrega en todos los criterios? o en el criterio de la memoria? PREGUNTAR
+			break;
+		default:
+			// error
+			break;
+	}
+	if (codigo == SELECT) {
+		switch(consistenciaRequest) {
+		case SC:
+			tiempoSelectSC+=cantidadTiempo;
+			cantidadSelectSC++;
+			break;
+		case SHC:
+			tiempoSelectSHC+=cantidadTiempo;
+			cantidadSelectSHC++;
+			break;
+		case EC:
+			tiempoSelectEC+=cantidadTiempo;
+			cantidadSelectEC++;
+			break;
+		case NINGUNA:
+			// que se hace en el caso de describe global?
+			break;
+		default:
+			break;
+		}
+	} else if (codigo == INSERT) {
+		switch(consistenciaRequest) {
+		case SC:
+			tiempoInsertSC+=cantidadTiempo;
+			cantidadInsertSC++;
+			break;
+		case SHC:
+			tiempoInsertSHC+=cantidadTiempo;
+			cantidadInsertSHC++;
+			break;
+		case EC:
+			tiempoInsertEC+=cantidadTiempo;
+			cantidadInsertEC++;
+			break;
+		case NINGUNA:
+			// que se hace en el caso de describe global?
+			break;
+		default:
+			break;
+		}
+	}
+
+	free(memoriaCorrespondiente->numeroMemoria);
+	// esta bien o me libera la memoria de mi listas? ademas en algunos casos lo agrego por 1era vez
+	free(memoriaCorrespondiente);
 }
 
 /*
@@ -137,8 +379,6 @@ void planificarNewAReady(void) {
 		sem_wait(&semRequestNew);
 		pthread_mutex_lock(&semMColaNew);
 		char* request = strdup((char*) queue_pop(new));
-//		char* request = (char*) malloc(strlen((char*)queue_peek(new)) + 1);
-//		request = (char*) queue_pop(new);
 		pthread_mutex_unlock(&semMColaNew);
 		if(validarRequest(request) == TRUE) {
 			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
@@ -264,31 +504,6 @@ void reservarRecursos(char* mensaje) {
 	sem_post(&semRequestReady);
 }
 
-/* liberarMemoria()
- * Parametros:
- * 	-> void
- * Descripcion: libera los recursos.
- * Return:
- * 	-> void  */
-void liberarMemoria(void) {
-	liberar_conexion(conexionMemoria);
-	config_destroy(config);
-	log_destroy(logger_KERNEL);
-	pthread_mutex_destroy(&semMColaNew);
-	pthread_mutex_destroy(&semMColaReady);
-	sem_destroy(&semRequestNew);
-	sem_destroy(&semRequestReady);
-	sem_destroy(&semMultiprocesamiento);
-	queue_destroy(new);
-	queue_destroy(ready);
-	list_destroy(memorias);
-	list_destroy(memoriasShc);
-	list_destroy(memoriasEc);
-	list_destroy(tablasSC);
-	list_destroy(tablasSHC);
-	list_destroy(tablasEC);
-}
-
 /* liberarRequestProcesada()
  * Parametros:
  * 	-> request_procesada* :: request
@@ -378,6 +593,7 @@ int manejarRequest(request_procesada* request) {
 			respuesta = enviarMensajeAMemoria(request->codigo, (char*) request->request);
 			break;
 		case JOURNAL:
+			procesarJournal(FALSE);
 			// solo a memorias que tengan un criterio
 			break;
 		case ADD:
@@ -387,6 +603,7 @@ int manejarRequest(request_procesada* request) {
 			procesarRun((t_queue*) request->request);
 			break;
 		case METRICS:
+			informarMetricas(TRUE);
 			break;
 		default:
 			// aca puede entrar solo si viene de run, porque sino antes siempre fue validada
@@ -528,9 +745,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	char** parametros = separarRequest(mensaje);
 	// si es un describe global o journal no hay tabla
 	int cantidadParametros = longitudDeArrayDeStrings(parametros);
-	if ((codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) ||
-			(codigo == JOURNAL && cantidadParametros == PARAMETROS_JOURNAL)) {
-
+	if (codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) {
+		// no hago nada porque se lo mando siempre a la mem ppal
 	} else {
 		config_memoria* memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1], parametros[2]);
 		if(memoriaCorrespondiente == NULL) {
@@ -545,26 +761,22 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			}
 		}
 	}
-	if (codigo == JOURNAL) {
-		procesarJournal(FALSE);
+	enviar(consistenciaTabla, mensaje, conexionTemporanea);
+	paqueteRecibido = recibir(conexionTemporanea);
+	respuesta = paqueteRecibido->palabraReservada;
+	// todo: si la respuesta es full, forzar journal y mandar request de vuelta?
+	if (respuesta == SUCCESS) {
+		log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
+		if (codigo == DESCRIBE) {
+			actualizarTablas(paqueteRecibido->request);
+		}
 	} else {
-		enviar(consistenciaTabla, mensaje, conexionTemporanea);
-		paqueteRecibido = recibir(conexionTemporanea);
-		respuesta = paqueteRecibido->palabraReservada;
-		// todo: si la respuesta es full, forzar journal y mandar request de vuelta?
-		if (respuesta == SUCCESS) {
-			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
-			if (codigo == DESCRIBE) {
-				actualizarTablas(paqueteRecibido->request);
-			}
-		} else {
-			log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
-		}
-		if (conexionTemporanea != conexionMemoria) {
-			liberar_conexion(conexionTemporanea);
-		}
-		eliminar_paquete(paqueteRecibido);
+		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
+	if (conexionTemporanea != conexionMemoria) {
+		liberar_conexion(conexionTemporanea);
+	}
+	eliminar_paquete(paqueteRecibido);
 	//free(memoriaCorrespondiente);
 	liberarArrayDeChar(parametros);
 	return respuesta;
