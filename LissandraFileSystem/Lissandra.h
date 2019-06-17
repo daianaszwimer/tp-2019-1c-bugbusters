@@ -12,6 +12,12 @@
 #include <nuestro_lib/nuestro_lib.h>
 #include <pthread.h>
 #include <sys/stat.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 
 t_log* logger_LFS;
 t_config* config;
@@ -64,15 +70,10 @@ void* leerDeConsola(void*);
 void* recibirMemorias(void*);
 void* conectarConMemoria(void*);
 void interpretarRequest(cod_request, char*, int*);
-errorNo procesarCreate(char*, char*, char*, char*);
-errorNo procesarInsert(char*, uint16_t, char*, unsigned long long);
-errorNo procesarSelect(char*, char*, char**);
-errorNo procesarDescribe(char*, char**);
 int obtenerBloqueDisponible(errorNo*);
 int crearDirectorio(char*);
 int mkdir_p(const char*);
 void crearFS(char*, char*);
-void liberarString(char*);
 errorNo crearParticiones(char*, int);
 void* hiloDump();
 errorNo dumpear();
