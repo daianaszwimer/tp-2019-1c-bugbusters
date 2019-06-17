@@ -104,7 +104,7 @@ int manejarRequest(request_procesada*);
 int enviarMensajeAMemoria(cod_request, char*);
 config_memoria* encontrarMemoriaSegunTabla(char*, char*);
 void actualizarTablas(char*);
-void recorrerTabla(char*);
+void agregarTablaACriterio(char*);
 void liberarTabla(char*);
 int encontrarMemoriaPpal(config_memoria*);
 consistencia obtenerConsistenciaTabla(char*);

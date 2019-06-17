@@ -276,3 +276,63 @@
 [INFO] 12:53:57:172 MetricasKernel/(20483:20495): Cantidad de Writes de SC: 0
 [INFO] 12:53:57:172 MetricasKernel/(20483:20495): Cantidad de Writes de SHC: 0
 [INFO] 12:53:57:172 MetricasKernel/(20483:20495): Cantidad de Writes de EC: 0
+[INFO] 18:27:17:14 MetricasKernel/(9545:9559): Read Latency de SC: -nan
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Read Latency de SHC: -nan
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Read Latency de EC: -nan
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Write Latency de SC: -nan
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Write Latency de SHC: -nan
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Write Latency de EC: -nan
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): El memory load de SC es:
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): El memory load de SHC es:
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): El memory load de EC es:
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Cantidad de Reads de SC: 0
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Cantidad de Reads de SHC: 0
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Cantidad de Reads de EC: 0
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Cantidad de Writes de SC: 0
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Cantidad de Writes de SHC: 0
+[INFO] 18:27:17:16 MetricasKernel/(9545:9559): Cantidad de Writes de EC: 0
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Read Latency de SC: -nan
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Read Latency de SHC: -nan
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Read Latency de EC: -nan
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Write Latency de SC: -nan
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Write Latency de SHC: -nan
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Write Latency de EC: -nan
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): El memory load de SC es:
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): El memory load de SHC es:
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): El memory load de EC es:
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Cantidad de Reads de SC: 0
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Cantidad de Reads de SHC: 0
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Cantidad de Reads de EC: 0
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Cantidad de Writes de SC: 0
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Cantidad de Writes de SHC: 0
+[INFO] 18:27:47:863 MetricasKernel/(9545:9559): Cantidad de Writes de EC: 0
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Read Latency de SC: -nan
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Read Latency de SHC: -nan
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Read Latency de EC: -nan
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Write Latency de SC: -nan
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Write Latency de SHC: -nan
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Write Latency de EC: -nan
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): El memory load de SC es:
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): El memory load de SHC es:
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): El memory load de EC es:
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Cantidad de Reads de SC: 0
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Cantidad de Reads de SHC: 0
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Cantidad de Reads de EC: 0
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Cantidad de Writes de SC: 0
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Cantidad de Writes de SHC: 0
+[INFO] 18:28:17:864 MetricasKernel/(9545:9559): Cantidad de Writes de EC: 0
+[INFO] 18:28:52:233 MetricasKernel/(9545:9559): Read Latency de SC: -nan
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Read Latency de SHC: -nan
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Read Latency de EC: -nan
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Write Latency de SC: -nan
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Write Latency de SHC: -nan
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Write Latency de EC: -nan
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): El memory load de SC es:
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): El memory load de SHC es:
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): El memory load de EC es:
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Cantidad de Reads de SC: 0
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Cantidad de Reads de SHC: 0
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Cantidad de Reads de EC: 0
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Cantidad de Writes de SC: 0
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Cantidad de Writes de SHC: 0
+[INFO] 18:28:52:234 MetricasKernel/(9545:9559): Cantidad de Writes de EC: 0

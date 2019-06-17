@@ -76,3 +76,18 @@
 [INFO] 12:53:47:108 Kernel/(20483:20557): Cantidad de Writes de EC: 0
 [INFO] 12:53:53:553 Kernel/(20483:20495): pasaron 30s
 [INFO] 12:54:27:172 Kernel/(20483:20495): pasaron 30s
+[INFO] 18:27:16:977 Kernel/(9545:9545): ----------------INICIO DE KERNEL--------------
+[INFO] 18:27:17:13 Kernel/(9545:9559): pasaron 30s
+[INFO] 18:27:24:725 Kernel/(9545:9563): La respuesta del request DESCRIBE es COMIDAS SC; ANIMALES SHC; PELIS EC; 
+
+[INFO] 18:27:47:863 Kernel/(9545:9559): pasaron 30s
+[INFO] 18:28:13:220 Kernel/(9545:9563): Agregue la tabla COMIDAS al criterio SC
+[INFO] 18:28:15:554 Kernel/(9545:9563): Agregue la tabla ANIMALES al criterio SHC
+[INFO] 18:28:16:287 Kernel/(9545:9563): Agregue la tabla PELIS al criterio EC
+[INFO] 18:28:17:864 Kernel/(9545:9559): pasaron 30s
+[INFO] 18:28:23:192 Kernel/(9545:9589): La respuesta del request DESCRIBE es COMIDAS SC; ANIMALES SHC; PELIS EC; 
+
+[INFO] 18:28:52:232 Kernel/(9545:9589): Agregue la tabla COMIDAS al criterio SC
+[INFO] 18:28:52:233 Kernel/(9545:9559): pasaron 30s
+[INFO] 18:28:53:137 Kernel/(9545:9589): Agregue la tabla ANIMALES al criterio SHC
+[INFO] 18:28:53:770 Kernel/(9545:9589): Agregue la tabla PELIS al criterio EC

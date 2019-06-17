@@ -666,52 +666,84 @@ int manejarRequest(request_procesada* request) {
  * Return:
  * 	-> void */
 void actualizarTablas(char* respuesta) {
-	// en cada describe actualizo toda la data?
-	// deberia limpiar las listas antes?
 	// formato de rta: tabla consistencia particiones tiempoDeCompactacion;
 	// separo por ; y despues itero sobre eso
 	char** respuestaParseada = string_split(respuesta, ";");
+	int esDescribeGlobal = longitudDeArrayDeStrings(respuestaParseada) != 1;
 	// solo limpiar cuando es global!!!
-	// que devuelve si no hay ningun ; ?
-	list_clean_and_destroy_elements(tablasSC, (void*)liberarTabla);
-	list_clean_and_destroy_elements(tablasSHC, (void*)liberarTabla);
-	list_clean_and_destroy_elements(tablasEC, (void*)liberarTabla);
-	string_iterate_lines(respuestaParseada, (void*)recorrerTabla);
+	if (esDescribeGlobal == TRUE) {
+		list_clean_and_destroy_elements(tablasSC, (void*)liberarTabla);
+		list_clean_and_destroy_elements(tablasSHC, (void*)liberarTabla);
+		list_clean_and_destroy_elements(tablasEC, (void*)liberarTabla);
+		string_iterate_lines(respuestaParseada, (void*)agregarTablaACriterio);
+	} else {
+		agregarTablaACriterio(respuestaParseada[0]);
+	}
 	liberarArrayDeChar(respuestaParseada);
 }
 
 /* recorrerTabla()
  * Parametros:
  * 	-> char* :: tabla
- * Descripcion: toma una tabla, se fija que consistencia tiene y la guarda donde corresponde.
+ * Descripcion: toma una tabla, se fija que consistencia tiene y la guarda donde corresponde si no existe.
+ * Si ya existe no hace nada y si la tiene que actualizar lo hace.
  * Return:
  * 	-> void */
-void recorrerTabla(char* tabla) {
-	// divido tabla
-	// la libero
+void agregarTablaACriterio(char* tabla) {
+	// busco la tabla y actualizo si cambio la consistencia y si no la creo
 	char** tablaParseada = string_split(tabla, " ");
 	char* nombreTabla = strdup(tablaParseada[0]);
-	char* consistenciaTabla = strdup(tablaParseada[1]);
+	char* consistenciaTabla = tablaParseada[1];
 	consistencia tipoConsistencia = obtenerEnumConsistencia(consistenciaTabla);
-	switch(tipoConsistencia) {
-		case SC:
-			list_add(tablasSC, nombreTabla);
-			log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
-			break;
-		case SHC:
-			list_add(tablasSHC, nombreTabla);
-			log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
-			break;
-		case EC:
-			list_add(tablasEC, nombreTabla);
-			log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
-			break;
-		default:
-			log_error(logger_KERNEL, "La tabla %s no tiene asociada un criterio válido y no se actualizó en la estructura de datos",
-					nombreTabla);
-			break;
+	int hayQueAgregar = FALSE;
+	int esTabla(char* tablaActual) {
+		return string_equals_ignore_case(nombreTabla, tablaActual);
 	}
-	free(consistenciaTabla);
+	if (list_find(tablasSC, (void*)esTabla) != NULL) {
+		if (tipoConsistencia != SC) {
+			hayQueAgregar = TRUE;
+			list_remove_and_destroy_by_condition(tablasSC, (void*)esTabla, (void*)liberarTabla);
+		} else {
+			free(nombreTabla);
+		}
+	} else if (list_find(tablasSHC, (void*)esTabla) != NULL) {
+		if (tipoConsistencia != SHC) {
+			hayQueAgregar = TRUE;
+			list_remove_and_destroy_by_condition(tablasSHC, (void*)esTabla, (void*)liberarTabla);
+		} else {
+			free(nombreTabla);
+		}
+	} else if (list_find(tablasEC, (void*)esTabla) != NULL) {
+		if (tipoConsistencia != EC) {
+			hayQueAgregar = TRUE;
+			list_remove_and_destroy_by_condition(tablasEC, (void*)esTabla, (void*)liberarTabla);
+		} else {
+			free(nombreTabla);
+		}
+	} else {
+		hayQueAgregar = TRUE;
+	}
+	if (hayQueAgregar == TRUE) {
+		// tabla no existe en estructura o hay que agregarla en otra
+		switch(tipoConsistencia) {
+			case SC:
+				list_add(tablasSC, nombreTabla);
+				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
+				break;
+			case SHC:
+				list_add(tablasSHC, nombreTabla);
+				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
+				break;
+			case EC:
+				list_add(tablasEC, nombreTabla);
+				log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
+				break;
+			default:
+				log_error(logger_KERNEL, "La tabla %s no tiene asociada un criterio válido y no se actualizó en la estructura de datos",
+						nombreTabla);
+				break;
+		}
+	}
 	liberarArrayDeChar(tablaParseada);
 }
 
@@ -733,8 +765,18 @@ void liberarTabla(char* tabla) {
  * Return:
  * 	-> consistenciaCorrespondiente :: consistencia*  */
 consistencia obtenerConsistenciaTabla(char* tabla) {
-	consistencia consistenciaCorrespondiente = SC;
-	return consistenciaCorrespondiente;
+	int esTabla(char* tablaActual) {
+		return string_equals_ignore_case(tabla, tablaActual);
+	}
+	if (list_find(tablasSC, (void*) esTabla) != NULL) {
+		return SC;
+	} else if (list_find(tablasSHC, (void*) esTabla) != NULL) {
+		return SHC;
+	} else if(list_find(tablasEC, (void*) esTabla) != NULL) {
+		return EC;
+	} else {
+		return CONSISTENCIA_INVALIDA;
+	}
 }
 
 /* encontrarMemoriaSegunTabla()
@@ -759,10 +801,10 @@ config_memoria* encontrarMemoriaSegunTabla(char* tabla, char* key) {
 			}
 			break;
 		case SHC:
-			// funcion hash
+			// todo: funcion hash
 			break;
 		case EC:
-			// funcion random
+			// todo: funcion random
 			break;
 		default:
 			//error
@@ -775,7 +817,7 @@ config_memoria* encontrarMemoriaSegunTabla(char* tabla, char* key) {
 /* encontrarMemoriaPpal()
  * Parametros:
  * 	-> config_memoria* :: memoria
- * Descripcion: devuelve TRUE cuando encuentra la memoria ppal;
+ * Descripcion: devuelve TRUE cuando encuentra la memoria ppal.
  * Return:
  * 	-> int  */
 int encontrarMemoriaPpal(config_memoria* memoria) {
@@ -805,7 +847,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	int conexionTemporanea = conexionMemoria;
 	char** parametros = separarRequest(mensaje);
 	// si es un describe global o journal no hay tabla
-	int cantidadParametros = longitudDeArrayDeStrings(parametros);
+	int cantidadParametros = longitudDeArrayDeStrings(parametros) - 1;
 	config_memoria* memoriaCorrespondiente;
 	if (codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) {
 		// describe global va siempre a la ppal
