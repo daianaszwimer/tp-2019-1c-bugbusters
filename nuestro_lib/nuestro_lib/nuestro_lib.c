@@ -266,10 +266,11 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 				}
 			}
 		}
-
+		liberarArrayDeChar(requestDividida);
 		return codPalabraReservada;
 
 	}else{
+		liberarArrayDeChar(requestDividida);
 		return codPalabraReservada;
 	}
 }
@@ -475,9 +476,36 @@ int crearConexion(char* ip, char* puerto)
 }
 
 /*
- *
+ *HANDSHAKES
  *
  */
+void enviarHandshakeLFS(int tamanioValue, int socket_cliente)
+{
+	t_handshake_lfs* handshake = malloc(sizeof(t_handshake_lfs));
+	handshake->tamanioValue = tamanioValue;
+	int tamanioPaquete = sizeof(int);
+	void* handshakeAEnviar = serializar_handshake_lfs(handshake, tamanioPaquete);
+	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
+	free(handshake);
+}
+
+t_handshake_lfs* recibirHandshakeLFS(int socket)
+{
+	t_handshake_lfs* handshake = malloc(sizeof(t_handshake_lfs));
+	recv(socket, &handshake->tamanioValue, sizeof(int), MSG_WAITALL);
+
+	return handshake;
+}
+
+void* serializar_handshake_lfs(t_handshake_lfs* handshake, int tamanio)
+{
+	void * buffer = malloc(tamanio);
+	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
+	// destino es un string
+	memcpy(buffer, &handshake->tamanioValue, sizeof(int));
+	return buffer;
+}
+
 void enviarHandshakeMemoria(char* puertos, char* ips, int socket_cliente)
 {
 	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));

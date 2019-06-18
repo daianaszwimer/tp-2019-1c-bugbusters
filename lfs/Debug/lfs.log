@@ -1,0 +1,812 @@
+[INFO] 13:16:10:218 Lfs/(19357:19357): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:16:25:96 Lfs/(19391:19391): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:16:45:679 Lfs/(19391:19391): No se ha ingresado la cantidad correcta de paraemtros
+[ERROR] 13:16:45:679 Lfs/(19391:19391): La request no es valida
+[INFO] 18:43:55:570 Lfs/(2565:2565): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:43:55:571 Lfs/(2565:2566): Lissandra lista para recibir Memorias
+[ERROR] 18:54:25:445 Lfs/(2565:2592): El cliente se desconecto
+[ERROR] 18:54:25:446 Lfs/(2565:2592): El cliente se desconecto
+[INFO] 18:55:45:34 Lfs/(3918:3918): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:55:45:34 Lfs/(3918:3919): Lissandra lista para recibir Memorias
+[INFO] 19:05:12:481 Lfs/(4463:4463): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:05:12:482 Lfs/(4463:4464): Lissandra lista para recibir Memorias
+[INFO] 19:12:55:545 Lfs/(5210:5210): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:12:55:545 Lfs/(5210:5211): Lissandra lista para recibir Memorias
+[INFO] 19:14:55:81 Lfs/(5337:5337): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:14:55:81 Lfs/(5337:5338): Lissandra lista para recibir Memorias
+[INFO] 19:15:09:250 Lfs/(5384:5384): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:15:09:250 Lfs/(5384:5385): Lissandra lista para recibir Memorias
+[INFO] 19:19:01:812 Lfs/(5776:5776): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:19:01:813 Lfs/(5776:5777): Lissandra lista para recibir Memorias
+[INFO] 19:24:24:467 Lfs/(6254:6254): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:24:24:467 Lfs/(6254:6255): Lissandra lista para recibir Memorias
+[INFO] 19:25:12:760 Lfs/(6449:6449): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:25:12:761 Lfs/(6449:6450): Lissandra lista para recibir Memorias
+[INFO] 19:36:03:741 Lfs/(8430:8430): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:36:03:742 Lfs/(8430:8431): Lissandra lista para recibir Memorias
+[INFO] 19:40:30:484 Lfs/(8897:8897): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:40:30:484 Lfs/(8897:8898): Lissandra lista para recibir Memorias
+[INFO] 19:42:12:687 Lfs/(9179:9179): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:42:12:687 Lfs/(9179:9180): Lissandra lista para recibir Memorias
+[INFO] 19:44:53:599 Lfs/(9374:9374): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:44:53:599 Lfs/(9374:9375): Lissandra lista para recibir Memorias
+[INFO] 19:46:34:796 Lfs/(9520:9520): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:46:34:797 Lfs/(9520:9521): Lissandra lista para recibir Memorias
+[INFO] 19:47:26:983 Lfs/(9818:9818): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:47:26:984 Lfs/(9818:9819): Lissandra lista para recibir Memorias
+[INFO] 19:47:36:52 Lfs/(10296:10296): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:47:36:53 Lfs/(10296:10297): Lissandra lista para recibir Memorias
+[INFO] 19:47:51:385 Lfs/(10715:10715): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:47:51:385 Lfs/(10715:10716): Lissandra lista para recibir Memorias
+[INFO] 19:50:42:163 Lfs/(10992:10992): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:50:42:164 Lfs/(10992:10993): Lissandra lista para recibir Memorias
+[INFO] 19:54:13:652 Lfs/(11337:11337): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:54:13:652 Lfs/(11337:11338): Lissandra lista para recibir Memorias
+[INFO] 19:56:42:805 Lfs/(11504:11504): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:56:42:806 Lfs/(11504:11505): Lissandra lista para recibir Memorias
+[INFO] 19:57:11:105 Lfs/(11635:11635): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:57:11:106 Lfs/(11635:11636): Lissandra lista para recibir Memorias
+[INFO] 19:57:37:349 Lfs/(11774:11774): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:57:37:350 Lfs/(11774:11775): Lissandra lista para recibir Memorias
+[INFO] 20:01:00:235 Lfs/(12140:12140): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:01:00:235 Lfs/(12140:12141): Lissandra lista para recibir Memorias
+[INFO] 20:01:32:220 Lfs/(12274:12274): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:01:32:221 Lfs/(12274:12275): Lissandra lista para recibir Memorias
+[INFO] 20:02:14:851 Lfs/(12394:12394): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:02:14:852 Lfs/(12394:12395): Lissandra lista para recibir Memorias
+[INFO] 20:07:10:761 Lfs/(12817:12817): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:07:10:762 Lfs/(12817:12818): Lissandra lista para recibir Memorias
+[INFO] 20:08:02:468 Lfs/(12942:12942): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:08:02:468 Lfs/(12942:12943): Lissandra lista para recibir Memorias
+[INFO] 20:13:16:955 Lfs/(13491:13491): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:13:16:955 Lfs/(13491:13492): Lissandra lista para recibir Memorias
+[INFO] 20:14:52:565 Lfs/(13663:13663): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:14:52:565 Lfs/(13663:13664): Lissandra lista para recibir Memorias
+[INFO] 20:15:07:598 Lfs/(13918:13918): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:15:07:599 Lfs/(13918:13919): Lissandra lista para recibir Memorias
+[INFO] 20:15:11:383 Lfs/(13940:13940): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:15:11:384 Lfs/(13940:13941): Lissandra lista para recibir Memorias
+[INFO] 20:15:35:135 Lfs/(14028:14028): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:15:35:135 Lfs/(14028:14029): Lissandra lista para recibir Memorias
+[INFO] 20:16:15:647 Lfs/(14145:14145): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:16:15:648 Lfs/(14145:14146): Lissandra lista para recibir Memorias
+[INFO] 20:17:00:133 Lfs/(14328:14328): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:17:00:133 Lfs/(14328:14329): Lissandra lista para recibir Memorias
+[INFO] 20:18:14:209 Lfs/(14439:14439): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:18:14:210 Lfs/(14439:14440): Lissandra lista para recibir Memorias
+[INFO] 20:18:51:18 Lfs/(14518:14518): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:18:51:19 Lfs/(14518:14519): Lissandra lista para recibir Memorias
+[INFO] 20:24:40:851 Lfs/(15141:15141): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:24:40:851 Lfs/(15141:15142): Lissandra lista para recibir Memorias
+[INFO] 20:25:35:34 Lfs/(15233:15233): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:25:35:34 Lfs/(15233:15234): Lissandra lista para recibir Memorias
+[INFO] 20:27:24:109 Lfs/(15482:15482): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:27:24:110 Lfs/(15482:15483): Lissandra lista para recibir Memorias
+[INFO] 20:27:36:714 Lfs/(15531:15531): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:27:36:715 Lfs/(15531:15532): Lissandra lista para recibir Memorias
+[INFO] 20:27:50:78 Lfs/(15600:15600): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:27:50:78 Lfs/(15600:15601): Lissandra lista para recibir Memorias
+[INFO] 20:28:12:176 Lfs/(15676:15676): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:28:12:177 Lfs/(15676:15677): Lissandra lista para recibir Memorias
+[INFO] 20:28:35:303 Lfs/(15762:15762): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:28:35:303 Lfs/(15762:15763): Lissandra lista para recibir Memorias
+[INFO] 20:31:06:873 Lfs/(16021:16021): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:31:06:874 Lfs/(16021:16022): Lissandra lista para recibir Memorias
+[INFO] 20:31:45:252 Lfs/(16114:16114): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:31:45:252 Lfs/(16114:16115): Lissandra lista para recibir Memorias
+[INFO] 20:32:23:689 Lfs/(16243:16243): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:32:23:690 Lfs/(16243:16244): Lissandra lista para recibir Memorias
+[INFO] 20:36:04:737 Lfs/(16575:16575): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:36:04:738 Lfs/(16575:16576): Lissandra lista para recibir Memorias
+[INFO] 20:37:00:250 Lfs/(16764:16764): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:37:00:251 Lfs/(16764:16765): Lissandra lista para recibir Memorias
+[INFO] 20:37:27:495 Lfs/(16878:16878): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:37:27:495 Lfs/(16878:16879): Lissandra lista para recibir Memorias
+[INFO] 20:42:19:694 Lfs/(17280:17280): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:42:19:694 Lfs/(17280:17281): Lissandra lista para recibir Memorias
+[INFO] 20:42:27:604 Lfs/(17333:17333): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:42:27:604 Lfs/(17333:17334): Lissandra lista para recibir Memorias
+[INFO] 20:42:48:780 Lfs/(17398:17398): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:42:48:780 Lfs/(17398:17399): Lissandra lista para recibir Memorias
+[INFO] 20:42:50:918 Lfs/(17423:17423): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:42:50:918 Lfs/(17423:17424): Lissandra lista para recibir Memorias
+[INFO] 20:42:58:742 Lfs/(17805:17805): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:42:58:743 Lfs/(17805:17806): Lissandra lista para recibir Memorias
+[INFO] 20:43:02:772 Lfs/(17852:17852): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:43:02:772 Lfs/(17852:17853): Lissandra lista para recibir Memorias
+[INFO] 20:43:07:210 Lfs/(17997:17997): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:43:07:211 Lfs/(17997:17998): Lissandra lista para recibir Memorias
+[INFO] 20:43:17:777 Lfs/(18059:18059): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:43:17:777 Lfs/(18059:18060): Lissandra lista para recibir Memorias
+[INFO] 20:46:16:965 Lfs/(18242:18242): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:46:16:965 Lfs/(18242:18243): Lissandra lista para recibir Memorias
+[INFO] 20:46:55:485 Lfs/(18383:18383): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:46:55:486 Lfs/(18383:18384): Lissandra lista para recibir Memorias
+[INFO] 20:47:15:822 Lfs/(18431:18431): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:47:15:823 Lfs/(18431:18432): Lissandra lista para recibir Memorias
+[INFO] 20:47:25:217 Lfs/(18488:18488): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:47:25:217 Lfs/(18488:18489): Lissandra lista para recibir Memorias
+[INFO] 20:47:38:273 Lfs/(18685:18685): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:47:38:273 Lfs/(18685:18686): Lissandra lista para recibir Memorias
+[INFO] 20:47:41:197 Lfs/(18869:18869): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:47:41:197 Lfs/(18869:18870): Lissandra lista para recibir Memorias
+[INFO] 20:47:58:579 Lfs/(18913:18913): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:47:58:579 Lfs/(18913:18914): Lissandra lista para recibir Memorias
+[INFO] 20:48:14:847 Lfs/(18999:18999): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:48:14:847 Lfs/(18999:19000): Lissandra lista para recibir Memorias
+[INFO] 20:48:28:591 Lfs/(19078:19078): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:48:28:592 Lfs/(19078:19079): Lissandra lista para recibir Memorias
+[INFO] 20:49:45:146 Lfs/(19219:19219): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:49:45:146 Lfs/(19219:19220): Lissandra lista para recibir Memorias
+[INFO] 20:17:50:196 Lfs/(3150:3150): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:23:33:731 Lfs/(3285:3285): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:25:03:961 Lfs/(3383:3383): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:27:37:242 Lfs/(3653:3653): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:02:51:209 Lfs/(4247:4247): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:03:34:542 Lfs/(4303:4303): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:05:29:226 Lfs/(4535:4535): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:17:31:536 Lfs/(4855:4855): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:23:20:985 Lfs/(5169:5169): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:51:47:844 Lfs/(6082:6082): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:52:11:257 Lfs/(6088:6088): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:54:55:359 Lfs/(6210:6210): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:57:47:220 Lfs/(6308:6308): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 09:31:52:215 Lfs/(3950:3950): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 09:33:42:577 Lfs/(3958:3958): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 09:34:39:863 Lfs/(3998:3998): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 09:35:38:183 Lfs/(4074:4074): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 09:36:35:662 Lfs/(4150:4150): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 09:36:38:251 Lfs/(4161:4161): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:02:03:653 Lfs/(5084:5084): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:02:53:895 Lfs/(5134:5134): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:05:18:300 Lfs/(5178:5178): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:05:21:388 Lfs/(5182:5182): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:06:11:239 Lfs/(5235:5235): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:06:14:928 Lfs/(5239:5239): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:07:35:945 Lfs/(5301:5301): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:07:53:251 Lfs/(5307:5307): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:08:27:263 Lfs/(5382:5382): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:09:40:711 Lfs/(5466:5466): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:09:48:957 Lfs/(5470:5470): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:14:53:416 Lfs/(5632:5632): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:15:52:495 Lfs/(5691:5691): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:25:45:671 Lfs/(6171:6171): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:25:53:278 Lfs/(6200:6200): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:30:28:532 Lfs/(6486:6486): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:04:07:263 Lfs/(14507:14507): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:05:19:47 Lfs/(14507:14507): No se ha ingresado la cantidad correcta de paraemtros
+[ERROR] 18:05:19:48 Lfs/(14507:14507): La request no es valida
+[INFO] 18:06:29:637 Lfs/(14507:14507): Me llego un CREATE
+[INFO] 18:07:07:548 Lfs/(14507:14507): Me llego un CREATE
+[INFO] 18:07:44:818 Lfs/(14578:14578): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:07:56:820 Lfs/(14578:14578): Me llego un CREATE
+[INFO] 18:09:06:188 Lfs/(14610:14610): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:09:27:708 Lfs/(14610:14610): Me llego un CREATE
+[INFO] 18:14:29:512 Lfs/(14722:14722): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:14:46:563 Lfs/(14722:14722): Me llego un CREATE
+[INFO] 18:16:10:285 Lfs/(14848:14848): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:16:32:399 Lfs/(14848:14848): Me llego un CREATE
+[INFO] 18:21:47:122 Lfs/(15062:15062): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:22:01:277 Lfs/(15062:15062): Me llego un CREATE
+[INFO] 18:22:11:811 Lfs/(15088:15088): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:22:24:863 Lfs/(15092:15092): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:23:09:130 Lfs/(15092:15092): Me llego un CREATE
+[INFO] 18:31:33:534 Lfs/(15266:15266): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:32:09:926 Lfs/(15266:15266): Me llego un CREATE
+[INFO] 18:33:14:841 Lfs/(15275:15275): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:33:41:908 Lfs/(15275:15275): Me llego un CREATE
+[INFO] 18:36:06:547 Lfs/(15385:15385): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:36:31:865 Lfs/(15385:15385): Me llego un CREATE
+[INFO] 18:41:47:797 Lfs/(15800:15800): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:42:01:421 Lfs/(15800:15800): Me llego un CREATE
+[INFO] 18:44:45:75 Lfs/(15914:15914): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:44:53:729 Lfs/(15914:15914): Me llego un CREATE
+[INFO] 18:50:46:675 Lfs/(16085:16085): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:50:58:998 Lfs/(16085:16085): No se ha ingresado la cantidad correcta de paraemtros
+[ERROR] 18:50:58:2 Lfs/(16085:16085): La request no es valida
+[INFO] 18:51:18:211 Lfs/(16085:16085): Me llego un CREATE
+[INFO] 18:53:50:216 Lfs/(16312:16312): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:02:51:695 Lfs/(16609:16609): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:03:03:679 Lfs/(16609:16609): No se ha ingresado la cantidad correcta de paraemtros
+[ERROR] 19:03:03:683 Lfs/(16609:16609): La request no es valida
+[INFO] 19:03:11:872 Lfs/(16609:16609): Me llego un CREATE
+[INFO] 19:06:09:991 Lfs/(16774:16774): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:06:22:220 Lfs/(16774:16774): Me llego un CREATE
+[INFO] 19:09:04:160 Lfs/(16823:16823): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:09:17:333 Lfs/(16856:16856): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:09:17:424 Lfs/(16856:16856): Me llego un CREATE
+[INFO] 19:14:10:627 Lfs/(17347:17347): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:14:10:718 Lfs/(17347:17347): Me llego un CREATE
+[INFO] 19:15:12:565 Lfs/(17405:17405): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:15:12:566 Lfs/(17405:17405): Me llego un CREATE
+[INFO] 19:15:19:464 Lfs/(17432:17432): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:15:19:553 Lfs/(17432:17432): Me llego un CREATE
+[INFO] 19:16:01:137 Lfs/(17518:17518): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 19:16:01:229 Lfs/(17518:17518): Me llego un CREATE
+[INFO] 10:22:37:182 Lfs/(15924:15924): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:22:37:291 Lfs/(15924:15924): Hilo de consola creado
+[INFO] 10:22:37:291 Lfs/(15924:15924): Hilo de recibir memorias creado
+[INFO] 10:22:37:292 Lfs/(15924:15928): Lissandra lista para recibir Memorias
+[INFO] 10:22:37:292 Lfs/(15924:15927): Mete algo vieja
+[INFO] 10:24:29:262 Lfs/(16001:16001): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:24:29:262 Lfs/(16001:16001): Hilo de consola creado
+[INFO] 10:24:29:262 Lfs/(16001:16001): Hilo de recibir memorias creado
+[INFO] 10:24:29:262 Lfs/(16001:16003): Lissandra lista para recibir Memorias
+[INFO] 10:24:29:262 Lfs/(16001:16002): Mete algo vieja
+[INFO] 10:25:16:0 Lfs/(16029:16029): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:25:16:1 Lfs/(16029:16029): Hilo de consola creado
+[INFO] 10:25:16:1 Lfs/(16029:16029): Hilo de recibir memorias creado
+[INFO] 10:25:16:1 Lfs/(16029:16031): Lissandra lista para recibir Memorias
+[INFO] 10:25:16:1 Lfs/(16029:16030): Mete algo vieja
+[INFO] 10:25:34:257 Lfs/(16029:16030): Me llego un CREATE
+[INFO] 10:25:34:258 Lfs/(16029:16030): Request recibida correctamente
+[INFO] 10:25:34:258 Lfs/(16029:16030): Mete algo vieja
+[INFO] 13:11:02:340 Lfs/(18810:18810): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:11:02:340 Lfs/(18810:18810): Hilo de consola creado
+[INFO] 13:11:02:340 Lfs/(18810:18811): Mete algo vieja
+[INFO] 13:11:02:340 Lfs/(18810:18810): Hilo de recibir memorias creado
+[INFO] 13:11:02:340 Lfs/(18810:18812): Lissandra lista para recibir Memorias
+[INFO] 13:11:31:397 Lfs/(18810:18811): Me llego un CREATE
+[INFO] 13:11:31:398 Lfs/(18810:18811): Request recibida correctamente
+[INFO] 13:11:31:398 Lfs/(18810:18811): Mete algo vieja
+[INFO] 13:13:47:381 Lfs/(18810:18811): No se ha ingresado la cantidad correcta de paraemtros
+[ERROR] 13:13:47:382 Lfs/(18810:18811): Request invalida
+[INFO] 13:13:47:382 Lfs/(18810:18811): Mete algo vieja
+[INFO] 13:14:47:718 Lfs/(18810:18811): Me llego un INSERT
+[INFO] 13:14:47:719 Lfs/(18810:18811): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 14:50:48:545 Lfs/(21220:21220): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:50:48:545 Lfs/(21220:21220): Hilo de consola creado
+[INFO] 14:50:48:545 Lfs/(21220:21220): Hilo de recibir memorias creado
+[INFO] 14:50:48:546 Lfs/(21220:21221): Mete algo vieja
+[INFO] 14:50:48:546 Lfs/(21220:21222): Lissandra lista para recibir Memorias
+[INFO] 14:51:22:15 Lfs/(21220:21221): Me llego un INSERT
+[INFO] 14:51:22:15 Lfs/(21220:21221): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 14:51:22:15 Lfs/(21220:21221): Request recibida correctamente
+[INFO] 14:51:22:15 Lfs/(21220:21221): Mete algo vieja
+[INFO] 14:51:42:266 Lfs/(21220:21221): Me llego un INSERT
+[INFO] 14:51:42:266 Lfs/(21220:21221): Request recibida correctamente
+[INFO] 14:51:42:266 Lfs/(21220:21221): Mete algo vieja
+[INFO] 14:52:19:277 Lfs/(21220:21221): Me llego un INSERT
+[INFO] 14:52:19:277 Lfs/(21220:21221): Request recibida correctamente
+[INFO] 14:52:19:277 Lfs/(21220:21221): Mete algo vieja
+[INFO] 14:52:32:838 Lfs/(21220:21221): Me llego un INSERT
+[INFO] 14:52:32:838 Lfs/(21220:21221): Request recibida correctamente
+[INFO] 14:52:32:838 Lfs/(21220:21221): Mete algo vieja
+[INFO] 14:52:39:90 Lfs/(21220:21221): Me llego un INSERT
+[INFO] 14:52:39:90 Lfs/(21220:21221): Request recibida correctamente
+[INFO] 14:52:39:90 Lfs/(21220:21221): Mete algo vieja
+[INFO] 15:17:12:33 Lfs/(21371:21371): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:17:12:33 Lfs/(21371:21371): Hilo de consola creado
+[INFO] 15:17:12:34 Lfs/(21371:21371): Hilo de recibir memorias creado
+[INFO] 15:17:12:34 Lfs/(21371:21373): Lissandra lista para recibir Memorias
+[INFO] 15:17:12:34 Lfs/(21371:21372): Mete algo vieja
+[INFO] 15:17:15:498 Lfs/(21371:21372): Me llego un INSERT
+[INFO] 15:17:15:498 Lfs/(21371:21372): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 15:17:15:498 Lfs/(21371:21372): Request recibida correctamente
+[INFO] 15:17:15:498 Lfs/(21371:21372): Mete algo vieja
+[INFO] 15:17:21:823 Lfs/(21371:21372): Me llego un INSERT
+[INFO] 15:17:21:823 Lfs/(21371:21372): Request recibida correctamente
+[INFO] 15:17:21:823 Lfs/(21371:21372): Mete algo vieja
+[INFO] 15:17:29:306 Lfs/(21371:21372): Me llego un INSERT
+[INFO] 15:17:29:306 Lfs/(21371:21372): Request recibida correctamente
+[INFO] 15:17:29:306 Lfs/(21371:21372): Mete algo vieja
+[INFO] 15:17:58:111 Lfs/(21371:21372): Me llego un INSERT
+[INFO] 15:17:58:111 Lfs/(21371:21372): Request recibida correctamente
+[INFO] 15:17:58:111 Lfs/(21371:21372): Mete algo vieja
+[INFO] 15:18:30:753 Lfs/(21371:21372): Me llego un INSERT
+[INFO] 15:18:30:753 Lfs/(21371:21372): Request recibida correctamente
+[INFO] 15:18:30:753 Lfs/(21371:21372): Mete algo vieja
+[INFO] 16:14:48:193 Lfs/(22388:22388): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:14:48:193 Lfs/(22388:22388): Hilo de consola creado
+[INFO] 16:14:48:193 Lfs/(22388:22388): Hilo de recibir memorias creado
+[INFO] 16:14:48:193 Lfs/(22388:22389): Mete algo vieja
+[INFO] 16:14:48:193 Lfs/(22388:22388): Dump iniciado
+[INFO] 16:14:48:194 Lfs/(22388:22390): Lissandra lista para recibir Memorias
+[INFO] 16:15:02:972 Lfs/(22388:22389): Me llego un INSERT
+[INFO] 16:15:02:972 Lfs/(22388:22389): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 16:15:02:972 Lfs/(22388:22389): Request recibida correctamente
+[INFO] 16:15:02:972 Lfs/(22388:22389): Mete algo vieja
+[INFO] 16:15:08:191 Lfs/(22388:22389): Me llego un INSERT
+[INFO] 16:15:08:191 Lfs/(22388:22389): Request recibida correctamente
+[INFO] 16:15:08:192 Lfs/(22388:22389): Mete algo vieja
+[INFO] 16:15:08:194 Lfs/(22388:22391): Dump exitoso
+[INFO] 16:15:28:195 Lfs/(22388:22391): Dump exitoso
+[INFO] 16:15:37:649 Lfs/(22388:22389): Me llego un INSERT
+[INFO] 16:15:37:649 Lfs/(22388:22389): Request recibida correctamente
+[INFO] 16:15:37:649 Lfs/(22388:22389): Mete algo vieja
+[INFO] 16:15:43:593 Lfs/(22388:22389): Me llego un INSERT
+[INFO] 16:15:43:593 Lfs/(22388:22389): Request recibida correctamente
+[INFO] 16:15:43:593 Lfs/(22388:22389): Mete algo vieja
+[INFO] 16:15:47:941 Lfs/(22388:22389): Me llego un INSERT
+[INFO] 16:15:47:941 Lfs/(22388:22389): Request recibida correctamente
+[INFO] 16:15:47:941 Lfs/(22388:22389): Mete algo vieja
+[INFO] 16:15:48:197 Lfs/(22388:22391): Dump exitoso
+[INFO] 16:16:08:199 Lfs/(22388:22391): Dump exitoso
+[INFO] 16:16:28:203 Lfs/(22388:22391): Dump exitoso
+[INFO] 16:20:44:102 Lfs/(22534:22534): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:20:44:102 Lfs/(22534:22534): Hilo de consola creado
+[INFO] 16:20:44:102 Lfs/(22534:22534): Hilo de recibir memorias creado
+[INFO] 16:20:44:103 Lfs/(22534:22534): Hilo de Dump iniciado
+[INFO] 16:20:44:103 Lfs/(22534:22535): Mete algo vieja
+[INFO] 16:20:44:103 Lfs/(22534:22536): Lissandra lista para recibir Memorias
+[INFO] 16:21:04:103 Lfs/(22534:22537): Dump iniciado
+[INFO] 16:21:24:103 Lfs/(22534:22537): Dump iniciado
+[INFO] 16:21:44:103 Lfs/(22534:22537): Dump iniciado
+[INFO] 16:22:04:104 Lfs/(22534:22537): Dump iniciado
+[INFO] 17:20:28:651 Lfs/(23209:23209): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:20:28:652 Lfs/(23209:23209): Hilo de consola creado
+[INFO] 17:20:28:652 Lfs/(23209:23209): Hilo de recibir memorias creado
+[INFO] 17:20:28:652 Lfs/(23209:23209): Hilo de Dump iniciado
+[INFO] 17:20:28:652 Lfs/(23209:23210): Mete algo vieja
+[INFO] 17:20:28:652 Lfs/(23209:23211): Lissandra lista para recibir Memorias
+[INFO] 17:20:46:374 Lfs/(23209:23210): Me llego un INSERT
+[INFO] 17:20:46:374 Lfs/(23209:23210): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:20:46:375 Lfs/(23209:23210): Request recibida correctamente
+[INFO] 17:20:46:375 Lfs/(23209:23210): Mete algo vieja
+[INFO] 17:20:48:654 Lfs/(23209:23212): Dump iniciado
+[INFO] 17:20:48:655 Lfs/(23209:23212): Dump exitoso
+[INFO] 17:21:08:656 Lfs/(23209:23212): Dump iniciado
+[INFO] 17:21:08:656 Lfs/(23209:23212): Dump exitoso
+[INFO] 17:21:15:726 Lfs/(23209:23210): Me llego un INSERT
+[INFO] 17:21:15:726 Lfs/(23209:23210): Request recibida correctamente
+[INFO] 17:21:15:726 Lfs/(23209:23210): Mete algo vieja
+[INFO] 17:21:16:525 Lfs/(23209:23210): Me llego un INSERT
+[INFO] 17:21:16:525 Lfs/(23209:23210): Request recibida correctamente
+[INFO] 17:21:16:525 Lfs/(23209:23210): Mete algo vieja
+[INFO] 17:21:17:241 Lfs/(23209:23210): Me llego un INSERT
+[INFO] 17:21:17:242 Lfs/(23209:23210): Request recibida correctamente
+[INFO] 17:21:17:242 Lfs/(23209:23210): Mete algo vieja
+[INFO] 17:21:17:865 Lfs/(23209:23210): Me llego un INSERT
+[INFO] 17:21:17:865 Lfs/(23209:23210): Request recibida correctamente
+[INFO] 17:21:17:865 Lfs/(23209:23210): Mete algo vieja
+[INFO] 17:21:18:590 Lfs/(23209:23210): Me llego un INSERT
+[INFO] 17:21:18:590 Lfs/(23209:23210): Request recibida correctamente
+[INFO] 17:21:18:590 Lfs/(23209:23210): Mete algo vieja
+[INFO] 17:21:28:656 Lfs/(23209:23212): Dump iniciado
+[INFO] 17:21:28:657 Lfs/(23209:23212): Dump exitoso
+[INFO] 17:21:48:659 Lfs/(23209:23212): Dump iniciado
+[INFO] 17:21:48:659 Lfs/(23209:23212): Dump exitoso
+[INFO] 15:24:10:406 Lfs/(27844:27844): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:24:10:406 Lfs/(27844:27844): Hilo de consola creado
+[INFO] 15:24:10:406 Lfs/(27844:27845): Mete algo vieja
+[INFO] 15:24:10:407 Lfs/(27844:27844): Hilo de recibir memorias creado
+[INFO] 15:24:10:407 Lfs/(27844:27844): Hilo de Dump iniciado
+[INFO] 15:24:10:407 Lfs/(27844:27846): Lissandra lista para recibir Memorias
+[INFO] 15:24:13:391 Lfs/(27844:27845): Me llego un INSERT
+[INFO] 15:24:13:391 Lfs/(27844:27845): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 15:24:13:391 Lfs/(27844:27845): Request recibida correctamente
+[INFO] 15:24:13:391 Lfs/(27844:27845): Mete algo vieja
+[INFO] 15:24:18:849 Lfs/(27844:27845): Me llego un INSERT
+[INFO] 15:24:18:849 Lfs/(27844:27845): Request recibida correctamente
+[INFO] 15:24:18:849 Lfs/(27844:27845): Mete algo vieja
+[INFO] 15:24:24:182 Lfs/(27844:27845): Me llego un INSERT
+[INFO] 15:24:24:183 Lfs/(27844:27845): Request recibida correctamente
+[INFO] 15:24:24:183 Lfs/(27844:27845): Mete algo vieja
+[INFO] 15:24:30:408 Lfs/(27844:27847): Dump iniciado
+[INFO] 15:24:30:408 Lfs/(27844:27847): Dump exitoso
+[INFO] 15:24:30:532 Lfs/(27844:27845): Me llego un INSERT
+[INFO] 15:24:30:532 Lfs/(27844:27845): Request recibida correctamente
+[INFO] 15:24:30:532 Lfs/(27844:27845): Mete algo vieja
+[INFO] 15:24:50:409 Lfs/(27844:27847): Dump iniciado
+[INFO] 15:24:50:409 Lfs/(27844:27847): Dump exitoso
+[INFO] 15:25:10:412 Lfs/(27844:27847): Dump iniciado
+[INFO] 15:25:10:412 Lfs/(27844:27847): Dump exitoso
+[INFO] 15:26:49:962 Lfs/(27936:27936): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:26:49:962 Lfs/(27936:27936): Hilo de consola creado
+[INFO] 15:26:49:962 Lfs/(27936:27937): Mete algo vieja
+[INFO] 15:26:49:962 Lfs/(27936:27936): Hilo de recibir memorias creado
+[INFO] 15:26:49:963 Lfs/(27936:27936): Hilo de Dump iniciado
+[INFO] 15:26:49:963 Lfs/(27936:27938): Lissandra lista para recibir Memorias
+[INFO] 15:26:51:656 Lfs/(27936:27936): Hilo de consola finalizado
+[INFO] 15:27:09:963 Lfs/(27936:27939): Dump iniciado
+[INFO] 15:27:32:642 Lfs/(27963:27963): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:27:32:643 Lfs/(27963:27963): Hilo de consola creado
+[INFO] 15:27:32:643 Lfs/(27963:27963): Hilo de recibir memorias creado
+[INFO] 15:27:32:643 Lfs/(27963:27964): Mete algo vieja
+[INFO] 15:27:32:643 Lfs/(27963:27963): Hilo de Dump iniciado
+[INFO] 15:27:32:643 Lfs/(27963:27965): Lissandra lista para recibir Memorias
+[INFO] 15:27:35:347 Lfs/(27963:27964): Me llego un INSERT
+[INFO] 15:27:35:347 Lfs/(27963:27964): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 15:27:35:347 Lfs/(27963:27964): Request recibida correctamente
+[INFO] 15:27:35:347 Lfs/(27963:27964): Mete algo vieja
+[INFO] 15:27:39:50 Lfs/(27963:27964): Me llego un INSERT
+[INFO] 15:27:39:50 Lfs/(27963:27964): Request recibida correctamente
+[INFO] 15:27:39:50 Lfs/(27963:27964): Mete algo vieja
+[INFO] 15:27:41:275 Lfs/(27963:27964): Me llego un INSERT
+[INFO] 15:27:41:275 Lfs/(27963:27964): Request recibida correctamente
+[INFO] 15:27:41:275 Lfs/(27963:27964): Mete algo vieja
+[INFO] 15:27:44:802 Lfs/(27963:27964): Me llego un INSERT
+[INFO] 15:27:44:802 Lfs/(27963:27964): Request recibida correctamente
+[INFO] 15:27:44:802 Lfs/(27963:27964): Mete algo vieja
+[INFO] 15:27:52:643 Lfs/(27963:27966): Dump iniciado
+[INFO] 15:27:52:644 Lfs/(27963:27966): Dump exitoso
+[INFO] 16:26:01:6 Lfs/(29168:29168): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:26:01:6 Lfs/(29168:29168): Hilo de consola creado
+[INFO] 16:26:01:7 Lfs/(29168:29169): Mete algo vieja
+[INFO] 16:26:01:7 Lfs/(29168:29168): Hilo de recibir memorias creado
+[INFO] 16:26:01:7 Lfs/(29168:29168): Hilo de Dump iniciado
+[INFO] 16:26:01:7 Lfs/(29168:29170): Lissandra lista para recibir Memorias
+[INFO] 16:26:05:163 Lfs/(29168:29169): Me llego un INSERT
+[INFO] 16:26:05:163 Lfs/(29168:29169): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 16:26:05:163 Lfs/(29168:29169): Request recibida correctamente
+[INFO] 16:26:05:163 Lfs/(29168:29169): Mete algo vieja
+[INFO] 16:26:10:18 Lfs/(29168:29169): Me llego un INSERT
+[INFO] 16:26:10:18 Lfs/(29168:29169): Request recibida correctamente
+[INFO] 16:26:10:18 Lfs/(29168:29169): Mete algo vieja
+[INFO] 16:26:15:224 Lfs/(29168:29169): Me llego un INSERT
+[INFO] 16:26:15:224 Lfs/(29168:29169): Request recibida correctamente
+[INFO] 16:26:15:224 Lfs/(29168:29169): Mete algo vieja
+[INFO] 16:26:21:11 Lfs/(29168:29171): Dump iniciado
+[INFO] 16:26:21:11 Lfs/(29168:29171): Dump exitoso
+[INFO] 16:26:41:12 Lfs/(29168:29171): Dump iniciado
+[INFO] 16:26:41:12 Lfs/(29168:29171): Dump exitoso
+[INFO] 16:27:01:13 Lfs/(29168:29171): Dump iniciado
+[INFO] 16:27:01:13 Lfs/(29168:29171): Dump exitoso
+[INFO] 16:31:19:12 Lfs/(29237:29237): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:31:19:12 Lfs/(29237:29237): Hilo de consola creado
+[INFO] 16:31:19:12 Lfs/(29237:29238): Mete algo vieja
+[INFO] 16:31:19:12 Lfs/(29237:29237): Hilo de recibir memorias creado
+[INFO] 16:31:19:12 Lfs/(29237:29239): Lissandra lista para recibir Memorias
+[INFO] 16:31:19:12 Lfs/(29237:29237): Hilo de Dump iniciado
+[INFO] 16:31:20:469 Lfs/(29237:29237): Hilo de consola finalizado
+[INFO] 16:31:34:958 Lfs/(29271:29271): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:31:34:958 Lfs/(29271:29271): Hilo de consola creado
+[INFO] 16:31:34:958 Lfs/(29271:29272): Mete algo vieja
+[INFO] 16:31:34:958 Lfs/(29271:29271): Hilo de recibir memorias creado
+[INFO] 16:31:34:959 Lfs/(29271:29271): Hilo de Dump iniciado
+[INFO] 16:31:34:959 Lfs/(29271:29273): Lissandra lista para recibir Memorias
+[INFO] 16:31:44:196 Lfs/(29271:29272): Me llego un INSERT
+[INFO] 16:31:44:196 Lfs/(29271:29272): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 16:31:44:196 Lfs/(29271:29272): Request recibida correctamente
+[INFO] 16:31:44:196 Lfs/(29271:29272): Mete algo vieja
+[INFO] 16:31:54:960 Lfs/(29271:29274): Dump iniciado
+[INFO] 16:31:54:961 Lfs/(29271:29274): Dump exitoso
+[INFO] 16:32:06:183 Lfs/(29271:29272): Me llego un INSERT
+[INFO] 16:32:06:183 Lfs/(29271:29272): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 16:32:06:183 Lfs/(29271:29272): Request recibida correctamente
+[INFO] 16:32:06:183 Lfs/(29271:29272): Mete algo vieja
+[INFO] 16:32:14:962 Lfs/(29271:29274): Dump iniciado
+[INFO] 16:32:14:962 Lfs/(29271:29274): Dump exitoso
+[INFO] 16:32:34:964 Lfs/(29271:29274): Dump iniciado
+[INFO] 16:32:34:964 Lfs/(29271:29274): Dump exitoso
+[INFO] 17:07:28:656 Lfs/(29877:29877): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:10:27:185 Lfs/(29977:29977): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:10:27:266 Lfs/(29977:29977): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:12:06:270 Lfs/(30035:30035): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:12:06:353 Lfs/(30035:30035): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:20:46:303 Lfs/(30111:30111): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:20:46:409 Lfs/(30111:30111): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:22:34:95 Lfs/(30165:30165): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:22:34:187 Lfs/(30165:30165): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:23:57:180 Lfs/(30232:30232): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:23:57:264 Lfs/(30232:30232): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:26:16:946 Lfs/(30310:30310): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:26:17:26 Lfs/(30310:30310): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:27:14:352 Lfs/(30359:30359): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:27:14:436 Lfs/(30359:30359): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:28:51:923 Lfs/(30553:30553): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:28:52:10 Lfs/(30553:30553): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:29:39:392 Lfs/(30611:30611): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:29:39:475 Lfs/(30611:30611): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:29:56:873 Lfs/(30648:30648): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:29:56:958 Lfs/(30648:30648): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:31:08:730 Lfs/(30714:30714): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:31:08:819 Lfs/(30714:30714): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:32:28:200 Lfs/(30844:30844): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:32:28:283 Lfs/(30844:30844): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:32:28:322 Lfs/(30844:30844): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 20:44:18:669 Lfs/(425:425): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 20:44:18:669 Lfs/(425:425): Hilo de consola creado
+[INFO] 20:44:18:669 Lfs/(425:425): Hilo de recibir memorias creado
+[INFO] 20:44:18:669 Lfs/(425:425): Hilo de Dump iniciado
+[INFO] 20:44:18:669 Lfs/(425:427): Lissandra lista para recibir Memorias
+[INFO] 20:44:18:669 Lfs/(425:426): Mete algo vieja
+[INFO] 20:44:28:154 Lfs/(425:426): Me llego un INSERT
+[INFO] 20:44:28:154 Lfs/(425:426): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 20:44:28:154 Lfs/(425:426): Request recibida correctamente
+[INFO] 20:44:28:154 Lfs/(425:426): Mete algo vieja
+[INFO] 20:44:38:670 Lfs/(425:428): Dump iniciado
+[INFO] 20:44:38:671 Lfs/(425:428): Dump exitoso
+[INFO] 20:50:18:873 Lfs/(557:557): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:34:29:194 Lfs/(2343:2343): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:35:27:439 Lfs/(2390:2390): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:38:49:364 Lfs/(2531:2531): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:42:03:485 Lfs/(2703:2703): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 21:43:16:150 Lfs/(2768:2768): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 00:03:18:314 Lfs/(3318:3318): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 00:03:18:315 Lfs/(3318:3318): Hilo de consola creado
+[INFO] 00:03:18:315 Lfs/(3318:3319): Mete algo vieja
+[INFO] 00:03:18:315 Lfs/(3318:3318): Hilo de recibir memorias creado
+[INFO] 00:03:18:315 Lfs/(3318:3320): Lissandra lista para recibir Memorias
+[INFO] 00:03:18:316 Lfs/(3318:3318): Hilo de Dump iniciado
+[INFO] 00:03:26:47 Lfs/(3318:3319): Me llego un INSERT
+[INFO] 00:03:26:47 Lfs/(3318:3319): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 00:03:26:47 Lfs/(3318:3319): Request recibida correctamente
+[INFO] 00:03:26:47 Lfs/(3318:3319): Mete algo vieja
+[INFO] 00:03:38:316 Lfs/(3318:3321): Dump iniciado
+[INFO] 14:47:24:538 Lfs/(5534:5534): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:47:24:538 Lfs/(5534:5534): Hilo de consola creado
+[INFO] 14:47:24:538 Lfs/(5534:5534): Hilo de recibir memorias creado
+[INFO] 14:47:24:538 Lfs/(5534:5535): Mete algo vieja
+[INFO] 14:47:24:538 Lfs/(5534:5534): Hilo de Dump iniciado
+[INFO] 14:47:24:539 Lfs/(5534:5536): Lissandra lista para recibir Memorias
+[INFO] 14:47:39:180 Lfs/(5534:5535): Me llego un CREATE
+[INFO] 14:47:39:227 Lfs/(5534:5535): Request recibida correctamente
+[INFO] 14:47:39:227 Lfs/(5534:5535): Mete algo vieja
+[INFO] 14:47:44:539 Lfs/(5534:5537): Dump iniciado
+[INFO] 14:47:44:539 Lfs/(5534:5537): Dump exitoso
+[INFO] 14:49:19:956 Lfs/(5621:5621): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 14:49:19:990 Lfs/(5621:5621): Hilo de consola creado
+[INFO] 14:49:19:990 Lfs/(5621:5624): Mete algo vieja
+[INFO] 14:49:19:991 Lfs/(5621:5621): Hilo de recibir memorias creado
+[INFO] 14:49:19:992 Lfs/(5621:5621): Hilo de Dump iniciado
+[INFO] 14:49:19:992 Lfs/(5621:5625): Lissandra lista para recibir Memorias
+[INFO] 14:49:30:784 Lfs/(5621:5624): Me llego un CREATE
+[INFO] 14:49:30:785 Lfs/(5621:5624): Request recibida correctamente
+[INFO] 14:49:30:785 Lfs/(5621:5624): Mete algo vieja
+[INFO] 14:49:39:993 Lfs/(5621:5626): Dump iniciado
+[INFO] 14:49:39:993 Lfs/(5621:5626): Dump exitoso
+[INFO] 14:49:52:606 Lfs/(5621:5624): No se ha ingresado la cantidad correcta de paraemtros
+[ERROR] 14:49:52:606 Lfs/(5621:5624): Request invalida
+[INFO] 14:49:52:606 Lfs/(5621:5624): Mete algo vieja
+[INFO] 14:49:59:993 Lfs/(5621:5626): Dump iniciado
+[INFO] 14:49:59:993 Lfs/(5621:5626): Dump exitoso
+[INFO] 14:50:09:115 Lfs/(5621:5624): Me llego un INSERT
+[INFO] 14:50:09:115 Lfs/(5621:5624): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 14:50:09:115 Lfs/(5621:5624): Request recibida correctamente
+[INFO] 14:50:09:115 Lfs/(5621:5624): Mete algo vieja
+[INFO] 14:50:19:994 Lfs/(5621:5626): Dump iniciado
+[INFO] 15:02:17:886 Lfs/(5863:5863): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:02:17:886 Lfs/(5863:5863): Hilo de consola creado
+[INFO] 15:02:17:886 Lfs/(5863:5863): Hilo de recibir memorias creado
+[INFO] 15:02:17:886 Lfs/(5863:5864): Mete algo vieja
+[INFO] 15:02:17:886 Lfs/(5863:5863): Hilo de Dump iniciado
+[INFO] 15:02:17:887 Lfs/(5863:5865): Lissandra lista para recibir Memorias
+[INFO] 15:02:25:483 Lfs/(5863:5864): Me llego un INSERT
+[INFO] 15:02:25:483 Lfs/(5863:5864): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 15:02:25:483 Lfs/(5863:5864): Request recibida correctamente
+[INFO] 15:02:25:483 Lfs/(5863:5864): Mete algo vieja
+[INFO] 15:02:37:893 Lfs/(5863:5866): Dump iniciado
+[INFO] 15:02:37:894 Lfs/(5863:5866): Dump exitoso
+[INFO] 15:02:49:429 Lfs/(5863:5864): Me llego un INSERT
+[INFO] 15:02:49:429 Lfs/(5863:5864): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 15:02:49:429 Lfs/(5863:5864): Request recibida correctamente
+[INFO] 15:02:49:429 Lfs/(5863:5864): Mete algo vieja
+[INFO] 15:02:57:895 Lfs/(5863:5866): Dump iniciado
+[INFO] 15:02:57:895 Lfs/(5863:5866): Dump exitoso
+[INFO] 15:04:45:58 Lfs/(5941:5941): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:07:29:618 Lfs/(6069:6069): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:07:29:703 Lfs/(6069:6069): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 15:07:29:735 Lfs/(6069:6069): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 15:09:40:367 Lfs/(6162:6162): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:37:15:572 Lfs/(6818:6818): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:59:02:831 Lfs/(7461:7461): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:01:32:666 Lfs/(7571:7571): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:35:34:101 Lfs/(8125:8125): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:35:34:114 Lfs/(8125:8125): Hilo de consola creado
+[INFO] 16:35:34:115 Lfs/(8125:8126): Mete algo vieja
+[INFO] 16:35:34:115 Lfs/(8125:8125): Hilo de recibir memorias creado
+[INFO] 16:35:34:115 Lfs/(8125:8125): Hilo de Dump iniciado
+[INFO] 16:35:34:115 Lfs/(8125:8127): Lissandra lista para recibir Memorias
+[INFO] 18:55:34:751 Lfs/(7128:7128): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:55:34:782 Lfs/(7128:7128): Hilo de consola creado
+[INFO] 18:55:34:782 Lfs/(7128:7129): Mete algo vieja
+[INFO] 18:55:34:783 Lfs/(7128:7128): Hilo de recibir memorias creado
+[INFO] 18:55:34:783 Lfs/(7128:7128): Hilo de Dump iniciado
+[INFO] 18:55:34:783 Lfs/(7128:7130): Lissandra lista para recibir Memorias
+[INFO] 18:55:43:369 Lfs/(7128:7129): Me llego un CREATE
+[INFO] 18:55:43:370 Lfs/(7128:7129): Request recibida correctamente
+[INFO] 18:55:43:371 Lfs/(7128:7129): Mete algo vieja
+[INFO] 10:02:51:514 Lfs/(7969:7969): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:02:51:515 Lfs/(7969:7969): Hilo de consola creado
+[INFO] 10:02:51:515 Lfs/(7969:7969): Hilo de recibir memorias creado
+[INFO] 10:02:51:515 Lfs/(7969:7969): Hilo de Dump iniciado
+[INFO] 10:02:51:515 Lfs/(7969:7970): Mete algo vieja
+[INFO] 10:02:51:515 Lfs/(7969:7971): Lissandra lista para recibir Memorias
+[INFO] 10:03:05:766 Lfs/(7969:7970): Me llego un INSERT
+[INFO] 10:03:05:767 Lfs/(7969:7970): La tabla TABLA1 no existe
+[INFO] 10:03:05:767 Lfs/(7969:7970): Mete algo vieja
+[INFO] 10:03:11:515 Lfs/(7969:7972): Dump iniciado
+[INFO] 10:03:11:515 Lfs/(7969:7972): Dump exitoso
+[INFO] 10:03:24:104 Lfs/(7969:7970): Me llego un CREATE
+[INFO] 10:03:24:105 Lfs/(7969:7970): no hay bloques disponibles
+[ERROR] 10:03:24:105 Lfs/(7969:7970): Error al crear un archivo de la tabla TABLA1
+[INFO] 10:03:24:105 Lfs/(7969:7970): Mete algo vieja
+[INFO] 10:03:31:516 Lfs/(7969:7972): Dump iniciado
+[INFO] 10:03:31:516 Lfs/(7969:7972): Dump exitoso
+[INFO] 10:03:51:516 Lfs/(7969:7972): Dump iniciado
+[INFO] 10:03:51:516 Lfs/(7969:7972): Dump exitoso
+[INFO] 10:13:16:413 Lfs/(8166:8166): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:13:16:413 Lfs/(8166:8166): Hilo de consola creado
+[INFO] 10:13:16:413 Lfs/(8166:8167): Mete algo vieja
+[INFO] 10:13:16:414 Lfs/(8166:8166): Hilo de recibir memorias creado
+[INFO] 10:13:16:414 Lfs/(8166:8166): Hilo de Dump iniciado
+[INFO] 10:13:16:414 Lfs/(8166:8168): Lissandra lista para recibir Memorias
+[INFO] 10:13:23:297 Lfs/(8166:8167): Me llego un CREATE
+[ERROR] 10:13:23:297 Lfs/(8166:8167): La tabla TABLA1 ya existe
+[INFO] 10:13:23:297 Lfs/(8166:8167): Mete algo vieja
+[INFO] 10:13:34:59 Lfs/(8166:8167): Me llego un CREATE
+[INFO] 10:13:34:60 Lfs/(8166:8167): Request recibida correctamente
+[INFO] 10:13:34:60 Lfs/(8166:8167): Mete algo vieja
+[INFO] 10:13:36:415 Lfs/(8166:8169): Dump iniciado
+[INFO] 10:13:36:415 Lfs/(8166:8169): Dump exitoso
+[INFO] 10:13:48:984 Lfs/(8166:8167): Me llego un INSERT
+[INFO] 10:13:48:984 Lfs/(8166:8167): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 10:13:48:984 Lfs/(8166:8167): Request recibida correctamente
+[INFO] 10:13:48:984 Lfs/(8166:8167): Mete algo vieja
+[INFO] 10:13:56:415 Lfs/(8166:8169): Dump iniciado
+[INFO] 10:13:56:416 Lfs/(8166:8169): Dump exitoso
+[INFO] 13:58:12:426 Lfs/(10042:10042): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 13:58:12:427 Lfs/(10042:10042): Hilo de consola creado
+[INFO] 13:58:12:427 Lfs/(10042:10043): Mete algo vieja
+[INFO] 13:58:12:427 Lfs/(10042:10042): Hilo de recibir memorias creado
+[INFO] 13:58:12:427 Lfs/(10042:10042): Hilo de Dump iniciado
+[INFO] 13:58:12:427 Lfs/(10042:10044): Lissandra lista para recibir Memorias
+[INFO] 13:58:21:851 Lfs/(10042:10043): Me llego un CREATE
+[INFO] 13:58:21:852 Lfs/(10042:10043): Request recibida correctamente
+[INFO] 13:58:21:852 Lfs/(10042:10043): Mete algo vieja
+[INFO] 13:58:32:428 Lfs/(10042:10045): Dump iniciado
+[INFO] 13:58:32:429 Lfs/(10042:10045): Dump exitoso
+[INFO] 13:58:41:995 Lfs/(10042:10043): Me llego un INSERT
+[INFO] 13:58:41:995 Lfs/(10042:10043): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 13:58:41:995 Lfs/(10042:10043): Request recibida correctamente
+[INFO] 13:58:41:995 Lfs/(10042:10043): Mete algo vieja
+[INFO] 13:58:52:429 Lfs/(10042:10045): Dump iniciado
+[INFO] 13:58:52:430 Lfs/(10042:10045): Dump exitoso
+[INFO] 01:12:18:214 Lfs/(14803:14803): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 01:12:18:214 Lfs/(14803:14803): Hilo de consola creado
+[INFO] 01:12:18:214 Lfs/(14803:14804): Mete algo vieja
+[INFO] 01:12:18:214 Lfs/(14803:14803): Hilo de recibir memorias creado
+[INFO] 01:12:18:215 Lfs/(14803:14803): Hilo de Dump iniciado
+[INFO] 01:12:18:215 Lfs/(14803:14805): Lissandra lista para recibir Memorias
+[INFO] 01:12:20:320 Lfs/(14803:14804): Me llego un INSERT
+[INFO] 01:12:20:320 Lfs/(14803:14804): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 01:12:20:320 Lfs/(14803:14804): Request recibida correctamente
+[INFO] 01:12:20:320 Lfs/(14803:14804): Mete algo vieja
+[INFO] 01:12:24:345 Lfs/(14803:14804): Me llego un INSERT
+[INFO] 01:12:24:345 Lfs/(14803:14804): Request recibida correctamente
+[INFO] 01:12:24:345 Lfs/(14803:14804): Mete algo vieja
+[INFO] 01:12:30:179 Lfs/(14803:14804): Me llego un INSERT
+[INFO] 01:12:30:179 Lfs/(14803:14804): Request recibida correctamente
+[INFO] 01:12:30:179 Lfs/(14803:14804): Mete algo vieja
+[INFO] 01:12:35:692 Lfs/(14803:14804): Me llego un INSERT
+[INFO] 01:12:35:692 Lfs/(14803:14804): Request recibida correctamente
+[INFO] 01:12:35:692 Lfs/(14803:14804): Mete algo vieja
+[INFO] 01:12:38:225 Lfs/(14803:14806): Dump iniciado
+[INFO] 01:12:38:226 Lfs/(14803:14806): Dump exitoso
+[INFO] 01:15:27:419 Lfs/(14908:14908): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 04:41:25:274 Lfs/(22310:22310): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 04:41:25:350 Lfs/(22310:22310): Hilo de consola creado
+[INFO] 04:41:25:350 Lfs/(22310:22310): Hilo de recibir memorias creado
+[INFO] 04:41:25:350 Lfs/(22310:22310): Hilo de Dump iniciado
+[INFO] 04:41:25:350 Lfs/(22310:22313): Mete algo vieja
+[INFO] 04:41:25:350 Lfs/(22310:22314): Lissandra lista para recibir Memorias
+[INFO] 04:41:32:966 Lfs/(22310:22313): Me llego un CREATE
+[INFO] 04:41:32:967 Lfs/(22310:22313): Request recibida correctamente
+[INFO] 04:41:32:968 Lfs/(22310:22313): Mete algo vieja
+[INFO] 04:41:54:843 Lfs/(22310:22310): Hilo de consola finalizado
+[INFO] 04:44:10:876 Lfs/(22373:22373): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 04:44:10:916 Lfs/(22373:22373): Hilo de consola creado
+[INFO] 04:44:10:916 Lfs/(22373:22374): Mete algo vieja
+[INFO] 04:44:10:917 Lfs/(22373:22373): Hilo de recibir memorias creado
+[INFO] 04:44:10:917 Lfs/(22373:22373): Hilo de Dump iniciado
+[INFO] 04:44:10:918 Lfs/(22373:22375): Lissandra lista para recibir Memorias
+[INFO] 04:44:18:135 Lfs/(22373:22374): Me llego un INSERT
+[INFO] 04:44:18:135 Lfs/(22373:22374): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 04:44:18:135 Lfs/(22373:22374): Request recibida correctamente
+[INFO] 04:44:18:135 Lfs/(22373:22374): Mete algo vieja
+[INFO] 04:44:26:11 Lfs/(22373:22373): Hilo de consola finalizado
+[INFO] 04:45:10:918 Lfs/(22373:22376): Dump iniciado
+[INFO] 04:45:10:919 Lfs/(22373:22376): Dump exitoso
+[INFO] 04:46:10:920 Lfs/(22373:22376): Dump iniciado
+[INFO] 04:46:10:920 Lfs/(22373:22376): Dump exitoso
+[INFO] 04:46:20:928 Lfs/(22430:22430): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 04:46:20:973 Lfs/(22430:22430): Hilo de consola creado
+[INFO] 04:46:20:973 Lfs/(22430:22430): Hilo de recibir memorias creado
+[INFO] 04:46:20:973 Lfs/(22430:22431): Mete algo vieja
+[INFO] 04:46:20:973 Lfs/(22430:22430): Hilo de Dump iniciado
+[INFO] 04:46:20:973 Lfs/(22430:22432): Lissandra lista para recibir Memorias
+[INFO] 04:46:36:657 Lfs/(22430:22431): Me llego un INSERT
+[INFO] 04:46:36:657 Lfs/(22430:22431): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 04:46:36:657 Lfs/(22430:22431): Request recibida correctamente
+[INFO] 04:46:36:657 Lfs/(22430:22431): Mete algo vieja
+[INFO] 04:46:54:713 Lfs/(22430:22431): Me llego un INSERT
+[INFO] 04:46:54:713 Lfs/(22430:22431): Request recibida correctamente
+[INFO] 04:46:54:713 Lfs/(22430:22431): Mete algo vieja
+[INFO] 04:47:13:914 Lfs/(22430:22431): Me llego un INSERT
+[INFO] 04:47:13:914 Lfs/(22430:22431): Request recibida correctamente
+[INFO] 04:47:13:914 Lfs/(22430:22431): Mete algo vieja
+[INFO] 04:47:20:357 Lfs/(22430:22433): Dump iniciado
+[INFO] 04:47:20:357 Lfs/(22430:22433): Dump exitoso
+[INFO] 04:47:40:253 Lfs/(22430:22431): Me llego un INSERT
+[INFO] 04:47:40:253 Lfs/(22430:22431): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 04:47:40:253 Lfs/(22430:22431): Request recibida correctamente
+[INFO] 04:47:40:253 Lfs/(22430:22431): Mete algo vieja
+[INFO] 04:48:01:267 Lfs/(22430:22431): Me llego un INSERT
+[INFO] 04:48:01:268 Lfs/(22430:22431): Request recibida correctamente
+[INFO] 04:48:01:268 Lfs/(22430:22431): Mete algo vieja
+[INFO] 04:48:20:358 Lfs/(22430:22433): Dump iniciado
+[INFO] 04:48:20:358 Lfs/(22430:22433): Dump exitoso
+[INFO] 04:48:41:646 Lfs/(22430:22431): Me llego un INSERT
+[INFO] 04:48:41:646 Lfs/(22430:22431): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 04:48:41:646 Lfs/(22430:22431): Request recibida correctamente
+[INFO] 04:48:41:646 Lfs/(22430:22431): Mete algo vieja
+[INFO] 04:48:54:790 Lfs/(22430:22431): Me llego un INSERT
+[INFO] 04:48:54:790 Lfs/(22430:22431): Request recibida correctamente
+[INFO] 04:48:54:790 Lfs/(22430:22431): Mete algo vieja
+[INFO] 04:49:20:361 Lfs/(22430:22433): Dump iniciado
+[INFO] 04:49:20:362 Lfs/(22430:22433): Dump exitoso
+[INFO] 04:51:24:182 Lfs/(22653:22653): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 05:02:06:858 Lfs/(22939:22939): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:20:58:231 Lfs/(4097:4097): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:20:58:597 Lfs/(4097:4097): Hilo de consola creado
+[INFO] 10:20:58:598 Lfs/(4097:4097): Hilo de recibir memorias creado
+[INFO] 10:20:58:598 Lfs/(4097:4099): Lissandra lista para recibir Memorias
+[INFO] 10:22:27:587 Lfs/(4097:4099): Se conecto la memoria 7
+[ERROR] 10:23:40:369 Lfs/(4097:4280): El cliente se desconecto
+[INFO] 10:23:47:566 Lfs/(4384:4384): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:23:47:606 Lfs/(4384:4384): Hilo de consola creado
+[INFO] 10:23:47:606 Lfs/(4384:4384): Hilo de recibir memorias creado
+[INFO] 10:23:47:607 Lfs/(4384:4386): Lissandra lista para recibir Memorias
+[INFO] 10:23:51:798 Lfs/(4384:4386): Se conecto la memoria 5
+[ERROR] 10:24:12:739 Lfs/(4384:4408): El cliente se desconecto
+[INFO] 16:40:36:1 Lfs/(5668:5668): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 00:54:51:159 Lfs/(11345:11345): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 00:54:51:216 Lfs/(11345:11345): Hilo de consola creado
+[INFO] 00:54:51:216 Lfs/(11345:11345): Hilo de recibir memorias creado
+[INFO] 00:54:51:216 Lfs/(11345:11347): Lissandra lista para recibir Memorias
+[INFO] 00:54:51:217 Lfs/(11345:11345): Hilo de Dump iniciado
+[INFO] 00:55:08:96 Lfs/(11345:11346): Me llego un INSERT
+[INFO] 00:55:08:97 Lfs/(11345:11346): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 00:55:08:97 Lfs/(11345:11346): 
+[INFO] 00:55:11:218 Lfs/(11345:11348): Dump iniciado
+[INFO] 00:55:11:218 Lfs/(11345:11348): Dump exitoso
+[INFO] 00:55:19:743 Lfs/(11345:11346): Me llego un INSERT
+[INFO] 00:55:19:743 Lfs/(11345:11346): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 00:55:19:743 Lfs/(11345:11346): 
+[INFO] 00:55:31:219 Lfs/(11345:11348): Dump iniciado
+[INFO] 00:55:31:219 Lfs/(11345:11348): Dump exitoso
+[INFO] 00:55:31:438 Lfs/(11345:11346): Me llego un INSERT
+[INFO] 00:55:31:438 Lfs/(11345:11346): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 00:55:31:438 Lfs/(11345:11346): 
+[INFO] 00:55:51:226 Lfs/(11345:11348): Dump iniciado
+[INFO] 00:55:51:548 Lfs/(11345:11348): Dump exitoso
+[INFO] 00:56:09:278 Lfs/(11345:11346): Me llego un INSERT
+[INFO] 00:56:09:278 Lfs/(11345:11346): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 00:56:09:278 Lfs/(11345:11346): 
+[INFO] 00:56:11:551 Lfs/(11345:11348): Dump iniciado
+[INFO] 00:56:11:551 Lfs/(11345:11348): Dump exitoso
+[INFO] 00:58:23:872 Lfs/(11492:11492): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 08:51:48:670 Lfs/(11933:11933): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 08:51:48:672 Lfs/(11933:11933): Hilo de consola creado
+[INFO] 08:51:48:672 Lfs/(11933:11933): Hilo de recibir memorias creado
+[INFO] 08:51:48:672 Lfs/(11933:11933): Hilo de Dump iniciado
+[INFO] 08:51:48:672 Lfs/(11933:11936): Lissandra lista para recibir Memorias
+[INFO] 08:52:00:276 Lfs/(11933:11934): Me llego un CREATE
+[INFO] 08:52:00:277 Lfs/(11933:11934): 
+[INFO] 08:52:08:675 Lfs/(11933:11937): Dump iniciado
+[INFO] 08:52:08:675 Lfs/(11933:11937): Dump exitoso
+[INFO] 08:52:20:855 Lfs/(11933:11934): Me llego un INSERT
+[INFO] 08:52:20:855 Lfs/(11933:11934): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 08:52:20:855 Lfs/(11933:11934): 
+[INFO] 08:52:28:675 Lfs/(11933:11937): Dump iniciado
+[INFO] 08:52:28:675 Lfs/(11933:11937): Dump exitoso
+[INFO] 08:52:41:307 Lfs/(11933:11934): Me llego un INSERT
+[INFO] 08:52:41:307 Lfs/(11933:11934): La tabla TABINSERT no existe
+[INFO] 08:52:41:307 Lfs/(11933:11934): 
+[INFO] 08:52:48:678 Lfs/(11933:11937): Dump iniciado
+[INFO] 08:52:48:678 Lfs/(11933:11937): Dump exitoso
+[INFO] 10:50:47:336 Lfs/(13687:13687): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:50:47:337 Lfs/(13687:13687): Hilo de consola creado
+[INFO] 10:50:47:337 Lfs/(13687:13687): Hilo de recibir memorias creado
+[INFO] 10:50:47:337 Lfs/(13687:13687): Hilo de Dump iniciado
+[INFO] 10:50:47:337 Lfs/(13687:13689): Lissandra lista para recibir Memorias
+[INFO] 10:51:01:125 Lfs/(13687:13688): Me llego un INSERT
+[INFO] 10:51:01:126 Lfs/(13687:13688): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 10:51:01:126 Lfs/(13687:13688): 
+[INFO] 10:51:10:290 Lfs/(13687:13688): Me llego un INSERT
+[INFO] 10:51:10:290 Lfs/(13687:13688): 
+[INFO] 10:51:23:509 Lfs/(13687:13688): Me llego un INSERT
+[INFO] 10:51:23:509 Lfs/(13687:13688): 
+[INFO] 10:51:47:338 Lfs/(13687:13690): Dump iniciado
+[INFO] 10:51:47:339 Lfs/(13687:13690): Dump exitoso
