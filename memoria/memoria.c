@@ -3,20 +3,20 @@
 
 int main(void) {
 
-//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
+	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
-//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-//	conectarAFileSystem();
+	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
+	//	conectarAFileSystem();
 
-//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
+	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 
 	inicializacionDeMemoria();
 	log_info(logger_MEMORIA,"INICIO DE MEMORIA");
 
 
-//--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
+	//--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
 	//sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
@@ -29,7 +29,7 @@ int main(void) {
 	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
 
-//-------------------------------- -PARTE FINAL DE MEMORIA---------------------------------------------------------
+	//-------------------------------- -PARTE FINAL DE MEMORIA---------------------------------------------------------
 	liberar_conexion(conexionLfs);
 	//liberarMemoria();
 	log_destroy(logger_MEMORIA);
@@ -56,45 +56,50 @@ void conectarAFileSystem() {
 }
 
 void inicializacionDeMemoria(){
+	//-------------------------------Reserva de memoria-------------------------------------------------------
+	//maxValue = handshakeConLFS(); TODO handshake posta
 
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	//maxValue = handshakeConLFS(); TODO handshake posta
 	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
-	int bitArray[marcosTotales];
-	inicializarBitArray(bitArray);
 
-	frame0 =(t_marco*) malloc(sizeof(t_marco));
-	elementoA1 = malloc(sizeof(t_elemTablaDePaginas));
-	tablaA = malloc(sizeof(t_segmento));
-	tablaDeSegmentos = malloc(sizeof(t_tablaDeSegmentos));
-
-//--------------------------------AUXILIAR: creacion de tabla/pag/elemento --------------------------------------
-
+	//-------------------------------Creacion de structs-------------------------------------------------------
+	char* bitarrayString=(char*)malloc(marcosTotales);
+	bitarrayString= strdup("");
+	bitarray= bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
+	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
 
-	tablaA->path= strdup("tablaA");
-	tablaA->tablaDePagina = list_create();	//list_create() HACE UN MALLOC
+	//-------------------------------AUXILIAR: creacion de tabla/pag/elemento ---------------------------------
 
-	elementoA1->numeroDePag=1;
-	elementoA1->marco=frame0;
-	elementoA1->modificado = SINMODIFICAR;
 
-	list_add(tablaA->tablaDePagina, elementoA1);
-	list_add(tablaDeSegmentos->segmentos,tablaA);
+	t_marco* pagLibre = NULL;
+	int rta= buscarPagDisponible(&pagLibre,bitarray);
 
-	frame0->timestamp = 123456789;
-	frame0->key=1;
-	strcpy(frame0->value,"hola");
+	t_segmento* nuevoSegmento = crearSegmento("tablaA");
+	t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(pagLibre,1,"hola",12345678);
+	list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
+	list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
 
 }
 
-void inicializarBitArray(int* bitArray){
-	int i=0;
-	while(bitArray[i]!= '/0'){
-		bitArray[i]=0;
-		i++;
+//int calcularTamMarco(){
+//	t_marco* marco=malloc(sizeof(t_marco));
+//	int tamanio= sizeof(marco->timestamp)+ sizeof(marco->key)+sizeof(marco->value);
+//	return tamanio;
+//}
+
+int obtenerBloqueDisponible(t_bitarray* bitarray) {
+	int index = 0;
+	while(index < marcosTotales && bitarray_test_bit(bitarray, index)) index++;
+	if(index >= marcosTotales) {
+		index = NUESTRO_ERROR;
+	}else{
+		bitarray_set_bit(bitarray, index);
 	}
+
+	return index;
 }
+
 /* leerDeConsola()
  * Parametros:
  * 	->  ::  void
@@ -205,15 +210,20 @@ void escucharMultiplesClientes() {
 
 			for(int i=0; i<numeroDeClientes; i++) {
 				if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
+
 					paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
 					cod_request palabraReservada = paqueteRecibido->palabraReservada;
 					char* request = paqueteRecibido->request;
-					printf("El codigo que recibi es: %s \n", request);
+					printf("El codigo que recibi es: %i \n", palabraReservada);
 					printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-					interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
-					free(request);
-					request=NULL;
-
+					if(palabraReservada != NUESTRO_ERROR){
+						interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
+						free(request);
+						request=NULL;
+					}
+					log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
+					int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+					// TODO: Chequear si el -1 se puede castear como int*
 				}
 			}//fin for
 
@@ -281,15 +291,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			log_info(logger_MEMORIA,"HaS finalizado el componente MEMORIA");
 			break;
 		case NUESTRO_ERROR:
-			if(caller == ANOTHER_COMPONENT){
-				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-				int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
-				// TODO: Chequear si el -1 se puede castear como int*
-				break;
-			}
-			else{
-				break;
-			}
+			break;
 		default:
 			log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
 			break;
@@ -309,7 +311,7 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 
 	enviar(palabraReservada, request, conexionLfs);
 	//sem_post(&semLeerDeConsola);
-	sleep(config_get_int_value(config, "RETARDO_FS")/1000);
+	usleep(config_get_int_value(config, "RETARDO_FS")*1000);
 	paqueteRecibido = recibir(conexionLfs);
 
 	return paqueteRecibido;
@@ -380,60 +382,60 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 //
 //
 //
-///*estaEnMemoria()
-// * Parametros:
-// * 	-> cod_request :: palabraReservada
-// * 	-> char* :: request
-// * 	-> t_paquete** :: valorEncontrado- se modifica por referencia
-// * 	-> t_elemTablaDePaginas** :: elemento (que contiene el puntero a la pag econtrada)- se modifica por referecia.
-// * Descripcion: Revisa si la tabla y key solicitada se encuentran que cache.
-// * 				En caso de que sea cierto, guarda valorEncontrado y elementoEncontrado; devolviendo operacion exitosa.
-// * 				En caso de que no exista la tabla||key devuelve el error correspondiente.
-// * Return:
-// * 	-> int :: resultado de la operacion
-// * 	VALGRIND :NO */
-//int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
-//	t_segmento* segmentoEnCache = malloc(sizeof(t_segmento));
-//	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
-//	t_paquete* paqueteAuxiliar;
-//
-//	char** parametros = separarRequest(request);
-//	char* segmentoABuscar=strdup(parametros[1]);
-//	uint16_t keyABuscar= convertirKey(parametros[2]);
-//
-//	int encontrarTabla(t_segmento* segmento){
-//		return string_equals_ignore_case(segmento->nombre, segmentoABuscar);
-//	}
-//
-//	segmentoEnCache = list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
-//	if(segmentoEnCache!= NULL){
-//
-//		int encontrarElemTablaDePag(t_elemTablaDePaginas* elemDePagina){
-//			return (elemDePagina->pagina->key == keyABuscar);
-//		}
-//
-//		elementoDePagEnCache= list_find(segmentoEnCache->tablaDePagina,(void*)encontrarElemTablaDePag);
-//		if(elementoDePagEnCache !=NULL){
-//			paqueteAuxiliar=malloc(sizeof(t_paquete));
-//			paqueteAuxiliar->palabraReservada=SUCCESS;
-//			char* requestAEnviar= strdup("");
-//			string_append_with_format(&requestAEnviar,"%s%s%s%s%c%s%c",segmentoABuscar," ",parametros[2]," ",'"',elementoDePagEnCache->pagina->value,'"');
-//			paqueteAuxiliar->request = strdup(requestAEnviar);
-//			paqueteAuxiliar->tamanio=sizeof(elementoDePagEnCache->pagina->value);
-//
-//			*elementoEncontrado=elementoDePagEnCache;
-//			*valorEncontrado = paqueteAuxiliar;
-//
-//			return EXIT_SUCCESS;
-//		}else{
-//
-//			return KEYINEXISTENTE;
-//		}
-//	}else{
-//
-//		return SEGMENTOINEXISTENTE;
-//	}
-//}
+/*estaEnMemoria()
+ * Parametros:
+ * 	-> cod_request :: palabraReservada
+ * 	-> char* :: request
+ * 	-> t_paquete** :: valorEncontrado- se modifica por referencia
+ * 	-> t_elemTablaDePaginas** :: elemento (que contiene el puntero a la pag econtrada)- se modifica por referecia.
+ * Descripcion: Revisa si la tabla y key solicitada se encuentran que cache.
+ * 				En caso de que sea cierto, guarda valorEncontrado y elementoEncontrado; devolviendo operacion exitosa.
+ * 				En caso de que no exista la tabla||key devuelve el error correspondiente.
+ * Return:
+ * 	-> int :: resultado de la operacion
+ * 	VALGRIND :NO */
+int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
+	t_segmento* segmentoEnCache = malloc(sizeof(t_segmento));
+	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
+	t_paquete* paqueteAuxiliar;
+
+	char** parametros = separarRequest(request);
+	char* segmentoABuscar=strdup(parametros[1]);
+	uint16_t keyABuscar= convertirKey(parametros[2]);
+
+	int encontrarTabla(t_segmento* segmento){
+		return string_equals_ignore_case(segmento->path, segmentoABuscar);
+	}
+
+	segmentoEnCache = list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	if(segmentoEnCache!= NULL){
+
+		int encontrarElemTablaDePag(t_elemTablaDePaginas* elemDePagina){
+			return (elemDePagina->marco->key == keyABuscar);
+		}
+
+		elementoDePagEnCache= list_find(segmentoEnCache->tablaDePagina,(void*)encontrarElemTablaDePag);
+		if(elementoDePagEnCache !=NULL){
+			paqueteAuxiliar=malloc(sizeof(t_paquete));
+			paqueteAuxiliar->palabraReservada=SUCCESS;
+			char* requestAEnviar= strdup("");
+			string_append_with_format(&requestAEnviar,"%s%s%s%s%c%s%c",segmentoABuscar," ",parametros[2]," ",'"',elementoDePagEnCache->marco->value,'"');
+			paqueteAuxiliar->request = strdup(requestAEnviar);
+			paqueteAuxiliar->tamanio=sizeof(elementoDePagEnCache->marco->value);
+
+			*elementoEncontrado=elementoDePagEnCache;
+			*valorEncontrado = paqueteAuxiliar;
+
+			return EXIT_SUCCESS;
+		}else{
+
+			return KEYINEXISTENTE;
+		}
+	}else{
+
+		return SEGMENTOINEXISTENTE;
+	}
+}
 //
 ///*encontrarSegmento()
 // * Parametros:
@@ -778,33 +780,44 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 //	}
 //}
 //
-//void actualizarPagina (t_pagina* pagina, char* newValue){
-//	unsigned long long newTimes = obtenerHoraActual();
-//	pagina->timestamp = newTimes;
-//	pagina->value =strdup(newValue);
-//}
-//
-//t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t newKey, char* newValue, unsigned long long timesTamp){
-//	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-//	newElementoDePagina->numeroDePag = rand();
-//	newElementoDePagina->pagina = crearPagina(newKey,newValue,timesTamp);
-//	newElementoDePagina->modificado = SINMODIFICAR;
-//	return newElementoDePagina;
-//}
-//
-//void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* newValue){
-//	actualizarPagina(elemento->pagina,newValue);
-//	elemento->modificado = MODIFICADO;
-//}
-//
-//t_segmento* crearSegmento(char* nuevaTabla){
-//	t_segmento* newTablaDePagina = (t_segmento*)malloc(sizeof(t_segmento));
-//	newTablaDePagina->nombre=strdup(nuevaTabla);
-//	newTablaDePagina->tablaDePagina=list_create();
-//	return newTablaDePagina;
-//}
-//
-//
+
+
+void actualizarPagina (t_marco* pagina, char* nuevoValue){
+	pagina->timestamp =  obtenerHoraActual();
+	strcpy(pagina->value,nuevoValue);
+}
+
+void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* nuevoValor){
+	actualizarPagina(elemento->marco,nuevoValor);
+	elemento->modificado = MODIFICADO;
+}
+
+t_marco* crearPagina(t_marco* pagLibre,uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
+	pagLibre->key= nuevaKey;
+	strcpy(pagLibre->value,nuevoValue);
+	pagLibre->timestamp= timesTamp;
+	return pagLibre;
+}
+
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
+	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+
+	id++;
+	newElementoDePagina->numeroDePag = id;
+	newElementoDePagina->marco = crearPagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
+	newElementoDePagina->modificado = SINMODIFICAR;
+
+	return newElementoDePagina;
+}
+
+t_segmento* crearSegmento(char* pathNuevoSegmento){
+	t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
+	nuevoSegmento->path=strdup(pathNuevoSegmento);
+	nuevoSegmento->tablaDePagina=list_create();
+	return nuevoSegmento;
+}
+
+
 //
 //void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
 //	//TODO, si lfs dio ok, igual calcular en mem?
@@ -875,42 +888,14 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 ////	pag= NULL;
 ////}
 
-
-t_marco* actualizarMarco(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
-	t_marco* nuevoMarco= (t_marco*)malloc(sizeof(t_marco)); //TODO: VER SI ESTA BIEN
-	if(buscarMarcoDisponible(&nuevoMarco)==0){
-		nuevoMarco->timestamp = nuevoTimesTamp;
-		nuevoMarco->key = nuevaKey;
-		strcpy(nuevoMarco->value , nuevoValor);
-		//nuevoMarco->value = nuevoValor;
-		return nuevoMarco;
-	}
-}
-
-int buscarMarcoDisponible(t_marco* marco){
-	marco=memoria;
-	t_marco* marcoSiguiente = (t_marco*)malloc(sizeof(t_marco)); //TODO: VER SI ESTA BIEN
-	for(int i=0;i<marcosTotales;i++){	//TODO: ver marcosUsados
-		if(frameDisponible(marco)){
-			return EXIT_SUCCESS;
-			break;
-		}
-		else{
-			marco = marco+sizeof(t_marco)*i;
-		}
-	}
-	return EXIT_FAILURE;
-}
-
-int frameDisponible(t_marco* marco){
-	if(marco->key == 0){
-		return TRUE;
+int buscarPagDisponible(t_marco** pagLibre){
+	int index= obtenerBloqueDisponible(bitarray);
+	if(index == NUESTRO_ERROR){
+		return MEMORIAFULL;
 	}else{
-		return FALSE;
+		*pagLibre = memoria + sizeof(t_marco)*index;
+		return SUCCESS;
 	}
-}
-
-void agregarMarcoAMemoria(uint16_t nuevaKey, char* nuevoValor, unsigned long long nuevoTimesTamp){
 
 }
 

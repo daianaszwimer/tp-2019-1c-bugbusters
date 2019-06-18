@@ -15,12 +15,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/time.h>
-
-size_t y;
-
-const size_t x(){
-	return y;
-}
+#include <commons/bitarray.h>
 
 //---DESCRIPCION FUNCIONALIDADES ACTUALES---
 /*funcionalidades actuales de MEMORIA:
@@ -45,8 +40,9 @@ typedef enum
 {
 	SEGMENTOEXISTENTE = 99,
 	SEGMENTOINEXISTENTE = 100,
-	KEYINEXISTENTE =101
-} t_erroresCache;
+	KEYINEXISTENTE =101,
+	MEMORIAFULL =102
+} t_erroresMemoria;
 
 //-----------------STRUCTS------------------
 //int maxValue = 20;
@@ -98,11 +94,12 @@ pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 //pthread_attr_t attr;
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
+t_bitarray* bitarray;
 void* memoria;
 int marcosTotales;
 int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
-
+int id=0;
 
 t_list* descriptoresClientes ;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
@@ -112,7 +109,7 @@ fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para s
 
 void conectarAFileSystem(void);
 void inicializacionDeMemoria(void);
-void inicializarBitArray(int*);
+int obtenerBloqueDisponible(t_bitarray*);
 
 void leerDeConsola(void);
 int validarRequest(char*);
@@ -126,18 +123,18 @@ void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
-void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresCache);
+void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresMemoria);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 int validarInsertSC(errorNo);
 
-t_marco* actualizarMarco(uint16_t, char*,unsigned long long);
 void actualizarPagina (t_marco*, char*);
-
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*,unsigned long long);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
+
+t_marco* crearPagina(t_marco*,uint16_t, char*, unsigned long long);
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(t_marco* ,uint16_t, char*,unsigned long long);
 t_segmento* crearSegmento(char*);
 
 
@@ -151,7 +148,6 @@ void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
 //void eliminarPagina(t_pagina*);
 
 int buscarMarcoDisponible(t_marco*);
-int frameDisponible(t_marco*);
 
 
 
