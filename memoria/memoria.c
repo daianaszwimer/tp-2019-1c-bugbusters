@@ -73,7 +73,7 @@ void inicializacionDeMemoria(){
 
 
 	t_marco* pagLibre = NULL;
-	int rta= obtenerPaginaDisponible(&pagLibre,bitarray);
+	int rta= obtenerPaginaDisponible(&pagLibre);
 
 	t_segmento* nuevoSegmento = crearSegmento("tablaA");
 	t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(pagLibre,1,"hola",12345678);
@@ -276,7 +276,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 
 		case SELECT:
 			log_info(logger_MEMORIA, "Me llego un SELECT");
-			//procesarSelect(codRequest, request,consistenciaMemoria, caller, i);
+			procesarSelect(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
@@ -327,69 +327,63 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 }
 
 
-///*procesarSelect()
-// * Parametros:
-// * 	-> cod_request :: palabraReservada
-// * 	-> char* ::  request
-// * 	-> t_caller :: caller
-// * 	-> int :: i (socket_kernel)
-// * Descripcion: En caso de que exista, permite obtener el valor de la key consultada de una tabla.
-// * 				SC || SHC : siempre consulta la existencia de la tabla y la key consultada a LFS. Y,en caso de que alli
-// * 							no exista, se informa ello.
-// * 							En caso de que exista, guardamos el resultado devuelto por LFS en cache (que nos sirve para
-// * 							el insert).
-// * 				EC : -Revisa si la tabla y value se encuentran en memoria.E n caso de encontrarlo en cache, devuelve el
-// * 							value asosciado.
-// * 							En caso de no existir la key o value, realiza procedimiento de SC||SHC
-// * Return:
-// * 	-> :: void
-// * VALGRIND:: NO */
-//void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int i) {
-//
-//
-////---------------CASOS DE PRUEBA------------------------------
-//
-//	t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
-//
-////-------------------------------------------------------------
-//	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas));
-//	t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
-//
-//
-//	int resultadoCache;
-//
-//	if(consistenciaMemoria == EC || caller == CONSOLE){		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-//		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
-//		if(resultadoCache == EXIT_SUCCESS ) {
-//			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-//			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
-//
-//		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-//			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-//			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-//			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-//			guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
-//		}
-//	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
-//		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-//		//TODO CUANDO LFS PUEDA HACER INSERT CORERCTAMENTE, HAY QUE DESCOMNTARLO
-//		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-//		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-//		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
-//		guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
-//
-//	}else{
-//		log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
-//
-//	}
-//
-//	//eliminar_paquete(valorDeLFS);
-//	valorDeLFS=NULL;
-//
-//}
-//
-//
-//
+/*procesarSelect()
+ * Parametros:
+ * 	-> cod_request :: palabraReservada
+ * 	-> char* ::  request
+ * 	-> t_caller :: caller
+ * 	-> int :: i (socket_kernel)
+ * Descripcion: En caso de que exista, permite obtener el valor de la key consultada de una tabla.
+ * 				SC || SHC : siempre consulta la existencia de la tabla y la key consultada a LFS. Y,en caso de que alli
+ * 							no exista, se informa ello.
+ * 							En caso de que exista, guardamos el resultado devuelto por LFS en cache (que nos sirve para
+ * 							el insert).
+ * 				EC : -Revisa si la tabla y value se encuentran en memoria.E n caso de encontrarlo en cache, devuelve el
+ * 							value asosciado.
+ * 							En caso de no existir la key o value, realiza procedimiento de SC||SHC
+ * Return:
+ * 	-> :: void
+ * VALGRIND:: NO */
+void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int i) {
+
+//-------------------------------------------------------------
+
+	t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
+	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas));
+	t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
+
+
+	int resultadoCache;
+
+	if(consistenciaMemoria == EC || caller == CONSOLE){		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
+		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
+		if(resultadoCache == EXIT_SUCCESS ) {
+			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
+
+		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
+			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
+			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+			guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
+		}
+	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
+		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
+		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
+		guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
+
+	}else{
+		log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
+
+	}
+
+	//eliminar_paquete(valorDeLFS); TODO revisar esto si se deberia borrar
+	valorDeLFS=NULL;
+
+}
+
 /*estaEnMemoria()
  * Parametros:
  * 	-> cod_request :: palabraReservada
@@ -444,176 +438,182 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 		return SEGMENTOINEXISTENTE;
 	}
 }
-//
-///*encontrarSegmento()
-// * Parametros:
-// * 	-> char* ::segmentoABuscar
-// * Descripcion: busca entre los segmentos existentes en cache y, en caso de existir el segmentoSolicitado,
-// * 				devuelve un puntero al mismo.
-// * Return:
-// * 	-> t_tablaDePaginas* :: segmentoEncontrado
-// * VALGRIND:: SI */
-//t_segmento* encontrarSegmento(char* segmentoABuscar){
-//	int encontrarTabla(t_segmento* segmento){
-//			return string_equals_ignore_case(segmento->nombre, segmentoABuscar);
-//	}
-//	return list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
-//}
-//
-///* enviarAlDestinatarioCorrecto()
-// * Parametros:
-// * 	-> cod_request :: palabraReservada
-// * 	-> int :: codResultado(de la request solictada)
-// * 	-> char* ::  request
-// * 	-> t_paquete* :: valorAEnviar
-// * 	-> t_caller :: caller
-// * 	-> int :: i (socketKernel)
-// * Descripcion: En caso de que la request haya llegado desde kernel, le envia la respuesta a el.
-// * 				En caso de que haya llegado por consola, muestra el resultado de la request por la misma.
-// * Return:
-// * 	-> :: void
-// * VALGRIND:: NO*/
-// void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int socketKernel){
-//	 //TODO reservar y liberar
-//	 char *errorDefault= strdup("");
-//	 switch(caller){
-//	 	 case(ANOTHER_COMPONENT):
-//			enviar(codResultado, valorAEnviar->request, socketKernel);
-//	 	 	break;
-//	 	 case(CONSOLE):
-//	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
-//	 	  	break;
-//	 	 default:
-//	 		string_append_with_format(&errorDefault, "%s%s","No se ha encontrado a quien devolver la reques realizada",request);
-//	 		 log_info(logger_MEMORIA,errorDefault);
-//	 		 break;
-//
-//	}
-//	free(errorDefault);
-//	errorDefault=NULL;
-// }
-//
-///* mostrarResultadoPorConsola()
-//  * Parametros:
-//  * 	-> cod_request :: palabraReservada
-//  * 	-> int :: codResultado(de la request solictada)
-//  * 	-> char* ::  request
-//  * 	-> t_paquete* :: valorAEnviar
-//  * Descripcion: Muestra por consola el mensaje a la request hecha, ya se un resultado exitoso o erroneo.
-//  * Return:
-//  * 	-> :: void
-//  * VALGRIND:: NO*/
-// void mostrarResultadoPorConsola(cod_request palabraReservada, int codResultado,char* request,t_paquete* valorAEnviar){
-//	 char* respuesta= strdup("");
-//	 char* error=strdup("");
-//	 char** requestSeparada=separarRequest(valorAEnviar->request);
-//	 char* valorEncontrado = requestSeparada[2];
-//	 switch(palabraReservada){
-//	 	 case(SELECT):
-//	 		if(codResultado == SUCCESS){
-//				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
-//				log_info(logger_MEMORIA,respuesta);
-//	 			free(respuesta);
-//	 			respuesta=NULL;
-//	 			free(error);
-//	 			error=NULL;
-//	 		}else{
-//	 			switch(codResultado){
-//					case(KEY_NO_EXISTE):
-//						string_append_with_format(&error, "%s%s%s","La respuesta a: ",request," no es valida, KEY INEXISTENTE");
-//						log_info(logger_MEMORIA,error);
-//						break;
-//					case(TABLA_NO_EXISTE):
-//						string_append_with_format(&error, "%s%s%s","La respuesta a: ",request," no es valida, TABLA INEXISTENTE");
-//						log_info(logger_MEMORIA,error);
-//						break;
-//					default:
-//						log_info(logger_MEMORIA,"No se ha podido encontrar respuesta a la request",request);
-//						break;
-//	 			}
-//	 			free(respuesta);
-//	 			respuesta=NULL;
-//	 			free(error);
-//	 			error=NULL;
-//			}
-//	 	 break;
-//		case(INSERT):
-//			if(codResultado == SUCCESS){
-//				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
-//				log_info(logger_MEMORIA,respuesta);
-//	 			free(respuesta);
-//	 			respuesta=NULL;
-//	 			free(error);
-//	 			error=NULL;
-//			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
-//				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
-//				log_info(logger_MEMORIA,error);
-//	 			free(respuesta);
-//	 			respuesta=NULL;
-//	 			free(error);
-//	 			error=NULL;
-//			}
-//			break;
-//		case(CREATE):
-//			if(codResultado == SUCCESS || codResultado == TABLA_EXISTE){
-//				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
-//				log_info(logger_MEMORIA,respuesta);
-//			}else{
-//				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
-//				log_info(logger_MEMORIA,error);
-//			}
-//			break;
-//		default:
-//			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
-// 			free(respuesta);
-// 			respuesta=NULL;
-// 			free(error);
-// 			error=NULL;
-//			break;
-//		}
-//}
-//
-// /* guardarRespuestaDeLFSaCACHE()
-//   * Parametros:
-//   * 	-> t_paquete* :: nuevoPaquete
-//   * 	-> t_erroresCache :: tipoError
-//   * Descripcion: Guarda el resultado devuelto por LFS a cache.
-//   * 			-En el caso de de que ya existia la key, se actualiza la misma
-//   * 			-En el caso de KEYIEXISTENTE= se debe solicitar PAGINA LIBRE:
-//   * 				*si la hay,se guarda una nueva pag con los valores obtenido en el
-//   * 					segmento(Que este si existia en cache).
-//   * 				*Si NO hay espacio libre => ALGORITMO DE REEMPLAZO (Y si MEMORIA == FULL) =>JOURNALING
-//   * 			-En el caso de SEGMENTOINEXISTENTE: se debe agregar un nuevo segmento y solictar PAGINA LIBRE
-//   * 				(siguiendo la logica de keyinexistente)
-//   * Return:
-//   * 	-> :: void
-//   * VALGRIND:: NO*/
-//void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresCache tipoError){
-//
-//	if(nuevoPaquete->palabraReservada == SUCCESS){
-//		char** requestSeparada= separarRequest(nuevoPaquete->request);
-//		char* nuevaTabla= strdup(requestSeparada[0]);
-//		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
-//		char* nuevoValor= strdup(requestSeparada[2]);
-//		unsigned long long nuevoTimestamp;
-//		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no checkeo, viene de LFS
-//		if(tipoError== KEYINEXISTENTE){
-//			t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
-//			tablaBuscada= encontrarSegmento(nuevaTabla);
-//			list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey, nuevoValor,nuevoTimestamp));
-//
-//		}else if(tipoError == SEGMENTOINEXISTENTE){
-//			t_segmento* nuevaSegmento = crearSegmento(nuevaTabla);
-//			list_add(nuevaSegmento->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp));
-//			list_add(tablaDeSegmentos->segmentos,nuevaSegmento);
-//
-//		}
-//	}
-////		case(TABLA_NO_EXISTE):
-////		case(KEY_NO_EXISTE):
-//
-//}
-//
+
+/*encontrarSegmento()
+ * Parametros:
+ * 	-> char* ::segmentoABuscar
+ * Descripcion: busca entre los segmentos existentes en cache y, en caso de existir el segmentoSolicitado,
+ * 				devuelve un puntero al mismo.
+ * Return:
+ * 	-> t_tablaDePaginas* :: segmentoEncontrado
+ * VALGRIND:: SI */
+t_segmento* encontrarSegmento(char* segmentoABuscar){
+	int encontrarTabla(t_segmento* segmento){
+			return string_equals_ignore_case(segmento->path, segmentoABuscar);
+	}
+	return list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+}
+
+/* enviarAlDestinatarioCorrecto()
+ * Parametros:
+ * 	-> cod_request :: palabraReservada
+ * 	-> int :: codResultado(de la request solictada)
+ * 	-> char* ::  request
+ * 	-> t_paquete* :: valorAEnviar
+ * 	-> t_caller :: caller
+ * 	-> int :: i (socketKernel)
+ * Descripcion: En caso de que la request haya llegado desde kernel, le envia la respuesta a el.
+ * 				En caso de que haya llegado por consola, muestra el resultado de la request por la misma.
+ * Return:
+ * 	-> :: void
+ * VALGRIND:: NO*/
+ void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int socketKernel){
+	 //TODO reservar y liberar
+	 char *errorDefault= strdup("");
+	 switch(caller){
+	 	 case(ANOTHER_COMPONENT):
+			enviar(codResultado, valorAEnviar->request, socketKernel);
+	 	 	break;
+	 	 case(CONSOLE):
+	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
+	 	  	break;
+	 	 default:
+	 		string_append_with_format(&errorDefault, "%s%s","No se ha encontrado a quien devolver la reques realizada",request);
+	 		 log_info(logger_MEMORIA,errorDefault);
+	 		 break;
+
+	}
+	free(errorDefault);
+	errorDefault=NULL;
+ }
+
+/* mostrarResultadoPorConsola()
+  * Parametros:
+  * 	-> cod_request :: palabraReservada
+  * 	-> int :: codResultado(de la request solictada)
+  * 	-> char* ::  request
+  * 	-> t_paquete* :: valorAEnviar
+  * Descripcion: Muestra por consola el mensaje a la request hecha, ya se un resultado exitoso o erroneo.
+  * Return:
+  * 	-> :: void
+  * VALGRIND:: NO*/
+ void mostrarResultadoPorConsola(cod_request palabraReservada, int codResultado,char* request,t_paquete* valorAEnviar){
+	 char* respuesta= strdup("");
+	 char* error=strdup("");
+	 char** requestSeparada=separarRequest(valorAEnviar->request);
+	 char* valorEncontrado = requestSeparada[2];
+	 switch(palabraReservada){
+	 	 case(SELECT):
+	 		if(codResultado == SUCCESS){
+				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
+				log_info(logger_MEMORIA,respuesta);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+	 		}else{
+	 			switch(codResultado){
+					case(KEY_NO_EXISTE):
+						string_append_with_format(&error, "%s%s%s","La respuesta a: ",request," no es valida, KEY INEXISTENTE");
+						log_info(logger_MEMORIA,error);
+						break;
+					case(TABLA_NO_EXISTE):
+						string_append_with_format(&error, "%s%s%s","La respuesta a: ",request," no es valida, TABLA INEXISTENTE");
+						log_info(logger_MEMORIA,error);
+						break;
+					default:
+						log_info(logger_MEMORIA,"No se ha podido encontrar respuesta a la request",request);
+						break;
+	 			}
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+			}
+	 	 break;
+		case(INSERT):
+			if(codResultado == SUCCESS){
+				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
+				log_info(logger_MEMORIA,respuesta);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
+				log_info(logger_MEMORIA,error);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+			}
+			break;
+		case(CREATE):
+			if(codResultado == SUCCESS || codResultado == TABLA_EXISTE){
+				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
+				log_info(logger_MEMORIA,respuesta);
+			}else{
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				log_info(logger_MEMORIA,error);
+			}
+			break;
+		default:
+			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
+ 			free(respuesta);
+ 			respuesta=NULL;
+ 			free(error);
+ 			error=NULL;
+			break;
+		}
+}
+
+ /* guardarRespuestaDeLFSaCACHE()
+   * Parametros:
+   * 	-> t_paquete* :: nuevoPaquete
+   * 	-> t_erroresCache :: tipoError
+   * Descripcion: Guarda el resultado devuelto por LFS a cache.
+   * 			-En el caso de de que ya existia la key, se actualiza la misma
+   * 			-En el caso de KEYIEXISTENTE= se debe solicitar PAGINA LIBRE:
+   * 				*si la hay,se guarda una nueva pag con los valores obtenido en el
+   * 					segmento(Que este si existia en cache).
+   * 				*Si NO hay espacio libre => ALGORITMO DE REEMPLAZO (Y si MEMORIA == FULL) =>JOURNALING
+   * 			-En el caso de SEGMENTOINEXISTENTE: se debe agregar un nuevo segmento y solictar PAGINA LIBRE
+   * 				(siguiendo la logica de keyinexistente)
+   * Return:
+   * 	-> :: void
+   * VALGRIND:: NO*/
+void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
+
+	if(nuevoPaquete->palabraReservada == SUCCESS){
+		char** requestSeparada= separarRequest(nuevoPaquete->request);
+		char* nuevaTabla= strdup(requestSeparada[0]);
+		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
+		char* nuevoValor= strdup(requestSeparada[2]);
+		unsigned long long nuevoTimestamp;
+		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no chequeo, viene de LFS
+		t_marco* pagLibre = NULL;
+		if(obtenerPaginaDisponible(&pagLibre)==MEMORIAFULL){
+			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
+			//TODO
+		}else{
+			if(tipoError== KEYINEXISTENTE){
+				t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
+				tablaBuscada= encontrarSegmento(nuevaTabla);
+				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
+
+			}else if(tipoError == SEGMENTOINEXISTENTE){
+				t_segmento* nuevaSegmento = crearSegmento(nuevaTabla);
+				list_add(nuevaSegmento->tablaDePagina,crearElementoEnTablaDePagina(pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
+				list_add(tablaDeSegmentos->segmentos,nuevaSegmento);
+
+			}
+		}
+	}
+//		case(TABLA_NO_EXISTE):
+//		case(KEY_NO_EXISTE):
+
+}
+
 ///* procesarInsert()
 // * Parametros:
 // * 	-> cod_request :: palabraReservada
@@ -952,7 +952,7 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
  * 	-> int :: resultado de la obtencion de una paina libre
  * 	VALGRIND :: SI*/
 int obtenerPaginaDisponible(t_marco** pagLibre){
-	int index= obtenerBloqueDisponible();
+	int index= obtenerIndiceMarcoDisponible();
 	if(index == NUESTRO_ERROR){
 		return MEMORIAFULL;
 	}else{

@@ -147,7 +147,7 @@ void liberarMemoria();
 void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
 //void eliminarPagina(t_pagina*);
 
-int buscarMarcoDisponible(t_marco*);
+int obtenerPaginaDisponible(t_marco**);
 
 
 
