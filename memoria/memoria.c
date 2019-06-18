@@ -789,35 +789,82 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 //}
 //
 
-
+/* actualizarPagina()
+ * Parametros:
+ *	-> t_marco* :: pagina
+ *	-> char* :: nuevoValor
+ * Descripcion: actualiza la pagina, insertando la hora actual, y actualiza el puntero
+ * 				al marco, insertando el nuevo valor.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: SI*/
 void actualizarPagina (t_marco* pagina, char* nuevoValue){
 	pagina->timestamp =  obtenerHoraActual();
 	strcpy(pagina->value,nuevoValue);
 }
 
+/* actualizarElementoEnTablaDePagina()
+ * Parametros:
+ *	-> t_elemTablaDePaginas* :: elemento
+ *	-> char* :: nuevoValor
+ * Descripcion: actualiza un elemento de la tabla de paginas(de un segmento), indicando
+ * 				que este ha sido actualizado(falg activado).
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: SI*/
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* nuevoValor){
 	actualizarPagina(elemento->marco,nuevoValor);
 	elemento->modificado = MODIFICADO;
 }
 
-t_marco* crearPagina(t_marco* pagLibre,uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
-	pagLibre->key= nuevaKey;
-	strcpy(pagLibre->value,nuevoValue);
-	pagLibre->timestamp= timesTamp;
-	return pagLibre;
+/* crearPagina()
+ * Parametros:
+ *	-> t_marco* :: pagina
+ *	-> uint16_t :: nuevaKey
+ *	-> char* :: nuevoValor
+ *	-> unsigned long long :: timesTamp
+ * Descripcion: crea una nueva pagina, utilizando como marco, un puntero que fue previamente
+ * 				hallado.
+ * Return:
+ * 	-> t_marco* :: pagina
+ * 	VALGRIND :: SI*/
+t_marco* crearPagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
+	pagina->key= nuevaKey;
+	strcpy(pagina->value,nuevoValue);
+	pagina->timestamp= timesTamp;
+	return pagina;
 }
 
+/* crearElementoEnTablaDePagina()
+ * Parametros:
+ *	-> t_marco* :: pagina
+ *	-> uint16_t :: nuevaKey
+ *	-> char* :: nuevoValor
+ *	-> unsigned long long :: timesTamp
+ * Descripcion: crea una nuevo elemento (de la tabla de paginas).Le asigna al mismo
+ * 				un nuevo id(por lo cual, primero incrementa la variable global), le setea el
+ * 				flag modificado en 0 y, crea una pagina.
+ * Return:
+ * 	-> t_elemTablaDePaginas* :: elementoDeTablaDePagina
+ * 	VALGRIND :: SI*/
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
-	t_elemTablaDePaginas* newElementoDePagina= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	t_elemTablaDePaginas* nuevoElemento= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
 
 	id++;
-	newElementoDePagina->numeroDePag = id;
-	newElementoDePagina->marco = crearPagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
-	newElementoDePagina->modificado = SINMODIFICAR;
+	nuevoElemento->numeroDePag = id;
+	nuevoElemento->marco = crearPagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
+	nuevoElemento->modificado = SINMODIFICAR;
 
-	return newElementoDePagina;
+	return nuevoElemento;
 }
 
+/* crearSegmento()
+ * Parametros:
+ *	-> char* :: pathNuevoSegmento
+ * Descripcion: crea un nuevo segmento con el path que fue solicitado.
+ * Return:
+ * 	-> t_segmento* :: nuevoSegmento
+ * 	VALGRIND :: SI*/
 t_segmento* crearSegmento(char* pathNuevoSegmento){
 	t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 	nuevoSegmento->path=strdup(pathNuevoSegmento);
@@ -896,14 +943,14 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
 ////	pag= NULL;
 ////}
 
-///* obtenerPaginaDisponible()
-// * Parametros:
-// *	-> t_marco** :: pagLibre
-// * Descripcion: Obtiene un puntero a una pagina libre, ocurriendo esto cuando existe un marco libre
-// *				donde pueda guardarse la misma.
-// * Return:
-// * 	-> int :: resultado de la obtencion de una paina libre
-// * 	VALGRIND :: SI*/
+/* obtenerPaginaDisponible()
+ * Parametros:
+ *	-> t_marco** :: pagLibre
+ * Descripcion: Obtiene un puntero a una pagina libre, ocurriendo esto cuando existe un marco libre
+ *				donde pueda guardarse la misma.
+ * Return:
+ * 	-> int :: resultado de la obtencion de una paina libre
+ * 	VALGRIND :: SI*/
 int obtenerPaginaDisponible(t_marco** pagLibre){
 	int index= obtenerBloqueDisponible();
 	if(index == NUESTRO_ERROR){
