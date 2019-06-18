@@ -99,7 +99,7 @@ void leerDeConsola(void){
  * 	-> resultadoVlidacion :: int
  * VALGRIND:: NO */
 int validarRequest(char* mensaje){
-	int tamanioMax = 10; //TODO lo pasa LFS X HANDSHAKE
+	int tamanioMax = handshake->tamanioValue; //TODO lo pasa LFS X HANDSHAKE
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
@@ -142,8 +142,9 @@ void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_FS"),
 			config_get_string_value(config, "PUERTO_FS"));
-	t_handshake_lfs* handshake = recibirHandshakeLFS(conexionLfs);
-	log_info(logger_MEMORIA, "SE CONECTO CON LFS y recibi de tamanioValue %d", handshake->tamanioValue);
+	handshake = recibirHandshakeLFS(conexionLfs);
+	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
+	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshake->tamanioValue);
 }
 
 void escucharMultiplesClientes() {
@@ -254,11 +255,11 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
 		case SALIDA:
-			log_info(logger_MEMORIA,"HaS finalizado el componente MEMORIA");
+			log_info(logger_MEMORIA,"Has finalizado el componente MEMORIA");
 			break;
 		case NUESTRO_ERROR:
 			if(caller == ANOTHER_COMPONENT){
-				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
+				log_error(logger_MEMORIA, "El cliente se desconecto. Terminando servidor");
 				int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
 				// TODO: Chequear si el -1 se puede castear como int*
 				break;
