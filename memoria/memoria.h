@@ -109,7 +109,7 @@ fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para s
 
 void conectarAFileSystem(void);
 void inicializacionDeMemoria(void);
-int obtenerBloqueDisponible(t_bitarray*);
+int obtenerIndiceMarcoDisponible();
 
 void leerDeConsola(void);
 int validarRequest(char*);

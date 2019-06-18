@@ -73,7 +73,7 @@ void inicializacionDeMemoria(){
 
 
 	t_marco* pagLibre = NULL;
-	int rta= buscarPagDisponible(&pagLibre,bitarray);
+	int rta= obtenerPaginaDisponible(&pagLibre,bitarray);
 
 	t_segmento* nuevoSegmento = crearSegmento("tablaA");
 	t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(pagLibre,1,"hola",12345678);
@@ -88,7 +88,15 @@ void inicializacionDeMemoria(){
 //	return tamanio;
 //}
 
-int obtenerBloqueDisponible(t_bitarray* bitarray) {
+/* obtenerIndiceMarcoDisponible()
+ * Parametros:
+ * 	->  ::  void
+ * Descripcion:Obtiene, en caso de que exista, un marco disponible.
+ * 				En caso contrario, devuelve error.
+ * Return:
+ * 	-> error||indice :: int
+ * VALGRIND:: SI */
+int obtenerIndiceMarcoDisponible() {
 	int index = 0;
 	while(index < marcosTotales && bitarray_test_bit(bitarray, index)) index++;
 	if(index >= marcosTotales) {
@@ -888,8 +896,16 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
 ////	pag= NULL;
 ////}
 
-int buscarPagDisponible(t_marco** pagLibre){
-	int index= obtenerBloqueDisponible(bitarray);
+///* obtenerPaginaDisponible()
+// * Parametros:
+// *	-> t_marco** :: pagLibre
+// * Descripcion: Obtiene un puntero a una pagina libre, ocurriendo esto cuando existe un marco libre
+// *				donde pueda guardarse la misma.
+// * Return:
+// * 	-> int :: resultado de la obtencion de una paina libre
+// * 	VALGRIND :: SI*/
+int obtenerPaginaDisponible(t_marco** pagLibre){
+	int index= obtenerBloqueDisponible();
 	if(index == NUESTRO_ERROR){
 		return MEMORIAFULL;
 	}else{
