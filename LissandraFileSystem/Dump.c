@@ -37,8 +37,9 @@ errorNo dumpear() {
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
 	char* pathMetadata = string_from_format("%sMetadata/Metadata.bin", puntoDeMontaje);
 	t_config* configMetadata = config_create(pathMetadata);
+	free(pathMetadata);
 	int tamanioBloque = config_get_int_value(configMetadata, "BLOCK_SIZE");
-
+	config_destroy(configMetadata);
 	// Refactor list_iterate
 	for(int i = 0; list_get(memtable->tablas,i) != NULL; i++) { // Recorro las tablas de la memtable
 		tabla = list_get(memtable->tablas,i);
@@ -57,6 +58,7 @@ errorNo dumpear() {
 			} while(fileTmp != NULL);
 			free(pathTabla);
 			fileTmp = fopen(pathTmp, "a+");
+			free(pathTmp);
 			if (fileTmp == NULL) {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
@@ -73,7 +75,7 @@ errorNo dumpear() {
 					cantidadDeBloquesAPedir++;
 				}
 				char* tamanioTmp = string_from_format("SIZE=%d", strlen(datosADumpear));
-				char* bloques = strdup("BLOCKS=[");
+				char* bloques = strdup("");
 				for(int i=0; i<cantidadDeBloquesAPedir;i++) {
 					int bloqueDeParticion = obtenerBloqueDisponible(&error); //si hay un error se setea en errorNo
 					if(bloqueDeParticion == -1){
@@ -90,6 +92,7 @@ errorNo dumpear() {
 							char* registrosAEscribir = string_substring_until(datosADumpear, tamanioBloque);
 							datosADumpear = string_substring_from(datosADumpear, tamanioBloque);
 							fprintf(bloque, "%s", registrosAEscribir);
+							free(registrosAEscribir);
 						} else {
 							fprintf(bloque, "%s", datosADumpear);
 						}
@@ -97,7 +100,7 @@ errorNo dumpear() {
 						free(pathBloque);
 					}
 				}
-				bloques = string_from_format("%s]", bloques);
+				bloques = string_from_format("BLOCKS=[%s]", bloques);
 				fprintf(fileTmp, "%s\n%s", tamanioTmp, bloques);
 				free(tamanioTmp);
 				free(bloques);
