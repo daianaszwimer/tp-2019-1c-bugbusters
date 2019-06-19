@@ -100,10 +100,7 @@ int obtenerIndiceMarcoDisponible() {
 	while(index < marcosTotales && bitarray_test_bit(bitarray, index)) index++;
 	if(index >= marcosTotales) {
 		index = NUESTRO_ERROR;
-	}else{
-		bitarray_set_bit(bitarray, index);
 	}
-
 	return index;
 }
 
@@ -839,6 +836,7 @@ t_marco* crearPagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue, unsign
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
 	t_elemTablaDePaginas* nuevoElemento= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
 
+	bitarray_set_bit(bitarray, id);
 	nuevoElemento->numeroDePag = id;
 	nuevoElemento->marco = crearPagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
 	nuevoElemento->modificado = SINMODIFICAR;
