@@ -284,7 +284,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
-			//procesarCreate(codRequest, request,consistenciaMemoria, caller, i);
+			procesarCreate(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case DESCRIBE:
 			log_info(logger_MEMORIA, "Me llego un DESCRIBE");
@@ -776,23 +776,6 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
 	return paqueteAEnviar;
 }
 
-///* validarInsertSC()
-// * Parametros:
-// *	-> errorNo :: codRespuestaDeLFS
-// * Descripcion: En SC||SHC, para insertar debe existir la tabla en LFS.Esta funcion valida si el resultado
-// * 				devuelto del select hecho a LFS es SUCCESS o NO
-// * Return:
-// * 	-> int :: resulltado de validacion
-// * 	VALGRIND :: SI*/
-//int validarInsertSC(errorNo codRespuestaDeLFS){
-//	if (codRespuestaDeLFS == SUCCESS || codRespuestaDeLFS ==KEY_NO_EXISTE){
-//		return EXIT_SUCCESS;
-//	}else{
-//		return EXIT_FAILURE;
-//	}
-//}
-
-
 /* actualizarPagina()
  * Parametros:
  *	-> t_marco* :: pagina
@@ -877,54 +860,58 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
 }
 
 
-//
-//void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
-//	//TODO, si lfs dio ok, igual calcular en mem?
-//	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
-//
-//	if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
-//		create(codRequest, request);
-//		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
-//	}else{
-//		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
-//
-//	}
-//
-//	eliminar_paquete(valorDeLFS);
-//	valorDeLFS= NULL;
-//}
-//
-//void create(cod_request codRequest,char* request){
-//	errorNo rtaCache = existeSegmentoEnMemoria(codRequest,request);
-//
-//	if(rtaCache == SEGMENTOINEXISTENTE){
-//		char** requestSeparada = separarRequest(request);
-//		t_segmento* nuevaTablaDePagina = crearSegmento(requestSeparada[1]);
-//		list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
-//	}
-//}
-//
-//errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
-//	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
-//	char** parametros = separarRequest(request);
-//	char* segmentoABuscar=strdup(parametros[1]);
-//	int encontrarTabla(t_segmento* segmento){
-//		return string_equals_ignore_case(segmento->nombre, segmentoABuscar);
-//	}
-//
-//	tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
-//	if(tablaDeSegmentosEnCache!= NULL){
-//		return SEGMENTOEXISTENTE;
-//	}else{
-//		return SEGMENTOINEXISTENTE;
-//	}
-//	free(tablaDeSegmentosEnCache); //TODO hay q hace uno q libere bien
-//	free(segmentoABuscar);
-//	segmentoABuscar =NULL;
-//	liberarArrayDeChar(parametros);
-//	parametros=NULL;
-//}
-//
+
+void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
+	//TODO, si lfs dio ok, igual calcular en mem?
+	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
+
+	if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
+		if(consistencia == EC || caller == CONSOLE){
+			create(codRequest, request);
+		}
+		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
+	}else{
+		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
+
+	}
+
+	eliminar_paquete(valorDeLFS);
+	valorDeLFS= NULL;
+}
+
+void create(cod_request codRequest,char* request){
+	errorNo rtaCache = existeSegmentoEnMemoria(codRequest,request);
+
+	if(rtaCache == SEGMENTOINEXISTENTE){
+		char** requestSeparada = separarRequest(request);
+		t_segmento* nuevaTablaDePagina = crearSegmento(requestSeparada[1]);
+		list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
+	}
+}
+
+errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
+	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
+	char** parametros = separarRequest(request);
+	char* segmentoABuscar=strdup(parametros[1]);
+	int encontrarTabla(t_segmento* segmento){
+		return string_equals_ignore_case(segmento->path, segmentoABuscar);
+	}
+
+	tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	if(tablaDeSegmentosEnCache!= NULL){
+		log_info(logger_MEMORIA,"YA EXISTE EL SEGMENTO");
+		return SEGMENTOEXISTENTE;
+	}else{
+		log_info(logger_MEMORIA,"NO EXISTE EL SEGMENTO");
+		return SEGMENTOINEXISTENTE;
+	}
+	free(tablaDeSegmentosEnCache); //TODO hay q hace uno q libere bien
+	free(segmentoABuscar);
+	segmentoABuscar =NULL;
+	liberarArrayDeChar(parametros);
+	parametros=NULL;
+}
+
 //
 //// FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
 ////void liberarMemoria(){
