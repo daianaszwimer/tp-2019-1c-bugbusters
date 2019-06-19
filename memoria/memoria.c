@@ -866,10 +866,11 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
  *	-> consistencia :: consistencia
  *	-> t_caller :: caller
  *	-> int :: socketKernel
- * Descripcion: crea un nuevo segmento.
+ * Descripcion: SC || SHC -> envia el create  LFS.
+ * 				EC -> crea el segmento en la memoria, sin consultarle a LFS.
  * Return:
  * 	-> void ::
- * 	VALGRIND :: SI*/
+ * 	VALGRIND :: NO*/
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
 	//TODO, si lfs dio ok, igual calcular en mem?
 	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
@@ -887,6 +888,16 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 	valorDeLFS= NULL;
 }
 
+/* create()
+ * Parametros:
+ *	-> codRequest :: codRequest
+ *	-> char* :: request
+ * Descripcion: Verifica que el segmento si existe en la memoria,y , en caso
+ * 				de que no sea asi, se crea un nuevo segmento.
+ * 				En caso contrario, no lo crea.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
 void create(cod_request codRequest,char* request){
 	errorNo rtaCache = existeSegmentoEnMemoria(codRequest,request);
 
@@ -897,6 +908,14 @@ void create(cod_request codRequest,char* request){
 	}
 }
 
+/* existeSegmentoEnMemoria()
+ * Parametros:
+ *	-> codRequest :: codRequest
+ *	-> char* :: request
+ * Descripcion: Solamente verifica si existe o no un segmento en memoria.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
 errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
 	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
 	char** parametros = separarRequest(request);
