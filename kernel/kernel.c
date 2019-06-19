@@ -387,6 +387,8 @@ int enviarMensajeAMemoria(cod_request codRequest,consistencia consistenciaMemori
 	respuesta = paqueteRecibido->palabraReservada;
 	if (respuesta == SUCCESS) {
 		log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
+	} else {
+		log_error(logger_KERNEL, "request invalida");
 	}
 	eliminar_paquete(paqueteRecibido);
 	return respuesta;
