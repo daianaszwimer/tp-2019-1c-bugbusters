@@ -8,7 +8,7 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-	conectarAFileSystem();
+//	conectarAFileSystem();
 
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 
@@ -71,13 +71,12 @@ void inicializacionDeMemoria(){
 
 	//-------------------------------AUXILIAR: creacion de tabla/pag/elemento ---------------------------------
 
-
 	t_marco* pagLibre = NULL;
-	int rta= obtenerPaginaDisponible(&pagLibre);
+	int index= obtenerPaginaDisponible(&pagLibre);
 
 	t_segmento* nuevoSegmento = crearSegmento("tablaA");
-	t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(pagLibre,1,"hola",12345678);
-	list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
+	t_elemTablaDePaginas* nuevoElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,1,"hola",12345678);
+	list_add(nuevoSegmento->tablaDePagina,nuevoElemTablaDePagina);
 	list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
 
 }
@@ -603,18 +602,19 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoEr
 		unsigned long long nuevoTimestamp;
 		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no chequeo, viene de LFS
 		t_marco* pagLibre = NULL;
-		if(obtenerPaginaDisponible(&pagLibre)==MEMORIAFULL){
+		int index= obtenerPaginaDisponible(&pagLibre);
+		if(index == MEMORIAFULL){
 			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
 			//TODO
 		}else{
 			if(tipoError== KEYINEXISTENTE){
 				t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
 				tablaBuscada= encontrarSegmento(nuevaTabla);
-				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
+				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
 
 			}else if(tipoError == SEGMENTOINEXISTENTE){
 				t_segmento* nuevaSegmento = crearSegmento(nuevaTabla);
-				list_add(nuevaSegmento->tablaDePagina,crearElementoEnTablaDePagina(pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
+				list_add(nuevaSegmento->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
 				list_add(tablaDeSegmentos->segmentos,nuevaSegmento);
 
 			}
@@ -723,7 +723,8 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		nuevoValor=NULL;
 	}else{
 		t_marco* pagLibre = NULL;
-		if(obtenerPaginaDisponible(&pagLibre)==MEMORIAFULL){
+		int index =obtenerPaginaDisponible(&pagLibre);
+		if(index == MEMORIAFULL){
 		log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
 		//TODO
 		}else{
@@ -733,7 +734,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			if(hayEspacio ==EXIT_SUCCESS){
 				t_segmento* tablaDestino = (t_segmento*)malloc(sizeof(t_segmento));
 				tablaDestino = encontrarSegmento(nuevaTabla);
-				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
+				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
 
 				//TODO unificar desp cuando lfs este, con valorDeLF
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
@@ -747,7 +748,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
 
 				t_segmento* nuevoSegmento = crearSegmento(nuevaTabla);
-				t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(pagLibre,nuevaKey,nuevoValor,nuevoTimestamp);
+				t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp);
 				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
 				list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
@@ -824,6 +825,7 @@ t_marco* crearPagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue, unsign
 
 /* crearElementoEnTablaDePagina()
  * Parametros:
+ * 	-> int :: id
  *	-> t_marco* :: pagina
  *	-> uint16_t :: nuevaKey
  *	-> char* :: nuevoValor
@@ -834,10 +836,9 @@ t_marco* crearPagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue, unsign
  * Return:
  * 	-> t_elemTablaDePaginas* :: elementoDeTablaDePagina
  * 	VALGRIND :: SI*/
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
 	t_elemTablaDePaginas* nuevoElemento= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
 
-	id++;
 	nuevoElemento->numeroDePag = id;
 	nuevoElemento->marco = crearPagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
 	nuevoElemento->modificado = SINMODIFICAR;
@@ -975,8 +976,22 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 		return MEMORIAFULL;
 	}else{
 		*pagLibre = memoria + sizeof(t_marco)*index;
-		return SUCCESS;
+		return index;
 	}
 
 }
+
+/* eliminarMarco()
+ * Parametros:
+ *	-> t_marco** :: pagLibre
+ * Descripcion: Obtiene un puntero a una pagina libre, ocurriendo esto cuando existe un marco libre
+ *				donde pueda guardarse la misma.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: SI*/
+void elimiarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
+	bitarray_clean_bit(bitarray, elem->numeroDePag);
+	memset(marcoAEliminar->value, 0, sizeof(marcoAEliminar->value));
+}
+
 
