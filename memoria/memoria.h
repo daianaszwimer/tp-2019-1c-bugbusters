@@ -41,7 +41,7 @@ typedef enum
 	SEGMENTOEXISTENTE = 99,
 	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101,
-	MEMORIAFULL =102
+	MEMORIAFULL =-10102
 } t_erroresMemoria;
 
 //-----------------STRUCTS------------------
@@ -99,7 +99,6 @@ void* memoria;
 int marcosTotales;
 int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
-int id=0;
 
 t_list* descriptoresClientes ;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
@@ -128,13 +127,12 @@ void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresMemoria);
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
-int validarInsertSC(errorNo);
 
 void actualizarPagina (t_marco*, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
 t_marco* crearPagina(t_marco*,uint16_t, char*, unsigned long long);
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(t_marco* ,uint16_t, char*,unsigned long long);
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long);
 t_segmento* crearSegmento(char*);
 
 
@@ -148,9 +146,12 @@ void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
 //void eliminarPagina(t_pagina*);
 
 int obtenerPaginaDisponible(t_marco**);
+
 void eliminarElemTablaSegmentos(t_segmento*);
 void liberarEstructurasMemoria(t_tablaDeSegmentos*);
 void liberarMemoria();
+void elimiarMarco(t_elemTablaDePaginas*,t_marco* );
+
 
 
 #endif /* MEMORIA_H_ */

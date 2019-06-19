@@ -8,7 +8,7 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-	conectarAFileSystem();
+//	conectarAFileSystem();
 
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 
@@ -75,13 +75,12 @@ void inicializacionDeMemoria(){
 
 	//-------------------------------AUXILIAR: creacion de tabla/pag/elemento ---------------------------------
 
-
 	t_marco* pagLibre = NULL;
-	int rta= obtenerPaginaDisponible(&pagLibre);
+	int index= obtenerPaginaDisponible(&pagLibre);
 
 	t_segmento* nuevoSegmento = crearSegmento("tablaA");
-	t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(pagLibre,1,"hola",12345678);
-	list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
+	t_elemTablaDePaginas* nuevoElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,1,"hola",12345678);
+	list_add(nuevoSegmento->tablaDePagina,nuevoElemTablaDePagina);
 	list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
 
 }
@@ -228,15 +227,15 @@ void escucharMultiplesClientes() {
 					char* request = paqueteRecibido->request;
 					printf("El codigo que recibi es: %i \n", palabraReservada);
 					printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-					if(palabraReservada != NUESTRO_ERROR){
-						interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
-						free(request);
-						request=NULL;
-					}
-					log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-					int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
-					// TODO: Chequear si el -1 se puede castear como int*
+					interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
+					free(request);
+					request=NULL;
+
+
 				}
+//				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
+//				int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+//				// TODO: Chequear si el -1 se puede castear como int*
 			}//fin for
 
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
@@ -284,11 +283,11 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case INSERT:
 			log_info(logger_MEMORIA, "Me llego un INSERT");
-			//procesarInsert(codRequest, request,consistenciaMemoria, caller, i);
+			procesarInsert(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case CREATE:
 			log_info(logger_MEMORIA, "Me llego un CREATE");
-			//procesarCreate(codRequest, request,consistenciaMemoria, caller, i);
+			procesarCreate(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case DESCRIBE:
 			log_info(logger_MEMORIA, "Me llego un DESCRIBE");
@@ -303,7 +302,17 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			log_info(logger_MEMORIA,"HaS finalizado el componente MEMORIA");
 			break;
 		case NUESTRO_ERROR:
-			break;
+			 if(caller == ANOTHER_COMPONENT){
+		                               log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
+	                               int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+	                               // TODO: Chequear si el -1 se puede castear como int*
+	                               break;
+	                      }
+	                      else{
+	                              break;
+	                    }
+
+
 		default:
 			log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
 			break;
@@ -375,9 +384,6 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
-		guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
-
 	}else{
 		log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 
@@ -504,10 +510,14 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  void mostrarResultadoPorConsola(cod_request palabraReservada, int codResultado,char* request,t_paquete* valorAEnviar){
 	 char* respuesta= strdup("");
 	 char* error=strdup("");
-	 char** requestSeparada=separarRequest(valorAEnviar->request);
-	 char* valorEncontrado = requestSeparada[2];
+	 char** requestSeparada=separarRequest(request);
+	 char** valorAEnviarSeparado=strdup("");
+	 char* valorEncontrado=strdup("");
 	 switch(palabraReservada){
 	 	 case(SELECT):
+			 valorAEnviarSeparado=separarRequest(valorAEnviar->request);
+	 	 	 valorEncontrado = valorAEnviarSeparado[2];
+
 	 		if(codResultado == SUCCESS){
 				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
 				log_info(logger_MEMORIA,respuesta);
@@ -596,202 +606,180 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoEr
 		unsigned long long nuevoTimestamp;
 		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no chequeo, viene de LFS
 		t_marco* pagLibre = NULL;
-		if(obtenerPaginaDisponible(&pagLibre)==MEMORIAFULL){
+		int index= obtenerPaginaDisponible(&pagLibre);
+		if(index == MEMORIAFULL){
 			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
 			//TODO
 		}else{
 			if(tipoError== KEYINEXISTENTE){
 				t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
 				tablaBuscada= encontrarSegmento(nuevaTabla);
-				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
+				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
 
 			}else if(tipoError == SEGMENTOINEXISTENTE){
 				t_segmento* nuevaSegmento = crearSegmento(nuevaTabla);
-				list_add(nuevaSegmento->tablaDePagina,crearElementoEnTablaDePagina(pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
+				list_add(nuevaSegmento->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
 				list_add(tablaDeSegmentos->segmentos,nuevaSegmento);
 
 			}
 		}
 	}
-//		case(TABLA_NO_EXISTE):
-//		case(KEY_NO_EXISTE):
 
 }
 
-///* procesarInsert()
-// * Parametros:
-// * 	-> cod_request :: palabraReservada
-// *	-> char* :: request
-// *	-> t_caller :: caller
-// *	-> int :: i (socket kernel)
-// * Descripcion: EC:
-// * 					1)se va a fijar si EXISTE SEGMENTO Y EXISTE KEY en memoria.
-// 	 	 	 	 	 si es correcto , se ACTUALIZA la pag (valor y timestamp)
-// * 					2)si no encuentra NO EXISTE KEY Pero si EXISTE SEGMENTO.Solicitar PAGINA LIBRE:
-// * 					*si la hay,se guarda una nueva pag con los valores obtenido en el
-// * 						segmento existente.
-// * 					*Si NO hay espacio libre => ALGORITMO DE REEMPLAZO (Y si MEMORIA == FULL) =>JOURNALING
-// * 					3)Si NO EXISTE SEGMENTO,solicita un segmento y solictar PAGINA LIBRE(siguiendo la logica de keyinexistente)
-// *
-// *				SC || SHC:
-// *					1)Le pregunta  LFS si existe la tabla en la que se desea insertar.
-// *					2)Si no existe, se notifica error al destinatario correspondiente
-// *					3)Si existe en lisandra=>se inserta siguiendo los pasos de EC
-// * Return:
-// * 	-> :: void
-// * 	VALGRIND :: NO*/
-//void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int i) {
-//		t_elemTablaDePaginas* elementoEncontrado= malloc(sizeof(t_elemTablaDePaginas));
-//		t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
-//		char* requestSeparada = separarRequest(request);
-////---------------CASOS DE PRUEBA------------------------------
-////en el .h para poder compartirlo con la funcion insertar
-//		t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
-////		valorDeLF->palabraReservada= 0;
-////		valorDeLF->tamanio=100;
-////		valorDeLF->request=strdup("tablaB  chau 123454657");
-//
-////-------------------------------------------------------------
-//
-//		int resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
-//		if(consistenciaMemoria == EC || caller == CONSOLE){
-//				insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
-//		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
-//				char* consultaALFS=malloc(sizeof(char*));
-//				string_append_with_format(&consultaALFS,"%s%s%s%s%s","SELECT"," ",requestSeparada[1]," ",requestSeparada[2]);
-//				valorDeLFS = intercambiarConFileSystem(SELECT,consultaALFS);
-//				if((consistenciaMemoria== SC && validarInsertSC(valorDeLFS->palabraReservada)== EXIT_SUCCESS)){
-//					insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
-//					free(elementoEncontrado);
-//					elementoEncontrado=NULL;
-//					free(valorEncontrado);
-//					valorEncontrado=NULL;
-//				}else{
-//					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-//				}
-//				free(consultaALFS);
-//		}else{
-//			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
-//			free(elementoEncontrado);
-//			elementoEncontrado=NULL;
-//			free(valorEncontrado);
-//			valorEncontrado=NULL;
-//		}
-//}
-//
-///* insertar()
-// * Parametros:
-// * 	-> int :: resultadoCache
-// * 	-> cod_request :: palabraReservada
-// *	-> char* :: request
-// *	-> t_elemTablaDePaginas* :: elementoEncontrado
-// *	-> t_caller :: caller
-// *	-> int :: i (socket kernel)
-// * Descripcion: Dependiendo del resultado arrojado por estaEnCache, inserta en memoria.
-// * 				Si EXISTE SEGMENTO Y EXISTE VALUR => ACTUALIZA
-// * 				Si EXISTE SEGMENTO Y NO EXISTE KEY => solicita pagina libre (+algoritmo de reemplazo+jounaling en caso de ser necesario)
-// * 				SI NO EXISTE LE SEGMENTO => se solicita agregar un nuevo segmento y se siguen los pasos de keyinexistente
-// * Return:
-// * 	-> :: void
-// * 	VALGRIND :: NO*/
-//void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int i){
-//	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
-//
-//	char** requestSeparada = separarRequest(request);
-//	char* nuevaTabla = strdup(requestSeparada[1]);
-//	char* nuevaKeyChar = strdup(requestSeparada[2]);
-//	int nuevaKey = convertirKey(nuevaKeyChar);
-//	char* nuevoValor = strdup(requestSeparada[3]);
-//	unsigned long long nuevoTimestamp;
-//
-////	char *consultaALFS= strdup("");
-//
-//	if(requestSeparada[4]!=NULL){
-//		convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
-//	}else{
-//		nuevoTimestamp= obtenerHoraActual();
-//	}
-//
-//
-//	if(resultadoCache == EXIT_SUCCESS){ // es decir que EXISTE SEGMENTO y EXISTE KEY
-//		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-//		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
-//		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-//		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
-//
-//		eliminar_paquete(paqueteAEnviar);
-//		free(nuevaTabla);
-//		nuevaTabla=NULL;
-//		free(nuevoValor);
-//		nuevoValor=NULL;
-//	}else if(resultadoCache == KEYINEXISTENTE){//TODO:		KEY no encontrada -> nueva pagina solicitada
-//		int hayEspacio= EXIT_SUCCESS; // TODO ALGORTMO DE REEMPLAZO + JOURNALING
-//
-//		if(hayEspacio ==EXIT_SUCCESS){
-//			t_segmento* tablaDestino = (t_segmento*)malloc(sizeof(t_segmento));
-//			tablaDestino = encontrarSegmento(nuevaTabla);
-//			list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(nuevaKey,nuevoValor, nuevoTimestamp));
-//
-//			//TODO unificar desp cuando lfs este, con valorDeLF
-//			paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-//			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
-//
-//			eliminar_paquete(paqueteAEnviar);
-//			free(nuevaTabla);
-//			nuevaTabla=NULL;
-//		}
-//
-//	}else if(resultadoCache == SEGMENTOINEXISTENTE){ //	TODO hay q solicitar si hay o no espacio??
-//
-//			t_segmento* nuevoSegmento = crearSegmento(nuevaTabla);
-//			t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(nuevaKey,nuevoValor,nuevoTimestamp);
-//			list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
-//			list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
-//			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
-//
-//
-////			free(nuevaTabla);
-////			nuevaTabla=NULL;
-////			free(nuevoValor);
-////			nuevoValor=NULL;
-//	}
-//}
-//
-///* armarPaqueteDeRtaAEnviar()
-// * Parametros:
-// *	-> char* :: request
-// * Descripcion: Cuando el resultado del insert fue EXITOSO,
-// * 				arma un paquete para enviarse (a quien solicito un insert)
-// * Return:
-// * 	-> paqueteAEnviar:: t_paquete*
-// * 	VALGRIND :: NO*/
-//t_paquete* armarPaqueteDeRtaAEnviar(char* request){
-//	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
-//
-//	paqueteAEnviar->palabraReservada= SUCCESS;
-//	char** requestRespuesta= string_n_split(request,2," ");
-//	paqueteAEnviar->request=strdup(requestRespuesta[1]);
-//	paqueteAEnviar->tamanio=strlen(requestRespuesta[1]);
-//
-//	return paqueteAEnviar;
-//}
-//
-///* validarInsertSC()
-// * Parametros:
-// *	-> errorNo :: codRespuestaDeLFS
-// * Descripcion: En SC||SHC, para insertar debe existir la tabla en LFS.Esta funcion valida si el resultado
-// * 				devuelto del select hecho a LFS es SUCCESS o NO
-// * Return:
-// * 	-> int :: resulltado de validacion
-// * 	VALGRIND :: SI*/
-//int validarInsertSC(errorNo codRespuestaDeLFS){
-//	if (codRespuestaDeLFS == SUCCESS){
-//		return EXIT_SUCCESS;
-//	}else{
-//		return EXIT_FAILURE;
-//	}
-//}
-//
+/* procesarInsert()
+ * Parametros:
+ * 	-> cod_request :: palabraReservada
+ *	-> char* :: request
+ *	-> t_caller :: caller
+ *	-> int :: i (socket kernel)
+ * Descripcion: EC:
+ * 					1)se va a fijar si EXISTE SEGMENTO Y EXISTE KEY en memoria.
+ 	 	 	 	 	 si es correcto , se ACTUALIZA la pag (valor y timestamp)
+ * 					2)si no encuentra NO EXISTE KEY Pero si EXISTE SEGMENTO.Solicitar PAGINA LIBRE:
+ * 					*si la hay,se guarda una nueva pag con los valores obtenido en el
+ * 						segmento existente.
+ * 					*Si NO hay espacio libre => ALGORITMO DE REEMPLAZO (Y si MEMORIA == FULL) =>JOURNALING
+ * 					3)Si NO EXISTE SEGMENTO,solicita un segmento y solictar PAGINA LIBRE(siguiendo la logica de keyinexistente)
+ *
+ *				SC || SHC:
+ *					1)Le pregunta  LFS si existe la tabla en la que se desea insertar.
+ *					2)Si no existe, se notifica error al destinatario correspondiente
+ *					3)Si existe en lisandra=>se inserta alli.
+ * Return:
+ * 	-> :: void
+ * 	VALGRIND :: NO*/
+void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int i) {
+		t_elemTablaDePaginas* elementoEncontrado= malloc(sizeof(t_elemTablaDePaginas));
+		t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
+		char** requestSeparada = separarRequest(request);
+		t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
+
+		if(consistenciaMemoria == EC || caller == CONSOLE){
+			int resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
+			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
+		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
+			char* consultaALFS=malloc(sizeof(char*));
+			*consultaALFS = '\0';
+			string_append_with_format(&consultaALFS,"%s%s%s%s%s","SELECT"," ",requestSeparada[1]," ",requestSeparada[2]);
+
+			t_paquete* insertALFS = malloc(sizeof(t_paquete));
+			insertALFS = intercambiarConFileSystem(palabraReservada,request);
+			if(insertALFS->palabraReservada== EXIT_SUCCESS){
+				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
+			}else{
+				enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+			}
+			free(consultaALFS);
+		}else{
+			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
+			free(elementoEncontrado);
+			elementoEncontrado=NULL;
+			free(valorEncontrado);
+			valorEncontrado=NULL;
+		}
+}
+
+/* insertar()
+ * Parametros:
+ * 	-> int :: resultadoCache
+ * 	-> cod_request :: palabraReservada
+ *	-> char* :: request
+ *	-> t_elemTablaDePaginas* :: elementoEncontrado
+ *	-> t_caller :: caller
+ *	-> int :: i (socket kernel)
+ * Descripcion: Dependiendo del resultado arrojado por estaEnCache, inserta en memoria.
+ * 				Si EXISTE SEGMENTO Y EXISTE VALUR => ACTUALIZA
+ * 				Si EXISTE SEGMENTO Y NO EXISTE KEY => solicita pagina libre (+algoritmo de reemplazo+jounaling en caso de ser necesario)
+ * 				SI NO EXISTE LE SEGMENTO => se solicita agregar un nuevo segmento y se siguen los pasos de keyinexistente
+ * Return:
+ * 	-> :: void
+ * 	VALGRIND :: NO*/
+void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int i){
+	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
+
+	char** requestSeparada = separarRequest(request);
+	char* nuevaTabla = strdup(requestSeparada[1]);
+	char* nuevaKeyChar = strdup(requestSeparada[2]);
+	int nuevaKey = convertirKey(nuevaKeyChar);
+	char* nuevoValor = strdup(requestSeparada[3]);
+	unsigned long long nuevoTimestamp;
+
+//	char *consultaALFS= strdup("");
+
+	if(requestSeparada[4]!=NULL){
+		convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
+	}else{
+		nuevoTimestamp= obtenerHoraActual();
+	}
+
+
+	if(resultadoCache == EXIT_SUCCESS){ // es decir que EXISTE SEGMENTO y EXISTE KEY
+		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
+		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
+		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+
+		eliminar_paquete(paqueteAEnviar);
+		free(nuevaTabla);
+		nuevaTabla=NULL;
+		free(nuevoValor);
+		nuevoValor=NULL;
+	}else{
+		t_marco* pagLibre = NULL;
+		int index =obtenerPaginaDisponible(&pagLibre);
+		if(index == MEMORIAFULL){
+		log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
+		//TODO
+		}else{
+			if(resultadoCache == KEYINEXISTENTE){//TODO:		KEY no encontrada -> nueva pagina solicitada
+			int hayEspacio= EXIT_SUCCESS; // TODO ALGORTMO DE REEMPLAZO + JOURNALING
+
+			if(hayEspacio ==EXIT_SUCCESS){
+				t_segmento* tablaDestino = (t_segmento*)malloc(sizeof(t_segmento));
+				tablaDestino = encontrarSegmento(nuevaTabla);
+				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
+
+				//TODO unificar desp cuando lfs este, con valorDeLF
+				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
+				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+
+				eliminar_paquete(paqueteAEnviar);
+				free(nuevaTabla);
+				nuevaTabla=NULL;
+			}
+
+			}else if(resultadoCache == SEGMENTOINEXISTENTE){
+
+				t_segmento* nuevoSegmento = crearSegmento(nuevaTabla);
+				t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp);
+				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
+				list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
+				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+
+			}
+		}//TODO Liberar memoria
+	}
+}
+
+/* armarPaqueteDeRtaAEnviar()
+ * Parametros:
+ *	-> char* :: request
+ * Descripcion: Cuando el resultado del insert fue EXITOSO,
+ * 				arma un paquete para enviarse (a quien solicito un insert)
+ * Return:
+ * 	-> paqueteAEnviar:: t_paquete*
+ * 	VALGRIND :: NO*/
+t_paquete* armarPaqueteDeRtaAEnviar(char* request){
+	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
+
+	paqueteAEnviar->palabraReservada= SUCCESS;
+	char** requestRespuesta= string_n_split(request,2," ");
+	paqueteAEnviar->request=strdup(requestRespuesta[1]);
+	paqueteAEnviar->tamanio=strlen(requestRespuesta[1]);
+
+	return paqueteAEnviar;
+}
 
 /* actualizarPagina()
  * Parametros:
@@ -841,6 +829,7 @@ t_marco* crearPagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue, unsign
 
 /* crearElementoEnTablaDePagina()
  * Parametros:
+ * 	-> int :: id
  *	-> t_marco* :: pagina
  *	-> uint16_t :: nuevaKey
  *	-> char* :: nuevoValor
@@ -851,10 +840,9 @@ t_marco* crearPagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue, unsign
  * Return:
  * 	-> t_elemTablaDePaginas* :: elementoDeTablaDePagina
  * 	VALGRIND :: SI*/
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
 	t_elemTablaDePaginas* nuevoElemento= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
 
-	id++;
 	nuevoElemento->numeroDePag = id;
 	nuevoElemento->marco = crearPagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
 	nuevoElemento->modificado = SINMODIFICAR;
@@ -876,55 +864,86 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
 	return nuevoSegmento;
 }
 
+/* procesarCreate()
+ * Parametros:
+ *	-> codRequest :: codRequest
+ *	-> char* :: request
+ *	-> consistencia :: consistencia
+ *	-> t_caller :: caller
+ *	-> int :: socketKernel
+ * Descripcion: SC || SHC -> envia el create  LFS.
+ * 				EC -> crea el segmento en la memoria, sin consultarle a LFS.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
+void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
+	//TODO, si lfs dio ok, igual calcular en mem?
+	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
+	if(consistencia == EC || caller == CONSOLE){
+		create(codRequest, request);
+	}else if(consistencia == SC ||consistencia == SHC){
+		valorDeLFS = intercambiarConFileSystem(codRequest,request);
+		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
+	}else{
+		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
 
-//
-//void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
-//	//TODO, si lfs dio ok, igual calcular en mem?
-//	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
-//
-//	if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
-//		create(codRequest, request);
-//		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
-//	}else{
-//		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
-//
-//	}
-//
-//	eliminar_paquete(valorDeLFS);
-//	valorDeLFS= NULL;
-//}
-//
-//void create(cod_request codRequest,char* request){
-//	errorNo rtaCache = existeSegmentoEnMemoria(codRequest,request);
-//
-//	if(rtaCache == SEGMENTOINEXISTENTE){
-//		char** requestSeparada = separarRequest(request);
-//		t_segmento* nuevaTablaDePagina = crearSegmento(requestSeparada[1]);
-//		list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
-//	}
-//}
-//
-//errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
-//	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
-//	char** parametros = separarRequest(request);
-//	char* segmentoABuscar=strdup(parametros[1]);
-//	int encontrarTabla(t_segmento* segmento){
-//		return string_equals_ignore_case(segmento->nombre, segmentoABuscar);
-//	}
-//
-//	tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
-//	if(tablaDeSegmentosEnCache!= NULL){
-//		return SEGMENTOEXISTENTE;
-//	}else{
-//		return SEGMENTOINEXISTENTE;
-//	}
-//	free(tablaDeSegmentosEnCache); //TODO hay q hace uno q libere bien
-//	free(segmentoABuscar);
-//	segmentoABuscar =NULL;
-//	liberarArrayDeChar(parametros);
-//	parametros=NULL;
-//}
-//
+	}
+
+	eliminar_paquete(valorDeLFS);
+	valorDeLFS= NULL;
+}
+
+/* create()
+ * Parametros:
+ *	-> codRequest :: codRequest
+ *	-> char* :: request
+ * Descripcion: Verifica que el segmento si existe en la memoria,y , en caso
+ * 				de que no sea asi, se crea un nuevo segmento.
+ * 				En caso contrario, no lo crea.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
+void create(cod_request codRequest,char* request){
+	errorNo rtaCache = existeSegmentoEnMemoria(codRequest,request);
+
+	if(rtaCache == SEGMENTOINEXISTENTE){
+		char** requestSeparada = separarRequest(request);
+		t_segmento* nuevaTablaDePagina = crearSegmento(requestSeparada[1]);
+		list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
+	}
+}
+
+/* existeSegmentoEnMemoria()
+ * Parametros:
+ *	-> codRequest :: codRequest
+ *	-> char* :: request
+ * Descripcion: Solamente verifica si existe o no un segmento en memoria.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
+errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
+	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
+	char** parametros = separarRequest(request);
+	char* segmentoABuscar=strdup(parametros[1]);
+	int encontrarTabla(t_segmento* segmento){
+		return string_equals_ignore_case(segmento->path, segmentoABuscar);
+	}
+
+	tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	if(tablaDeSegmentosEnCache!= NULL){
+		log_info(logger_MEMORIA,"YA EXISTE EL SEGMENTO");
+		return SEGMENTOEXISTENTE;
+	}else{
+		log_info(logger_MEMORIA,"NO EXISTE EL SEGMENTO");
+		return SEGMENTOINEXISTENTE;
+	}
+	free(tablaDeSegmentosEnCache); //TODO hay q hace uno q libere bien
+	free(segmentoABuscar);
+	segmentoABuscar =NULL;
+	liberarArrayDeChar(parametros);
+	parametros=NULL;
+}
+
 //
 //// FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
 ////void liberarMemoria(){
@@ -961,12 +980,10 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 		return MEMORIAFULL;
 	}else{
 		*pagLibre = memoria + sizeof(t_marco)*index;
-		return SUCCESS;
+		return index;
 	}
 
 }
-
-
 
 
 
@@ -990,4 +1007,17 @@ void liberarMemoria(){
 	FD_ZERO(&descriptoresDeInteres);
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
+}
+
+/* eliminarMarco()
+ * Parametros:
+ *	-> t_marco** :: pagLibre
+ * Descripcion: Obtiene un puntero a una pagina libre, ocurriendo esto cuando existe un marco libre
+ *				donde pueda guardarse la misma.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: SI*/
+void elimiarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
+	bitarray_clean_bit(bitarray, elem->numeroDePag);
+	memset(marcoAEliminar->value, 0, sizeof(marcoAEliminar->value));
 }
