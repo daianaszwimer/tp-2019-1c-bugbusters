@@ -658,12 +658,10 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			char* consultaALFS=malloc(sizeof(char*));
 			*consultaALFS = '\0';
 			string_append_with_format(&consultaALFS,"%s%s%s%s%s","SELECT"," ",requestSeparada[1]," ",requestSeparada[2]);
-			log_info(logger_MEMORIA,"%s", consultaALFS);
 
 			t_paquete* insertALFS = malloc(sizeof(t_paquete));
 			insertALFS = intercambiarConFileSystem(palabraReservada,request);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
-				log_info(logger_MEMORIA, "%s %d",request,palabraReservada);
 				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
 			}else{
 				enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
