@@ -859,16 +859,24 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
 	return nuevoSegmento;
 }
 
-
-
+/* procesarCreate()
+ * Parametros:
+ *	-> codRequest :: codRequest
+ *	-> char* :: request
+ *	-> consistencia :: consistencia
+ *	-> t_caller :: caller
+ *	-> int :: socketKernel
+ * Descripcion: crea un nuevo segmento.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: SI*/
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
 	//TODO, si lfs dio ok, igual calcular en mem?
 	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
-
-	if(valorDeLFS->palabraReservada == SUCCESS || valorDeLFS->palabraReservada == TABLA_EXISTE){
-		if(consistencia == EC || caller == CONSOLE){
-			create(codRequest, request);
-		}
+	if(consistencia == EC || caller == CONSOLE){
+		create(codRequest, request);
+	}else if(consistencia == SC ||consistencia == SHC){
+		valorDeLFS = intercambiarConFileSystem(codRequest,request);
 		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
 	}else{
 		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
