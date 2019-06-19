@@ -85,6 +85,7 @@ void inicializarVariables(void);
 void conectarAMemoria(void);
 void procesarHandshake(t_handshake_memoria*);
 void liberarMemoria(void);
+void liberarConfigMemoria(config_memoria*);
 void liberarRequestProcesada(request_procesada*);
 void liberarColaRequest(request_procesada*);
 void leerDeConsola(void);
@@ -102,7 +103,7 @@ int validarRequest(char *);
 int manejarRequest(request_procesada*);
 // se usa para procesar requests
 int enviarMensajeAMemoria(cod_request, char*);
-config_memoria* encontrarMemoriaSegunTabla(char*, char*);
+config_memoria* encontrarMemoriaSegunConsistencia(consistencia);
 void actualizarTablas(char*);
 void agregarTablaACriterio(char*);
 void liberarTabla(char*);

@@ -91,3 +91,124 @@
 [INFO] 18:28:52:233 Kernel/(9545:9559): pasaron 30s
 [INFO] 18:28:53:137 Kernel/(9545:9589): Agregue la tabla ANIMALES al criterio SHC
 [INFO] 18:28:53:770 Kernel/(9545:9589): Agregue la tabla PELIS al criterio EC
+[INFO] 19:01:23:185 Kernel/(10507:10507): ----------------INICIO DE KERNEL--------------
+[INFO] 19:01:23:209 Kernel/(10507:10523): pasaron 30s
+[INFO] 19:01:53:212 Kernel/(10507:10523): pasaron 30s
+[INFO] 19:02:22:300 Kernel/(10507:10521): No se ha ingresado la cantidad correcta de paraemtros
+[INFO] 19:02:23:213 Kernel/(10507:10523): pasaron 30s
+[INFO] 19:03:07:567 Kernel/(10507:10523): pasaron 30s
+[ERROR] 19:03:11:525 Kernel/(10507:10533): No se puede resolver el request porque no hay memorias asociadas al criterio SC
+[INFO] 20:02:03:882 Kernel/(10507:10523): pasaron 30s
+[INFO] 20:07:11:685 Kernel/(10507:10523): pasaron 30s
+[ERROR] 20:11:07:954 Kernel/(10507:10533): Se cancelo el script
+[INFO] 20:11:28:335 Kernel/(11901:11901): ----------------INICIO DE KERNEL--------------
+[INFO] 20:11:28:362 Kernel/(11901:11913): pasaron 30s
+[INFO] 20:11:49:265 Kernel/(11901:11920): La respuesta del request CREATE MARINOS SC 1 10000 es  
+
+[INFO] 20:11:49:266 Kernel/(11901:11920): voy a sumarle a select insert 0
+[INFO] 20:11:51:284 Kernel/(11901:11920): La respuesta del request DESCRIBE MARINOS es COMIDAS SC 
+
+[INFO] 20:11:52:911 Kernel/(11901:11920): Agregue la tabla COMIDAS al criterio SC
+[INFO] 20:11:52:911 Kernel/(11901:11920): voy a sumarle a select insert 0
+[INFO] 20:11:56:832 Kernel/(11901:11920): La respuesta del request INSERT MARINOS 983 "Ballena" es MARINOS 983 "Ballena" 
+
+[INFO] 20:11:56:832 Kernel/(11901:11920): voy a sumarle a select insert 1
+[INFO] 20:11:56:935 Kernel/(11901:11920): Vuelvo a ready
+[INFO] 20:11:57:847 Kernel/(11901:11930): La respuesta del request CREATE AVES SC 5 50000 es  
+
+[INFO] 20:11:57:847 Kernel/(11901:11930): voy a sumarle a select insert 0
+[INFO] 20:11:58:832 Kernel/(11901:11913): pasaron 30s
+[INFO] 20:11:58:832 Kernel/(11901:11930): La respuesta del request CREATE MAMIFEROS SC 3 60000 es  
+
+[INFO] 20:11:58:833 Kernel/(11901:11913): select insert 1 y total 4
+[INFO] 20:12:00:984 Kernel/(11901:11930): voy a sumarle a select insert 0
+[INFO] 20:12:01:86 Kernel/(11901:11930): La respuesta del request DESCRIBE es COMIDAS SC 
+
+[INFO] 20:12:02:831 Kernel/(11901:11930): Vuelvo a ready
+[INFO] 20:12:03:920 Kernel/(11901:11939): La respuesta del request INSERT MARINOS 33 "Pulpo" es MARINOS 33 "Pulpo" 
+
+[INFO] 20:12:03:920 Kernel/(11901:11939): voy a sumarle a select insert 1
+[INFO] 20:12:05:838 Kernel/(11901:11939): La respuesta del request INSERT AVES 11 "Paloma" es AVES 11 "Paloma" 
+
+[INFO] 20:12:05:839 Kernel/(11901:11939): voy a sumarle a select insert 1
+[INFO] 20:12:09:205 Kernel/(11901:11939): La respuesta del request INSERT MAMIFEROS 2222 "Gato" es MAMIFEROS 2222 "Gato" 
+
+[INFO] 20:12:09:206 Kernel/(11901:11939): voy a sumarle a select insert 1
+[INFO] 20:12:09:307 Kernel/(11901:11939): Vuelvo a ready
+[INFO] 20:12:10:435 Kernel/(11901:11949): La respuesta del request INSERT MAMIFEROS 239 "Perro" es MAMIFEROS 239 "Perro" 
+
+[INFO] 20:12:10:435 Kernel/(11901:11949): voy a sumarle a select insert 1
+[INFO] 20:12:13:660 Kernel/(11901:11949): La respuesta del request INSERT MARINOS 22 "Delfin" es MARINOS 22 "Delfin" 
+
+[INFO] 20:12:13:660 Kernel/(11901:11949): voy a sumarle a select insert 1
+[INFO] 20:12:13:768 Kernel/(11901:11949): La respuesta del request INSERT AVES 11 "Halcon" es AVES 11 "Halcon" 
+
+[INFO] 20:12:13:768 Kernel/(11901:11949): voy a sumarle a select insert 1
+[INFO] 20:12:13:870 Kernel/(11901:11949): Vuelvo a ready
+[INFO] 20:12:13:981 Kernel/(11901:11956): La respuesta del request SELECT AVES 11 es AVES 11 Halcon 1560813133767 
+
+[INFO] 20:12:13:981 Kernel/(11901:11956): voy a sumarle a select insert 1
+[INFO] 20:12:14:82 Kernel/(11901:11956): La respuesta del request INSERT MARINOS 983 "Orca" es MARINOS 983 "Orca" 
+
+[INFO] 20:12:14:83 Kernel/(11901:11956): voy a sumarle a select insert 1
+[INFO] 20:12:14:184 Kernel/(11901:11956): La respuesta del request DESCRIBE AVES es COMIDAS SC 
+
+[INFO] 20:12:18:28 Kernel/(11901:11956): voy a sumarle a select insert 0
+[INFO] 20:12:18:129 Kernel/(11901:11956): Vuelvo a ready
+[INFO] 20:12:18:248 Kernel/(11901:11960): La respuesta del request INSERT MARINOS 310 "Calamar" es MARINOS 310 "Calamar" 
+
+[INFO] 20:12:18:249 Kernel/(11901:11960): voy a sumarle a select insert 1
+[INFO] 20:12:18:354 Kernel/(11901:11960): La respuesta del request INSERT AVES 1102 "Buho" es AVES 1102 "Buho" 
+
+[INFO] 20:12:18:354 Kernel/(11901:11960): voy a sumarle a select insert 1
+[INFO] 20:12:18:456 Kernel/(11901:11960): La respuesta del request SELECT MARINOS 310 es MARINOS 310 Calamar 1560813138246 
+
+[INFO] 20:12:18:456 Kernel/(11901:11960): voy a sumarle a select insert 1
+[INFO] 20:12:18:557 Kernel/(11901:11960): Vuelvo a ready
+[INFO] 20:12:18:676 Kernel/(11901:11961): La respuesta del request INSERT AVES 333 "Colibri" es AVES 333 "Colibri" 
+
+[INFO] 20:12:18:676 Kernel/(11901:11961): voy a sumarle a select insert 1
+[INFO] 20:12:18:779 Kernel/(11901:11961): La respuesta del request INSERT MAMIFEROS 2222 "Elefante" es MAMIFEROS 2222 "Elefante" 
+
+[INFO] 20:12:18:779 Kernel/(11901:11961): voy a sumarle a select insert 1
+[INFO] 20:12:18:881 Kernel/(11901:11961): La respuesta del request INSERT MAMIFEROS 349 "Jirafa" es MAMIFEROS 349 "Jirafa" 
+
+[INFO] 20:12:18:881 Kernel/(11901:11961): voy a sumarle a select insert 1
+[INFO] 20:12:18:981 Kernel/(11901:11961): Vuelvo a ready
+[INFO] 20:12:19:92 Kernel/(11901:11962): La respuesta del request INSERT MARINOS 983 "Pez globo" es MARINOS 983 "Pez globo" 
+
+[INFO] 20:12:19:92 Kernel/(11901:11962): voy a sumarle a select insert 1
+[INFO] 20:12:19:194 Kernel/(11901:11962): La respuesta del request INSERT AVES 6262 "Loro" es AVES 6262 "Loro" 
+
+[INFO] 20:12:19:194 Kernel/(11901:11962): voy a sumarle a select insert 1
+[INFO] 20:12:19:297 Kernel/(11901:11962): La respuesta del request INSERT AVES 888 "Pelicano" es AVES 888 "Pelicano" 
+
+[INFO] 20:12:19:297 Kernel/(11901:11962): voy a sumarle a select insert 1
+[INFO] 20:12:19:397 Kernel/(11901:11962): Vuelvo a ready
+[INFO] 20:12:19:517 Kernel/(11901:11963): La respuesta del request DESCRIBE MAMIFEROS es COMIDAS SC 
+
+[INFO] 20:12:22:229 Kernel/(11901:11963): voy a sumarle a select insert 0
+[INFO] 20:12:22:337 Kernel/(11901:11963): La respuesta del request INSERT MAMIFEROS 349 "Cebra" es MAMIFEROS 349 "Cebra" 
+
+[INFO] 20:12:22:337 Kernel/(11901:11963): voy a sumarle a select insert 1
+[INFO] 20:12:22:442 Kernel/(11901:11963): La respuesta del request INSERT MAMIFEROS 721 "Caballo" es MAMIFEROS 721 "Caballo" 
+
+[INFO] 20:12:22:442 Kernel/(11901:11963): voy a sumarle a select insert 1
+[INFO] 20:12:22:543 Kernel/(11901:11963): Vuelvo a ready
+[INFO] 20:12:22:656 Kernel/(11901:11966): La respuesta del request INSERT AVES 11 "Pinguino" es AVES 11 "Pinguino" 
+
+[INFO] 20:12:22:656 Kernel/(11901:11966): voy a sumarle a select insert 1
+[INFO] 20:12:22:762 Kernel/(11901:11966): La respuesta del request INSERT MAMIFEROS 721 "Oveja" es MAMIFEROS 721 "Oveja" 
+
+[INFO] 20:12:22:762 Kernel/(11901:11966): voy a sumarle a select insert 1
+[INFO] 20:12:22:863 Kernel/(11901:11966): La respuesta del request SELECT MARINOS 983 es MARINOS 983 Pez globo 1560813139088 
+
+[INFO] 20:12:22:863 Kernel/(11901:11966): voy a sumarle a select insert 1
+[INFO] 20:12:22:963 Kernel/(11901:11966): Vuelvo a ready
+[INFO] 20:12:23:74 Kernel/(11901:11967): La respuesta del request DESCRIBE MAMIFEROS es COMIDAS SC 
+
+[INFO] 20:12:34:67 Kernel/(11901:11967): voy a sumarle a select insert 0
+[INFO] 20:12:34:68 Kernel/(11901:11913): pasaron 30s
+[INFO] 20:12:36:860 Kernel/(11901:11967): La respuesta del request INSERT MARINOS 983 "Tiburon" es MARINOS 983 "Tiburon" 
+
+[INFO] 20:13:26:921 Kernel/(11901:11913): select insert 22 y total 26

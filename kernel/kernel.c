@@ -85,14 +85,15 @@ void liberarMemoria(void) {
 	queue_destroy(new);
 	queue_destroy(ready);
 	list_destroy(memorias);
+	liberarConfigMemoria(memoriaSc);
 	list_destroy(memoriasShc);
 	list_destroy(memoriasEc);
-	list_destroy(tablasSC);
-	list_destroy(tablasSHC);
-	list_destroy(tablasEC);
-	list_destroy(cargaMemoriaSC);
-	list_destroy(cargaMemoriaSHC);
-	list_destroy(cargaMemoriaEC);
+	list_clean_and_destroy_elements(tablasSC, (void*)liberarTabla);
+	list_clean_and_destroy_elements(tablasSHC, (void*)liberarTabla);
+	list_clean_and_destroy_elements(tablasEC, (void*)liberarTabla);
+	list_clean_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
+	list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
+	list_clean_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
 }
 
 /* conectarAMemoria()
@@ -165,8 +166,9 @@ void leerDeConsola(void){
 void hacerDescribe(void) {
 	while(1) {
 		break;
-		int segundos = config_get_int_value(config, "METADATA_REFRESH"); //todo: esto es en segundos?
-		sleep(segundos);
+		int segundos = config_get_int_value(config, "METADATA_REFRESH");
+		// agregar a new? o ejecutarlo directamente?
+		usleep(segundos * 1000);
 	}
 }
 
@@ -226,12 +228,12 @@ void informarMetricas(int mostrarPorConsola) {
 	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
 	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
 		log_info(logger_KERNEL, "select insert %d y total %d", estadisticaAMostrar->cantidadSelectInsert, estadisticaAMostrar->cantidadTotal);
-		int estadistica = estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
+		double estadistica = (double)estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
 		if (mostrarPorConsola == TRUE) {
-			log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
+			log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
 					estadisticaAMostrar->numeroMemoria, estadistica);
 		} else {
-			log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
+			log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
 					estadisticaAMostrar->numeroMemoria, estadistica);
 		}
 	}
@@ -242,12 +244,18 @@ void informarMetricas(int mostrarPorConsola) {
 		log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatencySC);
 		log_info(logger_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
 		log_info(logger_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
-		log_info(logger_KERNEL, "El memory load de SC es:");
-		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
-		log_info(logger_KERNEL, "El memory load de SHC es:");
-		list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
-		log_info(logger_KERNEL, "El memory load de EC es:");
-		list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		if (list_size(cargaMemoriaSC) > 0) {
+			log_info(logger_KERNEL, "El memory load de SC es:");
+			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+		}
+		if (list_size(cargaMemoriaSHC) > 0) {
+			log_info(logger_KERNEL, "El memory load de SHC es:");
+			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+		}
+		if (list_size(cargaMemoriaEC) > 0) {
+			log_info(logger_KERNEL, "El memory load de EC es:");
+			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		}
 		log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
 		log_info(logger_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
 		log_info(logger_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
@@ -261,12 +269,18 @@ void informarMetricas(int mostrarPorConsola) {
 		log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatencySC);
 		log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
 		log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
-		log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
-		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
-		log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
-		list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
-		log_info(logger_METRICAS_KERNEL, "El memory load de EC es:");
-		list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		if (list_size(cargaMemoriaSC) > 0) {
+			log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
+			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+		}
+		if (list_size(cargaMemoriaSHC) > 0) {
+			log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
+			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+		}
+		if (list_size(cargaMemoriaEC) > 0) {
+			log_info(logger_METRICAS_KERNEL, "El memory load de EC es:");
+			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		}
 		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
 		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
 		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
@@ -287,6 +301,21 @@ void liberarEstadisticaMemoria(estadisticaMemoria* memoria) {
 	free(memoria->numeroMemoria);
 	free(memoria);
 }
+/* liberarConfigMemoria()
+ * Parametros:
+ * 	-> config_memoria* :: configALiberar
+ * Descripcion: recibe una configMemoria y la libera.
+ * Return:
+ * 	-> :: void  */
+
+void liberarConfigMemoria(config_memoria* configALiberar) {
+	if (configALiberar != NULL) {
+		free(configALiberar->ip);
+		free(configALiberar->numero);
+		free(configALiberar->puerto);
+	}
+	free(configALiberar)
+;}
 
 /* aumentarContadores()
  * Parametros:
@@ -599,7 +628,6 @@ void procesarRequest(request_procesada* request) {
  * Return:
  * 	-> requestEsValida :: bool  */
 int validarRequest(char* mensaje) {
-	//aca se va a poder validar que se haga select/insert sobre tabla existente?
 	int codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
 	switch(codValidacion) {
 		case EXIT_SUCCESS:
@@ -775,11 +803,11 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
 	} else if(list_find(tablasEC, (void*) esTabla) != NULL) {
 		return EC;
 	} else {
-		return CONSISTENCIA_INVALIDA;
+		return SC;
 	}
 }
 
-/* encontrarMemoriaSegunTabla()
+/* encontrarMemoriaSegunConsistencia()
  * Parametros:
  * 	-> char* :: tabla
  * 	-> char* :: key
@@ -787,12 +815,9 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
  * En el caso de SHC necesita la key para calcular a qué memoria redirigir.
  * Return:
  * 	-> memoriaCorrespondiente :: config_memoria*  */
-config_memoria* encontrarMemoriaSegunTabla(char* tabla, char* key) {
-	//busco en mi estructura de tablas el tipo
-	consistencia consistenciaDeTabla = obtenerConsistenciaTabla(tabla);
-	config_memoria* memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));//todo: hace falta malloc?
-	memoriaCorrespondiente = NULL;
-	switch(consistenciaDeTabla) {
+config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia) {
+	config_memoria* memoriaCorrespondiente = NULL;
+	switch(tipoConsistencia) {
 		case SC:
 			if (memoriaSc == NULL) {
 				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio SC");
@@ -808,7 +833,7 @@ config_memoria* encontrarMemoriaSegunTabla(char* tabla, char* key) {
 			break;
 		default:
 			//error
-			log_error(logger_KERNEL, "No se puede resolver el request porque no tengo la metadata de la tabla %s", tabla);
+			log_error(logger_KERNEL, "No se puede resolver el request porque no tengo la metadata de la tabla");
 			break;
 	}
 	return memoriaCorrespondiente;
@@ -846,21 +871,24 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	consistencia consistenciaTabla = NINGUNA;
 	int conexionTemporanea = conexionMemoria;
 	char** parametros = separarRequest(mensaje);
-	// si es un describe global o journal no hay tabla
+	// si es un describe global no hay tabla
 	int cantidadParametros = longitudDeArrayDeStrings(parametros) - 1;
 	config_memoria* memoriaCorrespondiente;
 	if (codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) {
-		// describe global va siempre a la ppal
+		// describe global va siempre a la ppal, todo: que pasa si se desconecta?
 		memoriaCorrespondiente = list_find(memorias, (void*)encontrarMemoriaPpal);
 	} else {
-		memoriaCorrespondiente = encontrarMemoriaSegunTabla(parametros[1], parametros[2]);
-		// todo: falta free
+		if (codigo == CREATE) {
+			consistenciaTabla = obtenerEnumConsistencia(parametros[2]);
+		} else {
+			consistenciaTabla = obtenerConsistenciaTabla(parametros[1]);
+		}
+		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla);
 		if(memoriaCorrespondiente == NULL) {
 			respuesta = ERROR_GENERICO;
 			liberarArrayDeChar(parametros);
 			return respuesta;
 		} else {
-			consistenciaTabla = obtenerConsistenciaTabla(parametros[1]);
 			if (!string_equals_ignore_case(memoriaCorrespondiente->ip, config_get_string_value(config, "IP_MEMORIA"))
 				&& !string_equals_ignore_case(memoriaCorrespondiente->puerto, config_get_string_value(config, "PUERTO_MEMORIA"))) {
 				conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
