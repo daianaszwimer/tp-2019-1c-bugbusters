@@ -381,9 +381,6 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
-		guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
-
 	}else{
 		log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 
@@ -623,8 +620,6 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoEr
 			}
 		}
 	}
-//		case(TABLA_NO_EXISTE):
-//		case(KEY_NO_EXISTE):
 
 }
 
@@ -646,7 +641,7 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoEr
  *				SC || SHC:
  *					1)Le pregunta  LFS si existe la tabla en la que se desea insertar.
  *					2)Si no existe, se notifica error al destinatario correspondiente
- *					3)Si existe en lisandra=>se inserta siguiendo los pasos de EC
+ *					3)Si existe en lisandra=>se inserta alli.
  * Return:
  * 	-> :: void
  * 	VALGRIND :: NO*/
@@ -656,39 +651,24 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 		char** requestSeparada = separarRequest(request);
 		t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
 
-//-------------------------------------------------------------
-//
-//						}else{
-//							enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-//						}
-//						free(consultaALFS);
-//				}else{
-//					log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
-//
-//				}
-
-
-
-		int resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 		if(consistenciaMemoria == EC || caller == CONSOLE){
-				insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
+			int resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
+			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
-				char* consultaALFS=malloc(sizeof(char*));
-				*consultaALFS = '\0';
-				string_append_with_format(&consultaALFS,"%s%s%s%s%s","SELECT"," ",requestSeparada[1]," ",requestSeparada[2]);
-				log_info(logger_MEMORIA,"%s", consultaALFS);
+			char* consultaALFS=malloc(sizeof(char*));
+			*consultaALFS = '\0';
+			string_append_with_format(&consultaALFS,"%s%s%s%s%s","SELECT"," ",requestSeparada[1]," ",requestSeparada[2]);
+			log_info(logger_MEMORIA,"%s", consultaALFS);
 
-				valorDeLFS = intercambiarConFileSystem(SELECT,consultaALFS);
-				if( validarInsertSC(valorDeLFS->palabraReservada)== EXIT_SUCCESS){
-					t_paquete* insertALFS = malloc(sizeof(t_paquete));
-					insertALFS = intercambiarConFileSystem(palabraReservada,request);
-					log_info(logger_MEMORIA, "%s %d",request,palabraReservada);
-					insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
-					enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
-				}else{
-					enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-				}
-				free(consultaALFS);
+			t_paquete* insertALFS = malloc(sizeof(t_paquete));
+			insertALFS = intercambiarConFileSystem(palabraReservada,request);
+			if(insertALFS->palabraReservada== EXIT_SUCCESS){
+				log_info(logger_MEMORIA, "%s %d",request,palabraReservada);
+				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
+			}else{
+				enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+			}
+			free(consultaALFS);
 		}else{
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 			free(elementoEncontrado);
@@ -798,21 +778,21 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
 	return paqueteAEnviar;
 }
 
-/* validarInsertSC()
- * Parametros:
- *	-> errorNo :: codRespuestaDeLFS
- * Descripcion: En SC||SHC, para insertar debe existir la tabla en LFS.Esta funcion valida si el resultado
- * 				devuelto del select hecho a LFS es SUCCESS o NO
- * Return:
- * 	-> int :: resulltado de validacion
- * 	VALGRIND :: SI*/
-int validarInsertSC(errorNo codRespuestaDeLFS){
-	if (codRespuestaDeLFS == SUCCESS || codRespuestaDeLFS ==KEY_NO_EXISTE){
-		return EXIT_SUCCESS;
-	}else{
-		return EXIT_FAILURE;
-	}
-}
+///* validarInsertSC()
+// * Parametros:
+// *	-> errorNo :: codRespuestaDeLFS
+// * Descripcion: En SC||SHC, para insertar debe existir la tabla en LFS.Esta funcion valida si el resultado
+// * 				devuelto del select hecho a LFS es SUCCESS o NO
+// * Return:
+// * 	-> int :: resulltado de validacion
+// * 	VALGRIND :: SI*/
+//int validarInsertSC(errorNo codRespuestaDeLFS){
+//	if (codRespuestaDeLFS == SUCCESS || codRespuestaDeLFS ==KEY_NO_EXISTE){
+//		return EXIT_SUCCESS;
+//	}else{
+//		return EXIT_FAILURE;
+//	}
+//}
 
 
 /* actualizarPagina()

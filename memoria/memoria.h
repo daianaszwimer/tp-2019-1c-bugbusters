@@ -128,7 +128,6 @@ void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresMemoria);
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
-int validarInsertSC(errorNo);
 
 void actualizarPagina (t_marco*, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
