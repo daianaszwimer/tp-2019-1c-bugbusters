@@ -8,10 +8,9 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-//	conectarAFileSystem();
+	conectarAFileSystem();
 
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
-
 	inicializacionDeMemoria();
 	log_info(logger_MEMORIA,"INICIO DE MEMORIA");
 
@@ -31,14 +30,9 @@ int main(void) {
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
 	log_info(logger_MEMORIA, "Hilo recibir kernels finalizado");
 
-
 	//-------------------------------- -PARTE FINAL DE MEMORIA---------------------------------------------------------
-	liberar_conexion(conexionLfs);
 	liberarEstructurasMemoria(tablaDeSegmentos);
 	liberarMemoria();
-//	log_destroy(logger_MEMORIA);
-// 	config_destroy(config);
-// 	FD_ZERO(&descriptoresDeInteres);// TODO momentaneamente, asi cerramos todas las conexiones
 
 	return EXIT_SUCCESS;
 }
@@ -155,7 +149,7 @@ void leerDeConsola(void){
  * 	-> resultadoVlidacion :: int
  * VALGRIND:: NO */
 int validarRequest(char* mensaje){
-	int tamanioMax = 10; //TODO lo pasa LFS X HANDSHAKE
+	int tamanioMax = 255; //TODO lo pasa LFS X HANDSHAKE
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
@@ -303,15 +297,13 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case NUESTRO_ERROR:
 			 if(caller == ANOTHER_COMPONENT){
-		                               log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-	                               int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
-	                               // TODO: Chequear si el -1 se puede castear como int*
-	                               break;
-	                      }
-	                      else{
-	                              break;
-	                    }
-
+				 log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
+				 int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+				 // TODO: Chequear si el -1 se puede castear como int*
+				 break;
+	         }else{
+	        	 break;
+	         }
 
 		default:
 			log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
@@ -944,27 +936,6 @@ errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
 	parametros=NULL;
 }
 
-//
-//// FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
-////void liberarMemoria(){
-////	void liberarElementoDePag(t_elemTablaDePaginas* self){
-////		 free(self->pagina->value);
-////		 free(self->pagina);
-////	 }
-////	list_clean_and_destroy_elements(tablaA->tablaDePagina, (void*)liberarElementoDePag);
-////}
-////
-////
-////void eliminarElemTablaDePaginas(t_elemTablaDePaginas* elementoEncontrado){
-////	eliminarPagina(elementoEncontrado->pagina);
-////	free(elementoEncontrado);
-////	elementoEncontrado=NULL;
-////}
-////void eliminarPagina(t_pagina* pag){
-////	free(pag->value);
-////	free(pag);
-////	pag= NULL;
-////}
 
 /* obtenerPaginaDisponible()
  * Parametros:
@@ -986,11 +957,18 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 }
 
 
-
+/* liberarEstructurasMemoria()
+ * Parametros:
+ *	-> t_tablaDeSEgmentos :: tablaDeSegmento
+ * Descripcion: Libera el marco de cada pagina, libera cada pagina de una tablaDePagina, libera la tablaDePagina
+ * 				de un segmento, libera lista de segmentos de una tablaDeSegmento, libera lista de tablaDeSegmentos
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: */
 void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
 	void eliminarElemTablaSegmentos(t_segmento* segmento){
 		void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
-//			free(pagina->marco); TODO
+			eliminarMarco(pagina,pagina->marco);
 			free(pagina);
 			pagina=NULL;
 		}
@@ -1001,13 +979,24 @@ void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
 	list_clean_and_destroy_elements(tablaDeSegmentos->segmentos, (void*) eliminarElemTablaSegmentos);
 }
 
+
+/* liberarMemoria()
+ * Parametros:
+ *	-> :: void
+ * Descripcion: Libera los punteros reservados en inicializarMemoria()
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: */
 void liberarMemoria(){
-	log_info(logger_MEMORIA, "Finalizo MEMORIA");
+	log_info(logger_MEMORIA, "Finaliza MEMORIA");
 	free(bitarray);
+	free(memoria);
+	liberar_conexion(conexionLfs);
 	FD_ZERO(&descriptoresDeInteres);
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
 }
+
 
 /* eliminarMarco()
  * Parametros:
@@ -1017,7 +1006,7 @@ void liberarMemoria(){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: SI*/
-void elimiarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
+void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 	bitarray_clean_bit(bitarray, elem->numeroDePag);
 	memset(marcoAEliminar->value, 0, sizeof(marcoAEliminar->value));
 }

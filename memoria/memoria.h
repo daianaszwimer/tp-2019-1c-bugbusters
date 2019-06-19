@@ -150,7 +150,7 @@ int obtenerPaginaDisponible(t_marco**);
 void eliminarElemTablaSegmentos(t_segmento*);
 void liberarEstructurasMemoria(t_tablaDeSegmentos*);
 void liberarMemoria();
-void elimiarMarco(t_elemTablaDePaginas*,t_marco* );
+void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
 
 
 
