@@ -27,16 +27,20 @@ int main(void) {
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
 
 	pthread_join(hiloLeerDeConsola, NULL);
+	log_info(logger_MEMORIA, "Hilo de consola finalizado");
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
+	log_info(logger_MEMORIA, "Hilo recibir kernels finalizado");
+
 
 	//-------------------------------- -PARTE FINAL DE MEMORIA---------------------------------------------------------
 	liberar_conexion(conexionLfs);
-	//liberarMemoria();
-	log_destroy(logger_MEMORIA);
- 	config_destroy(config);
- 	FD_ZERO(&descriptoresDeInteres);// TODO momentaneamente, asi cerramos todas las conexiones
+	liberarEstructurasMemoria(tablaDeSegmentos);
+	liberarMemoria();
+//	log_destroy(logger_MEMORIA);
+// 	config_destroy(config);
+// 	FD_ZERO(&descriptoresDeInteres);// TODO momentaneamente, asi cerramos todas las conexiones
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
@@ -962,3 +966,28 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 
 }
 
+
+
+
+
+void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
+	void eliminarElemTablaSegmentos(t_segmento* segmento){
+		void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
+//			free(pagina->marco); TODO
+			free(pagina);
+			pagina=NULL;
+		}
+		free(segmento->path);
+		segmento->path=NULL;
+		list_clean_and_destroy_elements(segmento->tablaDePagina, (void*) eliminarElemTablaPagina);
+	}
+	list_clean_and_destroy_elements(tablaDeSegmentos->segmentos, (void*) eliminarElemTablaSegmentos);
+}
+
+void liberarMemoria(){
+	log_info(logger_MEMORIA, "Finalizo MEMORIA");
+	free(bitarray);
+	FD_ZERO(&descriptoresDeInteres);
+	log_destroy(logger_MEMORIA);
+	config_destroy(config);
+}

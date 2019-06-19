@@ -143,12 +143,14 @@ void create(cod_request,char*);
 errorNo existeSegmentoEnMemoria(cod_request,char*);
 
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
-void liberarMemoria();
+
 void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
 //void eliminarPagina(t_pagina*);
 
 int obtenerPaginaDisponible(t_marco**);
-
+void eliminarElemTablaSegmentos(t_segmento*);
+void liberarEstructurasMemoria(t_tablaDeSegmentos*);
+void liberarMemoria();
 
 
 #endif /* MEMORIA_H_ */
