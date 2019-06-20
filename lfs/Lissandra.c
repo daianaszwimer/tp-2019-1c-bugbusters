@@ -47,7 +47,7 @@ void iniciarLFS(char* argv[]){
 		config = config_create(configPath);
 	}else{
 
-		config = config_create("/home/utnso/tp-2019-1c-bugbusters/LissandraFileSystem/LissandraFileSystem.config");
+		config = config_create("/home/utnso/tp-2019-1c-bugbusters/lfs/LissandraFileSystem.config");
 	}
 
 	if(config == NULL){

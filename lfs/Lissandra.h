@@ -18,6 +18,10 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include "API.h"
+#include "Dump.h"
+#include "Compactador.h"
+
 
 t_log* logger_LFS;
 t_config* config;
@@ -65,20 +69,15 @@ void crearFSMetadata(char*, char*);
 void levantarFS();
 void crearBloques();
 void liberarMemoriaLFS();
-
 void* leerDeConsola(void*);
 void* recibirMemorias(void*);
 void* conectarConMemoria(void*);
 void interpretarRequest(cod_request, char*, int*);
 int obtenerBloqueDisponible(errorNo*);
 int crearDirectorio(char*);
-int mkdir_p(const char*);
 void crearFS(char*, char*);
 errorNo crearParticiones(char*, int);
-void* hiloDump();
-errorNo dumpear();
 void vaciarTabla(t_tabla*);
-void compactacion(char*);
 t_list* obtenerRegistrosDeMemtable(char*, int);
 t_list* obtenerRegistrosDeTmp(char*, int);
 char* obtenerMetadata(char*);
