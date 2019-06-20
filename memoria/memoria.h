@@ -15,6 +15,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/time.h>
+#include <commons/bitarray.h>
 
 //---DESCRIPCION FUNCIONALIDADES ACTUALES---
 /*funcionalidades actuales de MEMORIA:
@@ -39,32 +40,34 @@ typedef enum
 {
 	SEGMENTOEXISTENTE = 99,
 	SEGMENTOINEXISTENTE = 100,
-	KEYINEXISTENTE =101
-} t_erroresCache;
+	KEYINEXISTENTE =101,
+	MEMORIAFULL =-10102
+} t_erroresMemoria;
 
 //-----------------STRUCTS------------------
+//int maxValue = 20;
 
 typedef struct{
 	unsigned long long timestamp;
 	uint16_t key;
-	char* value; // al inicializarse, lfs me tiene q decir el tamanio
-}t_pagina;
+	char value[20]; // al inicializarse, lfs me tiene q decir el tamanio
+}t_marco;
 
 typedef struct{
 	int numeroDePag;
-	t_pagina* pagina;
+	t_marco* marco;
 	t_flagModificado modificado;
 }t_elemTablaDePaginas;
 
 typedef struct{
-	char* nombre;
-	t_list* elementosDeTablaDePagina;
-}t_tablaDePaginas;
+	char* path;
+	t_list* tablaDePagina;
+}t_segmento;
 
 typedef struct{
-	t_list* segmentos;//TODO por ahora cada segmento es una tablaDePagias pero faltan agregar conceptos
-}t_segmentos;
-//TODO: revisar teoria para esto ultimo
+	t_list* segmentos;
+}t_tablaDeSegmentos;
+
 
 typedef struct{
 	time_t tv_sec;
@@ -74,15 +77,15 @@ typedef struct{
 
 //-------------VARIABLES GLOBALES-------------------------
 
-
-
 t_log* logger_MEMORIA;
 t_config* config;
+t_handshake_lfs* handshake;
 
-t_tablaDePaginas* tablaA;
-t_pagina* pag;
+t_tablaDeSegmentos* tablaDeSegmentos;
+t_segmento* tablaA;
 t_elemTablaDePaginas* elementoA1;
-t_segmentos* tablaDeSegmentos;
+t_marco* frame0;
+
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
@@ -92,13 +95,22 @@ pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 //pthread_attr_t attr;
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
+t_bitarray* bitarray;
+char* bitarrayString;
+void* memoria;
+int marcosTotales;
+int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 
 t_list* descriptoresClientes ;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
-//
+
 
 //------------------ --- FUNCIONES--------------------------------
+
+void conectarAFileSystem(void);
+void inicializacionDeMemoria(void);
+int obtenerIndiceMarcoDisponible();
 
 void leerDeConsola(void);
 int validarRequest(char*);
@@ -107,34 +119,42 @@ void escucharMultiplesClientes(void);
 void interpretarRequest(int, char*,t_caller, int);
 t_paquete* intercambiarConFileSystem(cod_request, char*);
 
-void conectarAFileSystem(void);
 void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
-void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresCache);
+void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresMemoria);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
-int validarInsertSC(errorNo);
-t_pagina* crearPagina(uint16_t, char*,unsigned long long);
-void actualizarPagina (t_pagina*, char*);
 
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(uint16_t, char*,unsigned long long);
+void actualizarPagina (t_marco*, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
-t_tablaDePaginas* crearTablaDePagina(char*);
+
+t_marco* crearPagina(t_marco*,uint16_t, char*, unsigned long long);
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long);
+t_segmento* crearSegmento(char*);
 
 
 void procesarCreate(cod_request, char*,consistencia, t_caller, int);
 void create(cod_request,char*);
-errorNo existeSegentoEnMemoria(cod_request,char*);
+t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
-void liberarMemoria();
+
 void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
-void eliminarPagina(t_pagina*);
+//void eliminarPagina(t_pagina*);
+
+int obtenerPaginaDisponible(t_marco**);
+
+void eliminarElemTablaSegmentos(t_segmento*);
+void liberarEstructurasMemoria(t_tablaDeSegmentos*);
+void liberarMemoria();
+void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
+void procesarDescribe(cod_request, char*,t_caller,int);
+
 
 
 #endif /* MEMORIA_H_ */

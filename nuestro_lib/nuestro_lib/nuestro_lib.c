@@ -506,39 +506,76 @@ void* serializar_handshake_lfs(t_handshake_lfs* handshake, int tamanio)
 	return buffer;
 }
 
-void enviarHandshakeMemoria(char* puertos, char* ips, int socket_cliente)
+/* enviarHandshakeMemoria()
+ * Parametros:
+ * 	-> char* :: puertos
+ * 	-> char* :: ips
+ * 	-> int :: socket_cliente
+ * Descripcion: recibe la data a enviar, la serializa y la manda
+ * Return:
+ * 	-> :: void  */
+void enviarHandshakeMemoria(char* puertos, char* ips, char* numeros, int socket_cliente)
 {
 	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
 	handshake->tamanioIps = strlen(ips) + 1;
-	handshake->tamanioPuertos = strlen(puertos) + 1;
 	handshake->ips = malloc(handshake->tamanioIps);
 	memcpy(handshake->ips, ips, handshake->tamanioIps);
+
+
+	handshake->tamanioPuertos = strlen(puertos) + 1;
 	handshake->puertos = malloc(handshake->tamanioPuertos);
 	memcpy(handshake->puertos, puertos, handshake->tamanioPuertos);
-	int tamanioPaquete = 2 * sizeof(int) + handshake->tamanioIps + handshake->tamanioPuertos;
+
+
+	handshake->tamanioNumeros = strlen(numeros) + 1;
+	handshake->numeros = malloc(handshake->tamanioNumeros);
+	memcpy(handshake->numeros, numeros, handshake->tamanioNumeros);
+
+
+	int tamanioPaquete = 3 * sizeof(int) + handshake->tamanioIps + handshake->tamanioPuertos + handshake->tamanioNumeros;
 	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanioPaquete);
 	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
 	free(handshake->ips);
 	free(handshake->puertos);
+	free(handshake->numeros);
 	free(handshake);
 }
 
+/* recibirHandshakeMemoria()
+ * Parametros:
+ * 	-> int :: socket
+ * Descripcion: recibe el handshake que le llega de memoria y lo deserealiza
+ * Return:
+ * 	-> handshake :: t_handshake_memoria  */
 t_handshake_memoria* recibirHandshakeMemoria(int socket)
 {
 	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
 	recv(socket, &handshake->tamanioIps, sizeof(int), MSG_WAITALL);
+	char* ipsRecibidos = malloc(handshake->tamanioIps);
+	recv(socket, ipsRecibidos, handshake->tamanioIps, MSG_WAITALL);
+
 	recv(socket, &handshake->tamanioPuertos, sizeof(int), MSG_WAITALL);
 	char* puertosRecibidos = malloc(handshake->tamanioPuertos);
-	char* ipsRecibidos = malloc(handshake->tamanioIps);
 	recv(socket, puertosRecibidos, handshake->tamanioPuertos, MSG_WAITALL);
-	recv(socket, ipsRecibidos, handshake->tamanioIps, MSG_WAITALL);
+
+	recv(socket, &handshake->tamanioNumeros, sizeof(int), MSG_WAITALL);
+	char* numerosRecibidos = malloc(handshake->tamanioNumeros);
+	recv(socket, numerosRecibidos, handshake->tamanioNumeros, MSG_WAITALL);
 
 	handshake->puertos = puertosRecibidos;
 	handshake->ips = ipsRecibidos;
+	handshake->numeros = numerosRecibidos;
 
 	return handshake;
 }
 
+/* serializar_handshake_memoria()
+ * Parametros:
+ * 	-> t_handshake_memoria* ::  handshake
+ * 	-> int :: tamanio
+ * Descripcion: serializa un t_handshake_memoria.
+ * Return:
+ * 	-> buffer :: void*  */
 void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
 {
 	void * buffer = malloc(tamanio);
@@ -548,11 +585,15 @@ void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
 	// destino es un string
 	memcpy(buffer + desplazamiento, &handshake->tamanioIps, sizeof(int));
 	desplazamiento += sizeof(int);
-	memcpy(buffer + desplazamiento, &handshake->tamanioPuertos, sizeof(int));
-	desplazamiento += sizeof(int);
 	memcpy(buffer + desplazamiento, handshake->ips, handshake->tamanioIps);
 	desplazamiento += handshake->tamanioIps;
+	memcpy(buffer + desplazamiento, &handshake->tamanioPuertos, sizeof(int));
+	desplazamiento += sizeof(int);
 	memcpy(buffer + desplazamiento, handshake->puertos, handshake->tamanioPuertos);
+	desplazamiento += handshake->tamanioPuertos;
+	memcpy(buffer + desplazamiento, &handshake->tamanioNumeros, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, handshake->numeros, handshake->tamanioNumeros);
 	return buffer;
 }
 
