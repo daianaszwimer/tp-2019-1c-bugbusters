@@ -84,6 +84,7 @@ void liberarMemoria(void) {
 	sem_destroy(&semMultiprocesamiento);
 	queue_destroy(new);
 	queue_destroy(ready);
+	//list_clean_and_destroy_elements(memorias, (void*)liberarConfigMemoria);
 	list_destroy(memorias);
 	liberarConfigMemoria(memoriaSc);
 	list_destroy(memoriasShc);
@@ -107,6 +108,7 @@ void conectarAMemoria(void) {
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 	handshake = recibirHandshakeMemoria(conexionMemoria);
 	procesarHandshake(handshake);
+	liberarHandshakeMemoria(handshake);
 }
 
 /* procesarHandshake()
@@ -126,7 +128,9 @@ void procesarHandshake(t_handshake_memoria* handshakeRecibido) {
 		memoriaNueva->ip = strdup(ips[i]);// config_get_string_value(config, "IP_MEMORIA");
 		memoriaNueva->puerto = strdup(puertos[i]);// config_get_string_value(config, "PUERTO_MEMORIA");
 		memoriaNueva->numero = strdup(numeros[i]);
+		log_info(logger_KERNEL, "estoy agregando el ip: %s puerto: %s numero: %s", memoriaNueva->ip, memoriaNueva->puerto, memoriaNueva->numero);
 		list_add(memorias, memoriaNueva);
+		memoriaNueva = NULL;
 	}
 	liberarArrayDeChar(ips);
 	liberarArrayDeChar(puertos);
@@ -183,7 +187,6 @@ void hacerDescribe(void) {
  * 	-> :: void  */
 void loguearMetricas(void) {
 	while(1) {
-		log_info(logger_KERNEL, "pasaron 30s");
 		informarMetricas(FALSE);
 		// limpio variables para empezar a contar de nuevo
 		pthread_mutex_lock(&semMMetricas);
@@ -230,7 +233,6 @@ void informarMetricas(int mostrarPorConsola) {
 	double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
 	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
 	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
-		log_info(logger_KERNEL, "select insert %d y total %d", estadisticaAMostrar->cantidadSelectInsert, estadisticaAMostrar->cantidadTotal);
 		double estadistica = (double)estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
 		if (mostrarPorConsola == TRUE) {
 			log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
@@ -455,7 +457,8 @@ void planificarNewAReady(void) {
 	while(1) {
 		sem_wait(&semRequestNew);
 		pthread_mutex_lock(&semMColaNew);
-		char* request = strdup((char*) queue_pop(new));
+		char* request = strdup((char*) queue_peek(new));
+		free((char*) queue_pop(new));
 		pthread_mutex_unlock(&semMColaNew);
 		if(validarRequest(request) == TRUE) {
 			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
@@ -549,6 +552,8 @@ void reservarRecursos(char* mensaje) {
 					queue_push(_request->request, otraRequest);
 					liberarArrayDeChar(requestDividida);
 					i = 1;
+					free(request);
+					request = NULL;
 					request = (char*) malloc(sizeof(char));
 				    *request = '\0';
 				}
@@ -563,6 +568,8 @@ void reservarRecursos(char* mensaje) {
 				queue_push(_request->request, otraRequest);
 				liberarArrayDeChar(requestDividida);
 			}
+			free(request);
+			request = NULL;
 			liberarArrayDeChar(parametros);
 			fclose(archivoLql);
 		}
@@ -942,17 +949,18 @@ void procesarJournal(int soloASHC) {
 			conexionTemporanea = crearConexion(memoriaAConectarse->ip, memoriaAConectarse->puerto);
 		}
 		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
-		t_paquete* paqueteRecibido = recibir(conexionTemporanea);
+		log_info(logger_KERNEL, "Se envió el JOURNAL a la memoria con numero %s", memoriaAConectarse->numero);
+		/*t_paquete* paqueteRecibido = recibir(conexionTemporanea);
 		int respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
 			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", "JOURNAL", paqueteRecibido->request);
 		} else {
 			log_error(logger_KERNEL, "El request %s no es válido", "JOURNAL");
-		}
+		}*/
 		if (conexionTemporanea != conexionMemoria) {
 			liberar_conexion(conexionTemporanea);
 		}
-		eliminar_paquete(paqueteRecibido);
+		// eliminar_paquete(paqueteRecibido);
 	}
 	if(soloASHC == TRUE) {
 		list_iterate(memoriasShc, (void*)enviarJournal);
@@ -1064,7 +1072,7 @@ int procesarAdd(char* mensaje) {
 				break;
 			case SHC:
 				list_add(memoriasShc, memoria);
-				procesarJournal(TRUE);
+				//procesarJournal(TRUE);
 				break;
 			case EC:
 				list_add(memoriasEc, memoria);

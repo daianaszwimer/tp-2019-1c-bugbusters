@@ -8,12 +8,12 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
+
 	conectarAFileSystem();
 
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 	inicializacionDeMemoria();
 	log_info(logger_MEMORIA,"INICIO DE MEMORIA");
-
 
 	//--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
@@ -235,7 +235,7 @@ void escucharMultiplesClientes() {
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
 				// todo: por ahora que no tenemos gossiping vamos a levantar siempre 3 memorias con estos 3 datos hardcodeados
-				enviarHandshakeMemoria("8001,8002,8003", "127.0.0.1,127.0.0.1,127.0.0.1", "1,2,3", descriptorCliente);
+				enviarHandshakeMemoria("8001", "127.0.0.1", "1", descriptorCliente);
 				numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 				numeroDeClientes++;
 			}
@@ -826,7 +826,6 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: SI*/
-
 void actualizarPagina (t_marco* pagina, char* nuevoValue){
 	pagina->timestamp =  obtenerHoraActual();
 	strcpy(pagina->value,nuevoValue);
