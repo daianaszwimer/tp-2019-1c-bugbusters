@@ -8,12 +8,12 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-//	conectarAFileSystem();
+
+	conectarAFileSystem();
 
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 	inicializacionDeMemoria();
 	log_info(logger_MEMORIA,"INICIO DE MEMORIA");
-
 
 	//--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
@@ -480,6 +480,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
+	 		log_info(logger_MEMORIA, valorAEnviar->request);
 			enviar(codResultado, valorAEnviar->request, socketKernel);
 	 	 	break;
 	 	 case(CONSOLE):

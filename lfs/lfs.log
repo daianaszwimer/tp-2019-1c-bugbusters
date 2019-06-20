@@ -1,0 +1,272 @@
+[INFO] 15:29:57:854 Lfs/(29601:29601): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:33:25:608 Lfs/(29601:29601): Hilo de consola creado
+[INFO] 15:33:25:609 Lfs/(29601:29928): Lissandra lista para recibir Memorias
+[INFO] 15:33:25:610 Lfs/(29601:29601): Hilo de recibir memorias creado
+[INFO] 15:33:25:613 Lfs/(29601:29601): Hilo de Dump iniciado
+[INFO] 15:33:59:769 Lfs/(29977:29977): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:34:22:393 Lfs/(29977:29977): Hilo de consola creado
+[INFO] 15:34:22:398 Lfs/(29977:29977): Hilo de recibir memorias creado
+[INFO] 15:34:22:400 Lfs/(29977:29996): Lissandra lista para recibir Memorias
+[INFO] 15:34:22:401 Lfs/(29977:29977): Hilo de Dump iniciado
+[INFO] 15:34:42:402 Lfs/(29977:29997): Dump iniciado
+[INFO] 15:34:42:402 Lfs/(29977:29997): Dump exitoso
+[INFO] 15:35:02:402 Lfs/(29977:29997): Dump iniciado
+[INFO] 15:35:02:403 Lfs/(29977:29997): Dump exitoso
+[INFO] 15:35:31:753 Lfs/(30048:30048): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:41:46:794 Lfs/(30308:30308): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:45:55:380 Lfs/(30483:30483): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:53:11:447 Lfs/(30979:30979): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 15:53:11:449 Lfs/(30979:30979): Hilo de consola creado
+[INFO] 15:53:11:452 Lfs/(30979:30992): Lissandra lista para recibir Memorias
+[INFO] 15:53:11:453 Lfs/(30979:30979): Hilo de recibir memorias creado
+[INFO] 15:53:11:455 Lfs/(30979:30979): Hilo de Dump iniciado
+[INFO] 15:53:13:247 Lfs/(30979:30979): Hilo de consola finalizado
+[INFO] 15:53:13:249 Lfs/(30979:30979): Hilo recibir memorias finalizado
+[INFO] 15:53:13:250 Lfs/(30979:30979): Hilo dumpeo finalizado
+[INFO] 15:53:13:250 Lfs/(30979:30979): Finalizando LFS
+[INFO] 16:02:59:471 Lfs/(31303:31303): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:05:14:224 Lfs/(31450:31450): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:07:43:72 Lfs/(31669:31669): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:18:20:270 Lfs/(31944:31944): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:22:33:669 Lfs/(31944:31944): Hilo de consola creado
+[INFO] 16:22:33:906 Lfs/(31944:31944): Hilo de recibir memorias creado
+[INFO] 16:22:33:907 Lfs/(31944:32037): Lissandra lista para recibir Memorias
+[INFO] 16:22:33:913 Lfs/(31944:31944): Hilo de Dump iniciado
+[INFO] 16:43:03:908 Lfs/(32682:32682): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:43:07:207 Lfs/(32682:32682): Hilo de consola creado
+[INFO] 16:43:07:209 Lfs/(32682:32682): Hilo de recibir memorias creado
+[INFO] 16:43:07:210 Lfs/(32682:32695): Lissandra lista para recibir Memorias
+[INFO] 16:43:07:212 Lfs/(32682:32682): Hilo de Dump iniciado
+[INFO] 16:43:42:183 Lfs/(32682:32694): Me llego un CREATE
+[INFO] 16:44:07:213 Lfs/(32682:32696): Dump iniciado
+[INFO] 16:44:07:213 Lfs/(32682:32696): Dump exitoso
+[INFO] 16:45:33:543 Lfs/(552:552): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:45:33:546 Lfs/(552:552): Hilo de consola creado
+[INFO] 16:45:33:554 Lfs/(552:552): Hilo de recibir memorias creado
+[INFO] 16:45:33:557 Lfs/(552:561): Lissandra lista para recibir Memorias
+[INFO] 16:45:33:558 Lfs/(552:552): Hilo de Dump iniciado
+[INFO] 16:45:44:651 Lfs/(552:560): Me llego un CREATE
+[INFO] 16:46:13:285 Lfs/(644:644): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:46:13:288 Lfs/(644:644): Hilo de consola creado
+[INFO] 16:46:13:289 Lfs/(644:644): Hilo de recibir memorias creado
+[INFO] 16:46:13:290 Lfs/(644:653): Lissandra lista para recibir Memorias
+[INFO] 16:46:13:290 Lfs/(644:644): Hilo de Dump iniciado
+[INFO] 16:46:21:372 Lfs/(644:652): Me llego un CREATE
+[INFO] 16:47:13:295 Lfs/(644:654): Dump iniciado
+[INFO] 16:47:13:296 Lfs/(644:654): Dump exitoso
+[INFO] 16:49:45:946 Lfs/(879:879): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:49:45:948 Lfs/(879:879): Hilo de consola creado
+[INFO] 16:49:45:948 Lfs/(879:879): Hilo de recibir memorias creado
+[INFO] 16:49:45:949 Lfs/(879:891): Lissandra lista para recibir Memorias
+[INFO] 16:49:45:949 Lfs/(879:879): Hilo de Dump iniciado
+[INFO] 16:50:48:766 Lfs/(1017:1017): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:51:20:909 Lfs/(1017:1017): Hilo de consola creado
+[INFO] 16:51:20:909 Lfs/(1017:1017): Hilo de recibir memorias creado
+[INFO] 16:51:20:910 Lfs/(1017:1050): Lissandra lista para recibir Memorias
+[INFO] 16:51:20:910 Lfs/(1017:1017): Hilo de Dump iniciado
+[INFO] 16:51:26:784 Lfs/(1017:1049): Me llego un CREATE
+[INFO] 16:52:51:925 Lfs/(1216:1216): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:53:01:421 Lfs/(1216:1216): Hilo de consola creado
+[INFO] 16:53:01:422 Lfs/(1216:1228): Lissandra lista para recibir Memorias
+[INFO] 16:53:01:422 Lfs/(1216:1216): Hilo de recibir memorias creado
+[INFO] 16:53:01:423 Lfs/(1216:1216): Hilo de Dump iniciado
+[INFO] 16:53:14:731 Lfs/(1216:1227): Me llego un CREATE
+[INFO] 16:54:40:361 Lfs/(1349:1349): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:56:29:169 Lfs/(1508:1508): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:56:36:328 Lfs/(1508:1508): Hilo de consola creado
+[INFO] 16:56:37:975 Lfs/(1508:1508): Hilo de recibir memorias creado
+[INFO] 16:56:37:975 Lfs/(1508:1539): Lissandra lista para recibir Memorias
+[INFO] 16:56:37:977 Lfs/(1508:1508): Hilo de Dump iniciado
+[INFO] 16:56:43:765 Lfs/(1508:1535): Me llego un CREATE
+[INFO] 16:57:21:458 Lfs/(1643:1643): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:59:04:205 Lfs/(1762:1762): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 16:59:30:951 Lfs/(1762:1762): Hilo de consola creado
+[INFO] 16:59:30:952 Lfs/(1762:1762): Hilo de recibir memorias creado
+[INFO] 16:59:30:952 Lfs/(1762:1806): Lissandra lista para recibir Memorias
+[INFO] 16:59:30:953 Lfs/(1762:1762): Hilo de Dump iniciado
+[INFO] 16:59:40:262 Lfs/(1762:1805): Me llego un CREATE
+[INFO] 17:00:37:710 Lfs/(1919:1919): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:01:37:927 Lfs/(2075:2075): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:01:46:765 Lfs/(2075:2075): Hilo de consola creado
+[INFO] 17:01:46:918 Lfs/(2075:2099): Lissandra lista para recibir Memorias
+[INFO] 17:01:48:363 Lfs/(2075:2075): Hilo de recibir memorias creado
+[INFO] 17:01:48:368 Lfs/(2075:2075): Hilo de Dump iniciado
+[INFO] 17:01:55:545 Lfs/(2075:2096): Me llego un CREATE
+[INFO] 17:03:26:392 Lfs/(2191:2191): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:03:40:544 Lfs/(2242:2242): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:04:39:833 Lfs/(2242:2242): Hilo de consola creado
+[INFO] 17:04:39:837 Lfs/(2242:2242): Hilo de recibir memorias creado
+[INFO] 17:04:39:838 Lfs/(2242:2294): Lissandra lista para recibir Memorias
+[INFO] 17:04:39:839 Lfs/(2242:2242): Hilo de Dump iniciado
+[INFO] 17:04:46:874 Lfs/(2242:2293): Me llego un CREATE
+[INFO] 17:06:29:838 Lfs/(2443:2443): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:06:48:98 Lfs/(2443:2443): Hilo de consola creado
+[INFO] 17:06:48:99 Lfs/(2443:2443): Hilo de recibir memorias creado
+[INFO] 17:06:48:100 Lfs/(2443:2476): Lissandra lista para recibir Memorias
+[INFO] 17:06:48:100 Lfs/(2443:2443): Hilo de Dump iniciado
+[INFO] 17:06:55:612 Lfs/(2443:2475): Me llego un CREATE
+[INFO] 17:07:27:690 Lfs/(2567:2567): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:08:07:42 Lfs/(2567:2567): Hilo de consola creado
+[INFO] 17:08:07:43 Lfs/(2567:2567): Hilo de recibir memorias creado
+[INFO] 17:08:07:43 Lfs/(2567:2615): Lissandra lista para recibir Memorias
+[INFO] 17:08:07:43 Lfs/(2567:2567): Hilo de Dump iniciado
+[INFO] 17:08:16:239 Lfs/(2567:2613): Me llego un CREATE
+[INFO] 17:08:42:500 Lfs/(2657:2657): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:09:34:216 Lfs/(2657:2657): Hilo de consola creado
+[INFO] 17:09:34:218 Lfs/(2657:2657): Hilo de recibir memorias creado
+[INFO] 17:09:34:219 Lfs/(2657:2715): Lissandra lista para recibir Memorias
+[INFO] 17:09:34:220 Lfs/(2657:2657): Hilo de Dump iniciado
+[INFO] 17:09:38:841 Lfs/(2657:2714): Me llego un CREATE
+[INFO] 17:10:01:589 Lfs/(2781:2781): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:10:52:220 Lfs/(2868:2868): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:11:01:819 Lfs/(2868:2868): Hilo de consola creado
+[INFO] 17:11:01:822 Lfs/(2868:2868): Hilo de recibir memorias creado
+[INFO] 17:11:01:822 Lfs/(2868:2886): Lissandra lista para recibir Memorias
+[INFO] 17:11:01:823 Lfs/(2868:2868): Hilo de Dump iniciado
+[INFO] 17:11:19:103 Lfs/(2920:2920): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:11:46:990 Lfs/(2920:2920): Hilo de consola creado
+[INFO] 17:11:48:653 Lfs/(2920:2920): Hilo de recibir memorias creado
+[INFO] 17:11:48:658 Lfs/(2920:2971): Lissandra lista para recibir Memorias
+[INFO] 17:11:48:659 Lfs/(2920:2920): Hilo de Dump iniciado
+[INFO] 17:11:57:162 Lfs/(2920:2968): Me llego un CREATE
+[INFO] 17:12:36:187 Lfs/(3021:3021): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:12:48:772 Lfs/(3021:3021): Hilo de consola creado
+[INFO] 17:12:48:773 Lfs/(3021:3021): Hilo de recibir memorias creado
+[INFO] 17:12:48:773 Lfs/(3021:3056): Lissandra lista para recibir Memorias
+[INFO] 17:12:48:774 Lfs/(3021:3021): Hilo de Dump iniciado
+[INFO] 17:12:59:562 Lfs/(3021:3055): Me llego un CREATE
+[INFO] 17:14:12:988 Lfs/(3158:3158): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:15:07:498 Lfs/(3158:3158): Hilo de consola creado
+[INFO] 17:15:07:500 Lfs/(3158:3158): Hilo de recibir memorias creado
+[INFO] 17:15:07:501 Lfs/(3158:3200): Lissandra lista para recibir Memorias
+[INFO] 17:15:07:501 Lfs/(3158:3158): Hilo de Dump iniciado
+[INFO] 17:15:16:35 Lfs/(3158:3197): Me llego un CREATE
+[ERROR] 17:15:18:107 Lfs/(3158:3197): La tabla TABLA ya existe
+[INFO] 17:15:18:107 Lfs/(3158:3197): 
+[INFO] 17:20:24:513 Lfs/(3584:3584): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:22:45:717 Lfs/(3584:3584): Hilo de consola creado
+[INFO] 17:22:45:717 Lfs/(3584:3584): Hilo de recibir memorias creado
+[INFO] 17:22:45:717 Lfs/(3584:3683): Lissandra lista para recibir Memorias
+[INFO] 17:22:45:717 Lfs/(3584:3584): Hilo de Dump iniciado
+[INFO] 17:22:53:472 Lfs/(3584:3682): Me llego un CREATE
+[INFO] 17:23:41:482 Lfs/(3753:3753): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:23:43:224 Lfs/(3753:3753): Hilo de consola creado
+[INFO] 17:23:43:228 Lfs/(3753:3753): Hilo de recibir memorias creado
+[INFO] 17:23:43:229 Lfs/(3753:3774): Lissandra lista para recibir Memorias
+[INFO] 17:23:43:229 Lfs/(3753:3753): Hilo de Dump iniciado
+[INFO] 17:24:55:334 Lfs/(3831:3831): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:25:03:530 Lfs/(3831:3831): Hilo de consola creado
+[INFO] 17:25:03:532 Lfs/(3831:3831): Hilo de recibir memorias creado
+[INFO] 17:25:03:532 Lfs/(3831:3831): Hilo de Dump iniciado
+[INFO] 17:25:03:533 Lfs/(3831:3869): Lissandra lista para recibir Memorias
+[INFO] 17:25:31:317 Lfs/(3831:3868): Me llego un CREATE
+[INFO] 17:34:08:661 Lfs/(4164:4164): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:35:53:640 Lfs/(4164:4164): Hilo de consola creado
+[INFO] 17:35:53:643 Lfs/(4164:4164): Hilo de recibir memorias creado
+[INFO] 17:35:53:644 Lfs/(4164:4239): Lissandra lista para recibir Memorias
+[INFO] 17:35:53:646 Lfs/(4164:4164): Hilo de Dump iniciado
+[INFO] 17:36:03:549 Lfs/(4164:4237): Me llego un CREATE
+[INFO] 17:36:32:769 Lfs/(4286:4286): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:36:49:445 Lfs/(4286:4286): Hilo de consola creado
+[INFO] 17:36:49:454 Lfs/(4286:4286): Hilo de recibir memorias creado
+[INFO] 17:36:49:457 Lfs/(4286:4304): Lissandra lista para recibir Memorias
+[INFO] 17:36:49:458 Lfs/(4286:4286): Hilo de Dump iniciado
+[INFO] 17:37:14:877 Lfs/(4342:4342): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:37:30:352 Lfs/(4342:4342): Hilo de consola creado
+[INFO] 17:37:30:353 Lfs/(4342:4342): Hilo de recibir memorias creado
+[INFO] 17:37:30:354 Lfs/(4342:4364): Lissandra lista para recibir Memorias
+[INFO] 17:37:30:355 Lfs/(4342:4342): Hilo de Dump iniciado
+[INFO] 17:41:07:525 Lfs/(4544:4544): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:41:09:148 Lfs/(4544:4544): Hilo de consola creado
+[INFO] 17:41:09:151 Lfs/(4544:4544): Hilo de recibir memorias creado
+[INFO] 17:41:09:151 Lfs/(4544:4557): Lissandra lista para recibir Memorias
+[INFO] 17:41:09:153 Lfs/(4544:4544): Hilo de Dump iniciado
+[INFO] 17:41:16:490 Lfs/(4544:4556): Me llego un CREATE
+[INFO] 17:41:45:41 Lfs/(4604:4604): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:41:47:361 Lfs/(4604:4604): Hilo de consola creado
+[INFO] 17:41:47:371 Lfs/(4604:4604): Hilo de recibir memorias creado
+[INFO] 17:41:47:372 Lfs/(4604:4604): Hilo de Dump iniciado
+[INFO] 17:41:47:372 Lfs/(4604:4617): Lissandra lista para recibir Memorias
+[INFO] 17:41:56:385 Lfs/(4604:4616): Me llego un CREATE
+[INFO] 17:42:47:375 Lfs/(4604:4618): Dump iniciado
+[INFO] 17:42:47:375 Lfs/(4604:4618): Dump exitoso
+[INFO] 17:43:36:823 Lfs/(4799:4799): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:43:38:881 Lfs/(4799:4799): Hilo de consola creado
+[INFO] 17:43:38:882 Lfs/(4799:4799): Hilo de recibir memorias creado
+[INFO] 17:43:38:883 Lfs/(4799:4824): Lissandra lista para recibir Memorias
+[INFO] 17:43:38:884 Lfs/(4799:4799): Hilo de Dump iniciado
+[INFO] 17:43:50:591 Lfs/(4799:4823): Me llego un CREATE
+[INFO] 17:46:05:312 Lfs/(4936:4936): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:46:53:323 Lfs/(4936:4936): Hilo de consola creado
+[INFO] 17:46:53:325 Lfs/(4936:4936): Hilo de recibir memorias creado
+[INFO] 17:46:53:325 Lfs/(4936:4989): Lissandra lista para recibir Memorias
+[INFO] 17:46:53:327 Lfs/(4936:4936): Hilo de Dump iniciado
+[INFO] 17:47:45:303 Lfs/(4936:4988): Me llego un CREATE
+[INFO] 17:47:53:480 Lfs/(4936:4990): Dump iniciado
+[INFO] 17:47:53:481 Lfs/(4936:4990): Dump exitoso
+[INFO] 17:48:37:487 Lfs/(5049:5049): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:48:39:578 Lfs/(5049:5049): Hilo de consola creado
+[INFO] 17:48:39:580 Lfs/(5049:5049): Hilo de recibir memorias creado
+[INFO] 17:48:39:580 Lfs/(5049:5062): Lissandra lista para recibir Memorias
+[INFO] 17:48:39:580 Lfs/(5049:5049): Hilo de Dump iniciado
+[INFO] 17:48:56:741 Lfs/(5049:5061): Me llego un CREATE
+[INFO] 17:50:00:251 Lfs/(5127:5127): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:50:15:257 Lfs/(5127:5127): Hilo de consola creado
+[INFO] 17:50:15:257 Lfs/(5127:5127): Hilo de recibir memorias creado
+[INFO] 17:50:15:258 Lfs/(5127:5145): Lissandra lista para recibir Memorias
+[INFO] 17:50:15:258 Lfs/(5127:5127): Hilo de Dump iniciado
+[INFO] 17:50:24:155 Lfs/(5127:5144): Me llego un CREATE
+[INFO] 17:52:47:49 Lfs/(5307:5307): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:52:48:453 Lfs/(5307:5307): Hilo de consola creado
+[INFO] 17:52:48:453 Lfs/(5307:5307): Hilo de recibir memorias creado
+[INFO] 17:52:48:453 Lfs/(5307:5318): Lissandra lista para recibir Memorias
+[INFO] 17:52:48:454 Lfs/(5307:5307): Hilo de Dump iniciado
+[INFO] 17:53:13:498 Lfs/(5307:5317): Me llego un CREATE
+[INFO] 17:54:34:876 Lfs/(5443:5443): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 17:56:21:124 Lfs/(5443:5443): Hilo de consola creado
+[INFO] 17:56:22:607 Lfs/(5443:5443): Hilo de recibir memorias creado
+[INFO] 17:56:22:607 Lfs/(5443:5569): Lissandra lista para recibir Memorias
+[INFO] 17:56:22:608 Lfs/(5443:5443): Hilo de Dump iniciado
+[INFO] 17:56:36:590 Lfs/(5443:5565): Me llego un CREATE
+[INFO] 17:57:28:916 Lfs/(5443:5570): Dump iniciado
+[INFO] 17:57:28:917 Lfs/(5443:5570): Dump exitoso
+[INFO] 18:05:43:470 Lfs/(5769:5769): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:07:20:234 Lfs/(5769:5769): Hilo de consola creado
+[INFO] 18:07:21:536 Lfs/(5769:5769): Hilo de recibir memorias creado
+[INFO] 18:07:21:536 Lfs/(5769:5879): Lissandra lista para recibir Memorias
+[INFO] 18:09:44:693 Lfs/(5936:5936): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:09:51:724 Lfs/(5936:5936): Hilo de consola creado
+[INFO] 18:09:51:726 Lfs/(5936:5936): Hilo de recibir memorias creado
+[INFO] 18:09:51:727 Lfs/(5936:5952): Lissandra lista para recibir Memorias
+[INFO] 18:09:51:732 Lfs/(5936:5936): Hilo de Dump iniciado
+                                                                                                     [INFO] 18:15:53:132 Lfs/(3681:3681): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:16:17:361 Lfs/(3681:3681): Hilo de consola creado
+[INFO] 18:16:17:370 Lfs/(3681:3681): Hilo de recibir memorias creado
+[INFO] 18:16:17:380 Lfs/(3681:3728): Lissandra lista para recibir Memorias
+[INFO] 18:16:17:385 Lfs/(3681:3681): Hilo de Dump iniciado
+[INFO] 18:16:33:333 Lfs/(3681:3727): Me llego un CREATE
+[INFO] 18:25:40:75 Lfs/(4749:4749): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:25:41:38 Lfs/(4749:4749): Hilo de consola creado
+[INFO] 18:25:41:42 Lfs/(4749:4749): Hilo de recibir memorias creado
+[INFO] 18:25:41:43 Lfs/(4749:4765): Lissandra lista para recibir Memorias
+[INFO] 18:25:41:45 Lfs/(4749:4749): Hilo de Dump iniciado
+[INFO] 18:25:51:985 Lfs/(4749:4764): Me llego un CREATE
+[INFO] 18:26:41:46 Lfs/(4749:4766): Dump iniciado
+[INFO] 18:26:41:51 Lfs/(4749:4766): Dump exitoso
+[INFO] 18:27:11:379 Lfs/(4893:4893): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:27:24:432 Lfs/(4893:4893): Hilo de consola creado
+[INFO] 18:27:24:437 Lfs/(4893:4915): Lissandra lista para recibir Memorias
+[INFO] 18:27:24:437 Lfs/(4893:4893): Hilo de recibir memorias creado
+[INFO] 18:27:24:459 Lfs/(4893:4893): Hilo de Dump iniciado
+[INFO] 18:27:35:515 Lfs/(4893:4914): Me llego un CREATE
+[INFO] 18:28:31:50 Lfs/(4971:4971): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 18:28:43:292 Lfs/(4971:4971): Hilo de consola creado
+[INFO] 18:28:43:293 Lfs/(4971:4971): Hilo de recibir memorias creado
+[INFO] 18:28:43:300 Lfs/(4971:4992): Lissandra lista para recibir Memorias
+[INFO] 18:28:43:300 Lfs/(4971:4971): Hilo de Dump iniciado
+[INFO] 18:29:10:387 Lfs/(4971:4991): Me llego un CREATE
+[INFO] 18:29:43:681 Lfs/(4971:4993): Dump iniciado
+[INFO] 18:29:43:683 Lfs/(4971:4993): Dump exitoso
+[INFO] 18:30:15:265 Lfs/(4971:4991): 
+[INFO] 18:30:43:691 Lfs/(4971:4993): Dump iniciado
+[INFO] 18:30:43:692 Lfs/(4971:4993): Dump exitoso

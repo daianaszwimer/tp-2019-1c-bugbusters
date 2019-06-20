@@ -1066,7 +1066,6 @@ int procesarAdd(char* mensaje) {
 		estado = ERROR_GENERICO;
 		log_error(logger_KERNEL, "No encontré la memoria %s", requestDividida[2]);
 	} else {
-		log_info(logger_KERNEL, "voy a asignar a la mem ip %s puerto %s", memoria->ip, memoria->puerto);
 		switch (_consistencia) {
 			case SC:
 				memoriaSc = memoria;

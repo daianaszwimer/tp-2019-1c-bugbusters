@@ -266,10 +266,11 @@ int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 				}
 			}
 		}
-
+		liberarArrayDeChar(requestDividida);
 		return codPalabraReservada;
 
 	}else{
+		liberarArrayDeChar(requestDividida);
 		return codPalabraReservada;
 	}
 }
