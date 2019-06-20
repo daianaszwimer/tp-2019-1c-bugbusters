@@ -234,7 +234,6 @@ void liberarArrayDeChar(char** arrayDeChar) {
  * 	-> exit :: int */
 int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
 	char** requestDividida = string_n_split(mensaje, 2, " ");
-	int resultadoValidacionParametros;
 
 	int codPalabraReservada = obtenerCodigoPalabraReservada(requestDividida[0], componente);
 	if(validarPalabraReservada(codPalabraReservada, componente, logger) == EXIT_SUCCESS){
