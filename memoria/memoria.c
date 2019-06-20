@@ -1012,6 +1012,13 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 }
 
 
+/* liberarTabla()
+ * Parametros:
+ *	-> t_segmento* :: segmento
+ * Descripcion: Libera a el marco de la pagina, libera cada pagina de una tabla
+ * Return:
+ * 	-> :: void
+ * 	VALGRIND :: NO */
 void liberarTabla(t_segmento* segmento){
 	void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
 		eliminarMarco(pagina,pagina->marco);
@@ -1030,14 +1037,12 @@ void liberarTabla(t_segmento* segmento){
  * Descripcion: Libera el marco de cada pagina, libera cada pagina de una tablaDePagina, libera la tablaDePagina
  * 				de un segmento, libera lista de segmentos de una tablaDeSegmento, libera lista de tablaDeSegmentos
  * Return:
- * 	-> void ::
- * 	VALGRIND :: */
+ * 	-> :: void
+ * 	VALGRIND :: NO */
 void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
 	void eliminarElemTablaSegmentos(t_segmento* segmento){
 		void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
 			eliminarMarco(pagina,pagina->marco);
-//			free(pagina->marco);
-//			pagina->marco=NULL;
 			free(pagina);
 			pagina=NULL;
 		}
@@ -1054,8 +1059,8 @@ void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
  *	-> :: void
  * Descripcion: Libera los punteros reservados en inicializarMemoria()
  * Return:
- * 	-> void ::
- * 	VALGRIND :: */
+ * 	-> :: void
+ * 	VALGRIND :: NO */
 void liberarMemoria(){
 	log_info(logger_MEMORIA, "Finaliza MEMORIA");
 	free(bitarray);
@@ -1101,6 +1106,18 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
 	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,(int) list_get(descriptoresClientes,i));
 }
 
+
+/* procesarDrop()
+ * Parametros:
+ *	-> cod_request :: codRequest
+ *	-> char* :: request
+ *	-> consistencia :: consistencia
+ *	-> t_caller :: caller
+ *	-> int :: i (socket kernel)
+ * Descripcion: Busca la tabla en memoria principal, si la encuentra libera la memoria. Siempre le avisa a LFS
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
 void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int i) {
 	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
 	t_paquete* valorDeLFS = malloc(sizeof(t_paquete));
