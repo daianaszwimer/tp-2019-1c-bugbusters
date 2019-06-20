@@ -218,3 +218,8 @@
 [INFO] 10:52:04:619 Kernel/(10424:10441): pasaron 30s
 [INFO] 10:52:24:710 Kernel/(10424:10456): voy a asignar a la mem ip 127.0.0.1 puerto 8001
 [INFO] 10:52:35:59 Kernel/(10424:10441): pasaron 30s
+[INFO] 19:51:35:436 Kernel/(27235:27235): ----------------INICIO DE KERNEL--------------
+[INFO] 19:51:35:449 Kernel/(27235:27247): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 19:59:48:24 Kernel/(27532:27532): ----------------INICIO DE KERNEL--------------
+[INFO] 19:59:48:40 Kernel/(27532:27573): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 20:00:03:725 Kernel/(27532:27579): while

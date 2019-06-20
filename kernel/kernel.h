@@ -14,12 +14,14 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/inotify.h>
 
 typedef struct
 {
 	char* ip;
 	char* puerto;
-	char* numero;//todo: es mejor y mas facil si esto es solo un int
+	char* numero;
 } config_memoria;
 
 typedef struct
@@ -67,6 +69,12 @@ int cantidadSelectEC = 0;
 int cantidadInsertEC = 0;
 t_list* cargaMemoriaEC;
 
+// Variables para inotify
+#define EVENT_SIZE  ( sizeof (struct inotify_event) + 24 )
+#define BUF_LEN     ( 1024 * EVENT_SIZE )
+int file_descriptor;
+int watch_descriptor;
+
 sem_t semRequestNew;				// semaforo para planificar requests en new
 pthread_mutex_t semMColaNew;		// semafoto mutex para cola de new
 sem_t semRequestReady;				// semaforo para planificar requests en ready
@@ -80,6 +88,7 @@ pthread_t hiloPlanificarNew;		// hilo para planificar requests de new a ready
 pthread_t hiloPlanificarExec;		// hilo para planificar requests de ready a exec y viceversa
 pthread_t hiloMetricas;				// hilo para loguear metricas cada 30 secs
 pthread_t hiloDescribe;				// hilo para hacer describe cada x secs
+pthread_t hiloCambioEnConfig;		// hilo que escucha los cambios en el archivo de configuración
 
 void inicializarVariables(void);
 void conectarAMemoria(void);
@@ -94,6 +103,7 @@ void loguearMetricas(void);
 void informarMetricas(int);
 void liberarEstadisticaMemoria(estadisticaMemoria*);
 void aumentarContadores(consistencia, char*, cod_request, double);
+void escucharCambiosEnConfig(void);
 // planificar requests
 void planificarNewAReady(void);
 void planificarReadyAExec(void);

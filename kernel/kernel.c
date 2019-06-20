@@ -11,6 +11,7 @@ int main(void) {
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
 	pthread_create(&hiloMetricas, NULL, (void*)loguearMetricas, NULL);
 	pthread_create(&hiloDescribe, NULL, (void*)hacerDescribe, NULL);
+	pthread_create(&hiloCambioEnConfig, NULL, (void*)escucharCambiosEnConfig, NULL);
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 
 	pthread_join(hiloConectarAMemoria, NULL);
@@ -19,6 +20,7 @@ int main(void) {
 	pthread_join(hiloMetricas, NULL);
 	pthread_join(hiloDescribe, NULL);
 	pthread_join(hiloLeerDeConsola, NULL);
+	pthread_join(hiloCambioEnConfig, NULL);
 
 	liberarMemoria();
 
@@ -89,6 +91,8 @@ void liberarMemoria(void) {
 	list_destroy_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
 	list_destroy_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
 	list_destroy_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
+	inotify_rm_watch(file_descriptor, watch_descriptor);
+	close(file_descriptor);
 	log_info(logger_KERNEL, "Estoy liberando toda la memoria, chau");
 	log_destroy(logger_KERNEL);
 	log_destroy(logger_METRICAS_KERNEL);
@@ -150,6 +154,7 @@ void leerDeConsola(void){
 			pthread_cancel(hiloPlanificarExec);
 			pthread_cancel(hiloMetricas);
 			pthread_cancel(hiloDescribe);
+			pthread_cancel(hiloCambioEnConfig);
 			free(mensaje);
 			break;
 		}
@@ -158,6 +163,29 @@ void leerDeConsola(void){
 		queue_push(new, mensaje);
 		pthread_mutex_unlock(&semMColaNew);
 		sem_post(&semRequestNew);
+	}
+}
+
+void escucharCambiosEnConfig(void) {
+	char buffer[BUF_LEN];
+	file_descriptor = inotify_init();
+	if (file_descriptor < 0) {
+		log_error(logger_KERNEL, "Inotify no se pudo inicializar correctamente");
+	}
+
+	watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config", IN_MODIFY);
+	while(1) {
+		log_info(logger_KERNEL, "while");
+		int length = read(file_descriptor, buffer, BUF_LEN);
+		if (length < 0) {
+			log_error(logger_KERNEL, "Error en inotify");
+		}
+
+		int offset = 0;
+		while (offset < length) {
+			struct inotify_event *event = (struct inotify_event *) &buffer[offset];
+			offset += sizeof (struct inotify_event) + event->len;
+		}
 	}
 }
 
@@ -171,7 +199,7 @@ void hacerDescribe(void) {
 	while(1) {
 		break;
 		int segundos = config_get_int_value(config, "METADATA_REFRESH");
-		// agregar a new? o ejecutarlo directamente?
+		// agregar a new? o ejecutarlo directamente? se ejecuta directamente
 		usleep(segundos * 1000);
 	}
 }
