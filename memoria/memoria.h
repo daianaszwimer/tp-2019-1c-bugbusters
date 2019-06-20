@@ -79,6 +79,7 @@ typedef struct{
 
 t_log* logger_MEMORIA;
 t_config* config;
+t_handshake_lfs* handshake;
 
 t_tablaDeSegmentos* tablaDeSegmentos;
 t_segmento* tablaA;
@@ -103,7 +104,7 @@ int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 
 t_list* descriptoresClientes ;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
-//
+
 
 //------------------ --- FUNCIONES--------------------------------
 

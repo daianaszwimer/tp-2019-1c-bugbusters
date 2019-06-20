@@ -12,6 +12,16 @@
 #include <nuestro_lib/nuestro_lib.h>
 #include <pthread.h>
 #include <sys/stat.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include "API.h"
+#include "Dump.h"
+#include "Compactador.h"
+
 
 t_log* logger_LFS;
 t_config* config;
@@ -20,6 +30,9 @@ t_list* descriptoresClientes;
 fd_set descriptoresDeInteres;			// Coleccion de descriptores de interes para select
 #define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"
 char* pathRaiz;
+char* pathTablas;
+char* pathMetadata;
+char* pathBloques;
 int blocks;
 
 typedef struct{
@@ -47,25 +60,26 @@ pthread_t hiloDumpeo;
 
 char* mensaje;
 int codValidacion;
+char* bitmap;
+t_bitarray* bitarray;
+int bitmapDescriptor;
 
+void iniciarLFS(char**);
+void crearFSMetadata(char*, char*);
+void levantarFS();
+void crearBloques();
+void liberarMemoriaLFS();
 void* leerDeConsola(void*);
 void* recibirMemorias(void*);
 void* conectarConMemoria(void*);
 void interpretarRequest(cod_request, char*, int*);
-errorNo procesarCreate(char*, char*, char*, char*);
-errorNo procesarInsert(char*, uint16_t, char*, unsigned long long);
-errorNo procesarSelect(char*, char*, t_registro**);
 int obtenerBloqueDisponible(errorNo*);
 int crearDirectorio(char*);
-int mkdir_p(const char*);
-void inicializarLfs(void);
-void liberarString(char*);
+void crearFS(char*, char*);
 errorNo crearParticiones(char*, int);
-void* hiloDump();
-errorNo dumpear();
 void vaciarTabla(t_tabla*);
-void compactacion(char*);
 t_list* obtenerRegistrosDeMemtable(char*, int);
 t_list* obtenerRegistrosDeTmp(char*, int);
+char* obtenerMetadata(char*);
 
 #endif /* LFS_H_ */

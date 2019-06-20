@@ -8,12 +8,12 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-//	conectarAFileSystem();
+
+	conectarAFileSystem();
 
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 	inicializacionDeMemoria();
 	log_info(logger_MEMORIA,"INICIO DE MEMORIA");
-
 
 	//--------------------------------SEMAFOROS-HILOS ----------------------------------------------------------------
 	//	SEMAFOROS
@@ -36,21 +36,6 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
-
-/* conectarAFileSystem()
- * Parametros:
- * 	->  :: void
- * Descripcion: Se crea la conexion con lissandraFileSystem
- *
- * Return:
- * 	-> :: void
- * VALGRIND:: SI */
-void conectarAFileSystem() {
-	conexionLfs = crearConexion(
-			config_get_string_value(config, "IP_FS"),
-			config_get_string_value(config, "PUERTO_FS"));
-	//log_info(logger_MEMORIA, "SE CONECTO CN LFS");
-}
 
 void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
@@ -145,7 +130,7 @@ void leerDeConsola(void){
  * 	-> resultadoVlidacion :: int
  * VALGRIND:: NO */
 int validarRequest(char* mensaje){
-	int tamanioMax = 255; //TODO lo pasa LFS X HANDSHAKE
+	int tamanioMax = handshake->tamanioValue; //TODO lo pasa LFS X HANDSHAKE
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
@@ -176,6 +161,23 @@ int validarRequest(char* mensaje){
 	request =NULL;
 	liberarArrayDeChar(requestSeparada); //(1)
 	requestSeparada=NULL;
+}
+
+/* conectarAFileSystem()
+ * Parametros:
+ * 	->  :: void
+ * Descripcion: Se crea la conexion con lissandraFileSystem y se realiza el handshake con la misma
+ * 				Se recibe de lfs el tam max del value
+ * Return:
+ * 	-> :: void
+ * VALGRIND:: SI */
+void conectarAFileSystem() {
+	conexionLfs = crearConexion(
+			config_get_string_value(config, "IP_FS"),
+			config_get_string_value(config, "PUERTO_FS"));
+	handshake = recibirHandshakeLFS(conexionLfs);
+	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
+	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshake->tamanioValue);
 }
 
 void escucharMultiplesClientes() {
@@ -232,7 +234,8 @@ void escucharMultiplesClientes() {
 
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
-				//enviarHandshakeMemoria("1, 2, 3", "4, 5, 6", descriptorCliente);
+				// todo: por ahora que no tenemos gossiping vamos a levantar siempre 3 memorias con estos 3 datos hardcodeados
+				enviarHandshakeMemoria("8001", "127.0.0.1", "1", descriptorCliente);
 				numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 				numeroDeClientes++;
 			}
@@ -293,7 +296,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
 		case SALIDA:
-			log_info(logger_MEMORIA,"HaS finalizado el componente MEMORIA");
+			log_info(logger_MEMORIA,"Has finalizado el componente MEMORIA");
 			break;
 		case NUESTRO_ERROR:
 			 if(caller == ANOTHER_COMPONENT){
@@ -478,6 +481,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
+	 		log_info(logger_MEMORIA, valorAEnviar->request);
 			enviar(codResultado, valorAEnviar->request, socketKernel);
 	 	 	break;
 	 	 case(CONSOLE):
@@ -608,6 +612,15 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 				log_info(logger_MEMORIA,error);
 	 		}
 				break;
+	 	 case(DROP):
+			if(codResultado == SUCCESS){
+				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
+				log_info(logger_MEMORIA,error);
+			}else{
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				log_info(logger_MEMORIA,error);
+			}
+	 	 break;
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
  			free(respuesta);
@@ -1085,7 +1098,7 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int i){
 	t_paquete* describeLFS = (t_paquete*) malloc(sizeof(t_paquete));
 	describeLFS=intercambiarConFileSystem(codRequest,request);
-	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,i);
+	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,(int) list_get(descriptoresClientes,i));
 }
 
 void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int i) {

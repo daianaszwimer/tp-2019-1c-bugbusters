@@ -42,6 +42,7 @@ typedef enum
 	SC,
 	SHC,
 	EC,
+	NINGUNA,
 	CONSISTENCIA_INVALIDA = -1
 } consistencia;
 
@@ -54,7 +55,8 @@ typedef enum
 	ERROR_CREANDO_DIRECTORIO,
 	ERROR_CREANDO_METADATA,
 	ERROR_CREANDO_PARTICIONES,
-	KEY_NO_EXISTE
+	KEY_NO_EXISTE,
+	ERROR_GENERICO = -1
 } errorNo;
 
 typedef enum
@@ -81,10 +83,12 @@ typedef struct
 
 typedef struct
 {
-	char* puertos;
-	char* ips;
 	int tamanioIps;
+	char* ips;
 	int tamanioPuertos;
+	char* puertos;
+	int tamanioNumeros;
+	char* numeros;
 } t_handshake_memoria;
 
 typedef struct
@@ -109,7 +113,7 @@ char** separarString(char*);
 int longitudDeArrayDeStrings(char**);
 char** obtenerParametros(char*);
 int longitudDeArrayDeStrings(char**);
-
+consistencia obtenerEnumConsistencia(char*);
 
 int crearConexion(char*, char*);
 t_config* leer_config(char*);
@@ -139,11 +143,12 @@ void* serializar_handshake_memoria(t_handshake_memoria*, int);
 void* serializar_handshake_lfs(t_handshake_lfs*, int);
 void* serializar_paquete(t_paquete* , int);
 void enviar(cod_request, char*, int);
-void enviarHandshakeMemoria(char*, char*, int);
+void enviarHandshakeMemoria(char*, char*, char*, int);
 void enviarHandshakeLFS(int, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 void liberarArrayDeChar(char**);
+void liberarHandshakeMemoria(t_handshake_memoria*);
 
 /* Multiplexacion */
 void eliminarClientesCerrados(t_list*, int*);
