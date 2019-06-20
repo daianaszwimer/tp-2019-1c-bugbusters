@@ -611,6 +611,15 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 				log_info(logger_MEMORIA,error);
 	 		}
 				break;
+	 	 case(DROP):
+			if(codResultado == SUCCESS){
+				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
+				log_info(logger_MEMORIA,error);
+			}else{
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				log_info(logger_MEMORIA,error);
+			}
+	 	 break;
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
  			free(respuesta);
