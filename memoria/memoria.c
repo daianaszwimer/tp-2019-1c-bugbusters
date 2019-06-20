@@ -46,7 +46,7 @@ void inicializacionDeMemoria(){
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
 	bitarrayString= strdup("");
-	bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
+	bitarray= bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
 	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
 
@@ -174,7 +174,7 @@ void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_FS"),
 			config_get_string_value(config, "PUERTO_FS"));
-	handshake = recibirHandshakeLFS(conexionLfs);
+	handshake = 20;//recibirHandshakeLFS(conexionLfs);
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshake->tamanioValue);
 }
