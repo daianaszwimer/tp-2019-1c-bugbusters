@@ -486,12 +486,14 @@ void enviarHandshakeLFS(int tamanioValue, int socket_cliente)
 	int tamanioPaquete = sizeof(int);
 	void* handshakeAEnviar = serializar_handshake_lfs(handshake, tamanioPaquete);
 	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
+	free(handshakeAEnviar);
 	free(handshake);
 }
 
 t_handshake_lfs* recibirHandshakeLFS(int socket)
 {
 	t_handshake_lfs* handshake = malloc(sizeof(t_handshake_lfs));
+	//handshake->tamanioValue = 20;
 	recv(socket, &handshake->tamanioValue, sizeof(int), MSG_WAITALL);
 
 	return handshake;

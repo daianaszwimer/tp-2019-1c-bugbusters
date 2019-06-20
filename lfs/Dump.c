@@ -89,7 +89,9 @@ errorNo dumpear() {
 						FILE* bloque = fopen(pathBloque, "a+");
 						if(cantidadDeBloquesAPedir != 1 && i < cantidadDeBloquesAPedir - 1) {
 							char* registrosAEscribir = string_substring_until(datosADumpear, tamanioBloque);
-							datosADumpear = string_substring_from(datosADumpear, tamanioBloque);
+							char* stringAuxiliar = string_substring_from(datosADumpear, tamanioBloque);
+							free(datosADumpear);
+							datosADumpear = stringAuxiliar;
 							fprintf(bloque, "%s", registrosAEscribir);
 							free(registrosAEscribir);
 						} else {

@@ -174,7 +174,7 @@ void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_FS"),
 			config_get_string_value(config, "PUERTO_FS"));
-	handshake = 20;//recibirHandshakeLFS(conexionLfs);
+	handshake = recibirHandshakeLFS(conexionLfs);
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshake->tamanioValue);
 }

@@ -1,5 +1,6 @@
 #include "API.h"
 
+
 /* procesarCreate() [API]
  * Parametros:
  * 	-> nombreTabla :: char*
@@ -159,7 +160,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 			t_registro* registro = (t_registro*)listaDeRegistros->head->data;
 			string_append_with_format(&*mensaje, "%s %u %s %llu", nombreTabla, registro->key, registro->value, registro->timestamp);
 		}else{
-			error = KEY_NO_EXISTE;
+			string_append_with_format(&*mensaje, "Registro no encontrado salu3");
 		}
 		list_destroy(listaDeRegistrosDeMemtable);
 		//list_destroy_and_destroy_elements(listaDeRegistrosDeTmp, (void*)eliminarRegistro);
