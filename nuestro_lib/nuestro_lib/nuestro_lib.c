@@ -528,7 +528,7 @@ void enviarHandshakeMemoria(char* puertos, char* ips, char* numeros, int socket_
 
 	handshake->tamanioNumeros = strlen(numeros) + 1;
 	handshake->numeros = malloc(handshake->tamanioNumeros);
-	memcpy(handshake->numeros, puertos, handshake->tamanioNumeros);
+	memcpy(handshake->numeros, numeros, handshake->tamanioNumeros);
 
 
 	int tamanioPaquete = 3 * sizeof(int) + handshake->tamanioIps + handshake->tamanioPuertos + handshake->tamanioNumeros;
