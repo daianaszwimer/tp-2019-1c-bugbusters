@@ -151,11 +151,12 @@ void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
 int obtenerPaginaDisponible(t_marco**);
 
 void eliminarElemTablaSegmentos(t_segmento*);
+void liberarTabla(t_segmento*);
 void liberarEstructurasMemoria(t_tablaDeSegmentos*);
 void liberarMemoria();
 void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
 void procesarDescribe(cod_request, char*,t_caller,int);
-
+void procesarDrop(cod_request, char* ,consistencia , t_caller , int);
 
 
 #endif /* MEMORIA_H_ */
