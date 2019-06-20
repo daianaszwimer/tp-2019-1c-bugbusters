@@ -358,7 +358,6 @@ void aumentarContadores(consistencia consistenciaRequest, char* numeroMemoria, c
 				memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
 				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
 			}
-			log_info(logger_KERNEL, "voy a sumarle a select insert %d", cantidadASumarSelectInsert);
 			break;
 		case SHC:
 			memoriaCorrespondiente = list_find(cargaMemoriaSHC, (void*)encontrarTabla);
