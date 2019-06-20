@@ -1,15 +1,15 @@
 #include "Compactador.h"
 
 void compactacion(char* pathTabla) {
-	int numeroTemporal = 0;
-	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
-	char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
-	char* pathMetadata = string_from_format("%sMetadata/Metadata.bin", puntoDeMontaje);
-	t_config* configMetadata = config_create(pathMetadata);
-	t_config* configMetadataTabla = config_create(pathMetadataTabla);
-	int tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
-	int numeroDeParticiones = config_get_int_value(configMetadataTabla, "PARTITIONS");
-	FILE* fileTmp;
+	//int numeroTemporal = 0;
+	//char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
+	//char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
+	//char* pathMetadata = string_from_format("%sMetadata/Metadata.bin", puntoDeMontaje);
+	//t_config* configMetadata = config_create(pathMetadata);
+	//t_config* configMetadataTabla = config_create(pathMetadataTabla);
+	//int tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
+	//int numeroDeParticiones = config_get_int_value(configMetadataTabla, "PARTITIONS");
+	//FILE* fileTmp;
 
 	DIR *tabla;
 	struct dirent *archivoDeLaTabla;
@@ -18,27 +18,36 @@ void compactacion(char* pathTabla) {
 		perror("opendir");
 	}
 
+	// Renombramos los tmp a tmpc
 	while((archivoDeLaTabla = readdir(tabla)) != NULL) {
 		if(string_ends_with(archivoDeLaTabla->d_name, ".tmp")) {
 			char* pathTmp = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
-			fileTmp = fopen(pathTmp, "r");
-			if (fileTmp != NULL) { // Crear tmpc de los tmp
-				char* pathTmpC = string_from_format("%s%c", pathTmp, 'c');
-				FILE* fileTmpC = fopen(pathTmpC, "w+");
-				char* datosDelArchivoTemporal = malloc((int) (sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long)));
-				while (fscanf(fileTmp, "%s", datosDelArchivoTemporal) == 1) {
-					fprintf(fileTmpC, "%s", datosDelArchivoTemporal);
-					fputc('\n', fileTmpC);
-				}
-				fclose(fileTmp);
-				rewind(fileTmpC);
+			char* pathTmpC = string_from_format("%s/%s%c", pathTabla, archivoDeLaTabla->d_name, 'c');
+			int resultadoDeRenombrar = rename(pathTmp, pathTmpC);
+			if(resultadoDeRenombrar != 0) {
+				log_info(logger_LFS, "No se pudo renombrar el temporal");
 			}
 		}
 	}
 
+
+
 	if (closedir(tabla) == -1) {
 		perror("closedir");
 	}
+
+	/*fileTmp = fopen(pathTmp, "r");
+				if (fileTmp != NULL) { // Crear tmpc de los tmp
+					char* pathTmpC = string_from_format("%s%c", pathTmp, 'c');
+					FILE* fileTmpC = fopen(pathTmpC, "w+");
+					char* datosDelArchivoTemporal = malloc((int) (sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long)));
+					while (fscanf(fileTmp, "%s", datosDelArchivoTemporal) == 1) {
+						fprintf(fileTmpC, "%s", datosDelArchivoTemporal);
+						fputc('\n', fileTmpC);
+					}
+					fclose(fileTmp);
+					rewind(fileTmpC);
+				}*/
 	/*do {
 		char* pathTmp = string_from_format("%s/%d.tmp", pathTabla,
 				numeroTemporal);
