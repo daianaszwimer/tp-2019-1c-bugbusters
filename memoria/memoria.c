@@ -825,18 +825,10 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: SI*/
-<<<<<<< HEAD
-int validarInsertSC(errorNo codRespuestaDeLFS){
-	if (codRespuestaDeLFS == SUCCESS){
-		return EXIT_SUCCESS;
-	}else{
-		return EXIT_FAILURE;
-	}
-=======
+
 void actualizarPagina (t_marco* pagina, char* nuevoValue){
 	pagina->timestamp =  obtenerHoraActual();
 	strcpy(pagina->value,nuevoValue);
->>>>>>> dev
 }
 
 /* actualizarElementoEnTablaDePagina()
