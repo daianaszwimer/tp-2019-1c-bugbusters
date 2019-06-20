@@ -1095,3 +1095,15 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
 	describeLFS=intercambiarConFileSystem(codRequest,request);
 	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,(int) list_get(descriptoresClientes,i));
 }
+
+
+
+
+
+
+
+
+
+
+
+
