@@ -97,10 +97,7 @@ int obtenerIndiceMarcoDisponible() {
 	while(index < marcosTotales && bitarray_test_bit(bitarray, index)) index++;
 	if(index >= marcosTotales) {
 		index = NUESTRO_ERROR;
-	}else{
-		bitarray_set_bit(bitarray, index);
 	}
-
 	return index;
 }
 
@@ -286,6 +283,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case DESCRIBE:
 			log_info(logger_MEMORIA, "Me llego un DESCRIBE");
+			procesarDescribe(codRequest, request,caller,i);
 			break;
 		case DROP:
 			log_info(logger_MEMORIA, "Me llego un DROP");
@@ -302,13 +300,10 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 				 log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 				 int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
 				 // TODO: Chequear si el -1 se puede castear como int*
-				 break;
-	         }else{
-	        	 break;
-	         }
-
+			  }
+			 break;
 		default:
-			log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
+			log_warning(logger_MEMORIA, "No has ingresado una request valida");
 			break;
 	}
 }
@@ -332,7 +327,6 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 	return paqueteRecibido;
 
 }
-
 
 /*procesarSelect()
  * Parametros:
@@ -605,6 +599,15 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			requestSeparada=NULL;
 			}
 			break;
+	 	 case(DESCRIBE):
+	 		if(codResultado == SUCCESS){
+				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
+				log_info(logger_MEMORIA,error);
+	 		}else{
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				log_info(logger_MEMORIA,error);
+	 		}
+				break;
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
  			free(respuesta);
@@ -743,8 +746,6 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 	char* nuevoValor = strdup(requestSeparada[3]);
 	unsigned long long nuevoTimestamp;
 
-//	char *consultaALFS= strdup("");
-
 	if(requestSeparada[4]!=NULL){
 		convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
 	}else{
@@ -770,22 +771,16 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
 		//TODO
 		}else{
-			if(resultadoCache == KEYINEXISTENTE){//TODO:		KEY no encontrada -> nueva pagina solicitada
-			int hayEspacio= EXIT_SUCCESS; // TODO ALGORTMO DE REEMPLAZO + JOURNALING
-
-			if(hayEspacio ==EXIT_SUCCESS){
+			if(resultadoCache == KEYINEXISTENTE){
 				t_segmento* tablaDestino = (t_segmento*)malloc(sizeof(t_segmento));
 				tablaDestino = encontrarSegmento(nuevaTabla);
 				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
-
-				//TODO unificar desp cuando lfs este, con valorDeLF
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 
 				eliminar_paquete(paqueteAEnviar);
 				free(nuevaTabla);
 				nuevaTabla=NULL;
-			}
 
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
 
@@ -881,6 +876,7 @@ t_marco* crearPagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue, unsign
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
 	t_elemTablaDePaginas* nuevoElemento= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
 
+	bitarray_set_bit(bitarray, id);
 	nuevoElemento->numeroDePag = id;
 	nuevoElemento->marco = crearPagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
 	nuevoElemento->modificado = SINMODIFICAR;
@@ -942,7 +938,7 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
  * 	-> void ::
  * 	VALGRIND :: NO*/
 void create(cod_request codRequest,char* request){
-	errorNo rtaCache = existeSegmentoEnMemoria(codRequest,request);
+	t_erroresMemoria rtaCache = existeSegmentoEnMemoria(codRequest,request);
 
 	if(rtaCache == SEGMENTOINEXISTENTE){
 		char** requestSeparada = separarRequest(request);
@@ -959,7 +955,7 @@ void create(cod_request codRequest,char* request){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
+t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
 	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
 	char** parametros = separarRequest(request);
 	char* segmentoABuscar=strdup(parametros[1]);
@@ -975,7 +971,6 @@ errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
 		log_info(logger_MEMORIA,"NO EXISTE EL SEGMENTO");
 		return SEGMENTOINEXISTENTE;
 	}
-//	free(tablaDeSegmentosEnCache); //TODO hay q hace uno q libere bien
 	liberarTabla(tablaDeSegmentosEnCache); //(6)
 	free(segmentoABuscar);
 	segmentoABuscar =NULL;
@@ -1076,10 +1071,22 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 	memset(marcoAEliminar->value, 0, sizeof(marcoAEliminar->value));
 }
 
-
-
-
-
+/* procesarDescribe()
+ * Parametros:
+ *	-> cod_request :: codRequest
+ *	-> char* :: request
+ *	-> t_caller :: caller
+ *	-> int :: i//socket kernel
+ * Descripcion: Actua como un pasamanos para pasarle a info del describe, mandada por lfs
+ * 				a kernel.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
+void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int i){
+	t_paquete* describeLFS = (t_paquete*) malloc(sizeof(t_paquete));
+	describeLFS=intercambiarConFileSystem(codRequest,request);
+	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,i);
+}
 
 void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int i) {
 	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));

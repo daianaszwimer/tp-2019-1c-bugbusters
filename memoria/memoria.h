@@ -139,7 +139,7 @@ t_segmento* crearSegmento(char*);
 
 void procesarCreate(cod_request, char*,consistencia, t_caller, int);
 void create(cod_request,char*);
-errorNo existeSegmentoEnMemoria(cod_request,char*);
+t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
 
@@ -152,8 +152,8 @@ void eliminarElemTablaSegmentos(t_segmento*);
 void liberarEstructurasMemoria(t_tablaDeSegmentos*);
 void liberarMemoria();
 void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
-
-void procesarDrop(codRequest, request ,consistenciaMemoria, caller, i);
+void procesarDescribe(cod_request, char*,t_caller,int);
+void procesarDrop(cod_request, char* ,consistencia , t_caller , int);
 
 
 #endif /* MEMORIA_H_ */
