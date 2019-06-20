@@ -11,7 +11,6 @@ int main(void) {
 //	conectarAFileSystem();
 
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
-
 	inicializacionDeMemoria();
 	log_info(logger_MEMORIA,"INICIO DE MEMORIA");
 
@@ -27,16 +26,14 @@ int main(void) {
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
 
 	pthread_join(hiloLeerDeConsola, NULL);
+	log_info(logger_MEMORIA, "Hilo de consola finalizado");
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
+	log_info(logger_MEMORIA, "Hilo recibir kernels finalizado");
 
 	//-------------------------------- -PARTE FINAL DE MEMORIA---------------------------------------------------------
-	liberar_conexion(conexionLfs);
-	//liberarMemoria();
-	log_destroy(logger_MEMORIA);
- 	config_destroy(config);
- 	FD_ZERO(&descriptoresDeInteres);// TODO momentaneamente, asi cerramos todas las conexiones
-
-	return 0;
+	liberarEstructurasMemoria(tablaDeSegmentos);
+	liberarMemoria();
+	return EXIT_SUCCESS;
 }
 
 
@@ -63,8 +60,8 @@ void inicializacionDeMemoria(){
 	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
-	char* bitarrayString=(char*)malloc(marcosTotales);
-	bitarrayString= strdup("");
+//	bitarrayString=(char*)malloc(marcosTotales);
+	bitarrayString= strdup(""); //DOBLE MALLOC VER POR LAS DUDAS
 	bitarray= bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
 	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
@@ -148,7 +145,7 @@ void leerDeConsola(void){
  * 	-> resultadoVlidacion :: int
  * VALGRIND:: NO */
 int validarRequest(char* mensaje){
-	int tamanioMax = 10; //TODO lo pasa LFS X HANDSHAKE
+	int tamanioMax = 255; //TODO lo pasa LFS X HANDSHAKE
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
@@ -177,6 +174,8 @@ int validarRequest(char* mensaje){
 	}
 	liberarArrayDeChar(request);
 	request =NULL;
+	liberarArrayDeChar(requestSeparada); //(1)
+	requestSeparada=NULL;
 }
 
 void escucharMultiplesClientes() {
@@ -426,15 +425,23 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			*elementoEncontrado=elementoDePagEnCache;
 			*valorEncontrado = paqueteAuxiliar;
 
+			liberarArrayDeChar(parametros);
+			parametros=NULL;
 			return EXIT_SUCCESS;
 		}else{
-
+			liberarArrayDeChar(parametros);
+			parametros=NULL;
 			return KEYINEXISTENTE;
 		}
 	}else{
-
+		liberarArrayDeChar(parametros);
+		parametros=NULL;
 		return SEGMENTOINEXISTENTE;
 	}
+	liberarArrayDeChar(parametros);
+	parametros=NULL;
+	free(paqueteAuxiliar); //(4)
+	paqueteAuxiliar=NULL;
 }
 
 /*encontrarSegmento()
@@ -513,6 +520,10 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 	 		}else{
 	 			switch(codResultado){
 					case(KEY_NO_EXISTE):
@@ -531,24 +542,60 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}
 	 	 break;
 		case(INSERT):
 			if(codResultado == SUCCESS){
 				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,respuesta);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
 				log_info(logger_MEMORIA,error);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}
 			break;
 		case(CREATE):
 			if(codResultado == SUCCESS || codResultado == TABLA_EXISTE){
 				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,respuesta);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
 				log_info(logger_MEMORIA,error);
+				free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}
 			break;
 	 	 case(DESCRIBE):
@@ -566,7 +613,11 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  			respuesta=NULL;
  			free(error);
  			error=NULL;
-			break;
+ 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+ 			valorAEnviarSeparado=NULL;
+ 			liberarArrayDeChar(requestSeparada); //(4)
+ 			requestSeparada=NULL;
+ 			break;
 		}
 }
 
@@ -926,27 +977,6 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* req
 	parametros=NULL;
 }
 
-//
-//// FUNCION QUE QUEREMOS UTILIZAR CUANDO FINALIZAN LOS DOS HILOS
-////void liberarMemoria(){
-////	void liberarElementoDePag(t_elemTablaDePaginas* self){
-////		 free(self->pagina->value);
-////		 free(self->pagina);
-////	 }
-////	list_clean_and_destroy_elements(tablaA->tablaDePagina, (void*)liberarElementoDePag);
-////}
-////
-////
-////void eliminarElemTablaDePaginas(t_elemTablaDePaginas* elementoEncontrado){
-////	eliminarPagina(elementoEncontrado->pagina);
-////	free(elementoEncontrado);
-////	elementoEncontrado=NULL;
-////}
-////void eliminarPagina(t_pagina* pag){
-////	free(pag->value);
-////	free(pag);
-////	pag= NULL;
-////}
 
 /* obtenerPaginaDisponible()
  * Parametros:
@@ -967,6 +997,54 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 
 }
 
+
+/* liberarEstructurasMemoria()
+ * Parametros:
+ *	-> t_tablaDeSEgmentos :: tablaDeSegmento
+ * Descripcion: Libera el marco de cada pagina, libera cada pagina de una tablaDePagina, libera la tablaDePagina
+ * 				de un segmento, libera lista de segmentos de una tablaDeSegmento, libera lista de tablaDeSegmentos
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: */
+void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
+	void eliminarElemTablaSegmentos(t_segmento* segmento){
+		void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
+			eliminarMarco(pagina,pagina->marco);
+//			free(pagina->marco);
+//			pagina->marco=NULL;
+			free(pagina);
+			pagina=NULL;
+		}
+		free(segmento->path);
+		segmento->path=NULL;
+		list_clean_and_destroy_elements(segmento->tablaDePagina, (void*) eliminarElemTablaPagina);
+	}
+	list_clean_and_destroy_elements(tablaDeSegmentos->segmentos, (void*) eliminarElemTablaSegmentos);
+}
+
+
+/* liberarMemoria()
+ * Parametros:
+ *	-> :: void
+ * Descripcion: Libera los punteros reservados en inicializarMemoria()
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: */
+void liberarMemoria(){
+	log_info(logger_MEMORIA, "Finaliza MEMORIA");
+	free(bitarray);
+	bitarray=NULL;
+	free(bitarrayString);
+	bitarrayString=NULL;
+	free(memoria);
+	memoria=NULL;
+	liberar_conexion(conexionLfs);
+	FD_ZERO(&descriptoresDeInteres);
+	log_destroy(logger_MEMORIA);
+	config_destroy(config);
+}
+
+
 /* eliminarMarco()
  * Parametros:
  *	-> t_marco** :: pagLibre
@@ -975,7 +1053,7 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: SI*/
-void elimiarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
+void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 	bitarray_clean_bit(bitarray, elem->numeroDePag);
 	memset(marcoAEliminar->value, 0, sizeof(marcoAEliminar->value));
 }
@@ -993,10 +1071,6 @@ void elimiarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
  * 	VALGRIND :: NO*/
 void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int i){
 	t_paquete* describeLFS = (t_paquete*) malloc(sizeof(t_paquete));
-	describeLFS->palabraReservada=SUCCESS;
-	describeLFS->request=strdup("la reques se ha realizado con exito");
-	describeLFS->tamanio= sizeof(request);
-	//intercambiarConFileSystem(codRequest,request);
-	log_info(logger_MEMORIA,"DESCRIBE FICTICIO PORQ WILLY NO LO SUBIO");
+	describeLFS=intercambiarConFileSystem(codRequest,request);
 	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,i);
 }

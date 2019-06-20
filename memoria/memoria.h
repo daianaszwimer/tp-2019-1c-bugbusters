@@ -95,6 +95,7 @@ pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
 t_bitarray* bitarray;
+char* bitarrayString;
 void* memoria;
 int marcosTotales;
 int marcosUtilizados=0;
@@ -141,12 +142,18 @@ void create(cod_request,char*);
 t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 
 //void liberarElementoDePag(t_elemTablaDePaginas* self);
-void liberarMemoria();
+
 void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
 //void eliminarPagina(t_pagina*);
 
 int obtenerPaginaDisponible(t_marco**);
-void elimiarMarco(t_elemTablaDePaginas*,t_marco* );
+
+void eliminarElemTablaSegmentos(t_segmento*);
+void liberarEstructurasMemoria(t_tablaDeSegmentos*);
+void liberarMemoria();
+void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
 void procesarDescribe(cod_request, char*,t_caller,int);
+
+
 
 #endif /* MEMORIA_H_ */
