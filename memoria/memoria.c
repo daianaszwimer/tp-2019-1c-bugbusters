@@ -1085,5 +1085,5 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int i){
 	t_paquete* describeLFS = (t_paquete*) malloc(sizeof(t_paquete));
 	describeLFS=intercambiarConFileSystem(codRequest,request);
-	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,i);
+	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,(int) list_get(descriptoresClientes,i));
 }
