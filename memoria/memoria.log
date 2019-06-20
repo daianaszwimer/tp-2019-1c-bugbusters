@@ -135,3 +135,9 @@
 [INFO] 21:08:30:291 Memoria/(5911:5922): Me llego un CREATE
 [INFO] 21:11:53:445 Memoria/(5911:5922): entre a interpretarr request
 [ERROR] 21:11:53:445 Memoria/(5911:5922): el cliente se desconecto. Terminando servidor
+[INFO] 14:55:46:635 Memoria/(13862:13862): SE CONECTO CN LFS
+[INFO] 14:55:46:643 Memoria/(13862:13927): Vamos a leer de consola
+[INFO] 14:55:46:647 Memoria/(13862:13928): Memoria lista para recibir al kernel
+[INFO] 15:17:31:754 Memoria/(15166:15166): SE CONECTO CN LFS
+[INFO] 15:17:31:763 Memoria/(15166:15176): Vamos a leer de consola
+[INFO] 15:17:31:772 Memoria/(15166:15177): Memoria lista para recibir al kernel
