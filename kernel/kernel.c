@@ -7,18 +7,18 @@ int main(void) {
 
 	//Hilos
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)conectarAMemoria, NULL);
-	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
 	pthread_create(&hiloMetricas, NULL, (void*)loguearMetricas, NULL);
 	pthread_create(&hiloDescribe, NULL, (void*)hacerDescribe, NULL);
+	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 
 	pthread_join(hiloConectarAMemoria, NULL);
-	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloPlanificarNew, NULL);
 	pthread_join(hiloPlanificarExec, NULL);
 	pthread_join(hiloMetricas, NULL);
 	pthread_join(hiloDescribe, NULL);
+	pthread_join(hiloLeerDeConsola, NULL);
 
 	liberarMemoria();
 
@@ -303,13 +303,13 @@ void liberarEstadisticaMemoria(estadisticaMemoria* memoria) {
 	free(memoria->numeroMemoria);
 	free(memoria);
 }
+
 /* liberarConfigMemoria()
  * Parametros:
  * 	-> config_memoria* :: configALiberar
  * Descripcion: recibe una configMemoria y la libera.
  * Return:
  * 	-> :: void  */
-
 void liberarConfigMemoria(config_memoria* configALiberar) {
 	if (configALiberar != NULL) {
 		free(configALiberar->ip);
