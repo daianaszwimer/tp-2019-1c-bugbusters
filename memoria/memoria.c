@@ -284,6 +284,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case DESCRIBE:
 			log_info(logger_MEMORIA, "Me llego un DESCRIBE");
+			procesarDescribe(codRequest, request,caller,i);
 			break;
 		case DROP:
 			log_info(logger_MEMORIA, "Me llego un DROP");
@@ -296,18 +297,13 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case NUESTRO_ERROR:
 			 if(caller == ANOTHER_COMPONENT){
-		                               log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-	                               int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
-	                               // TODO: Chequear si el -1 se puede castear como int*
-	                               break;
-	                      }
-	                      else{
-	                              break;
-	                    }
-
-
+				 log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
+				 int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+				 // TODO: Chequear si el -1 se puede castear como int*
+			  }
+			 break;
 		default:
-			log_warning(logger_MEMORIA, "Operacion desconocida. No quieras meter la pata");
+			log_warning(logger_MEMORIA, "No has ingresado una request valida");
 			break;
 	}
 }
@@ -331,7 +327,6 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 	return paqueteRecibido;
 
 }
-
 
 /*procesarSelect()
  * Parametros:
@@ -542,17 +537,9 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 			if(codResultado == SUCCESS){
 				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,respuesta);
-	 			free(respuesta);
-	 			respuesta=NULL;
-	 			free(error);
-	 			error=NULL;
 			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
 				log_info(logger_MEMORIA,error);
-	 			free(respuesta);
-	 			respuesta=NULL;
-	 			free(error);
-	 			error=NULL;
 			}
 			break;
 		case(CREATE):
@@ -564,6 +551,15 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 				log_info(logger_MEMORIA,error);
 			}
 			break;
+	 	 case(DESCRIBE):
+	 		if(codResultado == SUCCESS){
+				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
+				log_info(logger_MEMORIA,error);
+	 		}else{
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				log_info(logger_MEMORIA,error);
+	 		}
+				break;
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
  			free(respuesta);
@@ -698,8 +694,6 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 	char* nuevoValor = strdup(requestSeparada[3]);
 	unsigned long long nuevoTimestamp;
 
-//	char *consultaALFS= strdup("");
-
 	if(requestSeparada[4]!=NULL){
 		convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
 	}else{
@@ -725,22 +719,16 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
 		//TODO
 		}else{
-			if(resultadoCache == KEYINEXISTENTE){//TODO:		KEY no encontrada -> nueva pagina solicitada
-			int hayEspacio= EXIT_SUCCESS; // TODO ALGORTMO DE REEMPLAZO + JOURNALING
-
-			if(hayEspacio ==EXIT_SUCCESS){
+			if(resultadoCache == KEYINEXISTENTE){
 				t_segmento* tablaDestino = (t_segmento*)malloc(sizeof(t_segmento));
 				tablaDestino = encontrarSegmento(nuevaTabla);
 				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
-
-				//TODO unificar desp cuando lfs este, con valorDeLF
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 
 				eliminar_paquete(paqueteAEnviar);
 				free(nuevaTabla);
 				nuevaTabla=NULL;
-			}
 
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
 
@@ -898,7 +886,7 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
  * 	-> void ::
  * 	VALGRIND :: NO*/
 void create(cod_request codRequest,char* request){
-	errorNo rtaCache = existeSegmentoEnMemoria(codRequest,request);
+	t_erroresMemoria rtaCache = existeSegmentoEnMemoria(codRequest,request);
 
 	if(rtaCache == SEGMENTOINEXISTENTE){
 		char** requestSeparada = separarRequest(request);
@@ -915,7 +903,7 @@ void create(cod_request codRequest,char* request){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-errorNo existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
+t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
 	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
 	char** parametros = separarRequest(request);
 	char* segmentoABuscar=strdup(parametros[1]);
@@ -992,4 +980,23 @@ void elimiarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 	memset(marcoAEliminar->value, 0, sizeof(marcoAEliminar->value));
 }
 
-
+/* procesarDescribe()
+ * Parametros:
+ *	-> cod_request :: codRequest
+ *	-> char* :: request
+ *	-> t_caller :: caller
+ *	-> int :: i//socket kernel
+ * Descripcion: Actua como un pasamanos para pasarle a info del describe, mandada por lfs
+ * 				a kernel.
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
+void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int i){
+	t_paquete* describeLFS = (t_paquete*) malloc(sizeof(t_paquete));
+	describeLFS->palabraReservada=SUCCESS;
+	describeLFS->request=strdup("la reques se ha realizado con exito");
+	describeLFS->tamanio= sizeof(request);
+	//intercambiarConFileSystem(codRequest,request);
+	log_info(logger_MEMORIA,"DESCRIBE FICTICIO PORQ WILLY NO LO SUBIO");
+	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,i);
+}
