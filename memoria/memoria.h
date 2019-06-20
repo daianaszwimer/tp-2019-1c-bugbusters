@@ -153,6 +153,7 @@ void liberarEstructurasMemoria(t_tablaDeSegmentos*);
 void liberarMemoria();
 void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
 
+void procesarDrop(codRequest, request ,consistenciaMemoria, caller, i);
 
 
 #endif /* MEMORIA_H_ */
