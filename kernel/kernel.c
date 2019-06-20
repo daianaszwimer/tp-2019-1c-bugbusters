@@ -119,15 +119,18 @@ void procesarHandshake(t_handshake_memoria* handshakeRecibido) {
 	size_t i = 0;
 	char** ips = string_split(handshakeRecibido->ips, ",");
 	char** puertos = string_split(handshakeRecibido->puertos, ",");
-	//char** numeros = string_split(handshakeRecibido->numeros, ",");
+	char** numeros = string_split(handshakeRecibido->numeros, ",");
 	for( i = 0; ips[i] != NULL; i++)
 	{
 		config_memoria* memoriaNueva = (config_memoria*) malloc(sizeof(config_memoria));
-		memoriaNueva->ip = config_get_string_value(config, "IP_MEMORIA"); //ips[i];
-		memoriaNueva->puerto = config_get_string_value(config, "PUERTO_MEMORIA"); //puertos[i];
-		memoriaNueva->numero = "5";
+		memoriaNueva->ip = strdup(ips[i]);// config_get_string_value(config, "IP_MEMORIA");
+		memoriaNueva->puerto = strdup(puertos[i]);// config_get_string_value(config, "PUERTO_MEMORIA");
+		memoriaNueva->numero = strdup(numeros[i]);
 		list_add(memorias, memoriaNueva);
 	}
+	liberarArrayDeChar(ips);
+	liberarArrayDeChar(puertos);
+	liberarArrayDeChar(numeros);
 }
 
 /* leerDeConsola()

@@ -87,6 +87,8 @@ typedef struct
 	char* ips;
 	int tamanioPuertos;
 	char* puertos;
+	int tamanioNumeros;
+	char* numeros;
 } t_handshake_memoria;
 
 typedef struct
@@ -141,7 +143,7 @@ void* serializar_handshake_memoria(t_handshake_memoria*, int);
 void* serializar_handshake_lfs(t_handshake_lfs*, int);
 void* serializar_paquete(t_paquete* , int);
 void enviar(cod_request, char*, int);
-void enviarHandshakeMemoria(char*, char*, int);
+void enviarHandshakeMemoria(char*, char*, char*, int);
 void enviarHandshakeLFS(int, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
