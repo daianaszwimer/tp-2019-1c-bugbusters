@@ -1111,4 +1111,12 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 		}
 	}
 	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,i));
+	eliminar_paquete(valorDeLFS);
+	valorDeLFS= NULL;
+	free(tablaDeSegmentosEnCache);
+	tablaDeSegmentosEnCache=NULL;
+	liberarArrayDeChar(requestSeparada);
+	requestSeparada=NULL;
+	free(segmentoABuscar);
+	segmentoABuscar=NULL;
 }
