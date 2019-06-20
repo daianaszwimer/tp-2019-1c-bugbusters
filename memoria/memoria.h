@@ -95,6 +95,7 @@ pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
 t_bitarray* bitarray;
+char* bitarrayString;
 void* memoria;
 int marcosTotales;
 int marcosUtilizados=0;

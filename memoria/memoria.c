@@ -8,7 +8,7 @@ int main(void) {
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
-	conectarAFileSystem();
+//	conectarAFileSystem();
 
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 	inicializacionDeMemoria();
@@ -33,7 +33,6 @@ int main(void) {
 	//-------------------------------- -PARTE FINAL DE MEMORIA---------------------------------------------------------
 	liberarEstructurasMemoria(tablaDeSegmentos);
 	liberarMemoria();
-
 	return EXIT_SUCCESS;
 }
 
@@ -61,8 +60,8 @@ void inicializacionDeMemoria(){
 	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
-	char* bitarrayString=(char*)malloc(marcosTotales);
-	bitarrayString= strdup("");
+//	bitarrayString=(char*)malloc(marcosTotales);
+	bitarrayString= strdup(""); //DOBLE MALLOC VER POR LAS DUDAS
 	bitarray= bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
 	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
@@ -178,6 +177,8 @@ int validarRequest(char* mensaje){
 	}
 	liberarArrayDeChar(request);
 	request =NULL;
+	liberarArrayDeChar(requestSeparada); //(1)
+	requestSeparada=NULL;
 }
 
 void escucharMultiplesClientes() {
@@ -430,15 +431,23 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			*elementoEncontrado=elementoDePagEnCache;
 			*valorEncontrado = paqueteAuxiliar;
 
+			liberarArrayDeChar(parametros);
+			parametros=NULL;
 			return EXIT_SUCCESS;
 		}else{
-
+			liberarArrayDeChar(parametros);
+			parametros=NULL;
 			return KEYINEXISTENTE;
 		}
 	}else{
-
+		liberarArrayDeChar(parametros);
+		parametros=NULL;
 		return SEGMENTOINEXISTENTE;
 	}
+	liberarArrayDeChar(parametros);
+	parametros=NULL;
+	free(paqueteAuxiliar); //(4)
+	paqueteAuxiliar=NULL;
 }
 
 /*encontrarSegmento()
@@ -517,6 +526,10 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 	 		}else{
 	 			switch(codResultado){
 					case(KEY_NO_EXISTE):
@@ -535,6 +548,10 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}
 	 	 break;
 		case(INSERT):
@@ -545,6 +562,10 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
 				log_info(logger_MEMORIA,error);
@@ -552,15 +573,35 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}
 			break;
 		case(CREATE):
 			if(codResultado == SUCCESS || codResultado == TABLA_EXISTE){
 				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,respuesta);
+	 			free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
 				log_info(logger_MEMORIA,error);
+				free(respuesta);
+	 			respuesta=NULL;
+	 			free(error);
+	 			error=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorAEnviarSeparado=NULL;
+	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			requestSeparada=NULL;
 			}
 			break;
 		default:
@@ -569,7 +610,11 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  			respuesta=NULL;
  			free(error);
  			error=NULL;
-			break;
+ 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+ 			valorAEnviarSeparado=NULL;
+ 			liberarArrayDeChar(requestSeparada); //(4)
+ 			requestSeparada=NULL;
+ 			break;
 		}
 }
 
@@ -969,6 +1014,8 @@ void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
 	void eliminarElemTablaSegmentos(t_segmento* segmento){
 		void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
 			eliminarMarco(pagina,pagina->marco);
+//			free(pagina->marco);
+//			pagina->marco=NULL;
 			free(pagina);
 			pagina=NULL;
 		}
@@ -990,7 +1037,11 @@ void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
 void liberarMemoria(){
 	log_info(logger_MEMORIA, "Finaliza MEMORIA");
 	free(bitarray);
+	bitarray=NULL;
+	free(bitarrayString);
+	bitarrayString=NULL;
 	free(memoria);
+	memoria=NULL;
 	liberar_conexion(conexionLfs);
 	FD_ZERO(&descriptoresDeInteres);
 	log_destroy(logger_MEMORIA);
