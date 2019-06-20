@@ -151,9 +151,9 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 		//TODO validar q onda la funcion convertirKey, retorna -1 si hay error
 		int _key = convertirKey(key);
 		t_list* listaDeRegistrosDeMemtable = obtenerRegistrosDeMemtable(nombreTabla, _key);
-		t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);
+		//t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
-		list_add_all(listaDeRegistros, listaDeRegistrosDeTmp);
+		//list_add_all(listaDeRegistros, listaDeRegistrosDeTmp);
 		if(!list_is_empty(listaDeRegistros)){
 			list_sort(listaDeRegistros, (void*) ordenarRegistrosPorTimestamp);
 			t_registro* registro = (t_registro*)listaDeRegistros->head->data;
@@ -162,7 +162,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 			error = KEY_NO_EXISTE;
 		}
 		list_destroy(listaDeRegistrosDeMemtable);
-		list_destroy_and_destroy_elements(listaDeRegistrosDeTmp, (void*)eliminarRegistro);
+		//list_destroy_and_destroy_elements(listaDeRegistrosDeTmp, (void*)eliminarRegistro);
 	}else{
 		error = TABLA_NO_EXISTE;
 	}
