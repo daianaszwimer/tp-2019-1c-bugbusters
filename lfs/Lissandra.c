@@ -7,6 +7,16 @@
 int main(int argc, char* argv[]) {
 	iniciarLFS(argv);
 
+	/*procesarInsert("TABLA1", 2, "\"Esta es la prueba 1\"", obtenerHoraActual());
+	procesarInsert("TABLA1", 3, "\"Ahora es la prueba 2\"", obtenerHoraActual());
+
+	errorNo error = dumpear();
+
+	procesarInsert("TABLA1", 44, "\"Esta es la prueba 3\"", obtenerHoraActual());
+	procesarInsert("TABLA1", 655, "\"Ahora es la prueba 4\"", obtenerHoraActual());
+
+	error = dumpear();*/
+
 	if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
 		log_info(logger_LFS, "Hilo de consola creado");
 	}else{
@@ -31,7 +41,6 @@ int main(int argc, char* argv[]) {
 	log_info(logger_LFS, "Hilo recibir memorias finalizado");
 	pthread_join(hiloDumpeo, NULL);
 	log_info(logger_LFS, "Hilo dumpeo finalizado");
-
 
 	liberarMemoriaLFS();
 	return EXIT_SUCCESS;

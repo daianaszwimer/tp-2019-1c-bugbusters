@@ -69,7 +69,6 @@ errorNo dumpear() {
 					t_registro* registro = list_get(tabla->registros,j);
 					string_append_with_format(&datosADumpear, "%u;%s;%llu\n", registro->key, registro->value, registro->timestamp);
 				}
-				//fprintf(fileTmp, "%s", datosADumpear);
 				int cantidadDeBloquesAPedir = strlen(datosADumpear) / tamanioBloque;
 				if(strlen(datosADumpear) % tamanioBloque != 0) {
 					cantidadDeBloquesAPedir++;
@@ -82,9 +81,9 @@ errorNo dumpear() {
 						log_info(logger_LFS, "no hay bloques disponibles");
 					} else {
 						if(i==cantidadDeBloquesAPedir-1) {
-							bloques = string_from_format("%s%d", bloques, bloqueDeParticion);
+							string_append_with_format(&bloques, "%d", bloqueDeParticion);
 						} else {
-							bloques = string_from_format("%s%d,", bloques, bloqueDeParticion);
+							string_append_with_format(&bloques, "%d,", bloqueDeParticion);
 						}
 						char* pathBloque = string_from_format("%sBloques/%d.bin", puntoDeMontaje, bloqueDeParticion);
 						FILE* bloque = fopen(pathBloque, "a+");
@@ -100,10 +99,11 @@ errorNo dumpear() {
 						free(pathBloque);
 					}
 				}
-				bloques = string_from_format("BLOCKS=[%s]", bloques);
-				fprintf(fileTmp, "%s\n%s", tamanioTmp, bloques);
-				free(tamanioTmp);
+				char* bloquesTmp = string_from_format("BLOCKS=[%s]", bloques);
 				free(bloques);
+				fprintf(fileTmp, "%s\n%s", tamanioTmp, bloquesTmp);
+				free(bloquesTmp);
+				free(tamanioTmp);
 				free(datosADumpear);
 				fclose(fileTmp);
 				// Vacio la memtable
