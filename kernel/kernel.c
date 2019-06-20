@@ -187,7 +187,6 @@ void hacerDescribe(void) {
  * 	-> :: void  */
 void loguearMetricas(void) {
 	while(1) {
-		log_info(logger_KERNEL, "pasaron 30s");
 		informarMetricas(FALSE);
 		// limpio variables para empezar a contar de nuevo
 		pthread_mutex_lock(&semMMetricas);
@@ -234,7 +233,6 @@ void informarMetricas(int mostrarPorConsola) {
 	double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
 	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
 	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
-		log_info(logger_KERNEL, "select insert %d y total %d", estadisticaAMostrar->cantidadSelectInsert, estadisticaAMostrar->cantidadTotal);
 		double estadistica = (double)estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
 		if (mostrarPorConsola == TRUE) {
 			log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
@@ -951,17 +949,18 @@ void procesarJournal(int soloASHC) {
 			conexionTemporanea = crearConexion(memoriaAConectarse->ip, memoriaAConectarse->puerto);
 		}
 		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
-		t_paquete* paqueteRecibido = recibir(conexionTemporanea);
+		log_info(logger_KERNEL, "Se envió el JOURNAL a la memoria con numero %s", memoriaAConectarse->numero);
+		/*t_paquete* paqueteRecibido = recibir(conexionTemporanea);
 		int respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
 			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", "JOURNAL", paqueteRecibido->request);
 		} else {
 			log_error(logger_KERNEL, "El request %s no es válido", "JOURNAL");
-		}
+		}*/
 		if (conexionTemporanea != conexionMemoria) {
 			liberar_conexion(conexionTemporanea);
 		}
-		eliminar_paquete(paqueteRecibido);
+		// eliminar_paquete(paqueteRecibido);
 	}
 	if(soloASHC == TRUE) {
 		list_iterate(memoriasShc, (void*)enviarJournal);
