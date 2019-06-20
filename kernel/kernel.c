@@ -84,6 +84,7 @@ void liberarMemoria(void) {
 	sem_destroy(&semMultiprocesamiento);
 	queue_destroy(new);
 	queue_destroy(ready);
+	//list_clean_and_destroy_elements(memorias, (void*)liberarConfigMemoria);
 	list_destroy(memorias);
 	liberarConfigMemoria(memoriaSc);
 	list_destroy(memoriasShc);
@@ -107,6 +108,7 @@ void conectarAMemoria(void) {
 	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
 	handshake = recibirHandshakeMemoria(conexionMemoria);
 	procesarHandshake(handshake);
+	liberarHandshakeMemoria(handshake);
 }
 
 /* procesarHandshake()
@@ -126,7 +128,9 @@ void procesarHandshake(t_handshake_memoria* handshakeRecibido) {
 		memoriaNueva->ip = strdup(ips[i]);// config_get_string_value(config, "IP_MEMORIA");
 		memoriaNueva->puerto = strdup(puertos[i]);// config_get_string_value(config, "PUERTO_MEMORIA");
 		memoriaNueva->numero = strdup(numeros[i]);
+		log_info(logger_KERNEL, "estoy agregando el ip: %s puerto: %s numero: %s", memoriaNueva->ip, memoriaNueva->puerto, memoriaNueva->numero);
 		list_add(memorias, memoriaNueva);
+		memoriaNueva = NULL;
 	}
 	liberarArrayDeChar(ips);
 	liberarArrayDeChar(puertos);
@@ -455,7 +459,8 @@ void planificarNewAReady(void) {
 	while(1) {
 		sem_wait(&semRequestNew);
 		pthread_mutex_lock(&semMColaNew);
-		char* request = strdup((char*) queue_pop(new));
+		char* request = strdup((char*) queue_peek(new));
+		free((char*) queue_pop(new));
 		pthread_mutex_unlock(&semMColaNew);
 		if(validarRequest(request) == TRUE) {
 			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
@@ -549,6 +554,8 @@ void reservarRecursos(char* mensaje) {
 					queue_push(_request->request, otraRequest);
 					liberarArrayDeChar(requestDividida);
 					i = 1;
+					free(request);
+					request = NULL;
 					request = (char*) malloc(sizeof(char));
 				    *request = '\0';
 				}
@@ -563,6 +570,8 @@ void reservarRecursos(char* mensaje) {
 				queue_push(_request->request, otraRequest);
 				liberarArrayDeChar(requestDividida);
 			}
+			free(request);
+			request = NULL;
 			liberarArrayDeChar(parametros);
 			fclose(archivoLql);
 		}
@@ -1058,13 +1067,14 @@ int procesarAdd(char* mensaje) {
 		estado = ERROR_GENERICO;
 		log_error(logger_KERNEL, "No encontré la memoria %s", requestDividida[2]);
 	} else {
+		log_info(logger_KERNEL, "voy a asignar a la mem ip %s puerto %s", memoria->ip, memoria->puerto);
 		switch (_consistencia) {
 			case SC:
 				memoriaSc = memoria;
 				break;
 			case SHC:
 				list_add(memoriasShc, memoria);
-				procesarJournal(TRUE);
+				//procesarJournal(TRUE);
 				break;
 			case EC:
 				list_add(memoriasEc, memoria);

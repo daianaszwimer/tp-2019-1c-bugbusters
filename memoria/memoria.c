@@ -197,7 +197,7 @@ void escucharMultiplesClientes() {
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
 				// todo: por ahora que no tenemos gossiping vamos a levantar siempre 3 memorias con estos 3 datos hardcodeados
-				enviarHandshakeMemoria("8001,8002,8003", "127.0.0.1,127.0.0.1,127.0.0.1", "1,2,3", descriptorCliente);
+				enviarHandshakeMemoria("8001", "127.0.0.1", "1", descriptorCliente);
 				numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 				numeroDeClientes++;
 			}

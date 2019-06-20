@@ -212,3 +212,9 @@
 [INFO] 20:12:36:860 Kernel/(11901:11967): La respuesta del request INSERT MARINOS 983 "Tiburon" es MARINOS 983 "Tiburon" 
 
 [INFO] 20:13:26:921 Kernel/(11901:11913): select insert 22 y total 26
+[INFO] 10:51:21:917 Kernel/(10424:10424): ----------------INICIO DE KERNEL--------------
+[INFO] 10:51:21:924 Kernel/(10424:10437): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 10:51:21:943 Kernel/(10424:10441): pasaron 30s
+[INFO] 10:52:04:619 Kernel/(10424:10441): pasaron 30s
+[INFO] 10:52:24:710 Kernel/(10424:10456): voy a asignar a la mem ip 127.0.0.1 puerto 8001
+[INFO] 10:52:35:59 Kernel/(10424:10441): pasaron 30s
