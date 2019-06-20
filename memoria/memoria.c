@@ -480,6 +480,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
+	 		log_info(logger_MEMORIA, valorAEnviar->request);
 			enviar(codResultado, valorAEnviar->request, socketKernel);
 	 	 	break;
 	 	 case(CONSOLE):

@@ -322,7 +322,8 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	free(mensajeDeError);
 
 
-
+	log_info(logger_LFS, "LO DE ABAJO ES EL MSJ");
+	log_info(logger_LFS, mensaje);
 	if (memoria_fd != NULL) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{
