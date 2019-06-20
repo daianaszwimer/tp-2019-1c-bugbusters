@@ -39,14 +39,14 @@ int main(int argc, char* argv[]) {
 
 
 void iniciarLFS(char* argv[]){
-	logger_LFS = log_create("lfs.log", "Lfs", 1, LOG_LEVEL_DEBUG);
+	logger_LFS = log_create("LissandraFileSystem.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
 
 	if(argv[1] != NULL){
 		char* configPath = argv[1];
 		config = config_create(configPath);
 	}else{
-		config = config_create("/home/utnso/tp-2019-1c-bugbusters/lfs/lfs.config");
+		config = config_create("/home/utnso/tp-2019-1c-bugbusters/LissandraFileSystem/LissandraFileSystem.config");
 	}
 
 	if(config == NULL){
