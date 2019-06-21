@@ -148,6 +148,7 @@ void enviarHandshakeLFS(int, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 void liberarArrayDeChar(char**);
+void liberarHandshakeMemoria(t_handshake_memoria*);
 
 /* Multiplexacion */
 void eliminarClientesCerrados(t_list*, int*);

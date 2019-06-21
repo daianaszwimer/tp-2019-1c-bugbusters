@@ -486,12 +486,14 @@ void enviarHandshakeLFS(int tamanioValue, int socket_cliente)
 	int tamanioPaquete = sizeof(int);
 	void* handshakeAEnviar = serializar_handshake_lfs(handshake, tamanioPaquete);
 	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
+	free(handshakeAEnviar);
 	free(handshake);
 }
 
 t_handshake_lfs* recibirHandshakeLFS(int socket)
 {
 	t_handshake_lfs* handshake = malloc(sizeof(t_handshake_lfs));
+	//handshake->tamanioValue = 20;
 	recv(socket, &handshake->tamanioValue, sizeof(int), MSG_WAITALL);
 
 	return handshake;
@@ -535,10 +537,7 @@ void enviarHandshakeMemoria(char* puertos, char* ips, char* numeros, int socket_
 	int tamanioPaquete = 3 * sizeof(int) + handshake->tamanioIps + handshake->tamanioPuertos + handshake->tamanioNumeros;
 	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanioPaquete);
 	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
-	free(handshake->ips);
-	free(handshake->puertos);
-	free(handshake->numeros);
-	free(handshake);
+	liberarHandshakeMemoria(handshake);
 }
 
 /* recibirHandshakeMemoria()
@@ -660,6 +659,19 @@ void eliminar_paquete(t_paquete* paquete)
 {
 	free(paquete->request);
 	free(paquete);
+}
+
+/*liberarHandshakeMemoria()
+ * Parametros:
+ * 	-> t_handshake_memoria* ::  memoriaALiberar
+ * Descripcion: libera lo que está adentro del handshake.
+ * Return:
+ * 	-> :: void */
+void liberarHandshakeMemoria(t_handshake_memoria* memoriaALiberar) {
+	free(memoriaALiberar->ips);
+	free(memoriaALiberar->numeros);
+	free(memoriaALiberar->puertos);
+	free(memoriaALiberar);
 }
 
 /*liberar_conexion()
