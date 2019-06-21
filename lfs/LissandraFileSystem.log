@@ -1,0 +1,40 @@
+[INFO] 09:31:27:805 Lfs/(11628:11628): ----------------INICIO DE LISSANDRA FS--------------
+[ERROR] 09:31:27:806 Lfs/(11628:11628): Error al leer archivo de configuracion
+[INFO] 09:31:27:806 Lfs/(11628:11628): Finalizando Lissandra File System
+[INFO] 09:32:04:465 Lfs/(11706:11706): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 09:32:04:472 Lfs/(11706:11706): Hilo de consola creado
+[INFO] 09:32:04:474 Lfs/(11706:11706): Hilo de recibir memorias creado
+[INFO] 09:32:04:475 Lfs/(11706:11717): Lissandra lista para recibir Memorias
+[INFO] 09:32:04:477 Lfs/(11706:11706): Hilo de Dump iniciado
+[INFO] 09:33:04:478 Lfs/(11706:11718): Dump iniciado
+[INFO] 09:33:04:478 Lfs/(11706:11718): Dump exitoso
+[INFO] 09:33:12:3 Lfs/(11706:11716): Me llego un CREATE
+[ERROR] 09:33:12:4 Lfs/(11706:11716): La tabla TABLA ya existe
+[INFO] 09:33:12:4 Lfs/(11706:11716): 
+[INFO] 09:33:19:531 Lfs/(11706:11716): Me llego un CREATE
+[INFO] 09:33:19:539 Lfs/(11706:11716): 
+[INFO] 10:10:01:631 Lfs/(7812:7812): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:12:26:634 Lfs/(7812:7812): Hilo de consola creado
+[INFO] 10:12:26:642 Lfs/(7812:7812): Hilo de recibir memorias creado
+[INFO] 10:12:26:648 Lfs/(7812:7902): Lissandra lista para recibir Memorias
+[INFO] 10:12:26:649 Lfs/(7812:7812): Hilo de Dump iniciado
+[INFO] 10:14:34:358 Lfs/(8116:8116): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 10:14:34:359 Lfs/(8116:8116): Hilo de consola creado
+[INFO] 10:14:34:359 Lfs/(8116:8116): Hilo de recibir memorias creado
+[INFO] 10:14:34:359 Lfs/(8116:8116): Hilo de Dump iniciado
+[INFO] 10:14:34:359 Lfs/(8116:8125): Lissandra lista para recibir Memorias
+[INFO] 10:14:47:8 Lfs/(8116:8124): Me llego un CREATE
+[INFO] 10:14:47:10 Lfs/(8116:8124): 
+[INFO] 10:14:58:486 Lfs/(8116:8124): Me llego un INSERT
+[INFO] 10:14:58:488 Lfs/(8116:8124): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 10:14:58:488 Lfs/(8116:8124): 
+[INFO] 11:59:59:953 Lfs/(11762:11762): ----------------INICIO DE LISSANDRA FS--------------
+[INFO] 11:59:59:954 Lfs/(11762:11762): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 11:59:59:963 Lfs/(11762:11762): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 11:59:59:966 Lfs/(11762:11762): Finalizando LFS
+[INFO] 13:42:08:677 Lfs/(23941:23941): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 13:42:12:822 Lfs/(23941:23941): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 13:45:18:729 Lfs/(24109:24109): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 13:45:20:671 Lfs/(24109:24109): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 13:48:30:374 Lfs/(24222:24222): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 13:48:30:375 Lfs/(24222:24222): Se agrego la tabla a la memtable y se agrego el registro
