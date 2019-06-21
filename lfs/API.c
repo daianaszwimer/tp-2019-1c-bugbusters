@@ -298,3 +298,43 @@ char* obtenerMetadata(char* pathTabla){
 	}
 	return mensaje;
 }
+
+errorNo procesarDrop(char* nombreTabla){
+	errorNo error = SUCCESS;
+	char* pathTabla = string_from_format("%s/%s",pathTablas, nombreTabla);
+	DIR* tabla = opendir(pathTabla);
+	if(tabla){
+		borrarParticiones(tabla, pathTabla);
+		borrarTemporales(tabla, pathTabla);
+		borrarMetadata(tabla, pathTabla);
+		closedir(tabla);
+	}else{
+		error = TABLA_NO_EXISTE;
+	}
+
+	return error;
+}
+
+void borrarParticiones(char* pathTabla){
+
+	DIR* tabla;
+	char* pathFileTmp;
+	struct dirent* particion;
+	while ((particion = readdir (tabla)) != NULL) {
+		//ignora . y ..
+		if(strcmp(particion->d_name, ".") == 0 || strcmp(particion->d_name, "..") == 0) continue;
+		if (string_ends_with(particion->d_name, ".tmp")) {
+			pathFileTmp = string_from_format("%s/%s", pathTabla, particion->d_name);
+		}
+
+		free(pathFileTmp);
+	}
+}
+
+void borrarTemporales(char* pathTabla){
+
+}
+
+void borrarMetadata(char* pathTabla){
+
+}
