@@ -64,7 +64,7 @@ char* bitmap;
 t_bitarray* bitarray;
 int bitmapDescriptor;
 
-void iniciarLFS(char**);
+void inicializacionLissandraFileSystem(char**);
 void crearFSMetadata(char*, char*);
 void levantarFS();
 void crearBloques();
