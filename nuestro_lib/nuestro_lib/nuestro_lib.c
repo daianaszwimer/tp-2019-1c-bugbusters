@@ -219,6 +219,7 @@ int esperar_cliente(int socket_servidor)
 void liberarArrayDeChar(char** arrayDeChar) {
 	for (int j = 0; arrayDeChar[j] != NULL; j++) {
 		free(arrayDeChar[j]);
+		arrayDeChar[j]=NULL;
 	}
 	free(arrayDeChar);
 }
@@ -656,7 +657,9 @@ void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 void eliminar_paquete(t_paquete* paquete)
 {
 	free(paquete->request);
+	paquete->request=NULL;
 	free(paquete);
+	paquete=NULL;
 }
 
 /*liberarHandshakeMemoria()

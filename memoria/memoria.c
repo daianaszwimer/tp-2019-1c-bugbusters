@@ -130,7 +130,7 @@ void leerDeConsola(void){
  * 	-> resultadoVlidacion :: int
  * VALGRIND:: NO */
 int validarRequest(char* mensaje){
-	int tamanioMax = handshake->tamanioValue; //TODO lo pasa LFS X HANDSHAKE
+	int tamanioMax = handshake->tamanioValue;
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
@@ -139,28 +139,40 @@ int validarRequest(char* mensaje){
 	switch(codValidacion){
 		case EXIT_SUCCESS:
 			if(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],tamanioMax,logger_MEMORIA) == NUESTRO_ERROR){
+				liberarArrayDeChar(request);
+				request =NULL;
+				liberarArrayDeChar(requestSeparada); //(1)
+				requestSeparada=NULL;
 				return NUESTRO_ERROR;
 				break;
 			}
 			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
+			liberarArrayDeChar(request);
+			request =NULL;
+			liberarArrayDeChar(requestSeparada);
+			requestSeparada=NULL;
 			return EXIT_SUCCESS;
 			break;
 		case NUESTRO_ERROR:
 			//TODO es la q hay q hacerla generica
 			log_error(logger_MEMORIA, "La request no es valida");
+			liberarArrayDeChar(request);
+			request =NULL;
+			liberarArrayDeChar(requestSeparada);
+			requestSeparada=NULL;
 			return NUESTRO_ERROR;
 			break;
 		case SALIDA:
 			return SALIDA;
 			break;
 		default:
+			liberarArrayDeChar(request);
+			request =NULL;
+			liberarArrayDeChar(requestSeparada);
+			requestSeparada=NULL;
 			return NUESTRO_ERROR;
 			break;
 	}
-	liberarArrayDeChar(request);
-	request =NULL;
-	liberarArrayDeChar(requestSeparada); //(1)
-	requestSeparada=NULL;
 }
 
 /* conectarAFileSystem()
@@ -257,7 +269,7 @@ void escucharMultiplesClientes() {
  * 				y ,segun la palabra reservada,delega al correspondiente procesar
  * Return:
  * 	-> :: void
- * VALGRIND:: SI */
+ * VALGRIND:: EN PROCESO */
 void interpretarRequest(int palabraReservada,char* request,t_caller caller, int i) {
 
 	consistencia consistenciaMemoria;
@@ -309,6 +321,8 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			log_warning(logger_MEMORIA, "No has ingresado una request valida");
 			break;
 	}
+	liberarArrayDeChar(requestSeparada);
+	requestSeparada=NULL;
 }
 
 /*intercambiarConFileSystem()
@@ -396,11 +410,11 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
  * 				En caso de que no exista la tabla||key devuelve el error correspondiente.
  * Return:
  * 	-> int :: resultado de la operacion
- * 	VALGRIND :NO */
+ * 	VALGRIND : EN PROCESO */
 int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
-	t_segmento* segmentoEnCache = malloc(sizeof(t_segmento));
-	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
-	t_paquete* paqueteAuxiliar;
+	t_segmento* segmentoEnCache = malloc(sizeof(t_segmento)); //TODO: Ver free
+	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas)); //TODO: Ver free
+	t_paquete* paqueteAuxiliar; //TODO: Ver free
 
 	char** parametros = separarRequest(request);
 	char* segmentoABuscar=strdup(parametros[1]);
@@ -431,19 +445,27 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 
 			liberarArrayDeChar(parametros);
 			parametros=NULL;
+			free(segmentoABuscar);
+			segmentoABuscar=NULL;
 			return EXIT_SUCCESS;
 		}else{
 			liberarArrayDeChar(parametros);
 			parametros=NULL;
+			free(segmentoABuscar);
+			segmentoABuscar=NULL;
 			return KEYINEXISTENTE;
 		}
 	}else{
 		liberarArrayDeChar(parametros);
 		parametros=NULL;
+		free(segmentoABuscar);
+		segmentoABuscar=NULL;
 		return SEGMENTOINEXISTENTE;
 	}
 	liberarArrayDeChar(parametros);
 	parametros=NULL;
+	free(segmentoABuscar);
+	segmentoABuscar=NULL;
 	free(paqueteAuxiliar); //(4)
 	paqueteAuxiliar=NULL;
 }
@@ -506,13 +528,13 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
   * Descripcion: Muestra por consola el mensaje a la request hecha, ya se un resultado exitoso o erroneo.
   * Return:
   * 	-> :: void
-  * VALGRIND:: NO*/
+  * VALGRIND:: SI */
  void mostrarResultadoPorConsola(cod_request palabraReservada, int codResultado,char* request,t_paquete* valorAEnviar){
 	 char* respuesta= strdup("");
 	 char* error=strdup("");
 	 char** requestSeparada=separarRequest(request);
-	 char** valorAEnviarSeparado=strdup("");
-	 char* valorEncontrado=strdup("");
+	 char** valorAEnviarSeparado;
+	 char* valorEncontrado;
 	 switch(palabraReservada){
 	 	 case(SELECT):
 			 valorAEnviarSeparado=separarRequest(valorAEnviar->request);
@@ -525,9 +547,10 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
-	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorEncontrado=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado);
 	 			valorAEnviarSeparado=NULL;
-	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
 	 		}else{
 	 			switch(codResultado){
@@ -547,9 +570,10 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
-	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			valorEncontrado=NULL;
+	 			liberarArrayDeChar(valorAEnviarSeparado);
 	 			valorAEnviarSeparado=NULL;
-	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
 			}
 	 	 break;
@@ -561,9 +585,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
-	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
-	 			valorAEnviarSeparado=NULL;
-	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
 			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
@@ -572,9 +594,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
-	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
-	 			valorAEnviarSeparado=NULL;
-	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
 			}
 			break;
@@ -586,20 +606,16 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
-	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
-	 			valorAEnviarSeparado=NULL;
-	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
 			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
 				log_info(logger_MEMORIA,error);
-				free(respuesta);
+	 			free(respuesta);
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
-	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
-	 			valorAEnviarSeparado=NULL;
-	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
 			}
 			break;
@@ -611,7 +627,13 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
 				log_info(logger_MEMORIA,error);
 	 		}
-				break;
+			free(respuesta);
+			respuesta=NULL;
+			free(error);
+			error=NULL;
+			liberarArrayDeChar(requestSeparada);
+			requestSeparada=NULL;
+			break;
 	 	 case(DROP):
 			if(codResultado == SUCCESS){
 				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
@@ -620,16 +642,20 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
 				log_info(logger_MEMORIA,error);
 			}
-	 	 break;
+			free(respuesta);
+			respuesta=NULL;
+			free(error);
+			error=NULL;
+			liberarArrayDeChar(requestSeparada);
+			requestSeparada=NULL;
+	 	 	break;
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
  			free(respuesta);
  			respuesta=NULL;
  			free(error);
  			error=NULL;
- 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
- 			valorAEnviarSeparado=NULL;
- 			liberarArrayDeChar(requestSeparada); //(4)
+ 			liberarArrayDeChar(requestSeparada);
  			requestSeparada=NULL;
  			break;
 		}
@@ -702,12 +728,12 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoEr
  *					3)Si existe en lisandra=>se inserta alli.
  * Return:
  * 	-> :: void
- * 	VALGRIND :: NO*/
+ * 	VALGRIND :: EN PROCESO */
 void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int i) {
-		t_elemTablaDePaginas* elementoEncontrado= malloc(sizeof(t_elemTablaDePaginas));
-		t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
+		t_elemTablaDePaginas* elementoEncontrado= malloc(sizeof(t_elemTablaDePaginas));//TODO: Ver free
+		t_paquete* valorEncontrado=malloc(sizeof(t_paquete)); //TODO: Ver free
 		char** requestSeparada = separarRequest(request);
-		t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
+		t_paquete* valorDeLFS=malloc(sizeof(t_paquete)); //NO hacer free
 
 		if(consistenciaMemoria == EC || caller == CONSOLE){
 			int resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
@@ -725,13 +751,13 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 				enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 			}
 			free(consultaALFS);
+			consultaALFS=NULL;
 		}else{
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
-			free(elementoEncontrado);
-			elementoEncontrado=NULL;
-			free(valorEncontrado);
-			valorEncontrado=NULL;
+
 		}
+		liberarArrayDeChar(requestSeparada);
+		requestSeparada=NULL;
 }
 
 /* insertar()
@@ -748,10 +774,10 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
  * 				SI NO EXISTE LE SEGMENTO => se solicita agregar un nuevo segmento y se siguen los pasos de keyinexistente
  * Return:
  * 	-> :: void
- * 	VALGRIND :: NO*/
+ * 	VALGRIND :: EN PROCESO */
 void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int i){
-	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
 
+	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete)); //TODO: Ver free
 	char** requestSeparada = separarRequest(request);
 	char* nuevaTabla = strdup(requestSeparada[1]);
 	char* nuevaKeyChar = strdup(requestSeparada[2]);
@@ -765,24 +791,18 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		nuevoTimestamp= obtenerHoraActual();
 	}
 
-
 	if(resultadoCache == EXIT_SUCCESS){ // es decir que EXISTE SEGMENTO y EXISTE KEY
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 
-		eliminar_paquete(paqueteAEnviar);
-		free(nuevaTabla);
-		nuevaTabla=NULL;
-		free(nuevoValor);
-		nuevoValor=NULL;
 	}else{
 		t_marco* pagLibre = NULL;
 		int index =obtenerPaginaDisponible(&pagLibre);
 		if(index == MEMORIAFULL){
 		log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
-		//TODO
+
 		}else{
 			if(resultadoCache == KEYINEXISTENTE){
 				t_segmento* tablaDestino = (t_segmento*)malloc(sizeof(t_segmento));
@@ -791,12 +811,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 
-				eliminar_paquete(paqueteAEnviar);
-				free(nuevaTabla);
-				nuevaTabla=NULL;
-
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
-
 				t_segmento* nuevoSegmento = crearSegmento(nuevaTabla);
 				t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp);
 				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
@@ -804,8 +819,16 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 
 			}
-		}//TODO Liberar memoria
+		}
 	}
+	liberarArrayDeChar(requestSeparada);
+	requestSeparada=NULL;
+	free(nuevaTabla);
+	nuevaTabla=NULL;
+	free(nuevaKeyChar);
+	nuevaKeyChar=NULL;
+	free(nuevoValor);
+	nuevoValor=NULL;
 }
 
 /* armarPaqueteDeRtaAEnviar()
@@ -815,15 +838,17 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
  * 				arma un paquete para enviarse (a quien solicito un insert)
  * Return:
  * 	-> paqueteAEnviar:: t_paquete*
- * 	VALGRIND :: NO*/
+ * 	VALGRIND :: EN PROCESO */
 t_paquete* armarPaqueteDeRtaAEnviar(char* request){
-	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
+	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete)); //TODO: Ver free
 
 	paqueteAEnviar->palabraReservada= SUCCESS;
 	char** requestRespuesta= string_n_split(request,2," ");
 	paqueteAEnviar->request=strdup(requestRespuesta[1]);
 	paqueteAEnviar->tamanio=strlen(requestRespuesta[1]);
 
+	liberarArrayDeChar(requestRespuesta);
+	requestRespuesta=NULL;
 	return paqueteAEnviar;
 }
 
@@ -949,7 +974,7 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
  * 				En caso contrario, no lo crea.
  * Return:
  * 	-> void ::
- * 	VALGRIND :: NO*/
+ * 	VALGRIND :: EN PROCESO */
 void create(cod_request codRequest,char* request){
 	t_erroresMemoria rtaCache = existeSegmentoEnMemoria(codRequest,request);
 
@@ -957,6 +982,9 @@ void create(cod_request codRequest,char* request){
 		char** requestSeparada = separarRequest(request);
 		t_segmento* nuevaTablaDePagina = crearSegmento(requestSeparada[1]);
 		list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
+
+		liberarArrayDeChar(requestSeparada);
+		requestSeparada=NULL;
 	}
 }
 
@@ -967,7 +995,7 @@ void create(cod_request codRequest,char* request){
  * Descripcion: Solamente verifica si existe o no un segmento en memoria.
  * Return:
  * 	-> void ::
- * 	VALGRIND :: NO*/
+ * 	VALGRIND :: EN PROCESO */
 t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* request){
 	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
 	char** parametros = separarRequest(request);
@@ -978,17 +1006,20 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* req
 
 	tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
 	if(tablaDeSegmentosEnCache!= NULL){
+		liberarArrayDeChar(parametros);
+		parametros=NULL;
+		free(segmentoABuscar);
+		segmentoABuscar =NULL;
 		log_info(logger_MEMORIA,"YA EXISTE EL SEGMENTO");
 		return SEGMENTOEXISTENTE;
 	}else{
+		liberarArrayDeChar(parametros);
+		parametros=NULL;
+		free(segmentoABuscar);
+		segmentoABuscar =NULL;
 		log_info(logger_MEMORIA,"NO EXISTE EL SEGMENTO");
 		return SEGMENTOINEXISTENTE;
 	}
-	liberarTabla(tablaDeSegmentosEnCache); //(6)
-	free(segmentoABuscar);
-	segmentoABuscar =NULL;
-	liberarArrayDeChar(parametros);
-	parametros=NULL;
 }
 
 
