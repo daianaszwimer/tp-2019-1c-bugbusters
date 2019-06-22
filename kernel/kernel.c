@@ -27,6 +27,9 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
+// hilo de gossiping
+// tener en cuenta caida de memoria y sacarla de las listas
+
 /* inicializarVariables()
  * Parametros:
  * 	-> void
@@ -47,6 +50,9 @@ void inicializarVariables() {
 	pthread_mutex_init(&semMColaNew, NULL);
 	pthread_mutex_init(&semMColaReady, NULL);
 	pthread_mutex_init(&semMMetricas, NULL);
+	pthread_mutex_init(&semMTablasSC, NULL);
+	pthread_mutex_init(&semMTablasSHC, NULL);
+	pthread_mutex_init(&semMTablasEC, NULL);
 	// Colas de planificacion
 	new = queue_create();
 	ready = queue_create();
@@ -77,6 +83,9 @@ void liberarMemoria(void) {
 	pthread_mutex_destroy(&semMColaNew);
 	pthread_mutex_destroy(&semMColaReady);
 	pthread_mutex_destroy(&semMMetricas);
+	pthread_mutex_destroy(&semMTablasSC);
+	pthread_mutex_destroy(&semMTablasSHC);
+	pthread_mutex_destroy(&semMTablasEC);
 	sem_destroy(&semRequestNew);
 	sem_destroy(&semRequestReady);
 	sem_destroy(&semMultiprocesamiento);
@@ -158,14 +167,60 @@ void leerDeConsola(void){
 			free(mensaje);
 			break;
 		}
-		pthread_mutex_lock(&semMColaNew);
-		//agregar request a la cola de new
-		queue_push(new, mensaje);
-		pthread_mutex_unlock(&semMColaNew);
-		sem_post(&semRequestNew);
+		planificarRequest(mensaje);
 	}
 }
 
+/* planificarRequest()
+ * Parametros:
+ * 	-> char* :: request
+ * Descripcion: recibe una request, si es ADD o METRICS lo ejecuta directamente, sino lo agrega a la cola de new.
+ * Return:
+ * 	-> :: void  */
+void planificarRequest(char* request) {
+	char** requestSeparada = string_n_split(request, 2, " ");
+	cod_request codigo = obtenerCodigoPalabraReservada(requestSeparada[0], KERNEL);
+	if (codigo == ADD || codigo == METRICS) {
+		// https://github.com/sisoputnfrba/foro/issues/1382
+		pthread_t hiloRequest;
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, request);
+		if(threadProcesar == 0){
+			pthread_attr_destroy(&attr);
+		} else {
+			log_error(logger_KERNEL, "Hubo un error al crear el hilo que ejecuta la request");
+		}
+
+	} else {
+		pthread_mutex_lock(&semMColaNew);
+		//agregar request a la cola de new
+		queue_push(new, request);
+		pthread_mutex_unlock(&semMColaNew);
+		sem_post(&semRequestNew);
+	}
+	liberarArrayDeChar(requestSeparada);
+}
+
+void procesarRequestSinPlanificar(char* request) {
+	char** requestSeparada = string_n_split(request, 2, " ");
+	cod_request codigo = obtenerCodigoPalabraReservada(requestSeparada[0], KERNEL);
+	request_procesada* requestArmada = (request_procesada*) malloc(sizeof(request_procesada));
+	requestArmada->codigo = codigo;
+	requestArmada->request = strdup(request);
+	manejarRequest(requestArmada);
+	liberarRequestProcesada(requestArmada);
+	free(request);
+	liberarArrayDeChar(requestSeparada);
+}
+
+/* escucharCambiosEnConfig()
+ * Parametros:
+ * 	-> void
+ * Descripcion: es un hilo que escucha cambios en el config y actualiza las variables correspodientes.
+ * Return:
+ * 	-> :: void  */
 void escucharCambiosEnConfig(void) {
 	char buffer[BUF_LEN];
 	file_descriptor = inotify_init();
@@ -175,17 +230,12 @@ void escucharCambiosEnConfig(void) {
 
 	watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config", IN_MODIFY);
 	while(1) {
-		log_info(logger_KERNEL, "while");
+		log_info(logger_KERNEL, "Cambió el archivo de config");
 		int length = read(file_descriptor, buffer, BUF_LEN);
 		if (length < 0) {
 			log_error(logger_KERNEL, "Error en inotify");
 		}
 
-		int offset = 0;
-		while (offset < length) {
-			struct inotify_event *event = (struct inotify_event *) &buffer[offset];
-			offset += sizeof (struct inotify_event) + event->len;
-		}
 	}
 }
 
@@ -516,7 +566,6 @@ void planificarReadyAExec(void) {
 		pthread_mutex_lock(&semMColaReady);
 		request->codigo = ((request_procesada*) queue_peek(ready))->codigo;
 		if(request->codigo == RUN) {
-		//	request->request = (t_queue*) malloc(sizeof(((request_procesada*)queue_peek(ready))->request));
 			request->request = ((request_procesada*)queue_peek(ready))->request;
 		} else {
 			request->request = strdup((char*)((request_procesada*)queue_peek(ready))->request);
@@ -530,7 +579,7 @@ void planificarReadyAExec(void) {
 		if(threadProcesar == 0){
 			pthread_attr_destroy(&attr);
 		} else {
-			//informar error
+			log_error(logger_KERNEL, "Hubo un error al crear el hilo que ejecuta la request");
 		}
 	}
 }
@@ -707,6 +756,7 @@ int manejarRequest(request_procesada* request) {
 		case DESCRIBE:
 		case DROP:
 			respuesta = enviarMensajeAMemoria(request->codigo, (char*) request->request);
+			usleep(config_get_int_value(config, "SLEEP_EJECUCION")*1000);
 			break;
 		case JOURNAL:
 			procesarJournal(FALSE);
@@ -726,7 +776,6 @@ int manejarRequest(request_procesada* request) {
 			// la request. en tal caso se devuelve error para cortar ejecucion
 			break;
 	}
-	usleep(config_get_int_value(config, "SLEEP_EJECUCION")*1000);
 	return respuesta;
 }
 
@@ -743,9 +792,15 @@ void actualizarTablas(char* respuesta) {
 	int esDescribeGlobal = longitudDeArrayDeStrings(respuestaParseada) != 1;
 	// solo limpiar cuando es global!!!
 	if (esDescribeGlobal == TRUE) {
+		pthread_mutex_lock(&semMTablasSC);
 		list_clean_and_destroy_elements(tablasSC, (void*)liberarTabla);
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_lock(&semMTablasSHC);
 		list_clean_and_destroy_elements(tablasSHC, (void*)liberarTabla);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_lock(&semMTablasEC);
 		list_clean_and_destroy_elements(tablasEC, (void*)liberarTabla);
+		pthread_mutex_unlock(&semMTablasEC);
 		string_iterate_lines(respuestaParseada, (void*)agregarTablaACriterio);
 	} else {
 		agregarTablaACriterio(respuestaParseada[0]);
@@ -770,6 +825,9 @@ void agregarTablaACriterio(char* tabla) {
 	int esTabla(char* tablaActual) {
 		return string_equals_ignore_case(nombreTabla, tablaActual);
 	}
+	pthread_mutex_lock(&semMTablasSC);
+	pthread_mutex_lock(&semMTablasSHC);
+	pthread_mutex_lock(&semMTablasEC);
 	if (list_find(tablasSC, (void*)esTabla) != NULL) {
 		if (tipoConsistencia != SC) {
 			hayQueAgregar = TRUE;
@@ -777,6 +835,9 @@ void agregarTablaACriterio(char* tabla) {
 		} else {
 			free(nombreTabla);
 		}
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 	} else if (list_find(tablasSHC, (void*)esTabla) != NULL) {
 		if (tipoConsistencia != SHC) {
 			hayQueAgregar = TRUE;
@@ -784,6 +845,9 @@ void agregarTablaACriterio(char* tabla) {
 		} else {
 			free(nombreTabla);
 		}
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 	} else if (list_find(tablasEC, (void*)esTabla) != NULL) {
 		if (tipoConsistencia != EC) {
 			hayQueAgregar = TRUE;
@@ -791,22 +855,34 @@ void agregarTablaACriterio(char* tabla) {
 		} else {
 			free(nombreTabla);
 		}
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 	} else {
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 		hayQueAgregar = TRUE;
 	}
 	if (hayQueAgregar == TRUE) {
 		// tabla no existe en estructura o hay que agregarla en otra
 		switch(tipoConsistencia) {
 			case SC:
+				pthread_mutex_lock(&semMTablasSC);
 				list_add(tablasSC, nombreTabla);
+				pthread_mutex_unlock(&semMTablasSC);
 				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
 				break;
 			case SHC:
+				pthread_mutex_lock(&semMTablasSHC);
 				list_add(tablasSHC, nombreTabla);
+				pthread_mutex_unlock(&semMTablasSHC);
 				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
 				break;
 			case EC:
+				pthread_mutex_lock(&semMTablasEC);
 				list_add(tablasEC, nombreTabla);
+				pthread_mutex_unlock(&semMTablasEC);
 				log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
 				break;
 			default:
@@ -839,14 +915,30 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
 	int esTabla(char* tablaActual) {
 		return string_equals_ignore_case(tabla, tablaActual);
 	}
+	pthread_mutex_lock(&semMTablasSC);
+	pthread_mutex_lock(&semMTablasSHC);
+	pthread_mutex_lock(&semMTablasEC);
 	if (list_find(tablasSC, (void*) esTabla) != NULL) {
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 		return SC;
 	} else if (list_find(tablasSHC, (void*) esTabla) != NULL) {
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 		return SHC;
 	} else if(list_find(tablasEC, (void*) esTabla) != NULL) {
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 		return EC;
 	} else {
-		return SC;
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
+		log_error(logger_KERNEL, "No sé que consistencia tiene la tabla %s", tabla);
+		return CONSISTENCIA_INVALIDA;
 	}
 }
 
@@ -919,7 +1011,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	config_memoria* memoriaCorrespondiente;
 	if (codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) {
 		// describe global va siempre a la ppal, todo: que pasa si se desconecta?
-		memoriaCorrespondiente = list_find(memorias, (void*)encontrarMemoriaPpal);
+		memoriaCorrespondiente = list_find(memorias, (void*)encontrarMemoriaPpal);//todo: llamar a funcion random y elegir cualquier memoria
 	} else {
 		if (codigo == CREATE) {
 			consistenciaTabla = obtenerEnumConsistencia(parametros[2]);
@@ -943,9 +1035,13 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	respuesta = paqueteRecibido->palabraReservada;
 	// todo: si la respuesta es full, forzar journal y mandar request de vuelta?
 	if (respuesta == SUCCESS) {
-		log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
 		if (codigo == DESCRIBE) {
 			actualizarTablas(paqueteRecibido->request);
+		}
+		if(codigo == SELECT) {
+			log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
+		} else {
+			log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 		}
 	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
@@ -973,6 +1069,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
  * Return:
  * 	-> void */
 void procesarJournal(int soloASHC) {
+	// sumar a metrica
 	// ahora recorro la lista filtrada y creo las conexiones para mandar journal
 	// si la memoria es la ppal que ya estoy conectada, no me tengo que conectar
 	void enviarJournal(config_memoria* memoriaAConectarse) {
@@ -1051,6 +1148,7 @@ void procesarRun(t_queue* colaRun) {
 		free(queue_pop(colaRun));
 		liberarRequestProcesada(request);
 		quantumActual++;
+		usleep(config_get_int_value(config, "SLEEP_EJECUCION")*1000);
 	}
 	if (quantumActual == quantum && queue_is_empty(colaRun) == FALSE) {
 		//termino por fin de q
@@ -1103,13 +1201,16 @@ int procesarAdd(char* mensaje) {
 		switch (_consistencia) {
 			case SC:
 				memoriaSc = memoria;
+				log_info(logger_KERNEL, "Se agregó la memoria %s al criterio SC", memoria->numero);
 				break;
 			case SHC:
 				list_add(memoriasShc, memoria);
+				log_info(logger_KERNEL, "Se agregó la memoria %s al criterio SHC", memoria->numero);
 				//procesarJournal(TRUE);
 				break;
 			case EC:
 				list_add(memoriasEc, memoria);
+				log_info(logger_KERNEL, "Se agregó la memoria %s al criterio EC", memoria->numero);
 				break;
 			default:
 				break;

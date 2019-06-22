@@ -81,6 +81,9 @@ sem_t semRequestReady;				// semaforo para planificar requests en ready
 pthread_mutex_t semMColaReady;		// semafoto mutex para cola de ready
 sem_t semMultiprocesamiento;		// semaforo contador para limitar requests en exec
 pthread_mutex_t semMMetricas;		// semaforo mutex para evitar concurrencia en metricas
+pthread_mutex_t semMTablasSC;		// semaforo mutex para evitar concurrencia en la lista de tablas sc
+pthread_mutex_t semMTablasSHC;		// semaforo mutex para evitar concurrencia en la lista de tablas shc
+pthread_mutex_t semMTablasEC;		// semaforo mutex para evitar concurrencia en la lista de tablas ec
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		// hilo que conecta a memoria
@@ -105,6 +108,8 @@ void liberarEstadisticaMemoria(estadisticaMemoria*);
 void aumentarContadores(consistencia, char*, cod_request, double);
 void escucharCambiosEnConfig(void);
 // planificar requests
+void procesarRequestSinPlanificar(char*);
+void planificarRequest(char*);
 void planificarNewAReady(void);
 void planificarReadyAExec(void);
 void reservarRecursos(char*);
