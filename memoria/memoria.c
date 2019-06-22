@@ -45,9 +45,8 @@ void inicializacionDeMemoria(){
 	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
-//	bitarrayString=(char*)malloc(marcosTotales);
-	bitarrayString= strdup(""); //DOBLE MALLOC VER POR LAS DUDAS
-	bitarray= bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
+	bitarrayString= strdup("");
+	bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
 	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
 
@@ -377,6 +376,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+			actualizarTimestamp(valorEncontrado);
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
@@ -852,6 +852,18 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
 	return paqueteAEnviar;
 }
 
+/* actualizarTimestamp()
+ * Parametros:
+ *	-> t_elemTablaDePaginas* :: elemTablaDePag
+ * Descripcion: actualiza el timestamp correspondiente al marco dado
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: SI*/
+void actualizarTimestamp(t_elemTablaDePaginas* elemTablaDePag){
+	elemTablaDePag->marco->timestamp= obtenerHoraActual();
+}
+
+
 /* actualizarPagina()
  * Parametros:
  *	-> t_marco* :: pagina
@@ -950,17 +962,13 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
  * 	VALGRIND :: NO*/
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
 	//TODO, si lfs dio ok, igual calcular en mem?
-	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
+	t_paquete* valorDeLFS = (t_paquete*)malloc(sizeof(t_paquete));
+	valorDeLFS=intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
 	}else if(consistencia == SC ||consistencia == SHC){
-		valorDeLFS = intercambiarConFileSystem(codRequest,request);
 		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
-	}else{
-		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
-
 	}
-
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS= NULL;
 }
