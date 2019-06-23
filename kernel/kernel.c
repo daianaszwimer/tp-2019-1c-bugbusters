@@ -522,6 +522,11 @@ void reservarRecursos(char* mensaje) {
 		archivoLql = fopen(parametros[1], "r");
 		if (archivoLql == NULL) {
 			log_error(logger_KERNEL, "No existe un archivo en esa ruta");
+			liberarArrayDeChar(parametros);
+			liberarArrayDeChar(request);
+			free(mensaje);
+			free(_request);
+			return;
 		} else {
 			_request->request = queue_create();
 			char letra;
