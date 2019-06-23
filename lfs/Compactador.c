@@ -6,6 +6,7 @@ void compactacion(char* pathTabla) {
 	//t_config* configMetadata = config_create(pathMetadata);
 
 	DIR *tabla;
+	int particionDeEstaKey;
 	struct dirent *archivoDeLaTabla;
 	t_list* registrosDeTmpC = list_create();
 	t_list* registrosDeParticiones = list_create();
@@ -33,11 +34,15 @@ void compactacion(char* pathTabla) {
     	if(registroEncontrado != NULL) {
     		if(registroEncontrado->timestamp > registroDeTmpC->timestamp) {
     			registroDeTmpC->timestamp = registroEncontrado->timestamp;
-    			realloc(registroDeTmpC->value, strlen(registroEncontrado->value));
+    			registroDeTmpC->value = realloc(registroDeTmpC->value, strlen(registroEncontrado->value));
     			strcpy(registroDeTmpC->value, registroEncontrado->value);
     		}
     	}
     	return registroDeTmpC;
+	}
+
+	int existeParticion(int* particion) {
+		return *particion == particionDeEstaKey;
 	}
 
 	if((tabla = opendir(pathTabla)) == NULL) {
@@ -58,22 +63,22 @@ void compactacion(char* pathTabla) {
 
 	rewinddir(tabla);
 
-	// Leo todos los registros de los temporales y los guardo en una lista
+	// Leo todos los registros de los temporales a compactar y los guardo en una lista
 	while((archivoDeLaTabla = readdir(tabla)) != NULL) {
 		if(string_ends_with(archivoDeLaTabla->d_name, ".tmpc")) {
 			char* pathTmpC = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 			t_config* configTmpC = config_create(pathTmpC);
 			char** bloques = config_get_array_value(configTmpC, "BLOCKS");
 			int i = 0;
+			int j = 0;
+			char* registro = malloc((int) (sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long)));
+			strcpy(registro, "");
 			while (bloques[i] != NULL) {
-				char* registro = malloc((int) (sizeof(uint16_t) + tamanioValue + sizeof(unsigned long long)));
 				char* pathBloque = string_from_format("%sBloques/%s.bin", puntoDeMontaje, bloques[i]);
 				FILE* bloque = fopen(pathBloque, "r");
 				if(bloque == NULL) {
 					perror("Error");
 				}
-				int j = 0;
-
 				do {
 					char caracterLeido = fgetc(bloque);
 				    if(feof(bloque)) {
@@ -84,10 +89,14 @@ void compactacion(char* pathTabla) {
 				    	tRegistro = (t_registro*) malloc(sizeof(t_registro));
 				    	tRegistro->key = convertirKey(registroSeparado[0]);
 				    	tRegistro->value = strdup(registroSeparado[1]);
-				    	convertirTimestamp(registroSeparado[2], &tRegistro->timestamp);
+				    	convertirTimestamp(registroSeparado[2], &(tRegistro->timestamp));
 
-				    	int particionDeEstaKey = tRegistro->key % numeroDeParticiones;
-				    	list_add(particiones, &particionDeEstaKey); // TODO: Sin repetir particiones
+				    	particionDeEstaKey = tRegistro->key % numeroDeParticiones;
+
+				    	int* particion = list_find(particiones, (void*)existeParticion);
+				    	if(particion == NULL) {
+				    		list_add(particiones, &particionDeEstaKey);
+				    	}
 
 				    	t_registro* registroEncontrado = list_find(registrosDeTmpC, (void*)tieneMismaKey);
 				    	if(registroEncontrado != NULL) {
@@ -99,12 +108,15 @@ void compactacion(char* pathTabla) {
 				    		list_add(registrosDeTmpC, tRegistro);
 				    	}
 				    	j=0;
+				    	strcpy(registro, "");
 				    } else {
 				    	registro[j] = caracterLeido;
+				    	j++;
 				    }
 				} while(1);
 				free(pathBloque);
 				fclose(bloque);
+				i++;
 			}
 		}
 	}
@@ -112,7 +124,7 @@ void compactacion(char* pathTabla) {
 	// Leo todos los registros de las particiones y los guardo en una lista
 	for(int i = 0; list_get(particiones,i) != NULL; i++) {
 		int* particion = list_get(particiones, i);
-		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, particion);
+		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, *particion);
 		t_config* particionConfig = config_create(pathParticion);
 		char** bloques = config_get_array_value(particionConfig, "BLOCKS");
 
@@ -139,10 +151,12 @@ void compactacion(char* pathTabla) {
 					j=0;
 				} else {
 					registro[j] = caracterLeido;
+					j++;
 				}
 			} while (1);
 			free(pathBloque);
 			fclose(bloque);
+			i++;
 		}
 	}
 
@@ -168,6 +182,7 @@ void compactacion(char* pathTabla) {
 					bitarray_clean_bit(bitarray, i); // Esta bien esto?
 					free(pathBloque);
 					fclose(bloque);
+					i++;
 				}
 				remove(pathTmpC);
 				free(pathTmpC);
@@ -191,6 +206,7 @@ void compactacion(char* pathTabla) {
 						bitarray_clean_bit(bitarray, i);
 						free(pathBloque);
 						fclose(bloque);
+						i++;
 					}
 					remove(particionPath);
 					free(particionPath);

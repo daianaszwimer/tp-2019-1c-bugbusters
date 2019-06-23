@@ -27,7 +27,7 @@ int convertirKey(char* key) {
  * Return:
  * 	-> :: int */
 void convertirTimestamp(char* timestamp, unsigned long long* timestampLong) {
-	*timestampLong = strtol(timestamp,NULL,10);
+	*timestampLong = strtoll(timestamp,NULL,10);
 }
 
 /* obtenerEnumConsistencia()
