@@ -238,7 +238,7 @@ void liberarArrayDeChar(char** arrayDeChar) {
  * 				- los parametros sean los correctos, en cuanto  su cantidad.
  * Return: success or failure
  * 	-> exit :: int */
-errorNo validarMensaje(char* mensaje, Componente componente) {
+errorNo validarMensaje(char* mensaje, Componente componente, char** mensajeError) {
 	errorNo error = SUCCESS;
 	char** requestDividida = string_n_split(mensaje, 2, " ");
 
@@ -249,17 +249,40 @@ errorNo validarMensaje(char* mensaje, Componente componente) {
 		if(codPalabraReservada == NUESTRO_ERROR){
 			error = COD_REQUEST_INV;
 		}else{
-			int cantidadDeParametros;
-			if(requestDividida[1] == NULL){
-				cantidadDeParametros = 0;
-			}else{
-				char** parametros = separarRequest(requestDividida[1]);
-				cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-				liberarArrayDeChar(parametros);
-
+			char** parametros = NULL;
+			if(requestDividida[1] != NULL){
+				parametros = separarRequest(requestDividida[1]);
 			}
-			error = validarParametrosDelRequest(cantidadDeParametros, codPalabraReservada);
+			error = validarParametrosDelRequest(codPalabraReservada, parametros, componente);
 		}
+	}
+
+	switch(error){
+		case SUCCESS:
+			*mensajeError = '\0';
+			break;
+		case REQUEST_VACIA:
+			*mensajeError = "Request vacia";
+			break;
+		case COD_REQUEST_INV:
+			*mensajeError = "Comando invalido";
+			break;
+		case CANT_PARAM_INV:
+			*mensajeError = "Cantidad de parametros invalidos para la request ingresada";
+			break;
+		case KEY_NO_NUMERICA:
+			*mensajeError = "Key no numerica";
+			break;
+		case TIMESTAMP_NO_NUMERICO:
+			*mensajeError = "Timestamp no numerico";
+			break;
+		case CONSISTENCIA_NO_VALIDA:
+			*mensajeError = "Tipo de consistencia no valida";
+			break;
+		default:
+			*mensajeError = '\0';
+			break;
+
 	}
 
 	liberarArrayDeChar(requestDividida);
@@ -274,50 +297,128 @@ errorNo validarMensaje(char* mensaje, Componente componente) {
  * 				cantidad correcta de parametros que requiere la request realizada.
  * Return: success or failure
  * 	-> exit :: int */
-int validarParametrosDelRequest(int cantidadDeParametros, int codPalabraReservada) {
-	int retorno;
+errorNo validarParametrosDelRequest(int codPalabraReservada, char** parametros, Componente componente) {
+	errorNo error = SUCCESS;
+
+	int cantidadDeParametros = 0;
+	if(parametros != NULL){
+		cantidadDeParametros = longitudDeArrayDeStrings(parametros);
+	}
+
 	switch(codPalabraReservada) {
 			case SELECT:
-				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = validarSelect(parametros, cantidadDeParametros);
 				break;
 			case INSERT:
-				if(cantidadDeParametros == PARAMETROS_INSERT || cantidadDeParametros == PARAMETROS_INSERT_TIMESTAMP) {
-					retorno = EXIT_SUCCESS;
-				} else {
-					retorno = NUESTRO_ERROR;
-				}
+				error = validarInsert(parametros, cantidadDeParametros, componente);
 				break;
 			case CREATE:
-				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = validarCreate(parametros, cantidadDeParametros);
 				break;
 			case DESCRIBE:
-				if(cantidadDeParametros == PARAMETROS_DESCRIBE_GLOBAL || cantidadDeParametros == PARAMETROS_DESCRIBE_TABLA) {
-					retorno = EXIT_SUCCESS;
-				} else {
-					retorno = NUESTRO_ERROR;
-				}
+				error = validarDescribe(parametros, cantidadDeParametros);
 				break;
 			case DROP:
-				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = (cantidadDeParametros == PARAMETROS_DROP) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			case JOURNAL:
-				retorno = (cantidadDeParametros == PARAMETROS_JOURNAL) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = (cantidadDeParametros == PARAMETROS_JOURNAL) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			case ADD:
-				retorno = (cantidadDeParametros == PARAMETROS_ADD) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = (cantidadDeParametros == PARAMETROS_ADD) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			case RUN:
-				retorno = (cantidadDeParametros == PARAMETROS_RUN) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = (cantidadDeParametros == PARAMETROS_RUN) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			case METRICS:
-				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = (cantidadDeParametros == PARAMETROS_METRICS) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			default:
-				retorno = NUESTRO_ERROR;
+				error = FAILURE;
 				break;
 	}
-	return retorno;
+	if(parametros != NULL){
+		liberarArrayDeChar(parametros);
+	}
+	return error;
 }
+
+errorNo validarSelect(char** parametros, int cantidadDeParametros){
+	errorNo error = SUCCESS;
+	if(cantidadDeParametros != PARAMETROS_SELECT){
+		error = CANT_PARAM_INV;
+	}else{
+		char* key = parametros[1];
+		if(!esNumero(key)){
+			error = KEY_NO_NUMERICA;
+		}
+	}
+	return error;
+}
+
+errorNo validarInsert(char** parametros, int cantidadDeParametros, Componente componente){
+	errorNo error = SUCCESS;
+	if(componente == LFS){
+		if(cantidadDeParametros != PARAMETROS_INSERT && cantidadDeParametros != PARAMETROS_INSERT_TIMESTAMP){
+			error = CANT_PARAM_INV;
+		}
+	}else{
+		if(cantidadDeParametros != PARAMETROS_INSERT){
+			error = CANT_PARAM_INV;
+		}
+	}
+
+	if(error == SUCCESS){
+		char* key = parametros[1];
+		if(!esNumero(key)){
+			error = KEY_NO_NUMERICA;
+		}
+		char* timestamp = parametros[3];
+		if(timestamp != NULL){
+			if(!esNumero(timestamp)){
+				error = TIMESTAMP_NO_NUMERICO;
+			}
+		}
+	}
+	return error;
+}
+
+errorNo validarCreate(char** parametros, int cantidadDeParametros){
+	errorNo error = SUCCESS;
+	if(cantidadDeParametros != PARAMETROS_CREATE){
+		error = CANT_PARAM_INV;
+	}else{
+		char* consistencia = parametros[1];
+		if(!obtenerEnumConsistencia(consistencia)){
+			error = CONSISTENCIA_NO_VALIDA;
+		}
+		char* particiones = parametros[2];
+		if(!esNumero(particiones)){
+			error = KEY_NO_NUMERICA;
+		}
+		char* tiempoDeCompactacion = parametros[3];
+		if(!esNumero(tiempoDeCompactacion)){
+			error = TIMESTAMP_NO_NUMERICO;
+		}
+	}
+	return error;
+}
+
+errorNo validarDescribe(char** parametros, int cantidadDeParametros){
+	errorNo error = SUCCESS;
+	if(cantidadDeParametros != PARAMETROS_DESCRIBE_GLOBAL && cantidadDeParametros != PARAMETROS_DESCRIBE_TABLA){
+		error = CANT_PARAM_INV;
+	}
+	return error;
+}
+
+int esNumero(char* str){
+	for (int i = 0; str[i] != '\0'; i++){
+		if(!isdigit(str[i])) return 0;
+	}
+	return 1;
+}
+
 
 /* obtenerCodigoPalabraReservada()
  * Parametros:

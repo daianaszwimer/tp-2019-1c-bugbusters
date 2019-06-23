@@ -58,6 +58,10 @@ typedef enum
 	KEY_NO_EXISTE,
 	REQUEST_VACIA,
 	COD_REQUEST_INV,
+	CANT_PARAM_INV,
+	KEY_NO_NUMERICA,
+	TIMESTAMP_NO_NUMERICO,
+	CONSISTENCIA_NO_VALIDA,
 	FAILURE = -1
 } errorNo;
 
@@ -121,11 +125,12 @@ t_config* leer_config(char*);
 
 t_paquete* armar_paquete(int, char*);
 
-errorNo validarMensaje(char*, Componente);
-int validarParametrosDelRequest(int,int);
+errorNo validarMensaje(char*, Componente, char**);
+int validarParametrosDelRequest(int, char**, Componente);
 int obtenerCodigoPalabraReservada(char*, Componente);
 
 int validarValue(char*,char*, int, t_log*);
+int esNumero(char* key);
 
 ////servidor
 

@@ -128,30 +128,17 @@ void leerDeConsola(void){
  * Return:
  * 	-> resultadoVlidacion :: int
  * VALGRIND:: NO */
-int validarRequest(char* mensaje){
+void validarRequest(char* mensaje){
 	int tamanioMax = handshake->tamanioValue; //TODO lo pasa LFS X HANDSHAKE
-	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
-	codValidacion = validarMensaje(mensaje, MEMORIA);
+	char* mensajeDeError;
+	int mensajeValido = validarMensaje(mensaje, MEMORIA, &mensajeDeError);
 	int palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
-	switch(codValidacion){
-		case EXIT_SUCCESS:
-			if(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],tamanioMax,logger_MEMORIA) == NUESTRO_ERROR){
-				return NUESTRO_ERROR;
-				break;
-			}
+	if(mensajeValido == SUCCESS){
+		if(!(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],tamanioMax,logger_MEMORIA) == NUESTRO_ERROR)){
 			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
-			return EXIT_SUCCESS;
-			break;
-		case NUESTRO_ERROR:
-			//TODO es la q hay q hacerla generica
-			log_error(logger_MEMORIA, "La request no es valida");
-			return NUESTRO_ERROR;
-			break;
-		default:
-			return NUESTRO_ERROR;
-			break;
+		}
 	}
 	liberarArrayDeChar(request);
 	request =NULL;

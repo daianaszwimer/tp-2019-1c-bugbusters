@@ -113,7 +113,7 @@ void inicializacionDeMemoria(void);
 int obtenerIndiceMarcoDisponible();
 
 void leerDeConsola(void);
-int validarRequest(char*);
+void validarRequest(char*);
 
 void escucharMultiplesClientes(void);
 void interpretarRequest(int, char*,t_caller, int);

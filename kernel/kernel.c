@@ -643,20 +643,14 @@ void procesarRequest(request_procesada* request) {
  * Return:
  * 	-> requestEsValida :: bool  */
 int validarRequest(char* mensaje) {
-	int codValidacion = validarMensaje(mensaje, KERNEL);
-	switch(codValidacion) {
-		case EXIT_SUCCESS:
-			return TRUE;
-			break;
-		case EXIT_FAILURE:
-		case NUESTRO_ERROR:
-			return FALSE;
-			//informar error
-			break;
-		default:
-			return FALSE;
-			break;
+	char* mensajeError;
+	if(validarMensaje(mensaje, KERNEL, &mensajeError) == SUCCESS){
+		return TRUE;
+	}else{
+		log_error(logger_KERNEL, mensajeError);
+		return FALSE;
 	}
+
 }
 
 /*
@@ -818,7 +812,7 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
 	} else if(list_find(tablasEC, (void*) esTabla) != NULL) {
 		return EC;
 	} else {
-		return SC;
+		return CONSISTENCIA_INVALIDA;
 	}
 }
 
