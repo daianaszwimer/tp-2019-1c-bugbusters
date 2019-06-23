@@ -647,6 +647,7 @@ int validarRequest(char* mensaje) {
 	if(validarMensaje(mensaje, KERNEL, &mensajeError) == SUCCESS){
 		return TRUE;
 	}else{
+		//TODO loggear request que esta siendo no valida
 		log_error(logger_KERNEL, mensajeError);
 		return FALSE;
 	}
@@ -812,7 +813,7 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
 	} else if(list_find(tablasEC, (void*) esTabla) != NULL) {
 		return EC;
 	} else {
-		return CONSISTENCIA_INVALIDA;
+		return SC;
 	}
 }
 

@@ -389,7 +389,7 @@ errorNo validarCreate(char** parametros, int cantidadDeParametros){
 		error = CANT_PARAM_INV;
 	}else{
 		char* consistencia = parametros[1];
-		if(!obtenerEnumConsistencia(consistencia)){
+		if(obtenerEnumConsistencia(consistencia) == CONSISTENCIA_INVALIDA){
 			error = CONSISTENCIA_NO_VALIDA;
 		}
 		char* particiones = parametros[2];
