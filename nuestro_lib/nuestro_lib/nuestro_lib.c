@@ -542,6 +542,8 @@ void enviarHandshakeMemoria(char* puertos, char* ips, char* numeros, int socket_
 	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanioPaquete);
 	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
 	liberarHandshakeMemoria(handshake);
+	free(handshakeAEnviar);
+	handshakeAEnviar=NULL;
 }
 
 /* recibirHandshakeMemoria()
@@ -664,9 +666,7 @@ void* serializar_paquete(t_paquete* paquete, int tamanioPaquete)
 void eliminar_paquete(t_paquete* paquete)
 {
 	free(paquete->request);
-	paquete->request=NULL;
 	free(paquete);
-	paquete=NULL;
 }
 
 /*liberarHandshakeMemoria()
