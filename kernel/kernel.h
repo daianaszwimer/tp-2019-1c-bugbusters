@@ -118,8 +118,9 @@ int validarRequest(char *);
 int manejarRequest(request_procesada*);
 // se usa para procesar requests
 int enviarMensajeAMemoria(cod_request, char*);
-config_memoria* encontrarMemoriaSegunConsistencia(consistencia);
+config_memoria* encontrarMemoriaSegunConsistencia(consistencia, int);
 unsigned int obtenerIndiceRandom(int);
+unsigned int obtenerIndiceHash(int, int);
 void actualizarTablas(char*);
 void agregarTablaACriterio(char*);
 void liberarTabla(char*);

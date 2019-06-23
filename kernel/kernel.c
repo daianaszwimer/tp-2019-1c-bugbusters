@@ -616,7 +616,6 @@ void liberarRequestProcesada(request_procesada* request) {
  * Return:
  *     -> void  */
 void liberarColaRequest(request_procesada* requestCola) {
-	//printf("Voy a liberar: %s    ", (char*) requestCola->request);
     free((char*) requestCola->request);
     requestCola->request = NULL;
     free(requestCola);
@@ -872,7 +871,7 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
  * En el caso de SHC necesita la key para calcular a qué memoria redirigir.
  * Return:
  * 	-> memoriaCorrespondiente :: config_memoria*  */
-config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia) {
+config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia, int key) {
 	config_memoria* memoriaCorrespondiente = NULL;
 	switch(tipoConsistencia) {
 		case SC:
@@ -885,25 +884,49 @@ config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia)
 			pthread_mutex_unlock(&semMMemoriaSC);
 			break;
 		case SHC:
-			// todo: funcion hash
+			pthread_mutex_lock(&semMMemoriasSHC);
+			unsigned int indiceSHC = obtenerIndiceHash(key, list_size(memoriasShc));
+			memoriaCorrespondiente = list_get(memoriasShc, indiceSHC);
+			pthread_mutex_unlock(&semMMemoriasSHC);
 			break;
 		case EC:
 			pthread_mutex_lock(&semMMemoriasEC);
-			unsigned int indice = obtenerIndiceRandom(list_size(memoriasEc));
-			memoriaCorrespondiente = list_get(memoriasEc, indice);
+			unsigned int indiceEC = obtenerIndiceRandom(list_size(memoriasEc));
+			memoriaCorrespondiente = list_get(memoriasEc, indiceEC);
 			pthread_mutex_unlock(&semMMemoriasEC);
 			break;
 		default:
-			//error
 			log_error(logger_KERNEL, "No se puede resolver el request porque no tengo la metadata de la tabla");
 			break;
 	}
 	return memoriaCorrespondiente;
 }
 
+/* obtenerIndiceHash()
+ * Parametros:
+ * 	-> int :: key
+ * 	-> int :: maximo
+ * Descripcion: devuelve un numero en base a la key. Si la key es 0 devuelve cualquier número.
+ * El valor de retorno siempre es entre 0 y maximo
+ * Return:
+ * 	-> numero :: unsigned int  */
+unsigned int obtenerIndiceHash(int key, int maximo) {
+	if (key == 0) {
+		// https://github.com/sisoputnfrba/foro/issues/1326
+		return obtenerIndiceRandom(maximo);
+	} else {
+		unsigned int valorHash = 0;
+		unsigned int j = (key + 3) % 5 + maximo;
+		for (int i = 0; i < j; i++) {
+			valorHash += (key << j);
+		}
+		return valorHash % maximo;
+	}
+}
+
 /* obtenerIndiceRandom()
  * Parametros:
- * 	-> void
+ * 	-> int :: maximo
  * Descripcion: devuelve un numero random entre 0 y el max y
  * usa como seed el DAIU_NUMBER de la config.
  * Return:
@@ -954,13 +977,17 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		memoriaCorrespondiente = list_get(memorias, indice);
 		pthread_mutex_unlock(&semMMemorias);
 	} else {
+		int key = 0;
 		if (codigo == CREATE) {
 			consistenciaTabla = obtenerEnumConsistencia(parametros[2]);
 		} else {
 			consistenciaTabla = obtenerConsistenciaTabla(parametros[1]);
 		}
-		// semaforo???
-		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla);
+		if (codigo == SELECT || codigo == INSERT) {
+			key = (int) parametros[2];
+		}
+		// todo: semaforo???
+		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla, key);
 		if(memoriaCorrespondiente == NULL) {
 			respuesta = ERROR_GENERICO;
 			liberarArrayDeChar(parametros);
@@ -1030,7 +1057,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
  * Return:
  * 	-> void */
 void procesarJournal(int soloASHC) {
-	// sumar a metrica
+	// todo: sumar a metrica
 	// ahora recorro la lista filtrada y creo las conexiones para mandar journal
 	// si la memoria es la ppal que ya estoy conectada, no me tengo que conectar
 	void enviarJournal(config_memoria* memoriaAConectarse) {
@@ -1041,6 +1068,7 @@ void procesarJournal(int soloASHC) {
 		}
 		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
 		log_info(logger_KERNEL, "Se envió el JOURNAL a la memoria con numero %s", memoriaAConectarse->numero);
+		//todo: descomentar cuando memoria tenga journal
 		/*t_paquete* paqueteRecibido = recibir(conexionTemporanea);
 		int respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
@@ -1107,6 +1135,7 @@ void procesarRun(t_queue* colaRun) {
 	//el while es fin de Q o fin de cola
 	pthread_mutex_lock(&semMQuantum);
 	while(!queue_is_empty(colaRun) && quantumActual < quantum) {
+		pthread_mutex_unlock(&semMQuantum);
 		request = (request_procesada*) malloc(sizeof(request_procesada));
 		request->codigo = ((request_procesada*) queue_peek(colaRun))->codigo;
 		request->request = strdup((char*)((request_procesada*)queue_peek(colaRun))->request);
@@ -1125,12 +1154,13 @@ void procesarRun(t_queue* colaRun) {
 		liberarRequestProcesada(request);
 		quantumActual++;
 		usleep(sleepEjecucion*1000);
+		pthread_mutex_lock(&semMQuantum);
 	}
 	if (quantumActual == quantum && queue_is_empty(colaRun) == FALSE) {
+		pthread_mutex_unlock(&semMQuantum);
 		//termino por fin de q
 		log_info(logger_KERNEL, "Vuelvo a ready");
 		request_procesada* _request = (request_procesada*)(malloc(sizeof(request_procesada)));
-		//_request->request = (t_queue*) (malloc(sizeof(t_queue)));
 		_request->request = colaRun;
 		_request->codigo = RUN;
 		pthread_mutex_lock(&semMColaReady);
@@ -1138,6 +1168,7 @@ void procesarRun(t_queue* colaRun) {
 		pthread_mutex_unlock(&semMColaReady);
 		sem_post(&semRequestReady);
 	} else if (queue_is_empty(colaRun) == TRUE){
+		pthread_mutex_unlock(&semMQuantum);
 		// si estoy aca es porque ya ejecuto toda la cola
 		log_info(logger_KERNEL, "Finalizó la ejecución del script");
 		queue_destroy(colaRun);
