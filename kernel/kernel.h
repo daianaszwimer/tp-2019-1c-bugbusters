@@ -38,8 +38,10 @@ typedef struct
 
 t_log* logger_KERNEL;
 t_log* logger_METRICAS_KERNEL;
-int conexionMemoria;
+int conexionMemoria = 0;
 int quantum = 0;
+char* ipMemoria;
+char* puertoMemoria;
 int sleepEjecucion = 0;
 int metadataRefresh = 0;
 unsigned int numeroSeedRandom = 0;

@@ -1022,3 +1022,79 @@
 [INFO] 12:14:11:737 MetricasKernel/(7656:7669): Write Latency de SC: -nan
 [INFO] 12:14:11:737 MetricasKernel/(7656:7669): Cantidad de Reads de SC: 0
 [INFO] 12:14:11:737 MetricasKernel/(7656:7669): Cantidad de Writes de SC: 0
+[INFO] 16:46:05:774 MetricasKernel/(12459:12476): Read Latency de SC: -nan
+[INFO] 16:46:05:776 MetricasKernel/(12459:12476): Write Latency de SC: -nan
+[INFO] 16:46:05:776 MetricasKernel/(12459:12476): Cantidad de Reads de SC: 0
+[INFO] 16:46:05:776 MetricasKernel/(12459:12476): Cantidad de Writes de SC: 0
+[INFO] 16:46:39:26 MetricasKernel/(12512:12523): Read Latency de SC: -nan
+[INFO] 16:46:39:26 MetricasKernel/(12512:12523): Write Latency de SC: -nan
+[INFO] 16:46:39:26 MetricasKernel/(12512:12523): Cantidad de Reads de SC: 0
+[INFO] 16:46:39:26 MetricasKernel/(12512:12523): Cantidad de Writes de SC: 0
+[INFO] 16:48:47:96 MetricasKernel/(12569:12582): Read Latency de SC: -nan
+[INFO] 16:48:47:96 MetricasKernel/(12569:12582): Write Latency de SC: -nan
+[INFO] 16:48:47:96 MetricasKernel/(12569:12582): Cantidad de Reads de SC: 0
+[INFO] 16:48:47:96 MetricasKernel/(12569:12582): Cantidad de Writes de SC: 0
+[INFO] 16:49:32:294 MetricasKernel/(12569:12582): Read Latency de SC: -nan
+[INFO] 16:49:32:294 MetricasKernel/(12569:12582): Write Latency de SC: -nan
+[INFO] 16:49:32:294 MetricasKernel/(12569:12582): El memory load es:
+[INFO] 16:49:32:294 MetricasKernel/(12569:12582): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 0.000000
+[INFO] 16:49:32:294 MetricasKernel/(12569:12582): Cantidad de Reads de SC: 0
+[INFO] 16:49:32:294 MetricasKernel/(12569:12582): Cantidad de Writes de SC: 0
+[INFO] 16:50:43:99 MetricasKernel/(12569:12582): Read Latency de SC: -nan
+[INFO] 16:50:43:100 MetricasKernel/(12569:12582): Write Latency de SC: -nan
+[INFO] 16:50:43:100 MetricasKernel/(12569:12582): El memory load es:
+[INFO] 16:50:43:100 MetricasKernel/(12569:12582): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 0.000000
+[INFO] 16:50:43:100 MetricasKernel/(12569:12582): Cantidad de Reads de SC: 0
+[INFO] 16:50:43:100 MetricasKernel/(12569:12582): Cantidad de Writes de SC: 0
+[INFO] 16:53:08:865 MetricasKernel/(12569:12582): Read Latency de SC: -nan
+[INFO] 16:53:08:865 MetricasKernel/(12569:12582): Write Latency de SC: -nan
+[INFO] 16:53:08:865 MetricasKernel/(12569:12582): El memory load es:
+[INFO] 16:53:08:865 MetricasKernel/(12569:12582): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 0.000000
+[INFO] 16:53:08:865 MetricasKernel/(12569:12582): Cantidad de Reads de SC: 0
+[INFO] 16:53:08:865 MetricasKernel/(12569:12582): Cantidad de Writes de SC: 0
+[INFO] 16:53:38:865 MetricasKernel/(12569:12582): Read Latency de SC: -nan
+[INFO] 16:53:38:865 MetricasKernel/(12569:12582): Write Latency de SC: -nan
+[INFO] 16:53:38:865 MetricasKernel/(12569:12582): El memory load es:
+[INFO] 16:53:38:865 MetricasKernel/(12569:12582): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 0.000000
+[INFO] 16:53:38:865 MetricasKernel/(12569:12582): Cantidad de Reads de SC: 0
+[INFO] 16:53:38:865 MetricasKernel/(12569:12582): Cantidad de Writes de SC: 0
+[INFO] 16:54:08:865 MetricasKernel/(12569:12582): Read Latency de SC: -nan
+[INFO] 16:54:08:865 MetricasKernel/(12569:12582): Write Latency de SC: -nan
+[INFO] 16:54:08:865 MetricasKernel/(12569:12582): El memory load es:
+[INFO] 16:54:08:865 MetricasKernel/(12569:12582): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 0.000000
+[INFO] 16:54:08:865 MetricasKernel/(12569:12582): Cantidad de Reads de SC: 0
+[INFO] 16:54:08:866 MetricasKernel/(12569:12582): Cantidad de Writes de SC: 0
+[INFO] 16:54:38:866 MetricasKernel/(12569:12582): Read Latency de SC: -nan
+[INFO] 16:54:38:867 MetricasKernel/(12569:12582): Write Latency de SC: -nan
+[INFO] 16:54:38:867 MetricasKernel/(12569:12582): El memory load es:
+[INFO] 16:54:38:867 MetricasKernel/(12569:12582): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 0.000000
+[INFO] 16:54:38:867 MetricasKernel/(12569:12582): Cantidad de Reads de SC: 0
+[INFO] 16:54:38:867 MetricasKernel/(12569:12582): Cantidad de Writes de SC: 0
+[INFO] 16:55:08:872 MetricasKernel/(12569:12582): Read Latency de SC: -nan
+[INFO] 16:55:08:872 MetricasKernel/(12569:12582): Write Latency de SC: -nan
+[INFO] 16:55:08:872 MetricasKernel/(12569:12582): El memory load es:
+[INFO] 16:55:08:872 MetricasKernel/(12569:12582): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 0.000000
+[INFO] 16:55:08:873 MetricasKernel/(12569:12582): Cantidad de Reads de SC: 0
+[INFO] 16:55:08:873 MetricasKernel/(12569:12582): Cantidad de Writes de SC: 0
+[INFO] 17:02:05:20 MetricasKernel/(12735:12780): Read Latency de SC: -nan
+[INFO] 17:02:05:20 MetricasKernel/(12735:12780): Write Latency de SC: -nan
+[INFO] 17:02:05:20 MetricasKernel/(12735:12780): Cantidad de Reads de SC: 0
+[INFO] 17:02:05:20 MetricasKernel/(12735:12780): Cantidad de Writes de SC: 0
+[INFO] 17:10:45:622 MetricasKernel/(12735:12780): Read Latency de SC: -nan
+[INFO] 17:10:45:622 MetricasKernel/(12735:12780): Write Latency de SC: -nan
+[INFO] 17:10:45:622 MetricasKernel/(12735:12780): El memory load es:
+[INFO] 17:10:45:622 MetricasKernel/(12735:12780): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 0.000000
+[INFO] 17:10:45:622 MetricasKernel/(12735:12780): Cantidad de Reads de SC: 0
+[INFO] 17:10:45:622 MetricasKernel/(12735:12780): Cantidad de Writes de SC: 0
+[INFO] 17:20:27:309 MetricasKernel/(13220:13249): Read Latency de SC: -nan
+[INFO] 17:20:27:312 MetricasKernel/(13220:13249): Write Latency de SC: -nan
+[INFO] 17:20:27:312 MetricasKernel/(13220:13249): Cantidad de Reads de SC: 0
+[INFO] 17:20:27:312 MetricasKernel/(13220:13249): Cantidad de Writes de SC: 0
+[INFO] 17:26:17:407 MetricasKernel/(13572:13624): Read Latency de SC: -nan
+[INFO] 17:26:17:410 MetricasKernel/(13572:13624): Write Latency de SC: -nan
+[INFO] 17:26:17:410 MetricasKernel/(13572:13624): Cantidad de Reads de SC: 0
+[INFO] 17:26:17:411 MetricasKernel/(13572:13624): Cantidad de Writes de SC: 0
+[INFO] 17:38:30:817 MetricasKernel/(14251:14270): Read Latency de SC: -nan
+[INFO] 17:38:30:823 MetricasKernel/(14251:14270): Write Latency de SC: -nan
+[INFO] 17:38:30:823 MetricasKernel/(14251:14270): Cantidad de Reads de SC: 0
+[INFO] 17:38:30:823 MetricasKernel/(14251:14270): Cantidad de Writes de SC: 0

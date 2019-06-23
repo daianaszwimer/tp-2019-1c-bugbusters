@@ -27,7 +27,7 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
-// hilo de gossiping
+// todo: hilo de gossiping
 // tener en cuenta caida de memoria y sacarla de las listas
 
 /* inicializarVariables()
@@ -47,6 +47,8 @@ void inicializarVariables() {
 	sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
 	metadataRefresh = config_get_int_value(config, "METADATA_REFRESH");
 	numeroSeedRandom = config_get_int_value(config, "DAIU_NUMBER");
+	puertoMemoria = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
+	ipMemoria = strdup(config_get_string_value(config, "IP_MEMORIA"));
 	srand(numeroSeedRandom);
 
 	// Semáforos
@@ -93,6 +95,8 @@ void liberarMemoria(void) {
 	liberar_conexion(conexionMemoria);
 
 	config_destroy(config);
+	free(ipMemoria);
+	free(puertoMemoria);
 
 	pthread_mutex_destroy(&semMColaNew);
 	pthread_mutex_destroy(&semMColaReady);
@@ -255,8 +259,10 @@ void escucharCambiosEnConfig(void) {
 
 	watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config", IN_MODIFY);
 	while(1) {
-		log_info(logger_KERNEL, "Cambió el archivo de config");
 		int length = read(file_descriptor, buffer, BUF_LEN);
+		log_info(logger_KERNEL, "Cambió el archivo de config");
+		config_destroy(config);
+		config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 		if (length < 0) {
 			log_error(logger_KERNEL, "Error en inotify");
 		} else {
@@ -282,8 +288,8 @@ void escucharCambiosEnConfig(void) {
  * 	-> :: void  */
 void hacerDescribe(void) {
 	while(1) {
-		break;
-		// agregar a new? o ejecutarlo directamente? se ejecuta directamente
+		char* request = strdup("DESCRIBE");
+		procesarRequestSinPlanificar(request);
 		usleep(metadataRefresh * 1000);
 	}
 }
@@ -606,7 +612,6 @@ void liberarRequestProcesada(request_procesada* request) {
 	// solo hacer este free si request fue a exit
 	free(request);
 	request = NULL;
-	log_info(logger_KERNEL, "libero request");
 }
 
 /* liberarColaRequest()
@@ -885,15 +890,25 @@ config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia,
 			break;
 		case SHC:
 			pthread_mutex_lock(&semMMemoriasSHC);
-			unsigned int indiceSHC = obtenerIndiceHash(key, list_size(memoriasShc));
-			memoriaCorrespondiente = list_get(memoriasShc, indiceSHC);
-			pthread_mutex_unlock(&semMMemoriasSHC);
+			if (list_size(memoriasShc) != 0) {
+				unsigned int indiceSHC = obtenerIndiceHash(key, list_size(memoriasShc));
+				memoriaCorrespondiente = list_get(memoriasShc, indiceSHC);
+				pthread_mutex_unlock(&semMMemoriasSHC);
+			} else {
+				pthread_mutex_unlock(&semMMemoriasSHC);
+				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio SHC");
+			}
 			break;
 		case EC:
 			pthread_mutex_lock(&semMMemoriasEC);
-			unsigned int indiceEC = obtenerIndiceRandom(list_size(memoriasEc));
-			memoriaCorrespondiente = list_get(memoriasEc, indiceEC);
-			pthread_mutex_unlock(&semMMemoriasEC);
+			if (list_size(memoriasEc) != 0) {
+				unsigned int indiceEC = obtenerIndiceRandom(list_size(memoriasEc));
+				memoriaCorrespondiente = list_get(memoriasEc, indiceEC);
+				pthread_mutex_unlock(&semMMemoriasEC);
+			} else {
+				pthread_mutex_unlock(&semMMemoriasEC);
+				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio EC");
+			}
 			break;
 		default:
 			log_error(logger_KERNEL, "No se puede resolver el request porque no tengo la metadata de la tabla");
@@ -944,8 +959,8 @@ unsigned int obtenerIndiceRandom(int maximo) {
  * Return:
  * 	-> int  */
 int encontrarMemoriaPpal(config_memoria* memoria) {
-	return string_equals_ignore_case(memoria->ip, config_get_string_value(config, "IP_MEMORIA"))
-			&& string_equals_ignore_case(memoria->puerto, config_get_string_value(config, "PUERTO_MEMORIA"));
+	return string_equals_ignore_case(memoria->ip, ipMemoria)
+			&& string_equals_ignore_case(memoria->puerto, puertoMemoria);
 }
 /*
  * Funciones que procesan requests
@@ -973,9 +988,16 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	if (codigo == DESCRIBE) {
 		// https://github.com/sisoputnfrba/foro/issues/1391 chequearlo
 		pthread_mutex_lock(&semMMemorias);
-		unsigned int indice = obtenerIndiceRandom(list_size(memorias));
-		memoriaCorrespondiente = list_get(memorias, indice);
-		pthread_mutex_unlock(&semMMemorias);
+		if (list_size(memorias) != 0) {
+			unsigned int indice = obtenerIndiceRandom(list_size(memorias));
+			memoriaCorrespondiente = list_get(memorias, indice);
+			pthread_mutex_unlock(&semMMemorias);
+		} else {
+			pthread_mutex_unlock(&semMMemorias);
+			liberarArrayDeChar(parametros);
+			log_error(logger_KERNEL, "No puedo hacer DESCRIBE porque no hay memorias levantadas aún");
+			return ERROR_GENERICO;
+		}
 	} else {
 		int key = 0;
 		if (codigo == CREATE) {
@@ -993,8 +1015,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			liberarArrayDeChar(parametros);
 			return respuesta;
 		} else {
-			if (!string_equals_ignore_case(memoriaCorrespondiente->ip, config_get_string_value(config, "IP_MEMORIA"))
-				&& !string_equals_ignore_case(memoriaCorrespondiente->puerto, config_get_string_value(config, "PUERTO_MEMORIA"))) {
+			if (!string_equals_ignore_case(memoriaCorrespondiente->ip, ipMemoria)
+				&& !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
 				conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
 			}
 		}
@@ -1062,8 +1084,8 @@ void procesarJournal(int soloASHC) {
 	// si la memoria es la ppal que ya estoy conectada, no me tengo que conectar
 	void enviarJournal(config_memoria* memoriaAConectarse) {
 		int conexionTemporanea = conexionMemoria;
-		if (!string_equals_ignore_case(memoriaAConectarse->ip, config_get_string_value(config, "IP_MEMORIA"))
-			&& !string_equals_ignore_case(memoriaAConectarse->puerto, config_get_string_value(config, "PUERTO_MEMORIA"))) {
+		if (!string_equals_ignore_case(memoriaAConectarse->ip, ipMemoria)
+			&& !string_equals_ignore_case(memoriaAConectarse->puerto, puertoMemoria)) {
 			conexionTemporanea = crearConexion(memoriaAConectarse->ip, memoriaAConectarse->puerto);
 		}
 		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
