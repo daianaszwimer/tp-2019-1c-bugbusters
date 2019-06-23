@@ -190,7 +190,7 @@ void* leerDeConsola(void* arg) {
 			free(mensaje);
 			break;
 		}
-		if(!validarMensaje(mensaje, LFS, logger_LFS)){
+		if(!validarMensaje(mensaje, LFS)){
 			char** request = string_n_split(mensaje, 2, " ");
 			cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0], LFS);
 			interpretarRequest(palabraReservada, mensaje, NULL);

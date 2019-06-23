@@ -133,7 +133,7 @@ int validarRequest(char* mensaje){
 	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
-	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
+	codValidacion = validarMensaje(mensaje, MEMORIA);
 	int palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
 	switch(codValidacion){
 		case EXIT_SUCCESS:
@@ -148,9 +148,6 @@ int validarRequest(char* mensaje){
 			//TODO es la q hay q hacerla generica
 			log_error(logger_MEMORIA, "La request no es valida");
 			return NUESTRO_ERROR;
-			break;
-		case SALIDA:
-			return SALIDA;
 			break;
 		default:
 			return NUESTRO_ERROR;
@@ -296,9 +293,6 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
-			break;
-		case SALIDA:
-			log_info(logger_MEMORIA,"Has finalizado el componente MEMORIA");
 			break;
 		case NUESTRO_ERROR:
 			 if(caller == ANOTHER_COMPONENT){

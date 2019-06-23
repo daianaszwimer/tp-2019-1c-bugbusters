@@ -643,7 +643,7 @@ void procesarRequest(request_procesada* request) {
  * Return:
  * 	-> requestEsValida :: bool  */
 int validarRequest(char* mensaje) {
-	int codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
+	int codValidacion = validarMensaje(mensaje, KERNEL);
 	switch(codValidacion) {
 		case EXIT_SUCCESS:
 			return TRUE;
@@ -900,7 +900,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		}
 		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla);
 		if(memoriaCorrespondiente == NULL) {
-			respuesta = ERROR_GENERICO;
+			respuesta = FAILURE;
 			liberarArrayDeChar(parametros);
 			return respuesta;
 		} else {
@@ -1061,7 +1061,7 @@ int procesarAdd(char* mensaje) {
 	consistencia _consistencia;
 	_consistencia = obtenerEnumConsistencia(requestDividida[4]);
 	if (_consistencia == CONSISTENCIA_INVALIDA) {
-		estado = ERROR_GENERICO;
+		estado = FAILURE;
 		log_error(logger_KERNEL, "El criterio %s no es válido", requestDividida[4]);
 	}
 	int esMemoriaCorrecta(config_memoria* memoriaActual) {
@@ -1069,7 +1069,7 @@ int procesarAdd(char* mensaje) {
 	}
 	memoria = (config_memoria*) list_find(memorias, (void*)esMemoriaCorrecta);
 	if (memoria == NULL) {
-		estado = ERROR_GENERICO;
+		estado = FAILURE;
 		log_error(logger_KERNEL, "No encontré la memoria %s", requestDividida[2]);
 	} else {
 		switch (_consistencia) {
