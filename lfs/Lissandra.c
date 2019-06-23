@@ -5,7 +5,8 @@
  * 1. Char*: Path del config
  * */
 int main(int argc, char* argv[]) {
-	iniciarLFS(argv);
+
+	inicializacionLissandraFileSystem(argv);
 
 	if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
 		log_info(logger_LFS, "Hilo de consola creado");
@@ -32,15 +33,14 @@ int main(int argc, char* argv[]) {
 	pthread_join(hiloDumpeo, NULL);
 	log_info(logger_LFS, "Hilo dumpeo finalizado");
 
-
 	liberarMemoriaLFS();
 	return EXIT_SUCCESS;
 }
 
 
-void iniciarLFS(char* argv[]){
+void inicializacionLissandraFileSystem(char* argv[]){
 	logger_LFS = log_create("LissandraFileSystem.log", "Lfs", 1, LOG_LEVEL_DEBUG);
-	log_info(logger_LFS, "----------------INICIO DE LISSANDRA FS--------------");
+	log_info(logger_LFS, "----------------Inicializacion de Lissandra File System--------------");
 
 	if(argv[1] != NULL){
 		char* configPath = argv[1];
@@ -75,6 +75,7 @@ void iniciarLFS(char* argv[]){
 		configMetadata = config_create(pathFileMetadata);
 		blocks = config_get_int_value(configMetadata, "BLOCKS");
 	}else{
+		log_info(logger_LFS, "File System no detectado");
 		crearFS(pathBitmap, pathFileMetadata);
 	}
 
@@ -82,6 +83,8 @@ void iniciarLFS(char* argv[]){
 
 	levantarFS(pathBitmap);
 	free(pathBitmap);
+
+	log_info(logger_LFS, "----------------Lissandra File System inicializado correctamente--------------");
 }
 
 void crearFS(char* pathBitmap, char* pathFileMetadata) {
@@ -236,11 +239,10 @@ void* conectarConMemoria(void* arg) {
 		//si viene -1 es porque se desconecto la memoria
 		if (palabraReservada == -1){
 			eliminar_paquete(paqueteRecibido);
-			log_error(logger_LFS, "el cliente se desconecto. Terminando servidor");
+			log_debug(logger_LFS, "Se desconecto la memoria %i", memoria_fd);
 			close(memoria_fd);
 			break;
 		}
-		printf("De la memoria nro: %d \n", memoria_fd);
 		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
 		eliminar_paquete(paqueteRecibido);
 	}
@@ -252,6 +254,9 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	errorNo errorNo = SUCCESS;
 	char* mensaje = strdup("");
 	//TODO case memoria se desconecto
+	if(memoria_fd != NULL){
+		log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
+	}
 	switch (palabraReservada){
 		case SELECT:
 			log_info(logger_LFS, "Me llego un SELECT");
@@ -284,17 +289,11 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 		case DROP:
 			log_info(logger_LFS, "Me llego un DROP");
 			break;
-		case NUESTRO_ERROR:
-			if (memoria_fd != NULL) {
-				log_error(logger_LFS, "El cliente se desconecto");
-			}
-			break;
 		default:
 			break;
 	}
 
 	char* mensajeDeError;
-	//TODO case memoria se desconecto
 	switch(errorNo){
 		case SUCCESS:
 			mensajeDeError=strdup("Request ejecutada correctamente");
@@ -309,10 +308,10 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			break;
 		case TABLA_NO_EXISTE:
 			mensajeDeError = string_from_format("La tabla %s no existe", requestSeparada[1]);
-			log_info(logger_LFS, mensajeDeError);
+			log_error(logger_LFS, mensajeDeError);
 			break;
 		case KEY_NO_EXISTE:
-			mensajeDeError = string_from_format("La KEY %s no existe", requestSeparada[2]); // ODO mostrar bien mensaje de error
+			mensajeDeError = string_from_format("La KEY %s no existe", requestSeparada[2]); // TODO mostrar bien mensaje de error
 			log_info(logger_LFS, mensajeDeError);
 			break;
 		default:
@@ -321,9 +320,8 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 
 	free(mensajeDeError);
 
-
-	log_info(logger_LFS, "LO DE ABAJO ES EL MSJ");
-	log_info(logger_LFS, mensaje);
+	//sleep(3);
+	log_info(logger_LFS, "Mensaje a enviar:%s", mensaje);
 	if (memoria_fd != NULL) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{

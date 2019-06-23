@@ -46,7 +46,7 @@ void inicializacionDeMemoria(){
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
 	bitarrayString= strdup("");
-	bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
+	bitarray= bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
 	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
 
@@ -232,14 +232,17 @@ void escucharMultiplesClientes() {
 					char* request = paqueteRecibido->request;
 					printf("El codigo que recibi es: %i \n", palabraReservada);
 					printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-					interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
-					free(request);
-					request=NULL;
-
-
+					if(palabraReservada != -1){
+						interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
+						free(request);
+						request=NULL;
+					}else{
+						log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
+						list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
+					}
 				}
 //				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-//				int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+
 //				// TODO: Chequear si el -1 se puede castear como int*
 			}//fin for
 

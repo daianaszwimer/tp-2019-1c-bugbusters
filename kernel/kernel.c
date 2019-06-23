@@ -52,7 +52,6 @@ void inicializarVariables() {
 	memoriasEc = list_create();
 	memoriasShc = list_create();
 	memorias = list_create();
-	memoriaSc = (config_memoria*) malloc(sizeof(config_memoria));
 	memoriaSc = NULL;
 	// Tablas
 	tablasSC = list_create();
@@ -71,11 +70,8 @@ void inicializarVariables() {
  * Return:
  * 	-> void  */
 void liberarMemoria(void) {
-	log_info(logger_KERNEL, "Estoy liberando toda la memoria, chau");
 	liberar_conexion(conexionMemoria);
 	config_destroy(config);
-	log_destroy(logger_KERNEL);
-	log_destroy(logger_METRICAS_KERNEL);
 	pthread_mutex_destroy(&semMColaNew);
 	pthread_mutex_destroy(&semMColaReady);
 	pthread_mutex_destroy(&semMMetricas);
@@ -84,17 +80,18 @@ void liberarMemoria(void) {
 	sem_destroy(&semMultiprocesamiento);
 	queue_destroy(new);
 	queue_destroy(ready);
-	//list_clean_and_destroy_elements(memorias, (void*)liberarConfigMemoria);
-	list_destroy(memorias);
-	liberarConfigMemoria(memoriaSc);
+	list_destroy_and_destroy_elements(memorias, (void*)liberarConfigMemoria);
 	list_destroy(memoriasShc);
 	list_destroy(memoriasEc);
-	list_clean_and_destroy_elements(tablasSC, (void*)liberarTabla);
-	list_clean_and_destroy_elements(tablasSHC, (void*)liberarTabla);
-	list_clean_and_destroy_elements(tablasEC, (void*)liberarTabla);
-	list_clean_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
-	list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
-	list_clean_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
+	list_destroy_and_destroy_elements(tablasSC, (void*)liberarTabla);
+	list_destroy_and_destroy_elements(tablasSHC, (void*)liberarTabla);
+	list_destroy_and_destroy_elements(tablasEC, (void*)liberarTabla);
+	list_destroy_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
+	list_destroy_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
+	list_destroy_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
+	log_info(logger_KERNEL, "Estoy liberando toda la memoria, chau");
+	log_destroy(logger_KERNEL);
+	log_destroy(logger_METRICAS_KERNEL);
 }
 
 /* conectarAMemoria()
@@ -122,7 +119,7 @@ void procesarHandshake(t_handshake_memoria* handshakeRecibido) {
 	char** ips = string_split(handshakeRecibido->ips, ",");
 	char** puertos = string_split(handshakeRecibido->puertos, ",");
 	char** numeros = string_split(handshakeRecibido->numeros, ",");
-	for( i = 0; ips[i] != NULL; i++)
+	for(i = 0; ips[i] != NULL; i++)
 	{
 		config_memoria* memoriaNueva = (config_memoria*) malloc(sizeof(config_memoria));
 		memoriaNueva->ip = strdup(ips[i]);// config_get_string_value(config, "IP_MEMORIA");
@@ -318,9 +315,13 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
 		free(configALiberar->ip);
 		free(configALiberar->numero);
 		free(configALiberar->puerto);
+		configALiberar->ip = NULL;
+		configALiberar->puerto = NULL;
+		configALiberar->numero = NULL;
 	}
-	free(configALiberar)
-;}
+	free(configALiberar);
+	configALiberar = NULL;
+}
 
 /* aumentarContadores()
  * Parametros:
@@ -487,12 +488,13 @@ void planificarReadyAExec(void) {
 		pthread_mutex_lock(&semMColaReady);
 		request->codigo = ((request_procesada*) queue_peek(ready))->codigo;
 		if(request->codigo == RUN) {
-			request->request = (t_queue*) malloc(sizeof(((request_procesada*)queue_peek(ready))->request));
+		//	request->request = (t_queue*) malloc(sizeof(((request_procesada*)queue_peek(ready))->request));
 			request->request = ((request_procesada*)queue_peek(ready))->request;
 		} else {
 			request->request = strdup((char*)((request_procesada*)queue_peek(ready))->request);
+			free((char*)((request_procesada*)queue_peek(ready))->request);
 		}
-		queue_pop(ready);
+		free(queue_pop(ready));
 		pthread_mutex_unlock(&semMColaReady);
 		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
@@ -551,6 +553,7 @@ void reservarRecursos(char* mensaje) {
 					queue_push(_request->request, otraRequest);
 					liberarArrayDeChar(requestDividida);
 					i = 1;
+					otraRequest = NULL;
 					free(request);
 					request = NULL;
 					request = (char*) malloc(sizeof(char));
@@ -583,6 +586,7 @@ void reservarRecursos(char* mensaje) {
 		queue_push(ready, _request);
 		pthread_mutex_unlock(&semMColaReady);
 	}
+	free(mensaje);
 	liberarArrayDeChar(request);
 	sem_post(&semRequestReady);
 }
@@ -595,13 +599,14 @@ void reservarRecursos(char* mensaje) {
  * 	-> void  */
 void liberarRequestProcesada(request_procesada* request) {
 	if(request->codigo != RUN) {
-       free((char*) request->request);
+       free(request->request);
        request->request = NULL;
 	}
 	// en el caso del run ya se libera la cola en su funcion
 	// solo hacer este free si request fue a exit
 	free(request);
 	request = NULL;
+	log_info(logger_KERNEL, "libero request");
 }
 
 /* liberarColaRequest()
@@ -627,6 +632,7 @@ void liberarColaRequest(request_procesada* requestCola) {
 void procesarRequest(request_procesada* request) {
 	manejarRequest(request);
 	liberarRequestProcesada(request);
+	request = NULL;
 	sem_post(&semMultiprocesamiento);
 }
 
@@ -1013,7 +1019,8 @@ void procesarRun(t_queue* colaRun) {
 			break;
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
 		}
-		queue_pop(colaRun);
+		free((char*)((request_procesada*)queue_peek(colaRun))->request);
+		free(queue_pop(colaRun));
 		liberarRequestProcesada(request);
 		quantumActual++;
 	}
@@ -1021,7 +1028,7 @@ void procesarRun(t_queue* colaRun) {
 		//termino por fin de q
 		log_info(logger_KERNEL, "Vuelvo a ready");
 		request_procesada* _request = (request_procesada*)(malloc(sizeof(request_procesada)));
-		_request->request = (t_queue*) (malloc(sizeof(t_queue)));
+		//_request->request = (t_queue*) (malloc(sizeof(t_queue)));
 		_request->request = colaRun;
 		_request->codigo = RUN;
 		pthread_mutex_lock(&semMColaReady);
@@ -1050,7 +1057,7 @@ void procesarRun(t_queue* colaRun) {
 int procesarAdd(char* mensaje) {
 	int estado = SUCCESS;
 	char** requestDividida = separarRequest(mensaje);
-	config_memoria* memoria = (config_memoria*) malloc(sizeof(config_memoria));
+	config_memoria* memoria;
 	consistencia _consistencia;
 	_consistencia = obtenerEnumConsistencia(requestDividida[4]);
 	if (_consistencia == CONSISTENCIA_INVALIDA) {
