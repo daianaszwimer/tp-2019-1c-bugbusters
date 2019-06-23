@@ -33,14 +33,16 @@ typedef struct
 typedef struct
 {
 	int cantidadSelectInsert;
-	int cantidadTotal;
 	char* numeroMemoria;
 } estadisticaMemoria;
 
 t_log* logger_KERNEL;
 t_log* logger_METRICAS_KERNEL;
 int conexionMemoria;
-int quantum;
+int quantum = 0;
+int sleepEjecucion = 0;
+int metadataRefresh = 0;
+unsigned int numeroSeedRandom = 0;
 t_config* config;
 t_queue* new;
 t_queue* ready;
@@ -53,21 +55,12 @@ t_list* tablasSHC;
 t_list* tablasEC;
 
 // variables de metricas
-double tiempoSelectSC = 0.0;
-double tiempoInsertSC = 0.0;
-int cantidadSelectSC = 0;
-int cantidadInsertSC = 0;
-t_list* cargaMemoriaSC;
-double tiempoSelectSHC = 0.0;
-double tiempoInsertSHC = 0.0;
-int cantidadSelectSHC = 0;
-int cantidadInsertSHC = 0;
-t_list* cargaMemoriaSHC;
-double tiempoSelectEC = 0.0;
-double tiempoInsertEC = 0.0;
-int cantidadSelectEC = 0;
-int cantidadInsertEC = 0;
-t_list* cargaMemoriaEC;
+int cantidadTotalRequest = 0;
+double tiempoSelect = 0.0;
+double tiempoInsert = 0.0;
+int cantidadSelect = 0;
+int cantidadInsert = 0;
+t_list* cargaMemoria;
 
 // Variables para inotify
 #define EVENT_SIZE  ( sizeof (struct inotify_event) + 24 )
@@ -84,6 +77,13 @@ pthread_mutex_t semMMetricas;		// semaforo mutex para evitar concurrencia en met
 pthread_mutex_t semMTablasSC;		// semaforo mutex para evitar concurrencia en la lista de tablas sc
 pthread_mutex_t semMTablasSHC;		// semaforo mutex para evitar concurrencia en la lista de tablas shc
 pthread_mutex_t semMTablasEC;		// semaforo mutex para evitar concurrencia en la lista de tablas ec
+pthread_mutex_t semMMemoriaSC;		// semaforo mutex para evitar concurrencia en la lista de memorias sc
+pthread_mutex_t semMMemorias;		// semaforo mutex para evitar concurrencia en la lista de memorias
+pthread_mutex_t semMMemoriasSHC;	// semaforo mutex para evitar concurrencia en la lista de memorias shc
+pthread_mutex_t semMMemoriasEC;		// semaforo mutex para evitar concurrencia en la lista de memorias ec
+pthread_mutex_t semMQuantum;		// semaforo mutex para evitar concurrencia en la variable
+pthread_mutex_t semMSleepEjecucion;	// semaforo mutex para evitar concurrencia en la variable
+pthread_mutex_t semMMetadataRefresh;// semaforo mutex para evitar concurrencia en la variable
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		// hilo que conecta a memoria
@@ -105,7 +105,7 @@ void hacerDescribe(void);
 void loguearMetricas(void);
 void informarMetricas(int);
 void liberarEstadisticaMemoria(estadisticaMemoria*);
-void aumentarContadores(consistencia, char*, cod_request, double);
+void aumentarContadores(char*, cod_request, double);
 void escucharCambiosEnConfig(void);
 // planificar requests
 void procesarRequestSinPlanificar(char*);
@@ -119,6 +119,7 @@ int manejarRequest(request_procesada*);
 // se usa para procesar requests
 int enviarMensajeAMemoria(cod_request, char*);
 config_memoria* encontrarMemoriaSegunConsistencia(consistencia);
+unsigned int obtenerIndiceRandom(int);
 void actualizarTablas(char*);
 void agregarTablaACriterio(char*);
 void liberarTabla(char*);
