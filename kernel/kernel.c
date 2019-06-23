@@ -542,6 +542,7 @@ void planificarNewAReady(void) {
 			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
 			reservarRecursos(request);
 		} else {
+			free(request);
 			//error
 		}
 	}
@@ -756,7 +757,6 @@ int manejarRequest(request_procesada* request) {
 		case DESCRIBE:
 		case DROP:
 			respuesta = enviarMensajeAMemoria(request->codigo, (char*) request->request);
-			usleep(config_get_int_value(config, "SLEEP_EJECUCION")*1000);
 			break;
 		case JOURNAL:
 			procesarJournal(FALSE);
@@ -1009,7 +1009,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	// si es un describe global no hay tabla
 	int cantidadParametros = longitudDeArrayDeStrings(parametros) - 1;
 	config_memoria* memoriaCorrespondiente;
-	if (codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) {
+	if (codigo == DESCRIBE) {
+		// https://github.com/sisoputnfrba/foro/issues/1391 chequearlo
 		// describe global va siempre a la ppal, todo: que pasa si se desconecta?
 		memoriaCorrespondiente = list_find(memorias, (void*)encontrarMemoriaPpal);//todo: llamar a funcion random y elegir cualquier memoria
 	} else {
