@@ -365,7 +365,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-			actualizarTimestamp(valorEncontrado);
+			actualizarTimestamp(elementoEncontrado);
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
