@@ -499,9 +499,7 @@ void enviarHandshakeLFS(int tamanioValue, int socket_cliente)
 t_handshake_lfs* recibirHandshakeLFS(int socket)
 {
 	t_handshake_lfs* handshake = malloc(sizeof(t_handshake_lfs));
-	//handshake->tamanioValue = 20;
 	recv(socket, &handshake->tamanioValue, sizeof(int), MSG_WAITALL);
-
 	return handshake;
 }
 
