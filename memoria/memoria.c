@@ -944,9 +944,8 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 	valorDeLFS=intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
-	}else if(consistencia == SC ||consistencia == SHC){
-		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
 	}
+	enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS= NULL;
 }
