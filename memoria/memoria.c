@@ -45,8 +45,7 @@ void inicializacionDeMemoria(){
 	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
-//	bitarrayString=(char*)malloc(marcosTotales);
-	bitarrayString= strdup(""); //DOBLE MALLOC VER POR LAS DUDAS
+	bitarrayString= strdup("");
 	bitarray= bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
 	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
@@ -221,14 +220,17 @@ void escucharMultiplesClientes() {
 					char* request = paqueteRecibido->request;
 					printf("El codigo que recibi es: %i \n", palabraReservada);
 					printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-					interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
-					free(request);
-					request=NULL;
-
-
+					if(palabraReservada != -1){
+						interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
+						free(request);
+						request=NULL;
+					}else{
+						log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
+						list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
+					}
 				}
 //				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-//				int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
+
 //				// TODO: Chequear si el -1 se puede castear como int*
 			}//fin for
 
@@ -290,6 +292,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case DROP:
 			log_info(logger_MEMORIA, "Me llego un DROP");
+			procesarDrop(codRequest, request ,consistenciaMemoria, caller, i);
 			break;
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
@@ -362,6 +365,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+			actualizarTimestamp(valorEncontrado);
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
@@ -826,6 +830,18 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
 	return paqueteAEnviar;
 }
 
+/* actualizarTimestamp()
+ * Parametros:
+ *	-> t_elemTablaDePaginas* :: elemTablaDePag
+ * Descripcion: actualiza el timestamp correspondiente al marco dado
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: SI*/
+void actualizarTimestamp(t_elemTablaDePaginas* elemTablaDePag){
+	elemTablaDePag->marco->timestamp= obtenerHoraActual();
+}
+
+
 /* actualizarPagina()
  * Parametros:
  *	-> t_marco* :: pagina
@@ -924,17 +940,13 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
  * 	VALGRIND :: NO*/
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
 	//TODO, si lfs dio ok, igual calcular en mem?
-	t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
+	t_paquete* valorDeLFS = (t_paquete*)malloc(sizeof(t_paquete));
+	valorDeLFS=intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
 	}else if(consistencia == SC ||consistencia == SHC){
-		valorDeLFS = intercambiarConFileSystem(codRequest,request);
 		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
-	}else{
-		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
-
 	}
-
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS= NULL;
 }
@@ -983,7 +995,7 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* req
 		log_info(logger_MEMORIA,"NO EXISTE EL SEGMENTO");
 		return SEGMENTOINEXISTENTE;
 	}
-	free(tablaDeSegmentosEnCache); //TODO hay q hace uno q libere bien
+	liberarTabla(tablaDeSegmentosEnCache); //(6)
 	free(segmentoABuscar);
 	segmentoABuscar =NULL;
 	liberarArrayDeChar(parametros);
@@ -1011,20 +1023,37 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 }
 
 
+/* liberarTabla()
+ * Parametros:
+ *	-> t_segmento* :: segmento
+ * Descripcion: Libera a el marco de la pagina, libera cada pagina de una tabla
+ * Return:
+ * 	-> :: void
+ * 	VALGRIND :: NO */
+void liberarTabla(t_segmento* segmento){
+	void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
+		eliminarMarco(pagina,pagina->marco);
+		free(pagina);
+		pagina=NULL;
+	}
+	free(segmento->path);
+	segmento->path=NULL;
+	list_clean_and_destroy_elements(segmento->tablaDePagina, (void*) eliminarElemTablaPagina);
+}
+
+
 /* liberarEstructurasMemoria()
  * Parametros:
  *	-> t_tablaDeSEgmentos :: tablaDeSegmento
  * Descripcion: Libera el marco de cada pagina, libera cada pagina de una tablaDePagina, libera la tablaDePagina
  * 				de un segmento, libera lista de segmentos de una tablaDeSegmento, libera lista de tablaDeSegmentos
  * Return:
- * 	-> void ::
- * 	VALGRIND :: */
+ * 	-> :: void
+ * 	VALGRIND :: NO */
 void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
 	void eliminarElemTablaSegmentos(t_segmento* segmento){
 		void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
 			eliminarMarco(pagina,pagina->marco);
-//			free(pagina->marco);
-//			pagina->marco=NULL;
 			free(pagina);
 			pagina=NULL;
 		}
@@ -1041,12 +1070,12 @@ void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
  *	-> :: void
  * Descripcion: Libera los punteros reservados en inicializarMemoria()
  * Return:
- * 	-> void ::
- * 	VALGRIND :: */
+ * 	-> :: void
+ * 	VALGRIND :: NO */
 void liberarMemoria(){
 	log_info(logger_MEMORIA, "Finaliza MEMORIA");
 	free(bitarray);
-	bitarray=NULL;
+	bitarray=NULL; //(5)
 	free(bitarrayString);
 	bitarrayString=NULL;
 	free(memoria);
@@ -1086,4 +1115,49 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
 	t_paquete* describeLFS = (t_paquete*) malloc(sizeof(t_paquete));
 	describeLFS=intercambiarConFileSystem(codRequest,request);
 	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,(int) list_get(descriptoresClientes,i));
+}
+
+
+/* procesarDrop()
+ * Parametros:
+ *	-> cod_request :: codRequest
+ *	-> char* :: request
+ *	-> consistencia :: consistencia
+ *	-> t_caller :: caller
+ *	-> int :: i (socket kernel)
+ * Descripcion: Busca la tabla en memoria principal, si la encuentra libera la memoria. Siempre le avisa a LFS
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
+void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int i) {
+	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
+	t_paquete* valorDeLFS = malloc(sizeof(t_paquete));
+	valorDeLFS->palabraReservada=SUCCESS;
+	valorDeLFS->request=strdup("");
+	valorDeLFS->tamanio=sizeof(valorDeLFS->request);
+	char** requestSeparada = separarRequest(request);
+	char* segmentoABuscar=strdup(requestSeparada[1]);
+	//valorDeLFS = intercambiarConFileSystem(codRequest,request);
+	if(consistencia == EC || caller == CONSOLE){
+		int encontrarTabla(t_segmento* segmento){
+			return string_equals_ignore_case(segmento->path, segmentoABuscar);
+		}
+		tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+
+		if(tablaDeSegmentosEnCache!= NULL){
+			log_info(logger_MEMORIA,"La %s fue eliminada de MEMORIA",tablaDeSegmentosEnCache->path);
+			liberarTabla(tablaDeSegmentosEnCache);
+		}else{
+			log_info(logger_MEMORIA,"La %s no existe en MEMORIA",segmentoABuscar);
+		}
+	}
+	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,i));
+	eliminar_paquete(valorDeLFS);
+	valorDeLFS= NULL;
+	free(tablaDeSegmentosEnCache);
+	tablaDeSegmentosEnCache=NULL;
+	liberarArrayDeChar(requestSeparada);
+	requestSeparada=NULL;
+	free(segmentoABuscar);
+	segmentoABuscar=NULL;
 }

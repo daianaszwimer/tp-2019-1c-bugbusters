@@ -177,8 +177,14 @@ int iniciar_servidor(char* puerto, char* ip)
         if ((socket_servidor = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
             continue;
 
+        int val = 1;
+        if(setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(int)) == -1){
+        	perror("setsockopt");
+        }
+
         if (bind(socket_servidor, p->ai_addr, p->ai_addrlen) == -1) {
             close(socket_servidor);
+            perror("bind");
             continue;
         }
         break;
@@ -485,12 +491,14 @@ void enviarHandshakeLFS(int tamanioValue, int socket_cliente)
 	int tamanioPaquete = sizeof(int);
 	void* handshakeAEnviar = serializar_handshake_lfs(handshake, tamanioPaquete);
 	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
+	free(handshakeAEnviar);
 	free(handshake);
 }
 
 t_handshake_lfs* recibirHandshakeLFS(int socket)
 {
 	t_handshake_lfs* handshake = malloc(sizeof(t_handshake_lfs));
+	//handshake->tamanioValue = 20;
 	recv(socket, &handshake->tamanioValue, sizeof(int), MSG_WAITALL);
 
 	return handshake;
@@ -614,7 +622,9 @@ void enviar(int cod, char* mensaje, int socket_cliente)
 	//serializamos
 	void* paqueteAEnviar = serializar_paquete(paquete, tamanioPaquete);
 	//enviamos
+
 	send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0);
+
 	free(paqueteAEnviar);
 	free(paquete->request);
 	free(paquete);
