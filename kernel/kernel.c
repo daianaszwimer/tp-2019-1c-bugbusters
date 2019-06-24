@@ -1129,7 +1129,8 @@ void procesarJournal(int soloASHC) {
 		void agregarMemoriaSinRepetir(config_memoria* memoria) {
 			int existeUnaIgual(config_memoria* memoriaAgregada) {
 				return string_equals_ignore_case(memoriaAgregada->ip, memoria->ip) &&
-						string_equals_ignore_case(memoriaAgregada->puerto, memoria->puerto);
+						string_equals_ignore_case(memoriaAgregada->puerto, memoria->puerto) &&
+						string_equals_ignore_case(memoriaAgregada->numero, memoria->numero);
 			}
 			if (!list_any_satisfy(memoriasSinRepetir, (void*)existeUnaIgual)) {
 				list_add(memoriasSinRepetir, memoria);
