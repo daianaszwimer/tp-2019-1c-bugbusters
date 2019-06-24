@@ -120,8 +120,9 @@ void liberarMemoria(void) {
 	queue_destroy(ready);
 
 	list_destroy_and_destroy_elements(memorias, (void*)liberarConfigMemoria);
-	list_destroy(memoriasShc);
-	list_destroy(memoriasEc);
+	liberarConfigMemoria(memoriaSc);
+	list_destroy_and_destroy_elements(memoriasShc, (void*)liberarConfigMemoria);
+	list_destroy_and_destroy_elements(memoriasEc, (void*)liberarConfigMemoria);
 	list_destroy_and_destroy_elements(tablasSC, (void*)liberarTabla);
 	list_destroy_and_destroy_elements(tablasSHC, (void*)liberarTabla);
 	list_destroy_and_destroy_elements(tablasEC, (void*)liberarTabla);
@@ -797,19 +798,19 @@ void agregarTablaACriterio(char* tabla) {
 				pthread_mutex_lock(&semMTablasSC);
 				list_add(tablasSC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasSC);
-				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
+			//	log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
 				break;
 			case SHC:
 				pthread_mutex_lock(&semMTablasSHC);
 				list_add(tablasSHC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasSHC);
-				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
+			//	log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
 				break;
 			case EC:
 				pthread_mutex_lock(&semMTablasEC);
 				list_add(tablasEC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasEC);
-				log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
+			//	log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
 				break;
 			default:
 				log_error(logger_KERNEL, "La tabla %s no tiene asociada un criterio válido y no se actualizó en la estructura de datos",
@@ -882,17 +883,25 @@ config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia,
 		case SC:
 			pthread_mutex_lock(&semMMemoriaSC);
 			if (memoriaSc == NULL) {
+				pthread_mutex_unlock(&semMMemoriaSC);
 				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio SC");
 			} else {
-				memoriaCorrespondiente = memoriaSc;
+				memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));
+				memoriaCorrespondiente->ip = strdup(memoriaSc->ip);
+				memoriaCorrespondiente->puerto = strdup(memoriaSc->puerto);
+				memoriaCorrespondiente->numero = strdup(memoriaSc->numero);
+				pthread_mutex_unlock(&semMMemoriaSC);
 			}
-			pthread_mutex_unlock(&semMMemoriaSC);
 			break;
 		case SHC:
 			pthread_mutex_lock(&semMMemoriasSHC);
 			if (list_size(memoriasShc) != 0) {
 				unsigned int indiceSHC = obtenerIndiceHash(key, list_size(memoriasShc));
-				memoriaCorrespondiente = list_get(memoriasShc, indiceSHC);
+				config_memoria* memAux = list_get(memoriasShc, indiceSHC);
+				memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));
+				memoriaCorrespondiente->ip = strdup(memAux->ip);
+				memoriaCorrespondiente->puerto = strdup(memAux->puerto);
+				memoriaCorrespondiente->numero = strdup(memAux->numero);
 				pthread_mutex_unlock(&semMMemoriasSHC);
 			} else {
 				pthread_mutex_unlock(&semMMemoriasSHC);
@@ -903,7 +912,11 @@ config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia,
 			pthread_mutex_lock(&semMMemoriasEC);
 			if (list_size(memoriasEc) != 0) {
 				unsigned int indiceEC = obtenerIndiceRandom(list_size(memoriasEc));
-				memoriaCorrespondiente = list_get(memoriasEc, indiceEC);
+				config_memoria* memAux = list_get(memoriasEc, indiceEC);
+				memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));
+				memoriaCorrespondiente->ip = strdup(memAux->ip);
+				memoriaCorrespondiente->puerto = strdup(memAux->puerto);
+				memoriaCorrespondiente->numero = strdup(memAux->numero);
 				pthread_mutex_unlock(&semMMemoriasEC);
 			} else {
 				pthread_mutex_unlock(&semMMemoriasEC);
@@ -974,6 +987,13 @@ int encontrarMemoriaPpal(config_memoria* memoria) {
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
 int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
+	pthread_mutex_lock(&semMMemorias);
+	if (list_size(memorias) == 0) {
+		pthread_mutex_unlock(&semMMemorias);
+		log_error(logger_KERNEL, "No puedo hacer %s porque no hay memorias levantadas", mensaje);
+		return ERROR_GENERICO;
+	}
+	pthread_mutex_unlock(&semMMemorias);
 	clock_t tiempo;
 	double tiempoQueTardo = 0.0;
 	if (codigo == SELECT || codigo == INSERT) {
@@ -988,16 +1008,13 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	if (codigo == DESCRIBE) {
 		// https://github.com/sisoputnfrba/foro/issues/1391 chequearlo
 		pthread_mutex_lock(&semMMemorias);
-		if (list_size(memorias) != 0) {
-			unsigned int indice = obtenerIndiceRandom(list_size(memorias));
-			memoriaCorrespondiente = list_get(memorias, indice);
-			pthread_mutex_unlock(&semMMemorias);
-		} else {
-			pthread_mutex_unlock(&semMMemorias);
-			liberarArrayDeChar(parametros);
-			log_error(logger_KERNEL, "No puedo hacer DESCRIBE porque no hay memorias levantadas aún");
-			return ERROR_GENERICO;
+		unsigned int indice = obtenerIndiceRandom(list_size(memorias));
+		memoriaCorrespondiente = list_get(memorias, indice);
+		if (!string_equals_ignore_case(memoriaCorrespondiente->ip, ipMemoria)
+			&& !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
+			conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
 		}
+		pthread_mutex_unlock(&semMMemorias);
 	} else {
 		int key = 0;
 		if (codigo == CREATE) {
@@ -1008,7 +1025,6 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		if (codigo == SELECT || codigo == INSERT) {
 			key = (int) parametros[2];
 		}
-		// todo: semaforo???
 		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla, key);
 		if(memoriaCorrespondiente == NULL) {
 			respuesta = ERROR_GENERICO;
@@ -1019,6 +1035,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 				&& !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
 				conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
 			}
+			liberarConfigMemoria(memoriaCorrespondiente);
 		}
 	}
 	enviar(consistenciaTabla, mensaje, conexionTemporanea);
@@ -1225,34 +1242,62 @@ int procesarAdd(char* mensaje) {
 	pthread_mutex_lock(&semMMemorias);
 	memoria = (config_memoria*) list_find(memorias, (void*)esMemoriaCorrecta);
 	if (memoria == NULL) {
+		pthread_mutex_unlock(&semMMemorias);
 		estado = ERROR_GENERICO;
 		log_error(logger_KERNEL, "No encontré la memoria %s", requestDividida[2]);
 	} else {
+		config_memoria* memAux = (config_memoria*) malloc(sizeof(config_memoria));
+		memAux->ip = strdup(memoria->ip);
+		memAux->puerto = strdup(memoria->puerto);
+		memAux->numero = strdup(memoria->numero);
+		pthread_mutex_unlock(&semMMemorias);
+		int existeUnaIgual(config_memoria* memoriaEnLista) {
+			return string_equals_ignore_case(memoriaEnLista->ip, memAux->ip) &&
+					string_equals_ignore_case(memoriaEnLista->puerto, memAux->puerto) &&
+					string_equals_ignore_case(memoriaEnLista->numero, memAux->numero);
+		}
 		switch (_consistencia) {
 			case SC:
 				pthread_mutex_lock(&semMMemoriaSC);
-				memoriaSc = memoria;
-				log_info(logger_KERNEL, "Se agregó la memoria %s al criterio SC", memoria->numero);
+				if (memoriaSc != NULL) {
+					liberarConfigMemoria(memoriaSc);
+					memoriaSc = NULL;
+				}
+				memoriaSc = memAux;
 				pthread_mutex_unlock(&semMMemoriaSC);
+				log_info(logger_KERNEL, "Se agregó la memoria %s al criterio SC", memAux->numero);
 				break;
 			case SHC:
 				pthread_mutex_lock(&semMMemoriasSHC);
-				list_add(memoriasShc, memoria);
-				log_info(logger_KERNEL, "Se agregó la memoria %s al criterio SHC", memoria->numero);
-				pthread_mutex_unlock(&semMMemoriasSHC);
-				//procesarJournal(TRUE);
+				if (!list_any_satisfy(memoriasShc, (void*)existeUnaIgual)) {
+					list_add(memoriasShc, memAux);
+					pthread_mutex_unlock(&semMMemoriasSHC);
+					log_info(logger_KERNEL, "Se agregó la memoria %s al criterio SHC", memAux->numero);
+					//procesarJournal(TRUE);
+				} else {
+					pthread_mutex_unlock(&semMMemoriasSHC);
+					log_info(logger_KERNEL, "La memoria %s ya existe en la lista de memorias SHC", memAux->numero);
+					liberarConfigMemoria(memAux);
+				}
 				break;
 			case EC:
 				pthread_mutex_lock(&semMMemoriasEC);
-				list_add(memoriasEc, memoria);
-				log_info(logger_KERNEL, "Se agregó la memoria %s al criterio EC", memoria->numero);
-				pthread_mutex_unlock(&semMMemoriasEC);
+				if (!list_any_satisfy(memoriasEc, (void*)existeUnaIgual)) {
+					list_add(memoriasEc, memAux);
+					pthread_mutex_unlock(&semMMemoriasEC);
+					log_info(logger_KERNEL, "Se agregó la memoria %s al criterio EC", memAux->numero);
+				} else {
+					pthread_mutex_unlock(&semMMemoriasEC);
+					log_info(logger_KERNEL, "La memoria %s ya existe en la lista de memorias EC", memAux->numero);
+					liberarConfigMemoria(memAux);
+				}
 				break;
 			default:
+				liberarConfigMemoria(memAux);
+				log_info(logger_KERNEL, "Ocurrió un error al agregar la memoria al criterio");
 				break;
 		}
 	}
-	pthread_mutex_unlock(&semMMemorias);
 	liberarArrayDeChar(requestDividida);
 	return estado;
 }
