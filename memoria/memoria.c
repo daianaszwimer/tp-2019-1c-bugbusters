@@ -59,14 +59,8 @@ void inicializacionDeMemoria(){
 	t_elemTablaDePaginas* nuevoElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,1,"hola",12345678);
 	list_add(nuevoSegmento->tablaDePagina,nuevoElemTablaDePagina);
 	list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
-
 }
 
-//int calcularTamMarco(){
-//	t_marco* marco=malloc(sizeof(t_marco));
-//	int tamanio= sizeof(marco->timestamp)+ sizeof(marco->key)+sizeof(marco->value);
-//	return tamanio;
-//}
 
 /* obtenerIndiceMarcoDisponible()
  * Parametros:
@@ -191,6 +185,9 @@ void conectarAFileSystem() {
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshake->tamanioValue);
 }
 
+
+/* escucharMultiplesClientes()
+ * VALGRIND:: SI */
 void escucharMultiplesClientes() {
 	int descriptorServidor = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
 	log_info(logger_MEMORIA, "Memoria lista para recibir al kernel");
@@ -204,14 +201,6 @@ void escucharMultiplesClientes() {
 	t_paquete* paqueteRecibido;
 
 	while(1) {
-		//Varibale global, el hilo de leerConsola, cuando reccibe "SALIDA" lo setea en 1
-//		pthread_mutex_lock(&terminarHilo);
-//		if(flagTerminarHiloMultiplesClientes ==1){
-//			pthread_mutex_unlock(&terminarHilo);
-//			log_info(logger_MEMORIA,"ENTRE AL WHILE 1");
-//			break;
-//		}else{
-//			pthread_mutex_unlock(&terminarHilo);
 
 			eliminarClientesCerrados(descriptoresClientes, &numeroDeClientes);	// Se eliminan los clientes que tengan un -1 en su fd
 			FD_ZERO(&descriptoresDeInteres); 									// Inicializamos descriptoresDeInteres
@@ -234,17 +223,15 @@ void escucharMultiplesClientes() {
 					printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 					if(palabraReservada != -1){
 						interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
-						free(request);
-						request=NULL;
 					}else{
 						log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
 						list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
 					}
+					eliminar_paquete(paqueteRecibido);
+					paqueteRecibido=NULL;
 				}
 //				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-
-//				// TODO: Chequear si el -1 se puede castear como int*
-			}//fin for
+			}
 
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
@@ -253,11 +240,7 @@ void escucharMultiplesClientes() {
 				numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 				numeroDeClientes++;
 			}
-	//	}
 	}
-	eliminar_paquete(paqueteRecibido);
-	paqueteRecibido=NULL;
-
 }
 
 
@@ -368,9 +351,11 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 //-------------------------------------------------------------
 
 	t_paquete* valorDeLFS=malloc(sizeof(t_paquete)); //TODO: Ver free
+	valorDeLFS->request=NULL;
 	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas)); //TODO: Ver free
+	elementoEncontrado->marco=NULL;
 	t_paquete* valorEncontrado=malloc(sizeof(t_paquete)); //TODO: Ver free
-
+	valorEncontrado->request=NULL;
 
 	int resultadoCache;
 
@@ -378,26 +363,27 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-			actualizarTimestamp(elementoEncontrado); //TODO: ATENCION CAMBIE ACA
+			//actualizarTimestamp(elementoEncontrado); //TODO: ATENCION CAMBIE ACA
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
-			free(valorDeLFS);
-			valorDeLFS=NULL;
-		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
+		}else{// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 			guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
 		}
+		eliminar_paquete(valorEncontrado);
+		eliminar_paquete(valorDeLFS);
+		liberarElemTablaPagina(elementoEncontrado);
 	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 		eliminar_paquete(valorDeLFS);
-		valorDeLFS=NULL;
+		free(elementoEncontrado);
+		free(valorEncontrado);
 	}else{
 		log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
-		free(valorDeLFS);
-		valorDeLFS=NULL;
+
 	}
 }
 
@@ -449,12 +435,16 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			parametros=NULL;
 			free(segmentoABuscar);
 			segmentoABuscar=NULL;
+			liberarTabla(segmentoEnCache);
+			segmentoEnCache=NULL;
 			return EXIT_SUCCESS;
 		}else{
 			liberarArrayDeChar(parametros);
 			parametros=NULL;
 			free(segmentoABuscar);
 			segmentoABuscar=NULL;
+			liberarTabla(segmentoEnCache);
+			segmentoEnCache=NULL;
 			return KEYINEXISTENTE;
 		}
 	}else{
@@ -462,12 +452,16 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 		parametros=NULL;
 		free(segmentoABuscar);
 		segmentoABuscar=NULL;
+		liberarTabla(segmentoEnCache);
+		segmentoEnCache=NULL;
 		return SEGMENTOINEXISTENTE;
 	}
 	liberarArrayDeChar(parametros);
 	parametros=NULL;
 	free(segmentoABuscar);
 	segmentoABuscar=NULL;
+	liberarTabla(segmentoEnCache);
+	segmentoEnCache=NULL;
 	free(paqueteAuxiliar); //(4)
 	paqueteAuxiliar=NULL;
 }
@@ -513,8 +507,8 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 	  	break;
 	 	 default:
 	 		string_append_with_format(&errorDefault, "%s%s","No se ha encontrado a quien devolver la reques realizada",request);
-	 		 log_info(logger_MEMORIA,errorDefault);
-	 		 break;
+	 		log_info(logger_MEMORIA,errorDefault);
+	 		break;
 
 	}
 	free(errorDefault);
@@ -702,7 +696,6 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoEr
 				t_segmento* nuevaSegmento = crearSegmento(nuevaTabla);
 				list_add(nuevaSegmento->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
 				list_add(tablaDeSegmentos->segmentos,nuevaSegmento);
-
 			}
 		}
 	}
@@ -821,7 +814,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
 				list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
-
+				liberarTabla(nuevoSegmento);
 			}
 		}
 	}
@@ -993,6 +986,7 @@ void create(cod_request codRequest,char* request){
 	if(rtaCache == SEGMENTOINEXISTENTE){
 		char** requestSeparada = separarRequest(request);
 		t_segmento* nuevaTablaDePagina = crearSegmento(requestSeparada[1]); //TODO: Ver free
+		nuevaTablaDePagina->path=NULL;
 		list_add(tablaDeSegmentos->segmentos,nuevaTablaDePagina);
 
 		liberarArrayDeChar(requestSeparada);
@@ -1065,15 +1059,22 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
  * 	-> :: void
  * 	VALGRIND :: NO */
 void liberarTabla(t_segmento* segmento){
-	void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
+	int listaIgual(t_segmento* segmentoComparar){
+		if(segmentoComparar->path == segmento->path){
+			return TRUE;
+		}else{
+			return FALSE;
+		}
+	}
+	list_remove_and_destroy_by_condition(tablaDeSegmentos->segmentos,(int) listaIgual, (void*) liberarElemTablaPagina);
+}
+
+void liberarElemTablaPagina(t_elemTablaDePaginas* pagina){
 		eliminarMarco(pagina,pagina->marco);
 		free(pagina);
 		pagina=NULL;
-	}
-	free(segmento->path);
-	segmento->path=NULL;
-	list_clean_and_destroy_elements(segmento->tablaDePagina, (void*) eliminarElemTablaPagina);
 }
+
 
 
 /* liberarEstructurasMemoria()
@@ -1108,8 +1109,7 @@ void liberarEstructurasMemoria(t_tablaDeSegmentos* tablaDeSegmentos){
  * 	VALGRIND :: NO */
 void liberarMemoria(){
 	log_info(logger_MEMORIA, "Finaliza MEMORIA");
-	free(bitarray);
-	bitarray=NULL; //(5)
+	bitarray_destroy(bitarray);
 	free(bitarrayString);
 	bitarrayString=NULL;
 	free(memoria);
@@ -1188,8 +1188,6 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,i));
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS= NULL;
-	free(tablaDeSegmentosEnCache);
-	tablaDeSegmentosEnCache=NULL;
 	liberarArrayDeChar(requestSeparada);
 	requestSeparada=NULL;
 	free(segmentoABuscar);

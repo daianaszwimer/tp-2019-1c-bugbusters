@@ -612,7 +612,6 @@ void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
  * 	-> :: void  */
 void enviar(int cod, char* mensaje, int socket_cliente)
 {
-	//armamos el paquete
 	t_paquete* paquete = (t_paquete*) malloc(sizeof(t_paquete));
 	paquete->palabraReservada = cod;
 
@@ -627,8 +626,7 @@ void enviar(int cod, char* mensaje, int socket_cliente)
 	send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0);
 
 	free(paqueteAEnviar);
-	free(paquete->request);
-	free(paquete);
+	eliminar_paquete(paquete);
 }
 
 

@@ -143,15 +143,12 @@ void procesarCreate(cod_request, char*,consistencia, t_caller, int);
 void create(cod_request,char*);
 t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 
-//void liberarElementoDePag(t_elemTablaDePaginas* self);
-
-void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
-//void eliminarPagina(t_pagina*);
 
 int obtenerPaginaDisponible(t_marco**);
 
 void eliminarElemTablaSegmentos(t_segmento*);
 void liberarTabla(t_segmento*);
+void liberarElemTablaPagina(t_elemTablaDePaginas* );
 void liberarEstructurasMemoria(t_tablaDeSegmentos*);
 void liberarMemoria();
 void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
