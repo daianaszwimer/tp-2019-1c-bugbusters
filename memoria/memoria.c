@@ -365,7 +365,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-			actualizarTimestamp(elementoEncontrado);
+			actualizarTimestamp(elementoEncontrado->marco);
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
@@ -450,6 +450,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 	free(paqueteAuxiliar); //(4)
 	paqueteAuxiliar=NULL;
 }
+
 
 /*encontrarSegmento()
  * Parametros:
@@ -837,8 +838,8 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: SI*/
-void actualizarTimestamp(t_elemTablaDePaginas* elemTablaDePag){
-	elemTablaDePag->marco->timestamp= obtenerHoraActual();
+void actualizarTimestamp(t_marco* marco){
+	marco->timestamp= obtenerHoraActual();
 }
 
 
@@ -1160,3 +1161,122 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	free(segmentoABuscar);
 	segmentoABuscar=NULL;
 }
+
+/* LRU()
+ * Parametros:
+ *	-> t_elemTablaDePaginas** :: elemVictima
+ * Descripcion: Aplica LRU, buscando (si exite) la pagina sin modificar que esta sin consultarse hace mas tiempo
+ * Return:
+ * 	-> int :: resultado de aplicar el algorimo LRU
+ * 	VALGRIND :: NO*/
+int LRU(t_elemTablaDePaginas** elemVictima){
+	int i=0, j= 0;
+	t_list* elemSinModificar=list_create();
+	while(list_get(tablaDeSegmentos->segmentos,j)!=NULL){
+		t_segmento* segmento=list_get(tablaDeSegmentos->segmentos,j);
+
+		while (list_get(segmento->tablaDePagina, i) != NULL) {
+			t_elemTablaDePaginas* elemenetoTablaDePag =list_get(segmento->tablaDePagina, i);
+			if (elemenetoTablaDePag->modificado == SINMODIFICAR) {
+				list_add(elemSinModificar, elemenetoTablaDePag);
+			}
+			i++;
+		}
+		j++;
+	}
+
+
+	if (!list_is_empty(elemSinModificar)) {
+		list_sort(elemSinModificar, (void*) menorTimestamp);
+		*elemVictima = list_get(elemSinModificar, 0);
+		int desvinculacion=desvincularVictimaDeSuSegmento(elemVictima);
+		if(desvinculacion ==SUCCESS){
+			return SUCCESS;
+		}else{
+			return JOURNALTIME;
+		}
+
+	} else {
+		return JOURNALTIME;
+	}
+
+}
+
+/* LRU()
+ * desvincularVictimaDeSuSegmento:
+ *	-> t_elemTablaDePaginas* :: elemVictima
+ * Descripcion: Le quita al segmento la pagina indicada
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
+int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
+	void eliminarReferenciaVictima(t_segmento* segmento) {
+		int contieneElElemento(t_elemTablaDePaginas* elem){
+			if(elem->numeroDePag == elemVictima->numeroDePag){
+				return SUCCESS;
+			}else{
+				return NUESTRO_ERROR;
+			}
+		}
+
+		///t_elemTablaDePaginas* elemEncontrado=list_find(segmento->tablaDePagina, (void*)contieneElElemento);
+
+		list_remove_by_condition(segmento->tablaDePagina,(void*)contieneElElemento);
+
+//		while (list_get(segmento->tablaDePagina, i) != NULL) {
+//			t_elemTablaDePaginas* elemenetoTablaDePag =(t_elemTablaDePaginas*) malloc(sizeof(t_elemTablaDePaginas));
+//			elemenetoTablaDePag = list_get(segmento->tablaDePagina, i);
+//				void eliminarElemTablaPaginas(){
+//					if (elemenetoTablaDePag->numeroDePag == elemVictima->numeroDePag) {
+//					memset(elemenetoTablaDePag->marco->value, 0, sizeof(elemenetoTablaDePag->marco->value));
+//					}
+//				}
+//				list_clean_and_destroy_elements(segmento->tablaDePagina,(void*)eliminarElemTablaPaginas);
+//
+//			i++;
+//		}
+
+	}
+
+	t_segmento* segmento =list_find(tablaDeSegmentos->segmentos,(void*) eliminarReferenciaVictima);
+
+	if(segmento !=NULL){
+		return SUCCESS;
+	}else{
+		return NUESTRO_ERROR;
+	}
+}
+
+/* menorTimestamp()
+ * desvincularVictimaDeSuSegmento:
+ *	-> t_elemTablaDePaginas* :: primerElem
+ *	-> t_elemTablaDePaginas* :: segundoElem
+ * Descripcion: Indica si es cierto que el primer elemento contiene un timestamp menor que el segundo.
+ * Return:
+ * 	-> int :: bool
+ * 	VALGRIND :: SI*/
+ int menorTimestamp(t_elemTablaDePaginas* primerElem,t_elemTablaDePaginas* segundoElem) {
+	return primerElem->marco->timestamp <= segundoElem->marco->timestamp;
+}
+
+/* correrAlgoritmoLRU()
+ * desvincularVictimaDeSuSegmento:
+ *	-> t_elemTablaDePaginas** :: primerElem
+ * Descripcion: Invoca al algoritmo LRU y cachea el resultado del mismo
+ * Return:
+ * 	-> int :: bool-rta del algoritmo LRU
+ * 	VALGRIND :: NO*/
+int correrAlgoritmoLRU(t_elemTablaDePaginas** elementoAInsertar) {
+	log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutarse el algoritmo de reemplazo");
+	int rtaDeLRU=LRU(elementoAInsertar);
+	if ( rtaDeLRU != JOURNALTIME) {
+		log_info(logger_MEMORIA, "Se encontra una pagina para reemplazar");
+		return SUCCESS;
+
+	} else {
+		log_info(logger_MEMORIA,
+				"NO hay paginas para reemplazar, hay q hacer journaling");
+		return JOURNALTIME;
+	}
+}
+
