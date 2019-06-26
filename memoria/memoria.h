@@ -162,6 +162,6 @@ void procesarDrop(cod_request, char* ,consistencia , t_caller , int);
 int LRU(t_elemTablaDePaginas**);
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas*);
 int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
-int correrAlgoritmoLRU(t_elemTablaDePaginas**);
+t_elemTablaDePaginas* correrAlgoritmoLRU(int*);
 
 #endif /* MEMORIA_H_ */

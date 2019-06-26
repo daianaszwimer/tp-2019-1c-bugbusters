@@ -52,11 +52,17 @@ void inicializacionDeMemoria(){
 
 	//-------------------------------AUXILIAR: creacion de tabla/pag/elemento ---------------------------------
 
-	t_marco* pagLibre = NULL;
-	int index= obtenerPaginaDisponible(&pagLibre);
+	t_marco* pagLibre=NULL;
+	int index1= obtenerPaginaDisponible(&pagLibre);
+	int i=0;
+	while(i < marcosTotales){
+		 bitarray_set_bit(bitarray, i);
+		 i++;
+	}
 
+	bitarray_clean_bit(bitarray,64);
 	t_segmento* nuevoSegmento = crearSegmento("tablaA");
-	t_elemTablaDePaginas* nuevoElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,1,"hola",12345678);
+	t_elemTablaDePaginas* nuevoElemTablaDePagina = crearElementoEnTablaDePagina(index1,pagLibre,1,"hola",12345678);
 	list_add(nuevoSegmento->tablaDePagina,nuevoElemTablaDePagina);
 	list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
 
@@ -654,7 +660,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
    * Return:
    * 	-> :: void
    * VALGRIND:: NO*/
-void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
+ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
 
 	if(nuevoPaquete->palabraReservada == SUCCESS){
 		char** requestSeparada= separarRequest(nuevoPaquete->request);
@@ -666,8 +672,26 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoEr
 		t_marco* pagLibre = NULL;
 		int index= obtenerPaginaDisponible(&pagLibre);
 		if(index == MEMORIAFULL){
-			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
-			//TODO
+			t_elemTablaDePaginas* elementoAInsertar= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+			elementoAInsertar =NULL;
+			int rtaLRU;
+			elementoAInsertar=correrAlgoritmoLRU(&rtaLRU);
+			if (rtaLRU == SUCCESS){
+				if (tipoError == KEYINEXISTENTE) {
+					t_segmento* tablaBuscada = malloc(sizeof(t_segmento));
+					tablaBuscada = encontrarSegmento(nuevaTabla);
+					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+
+				} else if (tipoError == SEGMENTOINEXISTENTE) {
+					t_segmento* nuevaSegmento = crearSegmento(nuevaTabla);
+					list_add(nuevaSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+					list_add(tablaDeSegmentos->segmentos, nuevaSegmento);
+
+				}
+			} else {
+				log_info(logger_MEMORIA,
+						"NO hay paginas para reemplazar, hay q hacer journaling");
+			}
 		}else{
 			if(tipoError== KEYINEXISTENTE){
 				t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
@@ -1162,89 +1186,35 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	segmentoABuscar=NULL;
 }
 
-/* LRU()
- * Parametros:
- *	-> t_elemTablaDePaginas** :: elemVictima
- * Descripcion: Aplica LRU, buscando (si exite) la pagina sin modificar que esta sin consultarse hace mas tiempo
- * Return:
- * 	-> int :: resultado de aplicar el algorimo LRU
- * 	VALGRIND :: NO*/
-int LRU(t_elemTablaDePaginas** elemVictima){
-	int i=0, j= 0;
-	t_list* elemSinModificar=list_create();
-	while(list_get(tablaDeSegmentos->segmentos,j)!=NULL){
-		t_segmento* segmento=list_get(tablaDeSegmentos->segmentos,j);
 
-		while (list_get(segmento->tablaDePagina, i) != NULL) {
-			t_elemTablaDePaginas* elemenetoTablaDePag =list_get(segmento->tablaDePagina, i);
-			if (elemenetoTablaDePag->modificado == SINMODIFICAR) {
-				list_add(elemSinModificar, elemenetoTablaDePag);
-			}
-			i++;
-		}
-		j++;
-	}
-
-
-	if (!list_is_empty(elemSinModificar)) {
-		list_sort(elemSinModificar, (void*) menorTimestamp);
-		*elemVictima = list_get(elemSinModificar, 0);
-		int desvinculacion=desvincularVictimaDeSuSegmento(elemVictima);
-		if(desvinculacion ==SUCCESS){
-			return SUCCESS;
-		}else{
-			return JOURNALTIME;
-		}
-
-	} else {
-		return JOURNALTIME;
-	}
-
-}
-
-/* LRU()
- * desvincularVictimaDeSuSegmento:
+/* desvincularVictimaDeSuSegmento()
  *	-> t_elemTablaDePaginas* :: elemVictima
  * Descripcion: Le quita al segmento la pagina indicada
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
-	void eliminarReferenciaVictima(t_segmento* segmento) {
-		int contieneElElemento(t_elemTablaDePaginas* elem){
+	int i =0;
+	int retorno=NUESTRO_ERROR;
+	t_segmento* segmento=(t_segmento*)malloc(sizeof(t_segmento));
+	segmento=NULL;
+		int contieneElElementoVictima(t_elemTablaDePaginas* elem){
 			if(elem->numeroDePag == elemVictima->numeroDePag){
+				retorno = SUCCESS;
+				puts(elem->marco->value);
 				return SUCCESS;
 			}else{
 				return NUESTRO_ERROR;
 			}
 		}
 
-		///t_elemTablaDePaginas* elemEncontrado=list_find(segmento->tablaDePagina, (void*)contieneElElemento);
-
-		list_remove_by_condition(segmento->tablaDePagina,(void*)contieneElElemento);
-
-//		while (list_get(segmento->tablaDePagina, i) != NULL) {
-//			t_elemTablaDePaginas* elemenetoTablaDePag =(t_elemTablaDePaginas*) malloc(sizeof(t_elemTablaDePaginas));
-//			elemenetoTablaDePag = list_get(segmento->tablaDePagina, i);
-//				void eliminarElemTablaPaginas(){
-//					if (elemenetoTablaDePag->numeroDePag == elemVictima->numeroDePag) {
-//					memset(elemenetoTablaDePag->marco->value, 0, sizeof(elemenetoTablaDePag->marco->value));
-//					}
-//				}
-//				list_clean_and_destroy_elements(segmento->tablaDePagina,(void*)eliminarElemTablaPaginas);
-//
-//			i++;
-//		}
-
+	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
+		segmento = list_get(tablaDeSegmentos->segmentos,i);
+		list_remove_by_condition(segmento->tablaDePagina,(void*)contieneElElementoVictima);
+		i++;
 	}
 
-	t_segmento* segmento =list_find(tablaDeSegmentos->segmentos,(void*) eliminarReferenciaVictima);
-
-	if(segmento !=NULL){
-		return SUCCESS;
-	}else{
-		return NUESTRO_ERROR;
-	}
+	return retorno;
 }
 
 /* menorTimestamp()
@@ -1262,21 +1232,47 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 /* correrAlgoritmoLRU()
  * desvincularVictimaDeSuSegmento:
  *	-> t_elemTablaDePaginas** :: primerElem
- * Descripcion: Invoca al algoritmo LRU y cachea el resultado del mismo
+ * Descripcion: Revisa si existe un pag sin modificar y , de hacerlo, la elige como victima para darsela
+ * 				a la nueva request ingresada.
  * Return:
  * 	-> int :: bool-rta del algoritmo LRU
  * 	VALGRIND :: NO*/
-int correrAlgoritmoLRU(t_elemTablaDePaginas** elementoAInsertar) {
+ t_elemTablaDePaginas* correrAlgoritmoLRU(int* rta) {
 	log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutarse el algoritmo de reemplazo");
-	int rtaDeLRU=LRU(elementoAInsertar);
-	if ( rtaDeLRU != JOURNALTIME) {
-		log_info(logger_MEMORIA, "Se encontra una pagina para reemplazar");
-		return SUCCESS;
+	int i=0, j= 0;
+
+	t_list* elemSinModificar=list_create();
+
+	while(list_get(tablaDeSegmentos->segmentos,j)!=NULL){
+		t_segmento* segmento=list_get(tablaDeSegmentos->segmentos,j);
+
+		while (list_get(segmento->tablaDePagina, i) != NULL) {
+			t_elemTablaDePaginas* elemenetoTablaDePag =list_get(segmento->tablaDePagina, i);
+			if (elemenetoTablaDePag->modificado == SINMODIFICAR) {
+				list_add(elemSinModificar, elemenetoTablaDePag);
+			}
+			i++;
+		}
+		j++;
+		i=0;
+	}
+
+	t_elemTablaDePaginas* elementoVictima=(t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	elementoVictima =NULL;
+
+	if (!list_is_empty(elemSinModificar)) {
+		list_sort(elemSinModificar, (void*) menorTimestamp);
+		elementoVictima = list_get(elemSinModificar, 0);
+		int desvinculacion=desvincularVictimaDeSuSegmento(elementoVictima);
+		if(desvinculacion == SUCCESS){
+			*rta=SUCCESS;
+		}else{
+			*rta=NUESTRO_ERROR;
+		}
 
 	} else {
-		log_info(logger_MEMORIA,
-				"NO hay paginas para reemplazar, hay q hacer journaling");
-		return JOURNALTIME;
+		*rta=JOURNALTIME;
 	}
+	return elementoVictima;
 }
 
