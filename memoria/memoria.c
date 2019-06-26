@@ -55,12 +55,12 @@ void inicializacionDeMemoria(){
 	t_marco* pagLibre=NULL;
 	int index1= obtenerPaginaDisponible(&pagLibre);
 	int i=0;
-	while(i < marcosTotales){
-		 bitarray_set_bit(bitarray, i);
-		 i++;
-	}
-
-	bitarray_clean_bit(bitarray,64);
+//	while(i < marcosTotales){
+//		 bitarray_set_bit(bitarray, i);
+//		 i++;
+//	}
+//
+//	bitarray_clean_bit(bitarray,64);
 	t_segmento* nuevoSegmento = crearSegmento("tablaA");
 	t_elemTablaDePaginas* nuevoElemTablaDePagina = crearElementoEnTablaDePagina(index1,pagLibre,1,"hola",12345678);
 	list_add(nuevoSegmento->tablaDePagina,nuevoElemTablaDePagina);
@@ -1262,7 +1262,7 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 
 	if (!list_is_empty(elemSinModificar)) {
 		list_sort(elemSinModificar, (void*) menorTimestamp);
-		elementoVictima = list_get(elemSinModificar, 0);
+		elementoVictima = list_take_and_remove(elemSinModificar, 0);
 		int desvinculacion=desvincularVictimaDeSuSegmento(elementoVictima);
 		if(desvinculacion == SUCCESS){
 			*rta=SUCCESS;
@@ -1273,6 +1273,7 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 	} else {
 		*rta=JOURNALTIME;
 	}
+//	list_clean_and_destroy_elements(elemSinModificar,(void*)liberarElemTablaPagina);
 	return elementoVictima;
 }
 
