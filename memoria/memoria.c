@@ -775,12 +775,8 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			insertALFS = intercambiarConFileSystem(palabraReservada,request);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
 				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
-				free(insertALFS->request);
-				free(insertALFS);
 			}else{
 				enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-				free(insertALFS->request);
-				free(insertALFS);
 			}
 			eliminar_paquete(insertALFS);
 			insertALFS=NULL;
