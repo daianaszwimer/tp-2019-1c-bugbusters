@@ -52,13 +52,19 @@ void inicializacionDeMemoria(){
 
 	//-------------------------------AUXILIAR: creacion de tabla/pag/elemento ---------------------------------
 
-	t_marco* pagLibre = NULL;
-	int index= obtenerPaginaDisponible(&pagLibre);
-
-/*	t_segmento* nuevoSegmento = crearSegmento("tablaA");
-	t_elemTablaDePaginas* nuevoElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,1,"hola",12345678);
+	t_marco* pagLibre=NULL;
+	int index1= obtenerPaginaDisponible(&pagLibre);
+	int i=0;
+//	while(i < marcosTotales){
+//		 bitarray_set_bit(bitarray, i);
+//		 i++;
+//	}
+//
+//	bitarray_clean_bit(bitarray,64);
+	t_segmento* nuevoSegmento = crearSegmento("tablaA");
+	t_elemTablaDePaginas* nuevoElemTablaDePagina = crearElementoEnTablaDePagina(index1,pagLibre,1,"hola",12345678);
 	list_add(nuevoSegmento->tablaDePagina,nuevoElemTablaDePagina);
-	list_add(tablaDeSegmentos->segmentos,nuevoSegmento);*/
+	list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
 }
 
 
@@ -363,7 +369,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-			//actualizarTimestamp(elementoEncontrado); //TODO: ATENCION CAMBIE ACA
+			actualizarTimestamp(elementoEncontrado->marco);
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
 		}else{// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
@@ -465,6 +471,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 	free(paqueteAuxiliar); //(4)
 	paqueteAuxiliar=NULL;
 }
+
 
 /*encontrarSegmento()
  * Parametros:
@@ -671,7 +678,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
    * Return:
    * 	-> :: void
    * VALGRIND:: NO*/
-void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
+ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
 
 	if(nuevoPaquete->palabraReservada == SUCCESS){
 		char** requestSeparada= separarRequest(nuevoPaquete->request);
@@ -683,8 +690,26 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoEr
 		t_marco* pagLibre = NULL;
 		int index= obtenerPaginaDisponible(&pagLibre);
 		if(index == MEMORIAFULL){
-			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
-			//TODO
+			t_elemTablaDePaginas* elementoAInsertar= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+			elementoAInsertar =NULL;
+			int rtaLRU;
+			elementoAInsertar=correrAlgoritmoLRU(&rtaLRU);
+			if (rtaLRU == SUCCESS){
+				if (tipoError == KEYINEXISTENTE) {
+					t_segmento* tablaBuscada = malloc(sizeof(t_segmento));
+					tablaBuscada = encontrarSegmento(nuevaTabla);
+					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+
+				} else if (tipoError == SEGMENTOINEXISTENTE) {
+					t_segmento* nuevaSegmento = crearSegmento(nuevaTabla);
+					list_add(nuevaSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+					list_add(tablaDeSegmentos->segmentos, nuevaSegmento);
+
+				}
+			} else {
+				log_info(logger_MEMORIA,
+						"NO hay paginas para reemplazar, hay q hacer journaling");
+			}
 		}else{
 			if(tipoError== KEYINEXISTENTE){
 				t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
@@ -750,8 +775,12 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			insertALFS = intercambiarConFileSystem(palabraReservada,request);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
 				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
+				free(insertALFS->request);
+				free(insertALFS);
 			}else{
 				enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+				free(insertALFS->request);
+				free(insertALFS);
 			}
 			eliminar_paquete(insertALFS);
 			insertALFS=NULL;
@@ -869,8 +898,8 @@ t_paquete* armarPaqueteDeRtaAEnviar(char* request){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: SI*/
-void actualizarTimestamp(t_elemTablaDePaginas* elemTablaDePag){
-	elemTablaDePag->marco->timestamp= obtenerHoraActual();
+void actualizarTimestamp(t_marco* marco){
+	marco->timestamp= obtenerHoraActual();
 }
 
 
@@ -979,9 +1008,8 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 	valorDeLFS=intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
-	}else if(consistencia == SC ||consistencia == SHC){
-		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
 	}
+	enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS=NULL;
 }
@@ -1225,3 +1253,95 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	free(segmentoABuscar);
 	segmentoABuscar=NULL;
 }
+
+
+/* desvincularVictimaDeSuSegmento()
+ *	-> t_elemTablaDePaginas* :: elemVictima
+ * Descripcion: Le quita al segmento la pagina indicada
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
+int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
+	int i =0;
+	int retorno=NUESTRO_ERROR;
+	t_segmento* segmento=(t_segmento*)malloc(sizeof(t_segmento));
+	segmento=NULL;
+		int contieneElElementoVictima(t_elemTablaDePaginas* elem){
+			if(elem->numeroDePag == elemVictima->numeroDePag){
+				retorno = SUCCESS;
+				puts(elem->marco->value);
+				return SUCCESS;
+			}else{
+				return NUESTRO_ERROR;
+			}
+		}
+
+	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
+		segmento = list_get(tablaDeSegmentos->segmentos,i);
+		list_remove_by_condition(segmento->tablaDePagina,(void*)contieneElElementoVictima);
+		i++;
+	}
+
+	return retorno;
+}
+
+/* menorTimestamp()
+ * desvincularVictimaDeSuSegmento:
+ *	-> t_elemTablaDePaginas* :: primerElem
+ *	-> t_elemTablaDePaginas* :: segundoElem
+ * Descripcion: Indica si es cierto que el primer elemento contiene un timestamp menor que el segundo.
+ * Return:
+ * 	-> int :: bool
+ * 	VALGRIND :: SI*/
+ int menorTimestamp(t_elemTablaDePaginas* primerElem,t_elemTablaDePaginas* segundoElem) {
+	return primerElem->marco->timestamp <= segundoElem->marco->timestamp;
+}
+
+/* correrAlgoritmoLRU()
+ * desvincularVictimaDeSuSegmento:
+ *	-> t_elemTablaDePaginas** :: primerElem
+ * Descripcion: Revisa si existe un pag sin modificar y , de hacerlo, la elige como victima para darsela
+ * 				a la nueva request ingresada.
+ * Return:
+ * 	-> int :: bool-rta del algoritmo LRU
+ * 	VALGRIND :: NO*/
+ t_elemTablaDePaginas* correrAlgoritmoLRU(int* rta) {
+	log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutarse el algoritmo de reemplazo");
+	int i=0, j= 0;
+
+	t_list* elemSinModificar=list_create();
+
+	while(list_get(tablaDeSegmentos->segmentos,j)!=NULL){
+		t_segmento* segmento=list_get(tablaDeSegmentos->segmentos,j);
+
+		while (list_get(segmento->tablaDePagina, i) != NULL) {
+			t_elemTablaDePaginas* elemenetoTablaDePag =list_get(segmento->tablaDePagina, i);
+			if (elemenetoTablaDePag->modificado == SINMODIFICAR) {
+				list_add(elemSinModificar, elemenetoTablaDePag);
+			}
+			i++;
+		}
+		j++;
+		i=0;
+	}
+
+	t_elemTablaDePaginas* elementoVictima=(t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	elementoVictima =NULL;
+
+	if (!list_is_empty(elemSinModificar)) {
+		list_sort(elemSinModificar, (void*) menorTimestamp);
+		elementoVictima = list_take_and_remove(elemSinModificar, 0);
+		int desvinculacion=desvincularVictimaDeSuSegmento(elementoVictima);
+		if(desvinculacion == SUCCESS){
+			*rta=SUCCESS;
+		}else{
+			*rta=NUESTRO_ERROR;
+		}
+
+	} else {
+		*rta=JOURNALTIME;
+	}
+//	list_clean_and_destroy_elements(elemSinModificar,(void*)liberarElemTablaPagina);
+	return elementoVictima;
+}
+
