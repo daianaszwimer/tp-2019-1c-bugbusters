@@ -342,23 +342,23 @@ void informarMetricas(int mostrarPorConsola) {
 		}
 	}
 	if (mostrarPorConsola == TRUE) {
-		log_info(logger_KERNEL, "Read Latency de SC: %f", readLatency);
-		log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatency);
+		log_info(logger_KERNEL, "Read Latency: %f", readLatency);
+		log_info(logger_KERNEL, "Write Latency: %f", writeLatency);
 		if (list_size(cargaMemoria) > 0) {
 			log_info(logger_KERNEL, "El memory load es:");
 			list_iterate(cargaMemoria, (void*) mostrarCargaMemoria);
 		}
-		log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelect);
-		log_info(logger_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsert);
+		log_info(logger_KERNEL, "Cantidad de Reads: %d", cantidadSelect);
+		log_info(logger_KERNEL, "Cantidad de Writes: %d", cantidadInsert);
 	} else {
-		log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %f", readLatency);
-		log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatency);
+		log_info(logger_METRICAS_KERNEL, "Read Latency: %f", readLatency);
+		log_info(logger_METRICAS_KERNEL, "Write Latency: %f", writeLatency);
 		if (list_size(cargaMemoria) > 0) {
 			log_info(logger_METRICAS_KERNEL, "El memory load es:");
 			list_iterate(cargaMemoria, (void*) mostrarCargaMemoria);
 		}
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelect);
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsert);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads: %d", cantidadSelect);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes: %d", cantidadInsert);
 	}
 	pthread_mutex_unlock(&semMMetricas);
 }
@@ -798,19 +798,19 @@ void agregarTablaACriterio(char* tabla) {
 				pthread_mutex_lock(&semMTablasSC);
 				list_add(tablasSC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasSC);
-			//	log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
+				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
 				break;
 			case SHC:
 				pthread_mutex_lock(&semMTablasSHC);
 				list_add(tablasSHC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasSHC);
-			//	log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
+				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
 				break;
 			case EC:
 				pthread_mutex_lock(&semMTablasEC);
 				list_add(tablasEC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasEC);
-			//	log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
+				log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
 				break;
 			default:
 				log_error(logger_KERNEL, "La tabla %s no tiene asociada un criterio válido y no se actualizó en la estructura de datos",
@@ -1005,13 +1005,15 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	int conexionTemporanea = conexionMemoria;
 	char** parametros = separarRequest(mensaje);
 	config_memoria* memoriaCorrespondiente;
+	char* numMemoria;
 	if (codigo == DESCRIBE) {
 		// https://github.com/sisoputnfrba/foro/issues/1391 chequearlo
 		pthread_mutex_lock(&semMMemorias);
 		unsigned int indice = obtenerIndiceRandom(list_size(memorias));
 		memoriaCorrespondiente = list_get(memorias, indice);
+		numMemoria = strdup(memoriaCorrespondiente->numero);
 		if (!string_equals_ignore_case(memoriaCorrespondiente->ip, ipMemoria)
-			&& !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
+			|| !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
 			conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
 		}
 		pthread_mutex_unlock(&semMMemorias);
@@ -1032,9 +1034,10 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			return respuesta;
 		} else {
 			if (!string_equals_ignore_case(memoriaCorrespondiente->ip, ipMemoria)
-				&& !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
+				|| !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
 				conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
 			}
+			numMemoria = strdup(memoriaCorrespondiente->numero);
 			liberarConfigMemoria(memoriaCorrespondiente);
 		}
 	}
@@ -1043,6 +1046,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	respuesta = paqueteRecibido->palabraReservada;
 	if (respuesta == SUCCESS) {
 		if (codigo == DESCRIBE) {
+			log_info(logger_KERNEL, "llego %s", paqueteRecibido->request);
 			actualizarTablas(paqueteRecibido->request);
 		}
 		if(codigo == SELECT) {
@@ -1072,6 +1076,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		}
 	}
 	else {
+		//todo: ver que pasa que se traba con describe y otras requests invalidas
+		perror("MSJ");
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
 	if (conexionTemporanea != conexionMemoria) {
@@ -1083,7 +1089,9 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		tiempo = clock() - tiempo;
 		tiempoQueTardo = ((double)tiempo)/CLOCKS_PER_SEC;
 	}
-	aumentarContadores(memoriaCorrespondiente->numero, codigo, tiempoQueTardo);
+	log_debug(logger_KERNEL, "Le mande a a mem %s", numMemoria);
+	aumentarContadores(numMemoria, codigo, tiempoQueTardo);
+	free(numMemoria);
 	return respuesta;
 }
 
@@ -1274,7 +1282,7 @@ int procesarAdd(char* mensaje) {
 					list_add(memoriasShc, memAux);
 					pthread_mutex_unlock(&semMMemoriasSHC);
 					log_info(logger_KERNEL, "Se agregó la memoria %s al criterio SHC", memAux->numero);
-					//procesarJournal(TRUE);
+					procesarJournal(TRUE);
 				} else {
 					pthread_mutex_unlock(&semMMemoriasSHC);
 					log_info(logger_KERNEL, "La memoria %s ya existe en la lista de memorias SHC", memAux->numero);
