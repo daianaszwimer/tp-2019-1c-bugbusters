@@ -379,7 +379,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		}
 		eliminar_paquete(valorEncontrado);
 		eliminar_paquete(valorDeLFS);
-		liberarElemTablaPagina(elementoEncontrado);
+		free(elementoEncontrado);
 	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
@@ -441,7 +441,8 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			parametros=NULL;
 			free(segmentoABuscar);
 			segmentoABuscar=NULL;
-			liberarTabla(segmentoEnCache);
+			//liberarTabla(segmentoEnCache);
+			free(segmentoEnCache);
 			segmentoEnCache=NULL;
 			return EXIT_SUCCESS;
 		}else{
@@ -449,7 +450,8 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			parametros=NULL;
 			free(segmentoABuscar);
 			segmentoABuscar=NULL;
-			liberarTabla(segmentoEnCache);
+			//liberarTabla(segmentoEnCache);
+			free(segmentoEnCache);
 			segmentoEnCache=NULL;
 			return KEYINEXISTENTE;
 		}
@@ -458,7 +460,8 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 		parametros=NULL;
 		free(segmentoABuscar);
 		segmentoABuscar=NULL;
-		liberarTabla(segmentoEnCache);
+		//liberarTabla(segmentoEnCache);
+		free(segmentoEnCache);
 		segmentoEnCache=NULL;
 		return SEGMENTOINEXISTENTE;
 	}
@@ -466,7 +469,8 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 	parametros=NULL;
 	free(segmentoABuscar);
 	segmentoABuscar=NULL;
-	liberarTabla(segmentoEnCache);
+	//liberarTabla(segmentoEnCache);
+	free(segmentoEnCache);
 	segmentoEnCache=NULL;
 	free(paqueteAuxiliar); //(4)
 	paqueteAuxiliar=NULL;
@@ -589,8 +593,8 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			error=NULL;
 	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
-			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
-				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
+			}else{
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no ha podido realizarse,debido que NO EXISTE LA TABLA SOLICITADA");
 				log_info(logger_MEMORIA,error);
 	 			free(respuesta);
 	 			respuesta=NULL;
