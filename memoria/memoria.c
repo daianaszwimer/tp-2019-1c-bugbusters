@@ -55,10 +55,10 @@ void inicializacionDeMemoria(){
 	t_marco* pagLibre = NULL;
 	int index= obtenerPaginaDisponible(&pagLibre);
 
-	t_segmento* nuevoSegmento = crearSegmento("tablaA");
+/*	t_segmento* nuevoSegmento = crearSegmento("tablaA");
 	t_elemTablaDePaginas* nuevoElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,1,"hola",12345678);
 	list_add(nuevoSegmento->tablaDePagina,nuevoElemTablaDePagina);
-	list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
+	list_add(tablaDeSegmentos->segmentos,nuevoSegmento);*/
 }
 
 
@@ -350,11 +350,11 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 
 //-------------------------------------------------------------
 
-	t_paquete* valorDeLFS=malloc(sizeof(t_paquete)); //TODO: Ver free
+	t_paquete* valorDeLFS=malloc(sizeof(t_paquete));
 	valorDeLFS->request=NULL;
-	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas)); //TODO: Ver free
+	t_elemTablaDePaginas* elementoEncontrado = malloc(sizeof(t_elemTablaDePaginas));
 	elementoEncontrado->marco=NULL;
-	t_paquete* valorEncontrado=malloc(sizeof(t_paquete)); //TODO: Ver free
+	t_paquete* valorEncontrado=malloc(sizeof(t_paquete));
 	valorEncontrado->request=NULL;
 
 	int resultadoCache;
@@ -400,9 +400,9 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
  * 	-> int :: resultado de la operacion
  * 	VALGRIND : EN PROCESO */
 int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado){
-	t_segmento* segmentoEnCache = malloc(sizeof(t_segmento)); //TODO: Ver free
-	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas)); //TODO: Ver free
-	t_paquete* paqueteAuxiliar; //TODO: Ver free
+	t_segmento* segmentoEnCache = malloc(sizeof(t_segmento));
+	t_elemTablaDePaginas* elementoDePagEnCache = malloc(sizeof(t_elemTablaDePaginas));
+	t_paquete* paqueteAuxiliar;
 
 	char** parametros = separarRequest(request);
 	char* segmentoABuscar=strdup(parametros[1]);
@@ -495,7 +495,6 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  * 	-> :: void
  * VALGRIND:: NO*/
  void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int socketKernel){
-	 //TODO reservar y liberar
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
@@ -726,33 +725,47 @@ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoEr
  * 	VALGRIND :: EN PROCESO */
 void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int i) {
 		t_elemTablaDePaginas* elementoEncontrado= malloc(sizeof(t_elemTablaDePaginas));//TODO: Ver free
+		elementoEncontrado->marco=NULL;
 		t_paquete* valorEncontrado=malloc(sizeof(t_paquete)); //TODO: Ver free
+		valorEncontrado->request=NULL;
 		char** requestSeparada = separarRequest(request);
 		t_paquete* valorDeLFS=malloc(sizeof(t_paquete)); //NO hacer free
+		valorDeLFS->request=NULL;
 
 		if(consistenciaMemoria == EC || caller == CONSOLE){
 			int resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
+
+			liberarArrayDeChar(requestSeparada);
+			liberarElemTablaPagina(elementoEncontrado);
+			eliminar_paquete(valorEncontrado);
+			free(valorDeLFS);
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
 			char* consultaALFS=malloc(sizeof(char*));
 			*consultaALFS = '\0';
 			string_append_with_format(&consultaALFS,"%s%s%s%s%s","SELECT"," ",requestSeparada[1]," ",requestSeparada[2]);
 
-			t_paquete* insertALFS = malloc(sizeof(t_paquete)); //TODO: Ver free
+			t_paquete* insertALFS = (t_paquete*) malloc(sizeof(t_paquete));
+			insertALFS->request=NULL;
 			insertALFS = intercambiarConFileSystem(palabraReservada,request);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
 				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
 			}else{
 				enviarAlDestinatarioCorrecto(palabraReservada,valorDeLFS->palabraReservada,request,valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 			}
-			free(consultaALFS);
-			consultaALFS=NULL;
 			eliminar_paquete(insertALFS);
 			insertALFS=NULL;
+			free(consultaALFS);
+			consultaALFS=NULL;
 		}else{
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
-
 		}
+		free(elementoEncontrado);
+		elementoEncontrado=NULL;
+		free(valorEncontrado);
+		valorEncontrado=NULL;
+		free(valorDeLFS);
+		valorDeLFS=NULL;
 		liberarArrayDeChar(requestSeparada);
 		requestSeparada=NULL;
 }
@@ -774,7 +787,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
  * 	VALGRIND :: EN PROCESO */
 void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int i){
 
-	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete)); //NO hacer free
+	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
 	char** requestSeparada = separarRequest(request);
 	char* nuevaTabla = strdup(requestSeparada[1]);
 	char* nuevaKeyChar = strdup(requestSeparada[2]);
@@ -921,10 +934,11 @@ t_marco* crearPagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue, unsign
  * 	-> t_elemTablaDePaginas* :: elementoDeTablaDePagina
  * 	VALGRIND :: SI*/
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
-	t_elemTablaDePaginas* nuevoElemento= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	t_elemTablaDePaginas* nuevoElemento= (t_elemTablaDePaginas*) malloc(sizeof(t_elemTablaDePaginas));
 
 	bitarray_set_bit(bitarray, id);
 	nuevoElemento->numeroDePag = id;
+	//nuevoElemento->marco = malloc(sizeof(t_marco)+handshake->tamanioValue);
 	nuevoElemento->marco = crearPagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
 	nuevoElemento->modificado = SINMODIFICAR;
 
@@ -960,6 +974,8 @@ t_segmento* crearSegmento(char* pathNuevoSegmento){
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
 	//TODO, si lfs dio ok, igual calcular en mem?
 	t_paquete* valorDeLFS = (t_paquete*)malloc(sizeof(t_paquete));
+	valorDeLFS->request=NULL;
+	valorDeLFS=NULL;
 	valorDeLFS=intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
@@ -967,7 +983,7 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
 	}
 	eliminar_paquete(valorDeLFS);
-	valorDeLFS= NULL;
+	valorDeLFS=NULL;
 }
 
 /* create()
@@ -1075,7 +1091,16 @@ void liberarElemTablaPagina(t_elemTablaDePaginas* pagina){
 		pagina=NULL;
 }
 
-
+void liberarElemTablaSegmentos(t_segmento* segmento){
+		void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
+			eliminarMarco(pagina,pagina->marco);
+			free(pagina);
+			pagina=NULL;
+		}
+		free(segmento->path);
+		segmento->path=NULL;
+		list_clean_and_destroy_elements(segmento->tablaDePagina, (void*) eliminarElemTablaPagina);
+}
 
 /* liberarEstructurasMemoria()
  * Parametros:
@@ -1165,6 +1190,7 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
  * 	VALGRIND :: NO*/
 void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int i) {
 	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
+	tablaDeSegmentosEnCache->tablaDePagina=NULL;
 	t_paquete* valorDeLFS = malloc(sizeof(t_paquete));
 	valorDeLFS->palabraReservada=SUCCESS;
 	valorDeLFS->request=strdup("");
@@ -1180,10 +1206,16 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 
 		if(tablaDeSegmentosEnCache!= NULL){
 			log_info(logger_MEMORIA,"La %s fue eliminada de MEMORIA",tablaDeSegmentosEnCache->path);
-			liberarTabla(tablaDeSegmentosEnCache);
+			liberarElemTablaSegmentos(tablaDeSegmentosEnCache);
+			tablaDeSegmentosEnCache=NULL;
 		}else{
 			log_info(logger_MEMORIA,"La %s no existe en MEMORIA",segmentoABuscar);
+			free(tablaDeSegmentosEnCache);
+			tablaDeSegmentosEnCache=NULL;
 		}
+	}else{
+		free(tablaDeSegmentosEnCache);
+		tablaDeSegmentosEnCache=NULL;
 	}
 	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,i));
 	eliminar_paquete(valorDeLFS);
