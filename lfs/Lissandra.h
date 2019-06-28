@@ -36,6 +36,10 @@ char* pathBloques;
 int blocks;
 
 typedef struct{
+	int valor;
+} t_int;
+
+typedef struct{
 	unsigned long long timestamp;
 	uint16_t key;
 	char* value;

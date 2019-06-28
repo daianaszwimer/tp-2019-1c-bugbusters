@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
 
 	unsigned long long tiempo1 = obtenerHoraActual();
 	procesarInsert("TABLA1", 2, "\"Esta es la prueba 1\"", tiempo1);
+	procesarInsert("TABLA1", 6, "\"Esta es la prueba 5\"", tiempo1);
 	sleep(2);
 	unsigned long long tiempo2 = obtenerHoraActual();
 	procesarInsert("TABLA1", 3, "\"Ahora es la prueba 2\"", tiempo2);
@@ -20,7 +21,7 @@ int main(int argc, char* argv[]) {
 	errorNo error = dumpear();
 	compactacion(pathTabla);
 
-	if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
+	/*if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
 		log_info(logger_LFS, "Hilo de consola creado");
 	}else{
 		log_error(logger_LFS, "Error al crear hilo de consola");
@@ -43,8 +44,8 @@ int main(int argc, char* argv[]) {
 	pthread_join(hiloRecibirMemorias, NULL);
 	log_info(logger_LFS, "Hilo recibir memorias finalizado");
 	pthread_join(hiloDumpeo, NULL);
-	log_info(logger_LFS, "Hilo dumpeo finalizado");
-
+	log_info(logger_LFS, "Hilo dumpeo finalizado");*/
+	free(pathTabla);
 	liberarMemoriaLFS();
 	return EXIT_SUCCESS;
 }
@@ -157,7 +158,7 @@ void crearFSMetadata(char* pathBitmap, char* pathFileMetadata){
 
 void crearBloques(){
 	char* fileBloque;
-	for (int i = 1; i <= blocks; i++) {
+	for (int i = 0; i < blocks; i++) {
 		fileBloque = string_from_format("%s/%d.bin", pathBloques, i);
 		FILE* bloqueFile = fopen(fileBloque, "w");
 		if(bloqueFile){

@@ -7,7 +7,7 @@
 void* hiloDump(void* args) {
 	int tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
 	while(1) {
-		sleep(tiempoDump/1000);
+		sleep(tiempoDump/1000); //TODO: usleep
 		log_info(logger_LFS, "Dump iniciado");
 		errorNo resultado = dumpear();
 		switch(resultado) {
@@ -22,6 +22,7 @@ void* hiloDump(void* args) {
 	}
 }
 
+//TODO: que se guarde sin comillas
 /* dumpear() [VALGRINDEADO]
  * Parametros: void
  * Descripcion: baja los datos de la memtable a disco
@@ -63,11 +64,11 @@ errorNo dumpear() {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				// Guardo lo de la tabla en el archivo temporal
-				char* datosADumpear = malloc(sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE") + sizeof(unsigned long long));
+				char* datosADumpear = malloc(sizeof(unsigned long long) + sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE"));
 				strcpy(datosADumpear, "");
 				for(int j = 0; list_get(tabla->registros,j) != NULL; j++) {
 					t_registro* registro = list_get(tabla->registros,j);
-					string_append_with_format(&datosADumpear, "%u;%s;%llu\n", registro->key, registro->value, registro->timestamp);
+					string_append_with_format(&datosADumpear, "%llu;%u;%s\n", registro->timestamp, registro->key, registro->value);
 				}
 				int cantidadDeBloquesAPedir = strlen(datosADumpear) / tamanioBloque;
 				if(strlen(datosADumpear) % tamanioBloque != 0) {
