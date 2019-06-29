@@ -225,6 +225,7 @@ int esperar_cliente(int socket_servidor)
 void liberarArrayDeChar(char** arrayDeChar) {
 	for (int j = 0; arrayDeChar[j] != NULL; j++) {
 		free(arrayDeChar[j]);
+		arrayDeChar[j]=NULL;
 	}
 	free(arrayDeChar);
 }
@@ -538,9 +539,7 @@ void enviarHandshakeLFS(int tamanioValue, int socket_cliente)
 t_handshake_lfs* recibirHandshakeLFS(int socket)
 {
 	t_handshake_lfs* handshake = malloc(sizeof(t_handshake_lfs));
-	//handshake->tamanioValue = 20;
 	recv(socket, &handshake->tamanioValue, sizeof(int), MSG_WAITALL);
-
 	return handshake;
 }
 
@@ -583,6 +582,8 @@ void enviarHandshakeMemoria(char* puertos, char* ips, char* numeros, int socket_
 	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanioPaquete);
 	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
 	liberarHandshakeMemoria(handshake);
+	free(handshakeAEnviar);
+	handshakeAEnviar=NULL;
 }
 
 /* recibirHandshakeMemoria()
@@ -651,7 +652,6 @@ void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
  * 	-> :: void  */
 void enviar(int cod, char* mensaje, int socket_cliente)
 {
-	//armamos el paquete
 	t_paquete* paquete = (t_paquete*) malloc(sizeof(t_paquete));
 	paquete->palabraReservada = cod;
 
@@ -666,8 +666,7 @@ void enviar(int cod, char* mensaje, int socket_cliente)
 	send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0);
 
 	free(paqueteAEnviar);
-	free(paquete->request);
-	free(paquete);
+	eliminar_paquete(paquete);
 }
 
 
