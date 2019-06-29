@@ -20,8 +20,6 @@
 #include <sys/mman.h>
 #include "API.h"
 #include "Dump.h"
-#include "Compactador.h"
-
 
 t_log* logger_LFS;
 t_config* config;
