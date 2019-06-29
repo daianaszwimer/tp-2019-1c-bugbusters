@@ -239,70 +239,58 @@ void liberarArrayDeChar(char** arrayDeChar) {
  * 				- los parametros sean los correctos, en cuanto  su cantidad.
  * Return: success or failure
  * 	-> exit :: int */
-int validarMensaje(char* mensaje, Componente componente, t_log* logger) {
+errorNo validarMensaje(char* mensaje, Componente componente, char** mensajeError) {
+	errorNo error = SUCCESS;
 	char** requestDividida = string_n_split(mensaje, 2, " ");
 
-	int codPalabraReservada = obtenerCodigoPalabraReservada(requestDividida[0], componente);
-	if(validarPalabraReservada(codPalabraReservada, componente, logger) == EXIT_SUCCESS){
-		if(codPalabraReservada != SALIDA && codPalabraReservada != NUESTRO_ERROR){
-			if(requestDividida[1]==NULL){
-				if(cantDeParametrosEsCorrecta(0,codPalabraReservada) == EXIT_SUCCESS){
-					liberarArrayDeChar(requestDividida);
-					return EXIT_SUCCESS;
-				}else{
-					liberarArrayDeChar(requestDividida);
-					log_info(logger,"No se ha ingresado ningun parametro para la request, y esta request necesita parametros ");
-					return NUESTRO_ERROR;
-					/*if(codPalabraReservada == NUESTRO_ERROR){
-						return NUESTRO_ERROR;
-					}else if(codPalabraReservada == SALIDA){
-						return SALIDA;
-					}*/
-				}
-			}else{
-				char** parametros = separarRequest(requestDividida[1]);
-				int cantidadDeParametros = longitudDeArrayDeStrings(parametros);
-				liberarArrayDeChar(requestDividida);
-				liberarArrayDeChar(parametros);
-				if(validadCantDeParametros(cantidadDeParametros,codPalabraReservada, logger) == EXIT_SUCCESS) {
-					return EXIT_SUCCESS;
-				}
-				else {
-					return NUESTRO_ERROR;
-				}
-			}
-		}
-		liberarArrayDeChar(requestDividida);
-		return codPalabraReservada;
-
+	if(string_is_empty(mensaje) || requestDividida[0] == NULL){
+		error = REQUEST_VACIA;
 	}else{
-		liberarArrayDeChar(requestDividida);
-		return codPalabraReservada;
+		int codPalabraReservada = obtenerCodigoPalabraReservada(requestDividida[0], componente);
+		if(codPalabraReservada == NUESTRO_ERROR){
+			error = COD_REQUEST_INV;
+		}else{
+			char** parametros = NULL;
+			if(requestDividida[1] != NULL){
+				parametros = separarRequest(requestDividida[1]);
+			}
+			error = validarParametrosDelRequest(codPalabraReservada, parametros, componente);
+		}
 	}
+
+	switch(error){
+		case SUCCESS:
+			*mensajeError = '\0';
+			break;
+		case REQUEST_VACIA:
+			*mensajeError = "Request vacia";
+			break;
+		case COD_REQUEST_INV:
+			*mensajeError = "Comando invalido";
+			break;
+		case CANT_PARAM_INV:
+			*mensajeError = "Cantidad de parametros invalidos para la request ingresada";
+			break;
+		case KEY_NO_NUMERICA:
+			*mensajeError = "Key no numerica";
+			break;
+		case TIMESTAMP_NO_NUMERICO:
+			*mensajeError = "Timestamp no numerico";
+			break;
+		case CONSISTENCIA_NO_VALIDA:
+			*mensajeError = "Tipo de consistencia no valida";
+			break;
+		default:
+			*mensajeError = '\0';
+			break;
+
+	}
+
+	liberarArrayDeChar(requestDividida);
+	return error;
 }
 
-
-/* validadCantDeParametros()
- * Parametros:
- * 	-> cantidadDeParametros ::  int
- * 	-> codPalabraReservada :: int
- * Descripcion: evalua que se haya ingresado la cantidad correcta de parametros que requiere la request realizada.
- * 				 En el caso de no serlo, se informa de ello.
- * Return: success or failure
- * 	-> exit :: int */
-int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t_log* logger){
-	int resultadoCantParametros = cantDeParametrosEsCorrecta(cantidadDeParametros, codPalabraReservada);
-	if(resultadoCantParametros == EXIT_SUCCESS){
-		return EXIT_SUCCESS;
-	}else if(resultadoCantParametros == SALIDA){
-		return SALIDA;
-	}
-	log_info(logger,"No se ha ingresado la cantidad correcta de paraemtros");
-	return NUESTRO_ERROR;
-}
-
-
-/* cantDeParametrosEsCorrecta()
+/* validarParametrosDelRequest()
  * Parametros:
  * 	-> cantidadDeParametros ::  int
  * 	-> codPalabraReservada :: int
@@ -310,71 +298,126 @@ int validadCantDeParametros(int cantidadDeParametros, int codPalabraReservada, t
  * 				cantidad correcta de parametros que requiere la request realizada.
  * Return: success or failure
  * 	-> exit :: int */
-int cantDeParametrosEsCorrecta(int cantidadDeParametros, int codPalabraReservada) {
-	int retorno;
+errorNo validarParametrosDelRequest(int codPalabraReservada, char** parametros, Componente componente) {
+	errorNo error = SUCCESS;
+
+	int cantidadDeParametros = 0;
+	if(parametros != NULL){
+		cantidadDeParametros = longitudDeArrayDeStrings(parametros);
+	}
+
 	switch(codPalabraReservada) {
 			case SELECT:
-				retorno = (cantidadDeParametros == PARAMETROS_SELECT)? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = validarSelect(parametros, cantidadDeParametros);
 				break;
 			case INSERT:
-				if(cantidadDeParametros == PARAMETROS_INSERT || cantidadDeParametros == PARAMETROS_INSERT_TIMESTAMP) {
-					retorno = EXIT_SUCCESS;
-				} else {
-					retorno = NUESTRO_ERROR;
-				}
+				error = validarInsert(parametros, cantidadDeParametros, componente);
 				break;
 			case CREATE:
-				retorno = (cantidadDeParametros == PARAMETROS_CREATE) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = validarCreate(parametros, cantidadDeParametros);
 				break;
 			case DESCRIBE:
-				if(cantidadDeParametros == PARAMETROS_DESCRIBE_GLOBAL || cantidadDeParametros == PARAMETROS_DESCRIBE_TABLA) {
-					retorno = EXIT_SUCCESS;
-				} else {
-					retorno = NUESTRO_ERROR;
-				}
+				error = validarDescribe(parametros, cantidadDeParametros);
 				break;
 			case DROP:
-				retorno = (cantidadDeParametros == PARAMETROS_DROP) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = (cantidadDeParametros == PARAMETROS_DROP) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			case JOURNAL:
-				retorno = (cantidadDeParametros == PARAMETROS_JOURNAL) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = (cantidadDeParametros == PARAMETROS_JOURNAL) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			case ADD:
-				retorno = (cantidadDeParametros == PARAMETROS_ADD) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = (cantidadDeParametros == PARAMETROS_ADD) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			case RUN:
-				retorno = (cantidadDeParametros == PARAMETROS_RUN) ? EXIT_SUCCESS : NUESTRO_ERROR;
+				error = (cantidadDeParametros == PARAMETROS_RUN) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			case METRICS:
-				retorno = (cantidadDeParametros == PARAMETROS_METRICS) ? EXIT_SUCCESS : NUESTRO_ERROR;
-				break;
-			case SALIDA:
-				retorno = SALIDA;
+				error = (cantidadDeParametros == PARAMETROS_METRICS) ? SUCCESS : CANT_PARAM_INV;
 				break;
 			default:
-				retorno = NUESTRO_ERROR;
+				error = FAILURE;
 				break;
 	}
-	return retorno;
+	if(parametros != NULL){
+		liberarArrayDeChar(parametros);
+	}
+	return error;
 }
 
-
-/* validarPalabraReservada()
- * Parametros:
- * 	-> codigoPalabraReservada ::  int 
- * 	-> coponenete :: Componente
- * Descripcion: evalua que se haya ingresado una request que entienda el componenete.
- * 				 En el caso de no serlo, se informa de ello.
- * Return: success or failure
- * 	-> exit :: int */
-int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t_log* logger){
-	if(codigoPalabraReservada != -1) {
-		return EXIT_SUCCESS;
-	}else if(codigoPalabraReservada == 404){
-		return SALIDA;
+errorNo validarSelect(char** parametros, int cantidadDeParametros){
+	errorNo error = SUCCESS;
+	if(cantidadDeParametros != PARAMETROS_SELECT){
+		error = CANT_PARAM_INV;
+	}else{
+		char* key = parametros[1];
+		if(!esNumero(key)){
+			error = KEY_NO_NUMERICA;
+		}
 	}
-	log_info(logger, "Debe ingresar un request válido");
-	return NUESTRO_ERROR;
+	return error;
+}
+
+errorNo validarInsert(char** parametros, int cantidadDeParametros, Componente componente){
+	errorNo error = SUCCESS;
+	if(componente == LFS){
+		if(cantidadDeParametros != PARAMETROS_INSERT && cantidadDeParametros != PARAMETROS_INSERT_TIMESTAMP){
+			error = CANT_PARAM_INV;
+		}
+	}else{
+		if(cantidadDeParametros != PARAMETROS_INSERT){
+			error = CANT_PARAM_INV;
+		}
+	}
+
+	if(error == SUCCESS){
+		char* key = parametros[1];
+		if(!esNumero(key)){
+			error = KEY_NO_NUMERICA;
+		}
+		char* timestamp = parametros[3];
+		if(timestamp != NULL){
+			if(!esNumero(timestamp)){
+				error = TIMESTAMP_NO_NUMERICO;
+			}
+		}
+	}
+	return error;
+}
+
+errorNo validarCreate(char** parametros, int cantidadDeParametros){
+	errorNo error = SUCCESS;
+	if(cantidadDeParametros != PARAMETROS_CREATE){
+		error = CANT_PARAM_INV;
+	}else{
+		char* consistencia = parametros[1];
+		if(obtenerEnumConsistencia(consistencia) == CONSISTENCIA_INVALIDA){
+			error = CONSISTENCIA_NO_VALIDA;
+		}
+		char* particiones = parametros[2];
+		if(!esNumero(particiones)){
+			error = KEY_NO_NUMERICA;
+		}
+		char* tiempoDeCompactacion = parametros[3];
+		if(!esNumero(tiempoDeCompactacion)){
+			error = TIMESTAMP_NO_NUMERICO;
+		}
+	}
+	return error;
+}
+
+errorNo validarDescribe(char** parametros, int cantidadDeParametros){
+	errorNo error = SUCCESS;
+	if(cantidadDeParametros != PARAMETROS_DESCRIBE_GLOBAL && cantidadDeParametros != PARAMETROS_DESCRIBE_TABLA){
+		error = CANT_PARAM_INV;
+	}
+	return error;
+}
+
+int esNumero(char* str){
+	for (int i = 0; str[i] != '\0'; i++){
+		if(!isdigit(str[i])) return 0;
+	}
+	return 1;
 }
 
 
@@ -390,34 +433,31 @@ int validarPalabraReservada(int codigoPalabraReservada, Componente componente, t
 int obtenerCodigoPalabraReservada(char* palabraReservada, Componente componente) {
 	int codPalabraReservada;
 	if (!strcmp(palabraReservada, "SELECT")) {
-		codPalabraReservada = 0;
+		codPalabraReservada = SELECT;
 	}
 	else if (!strcmp(palabraReservada, "INSERT")) {
-		codPalabraReservada = 1;
+		codPalabraReservada = INSERT;
 	}
 	else if (!strcmp(palabraReservada, "CREATE")) {
-		codPalabraReservada = 2;
+		codPalabraReservada = CREATE;
 	}
 	else if (!strcmp(palabraReservada, "DESCRIBE")) {
-		codPalabraReservada = 3;
+		codPalabraReservada = DESCRIBE;
 	}
 	else if (!strcmp(palabraReservada, "DROP")) {
-		codPalabraReservada = 4;
+		codPalabraReservada = DROP;
 	}
 	else if (!strcmp(palabraReservada, "JOURNAL")) {
-		codPalabraReservada = (componente == LFS) ? -1 : 5;
+		codPalabraReservada = (componente == LFS) ? NUESTRO_ERROR : JOURNAL;
 	}
 	else if (!strcmp(palabraReservada, "ADD")) {
-		codPalabraReservada = (componente == KERNEL) ? 6 : -1;
+		codPalabraReservada = (componente == KERNEL) ? ADD : NUESTRO_ERROR;
 	}
 	else if (!strcmp(palabraReservada, "RUN")) {
-		codPalabraReservada = (componente == KERNEL) ? 7 : -1;
+		codPalabraReservada = (componente == KERNEL) ? RUN : NUESTRO_ERROR;
 	}
 	else if (!strcmp(palabraReservada, "METRICS")) {
-		codPalabraReservada = (componente == KERNEL) ? 8 : -1;
-	}
-	else if (!strcmp(palabraReservada, "SALIDA")) {
-		codPalabraReservada = 404;
+		codPalabraReservada = (componente == KERNEL) ? METRICS : NUESTRO_ERROR;
 	}
 	else {
 		codPalabraReservada = NUESTRO_ERROR;

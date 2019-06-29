@@ -128,49 +128,19 @@ void leerDeConsola(void){
  * Return:
  * 	-> resultadoVlidacion :: int
  * VALGRIND:: NO */
-int validarRequest(char* mensaje){
+void validarRequest(char* mensaje){
 	int tamanioMax = handshake->tamanioValue;
-	int codValidacion;
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
-	codValidacion = validarMensaje(mensaje, MEMORIA, logger_MEMORIA);
+	char* mensajeDeError;
+	int mensajeValido = validarMensaje(mensaje, MEMORIA, &mensajeDeError);
 	int palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
-	switch(codValidacion){
-		case EXIT_SUCCESS:
-			if(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],tamanioMax,logger_MEMORIA) == NUESTRO_ERROR){
-				liberarArrayDeChar(request);
-				request =NULL;
-				liberarArrayDeChar(requestSeparada); //(1)
-				requestSeparada=NULL;
-				return NUESTRO_ERROR;
-				break;
-			}
+	if(mensajeValido == SUCCESS){
+		if(!(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],tamanioMax,logger_MEMORIA) == NUESTRO_ERROR)){
 			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
-			liberarArrayDeChar(request);
-			request =NULL;
-			liberarArrayDeChar(requestSeparada);
-			requestSeparada=NULL;
-			return EXIT_SUCCESS;
-			break;
-		case NUESTRO_ERROR:
-			//TODO es la q hay q hacerla generica
-			log_error(logger_MEMORIA, "La request no es valida");
-			liberarArrayDeChar(request);
-			request =NULL;
-			liberarArrayDeChar(requestSeparada);
-			requestSeparada=NULL;
-			return NUESTRO_ERROR;
-			break;
-		case SALIDA:
-			return SALIDA;
-			break;
-		default:
-			liberarArrayDeChar(request);
-			request =NULL;
-			liberarArrayDeChar(requestSeparada);
-			requestSeparada=NULL;
-			return NUESTRO_ERROR;
-			break;
+		}
+	}else{
+		log_error(logger_MEMORIA, mensajeDeError);
 	}
 }
 
@@ -297,9 +267,6 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
-			break;
-		case SALIDA:
-			log_info(logger_MEMORIA,"Has finalizado el componente MEMORIA");
 			break;
 		case NUESTRO_ERROR:
 			 if(caller == ANOTHER_COMPONENT){

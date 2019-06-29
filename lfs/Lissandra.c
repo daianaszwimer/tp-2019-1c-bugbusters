@@ -195,6 +195,7 @@ void liberarMemoriaLFS(){
 }
 
 void* leerDeConsola(void* arg) {
+	char* mensajeDeError;
 	while (1) {
 		mensaje = readline(">");
 		if (!(strncmp(mensaje, "", 1) != 0)) {
@@ -203,14 +204,14 @@ void* leerDeConsola(void* arg) {
 			free(mensaje);
 			break;
 		}
-		if(!validarMensaje(mensaje, LFS, logger_LFS)){
+
+		if(validarMensaje(mensaje, LFS, &mensajeDeError) == SUCCESS){
 			char** request = string_n_split(mensaje, 2, " ");
 			cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0], LFS);
 			interpretarRequest(palabraReservada, mensaje, NULL);
 			liberarArrayDeChar(request);
-
 		}else{
-			log_error(logger_LFS, "Request invalida");
+			log_error(logger_LFS, mensajeDeError);
 		}
 		free(mensaje);
 	}

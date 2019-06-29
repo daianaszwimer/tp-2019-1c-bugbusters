@@ -56,7 +56,13 @@ typedef enum
 	ERROR_CREANDO_METADATA,
 	ERROR_CREANDO_PARTICIONES,
 	KEY_NO_EXISTE,
-	ERROR_GENERICO = -1
+	REQUEST_VACIA,
+	COD_REQUEST_INV,
+	CANT_PARAM_INV,
+	KEY_NO_NUMERICA,
+	TIMESTAMP_NO_NUMERICO,
+	CONSISTENCIA_NO_VALIDA,
+	FAILURE = -1
 } errorNo;
 
 typedef enum
@@ -70,8 +76,7 @@ typedef enum
 	ADD,
 	RUN,
 	METRICS,
-	NUESTRO_ERROR = -1,
-	SALIDA = 404
+	NUESTRO_ERROR = -1
 } cod_request;
 
 typedef struct
@@ -120,13 +125,12 @@ t_config* leer_config(char*);
 
 t_paquete* armar_paquete(int, char*);
 
-int validarMensaje(char*, Componente, t_log*);
-int cantDeParametrosEsCorrecta(int,int);
-int validarPalabraReservada(int,Componente, t_log*);
-int validadCantDeParametros(int, int, t_log*);
+errorNo validarMensaje(char*, Componente, char**);
+int validarParametrosDelRequest(int, char**, Componente);
 int obtenerCodigoPalabraReservada(char*, Componente);
 
 int validarValue(char*,char*, int, t_log*);
+int esNumero(char* key);
 
 ////servidor
 
