@@ -1,5 +1,28 @@
 #include "Compactador.h"
 
+void* hiloCompactacion(void* args) {
+	char* nombreTabla;// Viene de lissandra
+	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
+
+	char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
+	t_config* configMetadataTabla = config_create(pathMetadataTabla);
+	int tiempoEntreCompactaciones = config_get_int_value(configMetadataTabla, "COMPACTION_TIME");
+	free(pathMetadataTabla);
+	config_destroy(configMetadataTabla);
+
+	while(1) {
+		sleep(tiempoEntreCompactaciones/1000); //TODO: usleep
+		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", nombreTabla);
+		log_info(logger_LFS, infoComienzoCompactacion);
+		free(infoComienzoCompactacion);
+		compactar(pathTabla);
+		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", nombreTabla);
+		log_info(logger_LFS, infoTerminoCompactacion);
+		free(infoTerminoCompactacion);
+	}
+	free(pathTabla);
+}
+
 void compactar(char* pathTabla) {
 
 	DIR *tabla;
@@ -23,17 +46,27 @@ void compactar(char* pathTabla) {
 	config_destroy(configMetadataTabla);
 
 	t_registro* obtenerTimestampMasAltoSiExiste(t_registro* registroDeTmpC) {
+		t_registro* registroAEscribir = malloc(sizeof(t_registro));
 		int tieneMismaKey(t_registro* registroBuscado) {
 			return registroDeTmpC->key == registroBuscado->key;
 		}
     	t_registro* registroEncontrado = list_find(registrosDeParticiones, (void*)tieneMismaKey);
     	if(registroEncontrado != NULL) {
     		if(registroEncontrado->timestamp > registroDeTmpC->timestamp) {
-    			registroDeTmpC->timestamp = registroEncontrado->timestamp;
-    			registroDeTmpC->value = strdup(registroEncontrado->value);
+    			registroAEscribir->timestamp = registroEncontrado->timestamp;
+    			registroAEscribir->key = registroEncontrado->key;
+    			registroAEscribir->value = strdup(registroEncontrado->value);
+    		} else {
+    			registroAEscribir->timestamp = registroDeTmpC->timestamp;
+    			registroAEscribir->key = registroDeTmpC->key;
+    			registroAEscribir->value = strdup(registroDeTmpC->value);
     		}
+    	} else {
+    		registroAEscribir->timestamp = registroDeTmpC->timestamp;
+    		registroAEscribir->key = registroDeTmpC->key;
+    		registroAEscribir->value = strdup(registroDeTmpC->value);
     	}
-    	return registroDeTmpC;
+    	return registroAEscribir;
 	}
 
 	// Abrimos el directorio de la tabla para poder recorrerlo
@@ -47,7 +80,6 @@ void compactar(char* pathTabla) {
 	// Leemos todos los registros de los temporales a compactar y los guardamos en una lista
 	t_list* registrosDeTmpC = leerDeTodosLosTmpC(pathTabla, archivoDeLaTabla, tabla, particiones, numeroDeParticiones, puntoDeMontaje);
 
-	/*
 	// Verificamos si hay datos que compactar
 	if (registrosDeTmpC->elements_count != 0) {
 
@@ -66,10 +98,11 @@ void compactar(char* pathTabla) {
 		// Grabamos los datos en el nuevo archivo “.bin”
 		guardarDatosNuevos(pathTabla, registrosAEscribir, particiones, tamanioBloque, puntoDeMontaje, numeroDeParticiones);
 
-		// TODO: Desbloquear la tabla y dejar un registro de cuánto tiempo estuvo bloqueada la tabla para realizar esta operatoria.
+		// TODO: Desbloquear la tabla y dejar un registro de cuanto tiempo estuvo bloqueada la tabla para realizar esta operatoria
+
 		list_destroy_and_destroy_elements(registrosDeParticiones, (void*) eliminarRegistro);
 		list_destroy_and_destroy_elements(registrosAEscribir, (void*) eliminarRegistro);
-	}*/
+	}
 
 	// Cerramos el directorio
 	if (closedir(tabla) == -1) {
@@ -125,8 +158,10 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 			int i = 0;
 			int j = 0;
 
-			char* registro = malloc(sizeof(char));
-			//char* registro = malloc((sizeof(uint16_t) + config_get_int_value(config, "TAMAÑO_VALUE") + sizeof(unsigned long long)));
+			char* registro = calloc(1, 25 + config_get_int_value(config, "TAMAÑO_VALUE"));
+			// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes
+			// 5 bytes son 5 char
+
 			//strcpy(registro, "");
 			while (bloques[i] != NULL) {
 				char* pathBloque = string_from_format("%sBloques/%s.bin", puntoDeMontaje, bloques[i]);
@@ -141,13 +176,12 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 						break;
 					}
 					if (caracterLeido == '\n') {
-						registro = realloc(registro, sizeof(char) * (j+1));
-						strcat(registro, "\0");
 						char** registroSeparado = string_n_split(registro, 3, ";");
 						tRegistro = (t_registro*) malloc(sizeof(t_registro));
 						convertirTimestamp(registroSeparado[0], &(tRegistro->timestamp));
 						tRegistro->key = convertirKey(registroSeparado[1]);
 						tRegistro->value = strdup(registroSeparado[2]);
+						//log_debug(logger_LFS, registroSeparado[2]);
 
 						liberarArrayDeChar(registroSeparado);
 
@@ -172,7 +206,6 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 						j = 0;
 						strcpy(registro, "");
 					} else {
-						registro = realloc(registro, sizeof(char) * (j+1));
 						registro[j] = caracterLeido;
 						j++;
 					}
@@ -196,10 +229,17 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
 
 	for (int i = 0; list_get(particiones, i) != NULL; i++) {
 		particion = list_get(particiones, i);
+
 		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, particion->valor);
 		t_config* particionConfig = config_create(pathParticion);
 		char** bloques = config_get_array_value(particionConfig, "BLOCKS");
-		char* registro = malloc((int) (sizeof(unsigned long long) + sizeof(uint16_t) + config_get_int_value(config, "TAMAÑO_VALUE")));
+		free(pathParticion);
+		config_destroy(particionConfig);
+
+		char* registro = calloc(1, 25 + config_get_int_value(config, "TAMAÑO_VALUE"));
+		// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes
+		// 5 bytes son 5 char
+
 		int z = 0;
 		int j = 0;
 		while (bloques[z] != NULL) {
@@ -219,6 +259,7 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
 					convertirTimestamp(registroSeparado[0], &tRegistro->timestamp);
 					tRegistro->key = convertirKey(registroSeparado[1]);
 					tRegistro->value = strdup(registroSeparado[2]);
+					liberarArrayDeChar(registroSeparado);
 					list_add(registrosDeParticiones, tRegistro);
 					j = 0;
 					strcpy(registro, "");
@@ -232,7 +273,7 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
 			z++;
 		}
 		free(registro);
-		free(bloques);
+		liberarArrayDeChar(bloques);
 	}
 	return registrosDeParticiones;
 }
@@ -244,23 +285,25 @@ void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeL
 			char* pathTmpC = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 			t_config* configTmpC = config_create(pathTmpC);
 			char** bloques = config_get_array_value(configTmpC, "BLOCKS");
+			config_destroy(configTmpC);
 			int i = 0;
 			while (bloques[i] != NULL) {
 				char* pathBloque = string_from_format("%sBloques/%s.bin", puntoDeMontaje, bloques[i]);
 				FILE* bloque = fopen(pathBloque, "w");
-				bitarray_clean_bit(bitarray, i);
+				bitarray_clean_bit(bitarray, (int) strtol(bloques[i], NULL, 10));
 				free(pathBloque);
 				fclose(bloque);
 				i++;
 			}
+			liberarArrayDeChar(bloques);
 			remove(pathTmpC);
 			free(pathTmpC);
-			config_destroy(configTmpC);
 		}
 
 		if (string_ends_with(archivoDeLaTabla->d_name, ".bin") && !string_equals_ignore_case(archivoDeLaTabla->d_name, "Metadata.bin")) {
 			char** numeroDeParticionString = string_split(archivoDeLaTabla->d_name, ".");
 			int numeroDeParticion = strtol(numeroDeParticionString[0], NULL, 10);
+			liberarArrayDeChar(numeroDeParticionString);
 
 			int particionActual(t_int* particion_actual) {
 				return particion_actual->valor == numeroDeParticion;
@@ -270,18 +313,19 @@ void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeL
 			if (particionEncontrada != NULL) {
 				char* particionPath = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 				t_config* configParticion = config_create(particionPath);
+				free(particionPath);
 				char** bloques = config_get_array_value(configParticion, "BLOCKS");
+				config_destroy(configParticion);
 				int i = 0;
 				while (bloques[i] != NULL) {
 					char* pathBloque = string_from_format("%sBloques/%s.bin", puntoDeMontaje, bloques[i]);
 					FILE* bloque = fopen(pathBloque, "w");
-					bitarray_clean_bit(bitarray, i);
+					bitarray_clean_bit(bitarray, (int) strtol(bloques[i], NULL, 10));
 					free(pathBloque);
 					fclose(bloque);
 					i++;
 				}
-				free(particionPath);
-				config_destroy(configParticion);
+				liberarArrayDeChar(bloques);
 			}
 		}
 	}
@@ -300,26 +344,29 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 		particion = list_get(particiones, i);
 		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, particion->valor);
 		t_config* configParticion = config_create(pathParticion);
+		free(pathParticion);
 
 		t_list* registrosPorParticion = list_filter(registrosAEscribir, (void*) keyCorrespondeAParticion);
 
-		char* datosACompactar = malloc(sizeof(unsigned long long) + sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE"));
-		strcpy(datosACompactar, "");
+		char* datosACompactar = calloc(1, 25 + config_get_int_value(config, "TAMAÑO_VALUE"));
+		// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes
+		// 5 bytes son 5 char
+
 		for (int j = 0; list_get(registrosPorParticion, j) != NULL; j++) {
 			t_registro* registro = list_get(registrosPorParticion, j);
 			string_append_with_format(&datosACompactar, "%llu;%u;%s\n", registro->timestamp, registro->key, registro->value);
 		}
 
-		list_destroy_and_destroy_elements(registrosPorParticion, (void*) eliminarParticion);
+		list_destroy(registrosPorParticion);
 
 		int cantidadDeBloquesAPedir = strlen(datosACompactar) / tamanioBloque;
 		if (strlen(datosACompactar) % tamanioBloque != 0) {
 			cantidadDeBloquesAPedir++;
 		}
-		char* tamanioDatos = strdup("");
-		sprintf(tamanioDatos, "%d", strlen(datosACompactar));
+		char* tamanioDatos = string_from_format("%d", strlen(datosACompactar));
 		config_set_value(configParticion, "SIZE", tamanioDatos);
 		free(tamanioDatos);
+
 		char* bloques = strdup("");
 		for (int i = 0; i < cantidadDeBloquesAPedir; i++) {
 			int bloqueDeParticion = obtenerBloqueDisponible(&error); //si hay un error se setea en errorNo
@@ -333,6 +380,7 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 				}
 				char* pathBloque = string_from_format("%sBloques/%d.bin", puntoDeMontaje, bloqueDeParticion);
 				FILE* bloque = fopen(pathBloque, "a+");
+				free(pathBloque);
 				if (cantidadDeBloquesAPedir != 1 && i < cantidadDeBloquesAPedir - 1) {
 					char* registrosAEscribirString = string_substring_until(datosACompactar, tamanioBloque);
 					char* stringAuxiliar = string_substring_from(datosACompactar, tamanioBloque);
@@ -344,7 +392,6 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 					fprintf(bloque, "%s", datosACompactar);
 				}
 				fclose(bloque);
-				free(pathBloque);
 			}
 		}
 		char* blocks = string_from_format("[%s]", bloques);

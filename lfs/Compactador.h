@@ -1,5 +1,7 @@
 #include "Lissandra.h"
 
+void* hiloCompactacion(void*);
+
 void compactar(char*);
 
 void renombrarTmp_a_TmpC(char*, struct dirent*, DIR*);
