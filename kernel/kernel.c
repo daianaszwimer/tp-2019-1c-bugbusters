@@ -402,41 +402,114 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
  * Descripcion: aumenta las variables para las métricas.
  * Return:
  * 	-> :: void  */
-void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidadTiempo) {
+void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidadTiempo, consistencia consistenciaRequest) {
 	estadisticaMemoria* memoriaCorrespondiente;
-	// si es un describe global va a entrar al "NINGUNA"
-	// cargo en el criterio segun el request o segun la memoria?
-	// o sea si tengo una memory que es SC y EC y le hago dos select que son de una tabla
-	// EC, en la cantidad total de request en mi lista de SC de esa memoria es de 2 o 0? porque
-	// no se hizo nada SC pero si se hizo a esa memoria PREGUNTAR
-	int encontrarTabla(estadisticaMemoria* memoria) {
-		return string_equals_ignore_case(memoria->numeroMemoria, numeroMemoria);
-	}
-	int cantidadASumarSelectInsert = codigo == SELECT || codigo == INSERT;
-	pthread_mutex_lock(&semMMetricas);
-
-	memoriaCorrespondiente = list_find(cargaMemoria, (void*)encontrarTabla);
-	if (memoriaCorrespondiente == NULL) {
-		memoriaCorrespondiente = NULL;
-		memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
-		memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
-		memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
-		list_add(cargaMemoria, memoriaCorrespondiente);
-	} else {
-		// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
-		memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
-	}
-
-	cantidadTotalRequest++;
-
-	if (codigo == SELECT) {
-		tiempoSelect += cantidadTiempo;
-		cantidadSelect++;
-	} else if (codigo == INSERT) {
-		tiempoInsert += cantidadTiempo;
-		cantidadInsert++;
-	}
-	pthread_mutex_unlock(&semMMetricas);
+		// si es un describe global va a entrar al "NINGUNA"
+		// cargo en el criterio segun el request o segun la memoria?
+		// o sea si tengo una memory que es SC y EC y le hago dos select que son de una tabla
+		// EC, en la cantidad total de request en mi lista de SC de esa memoria es de 2 o 0? porque
+		// no se hizo nada SC pero si se hizo a esa memoria PREGUNTAR
+		int encontrarTabla(estadisticaMemoria* memoria) {
+			return string_equals_ignore_case(memoria->numeroMemoria, numeroMemoria);
+		}
+		int cantidadASumarSelectInsert = codigo == SELECT || codigo == INSERT;
+		pthread_mutex_lock(&semMMetricas);
+		switch (consistenciaRequest) {
+			case SC:
+				memoriaCorrespondiente = list_find(cargaMemoriaSC, (void*)encontrarTabla);
+				if (memoriaCorrespondiente == NULL) {
+					memoriaCorrespondiente = NULL;
+					memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+					memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = 1;
+					memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
+					list_add(cargaMemoriaSC, memoriaCorrespondiente);
+				} else {
+					// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+				}
+				log_info(logger_KERNEL, "voy a sumarle a select insert %d", cantidadASumarSelectInsert);
+				break;
+			case SHC:
+				memoriaCorrespondiente = list_find(cargaMemoriaSHC, (void*)encontrarTabla);
+				if (memoriaCorrespondiente == NULL) {
+					memoriaCorrespondiente = NULL;
+					memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+					memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = 1;
+					memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
+					list_add(cargaMemoriaSHC, memoriaCorrespondiente);
+				} else {
+					// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+				}
+				break;
+			case EC:
+				memoriaCorrespondiente = list_find(cargaMemoriaEC, (void*)encontrarTabla);
+				if (memoriaCorrespondiente == NULL) {
+					memoriaCorrespondiente = NULL;
+					memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+					memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = 1;
+					memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
+					list_add(cargaMemoriaEC, memoriaCorrespondiente);
+				} else {
+					// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+				}
+				break;
+			case NINGUNA:
+				// se agrega en todos los criterios? o en el criterio de la memoria? PREGUNTAR
+				break;
+			default:
+				// error
+				break;
+		}
+		if (codigo == SELECT) {
+			switch(consistenciaRequest) {
+			case SC:
+				tiempoSelectSC+=cantidadTiempo;
+				cantidadSelectSC++;
+				break;
+			case SHC:
+				tiempoSelectSHC+=cantidadTiempo;
+				cantidadSelectSHC++;
+				break;
+			case EC:
+				tiempoSelectEC+=cantidadTiempo;
+				cantidadSelectEC++;
+				break;
+			case NINGUNA:
+				// que se hace en el caso de describe global?
+				break;
+			default:
+				break;
+			}
+		} else if (codigo == INSERT) {
+			switch(consistenciaRequest) {
+			case SC:
+				tiempoInsertSC+=cantidadTiempo;
+				cantidadInsertSC++;
+				break;
+			case SHC:
+				tiempoInsertSHC+=cantidadTiempo;
+				cantidadInsertSHC++;
+				break;
+			case EC:
+				tiempoInsertEC+=cantidadTiempo;
+				cantidadInsertEC++;
+				break;
+			case NINGUNA:
+				// que se hace en el caso de describe global?
+				break;
+			default:
+				break;
+			}
+		}
+		pthread_mutex_unlock(&semMMetricas);
 }
 
 /*

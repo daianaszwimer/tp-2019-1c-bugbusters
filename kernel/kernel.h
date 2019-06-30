@@ -33,6 +33,7 @@ typedef struct
 typedef struct
 {
 	int cantidadSelectInsert;
+	int cantidadTotal;
 	char* numeroMemoria;
 } estadisticaMemoria;
 
@@ -57,12 +58,21 @@ t_list* tablasSHC;
 t_list* tablasEC;
 
 // variables de metricas
-int cantidadTotalRequest = 0;
-double tiempoSelect = 0.0;
-double tiempoInsert = 0.0;
-int cantidadSelect = 0;
-int cantidadInsert = 0;
-t_list* cargaMemoria;
+double tiempoSelectSC = 0.0;
+double tiempoInsertSC = 0.0;
+int cantidadSelectSC = 0;
+int cantidadInsertSC = 0;
+t_list* cargaMemoriaSC;
+double tiempoSelectSHC = 0.0;
+double tiempoInsertSHC = 0.0;
+int cantidadSelectSHC = 0;
+int cantidadInsertSHC = 0;
+t_list* cargaMemoriaSHC;
+double tiempoSelectEC = 0.0;
+double tiempoInsertEC = 0.0;
+int cantidadSelectEC = 0;
+int cantidadInsertEC = 0;
+t_list* cargaMemoriaEC;
 
 // Variables para inotify
 #define EVENT_SIZE  ( sizeof (struct inotify_event) + 24 )
@@ -107,7 +117,7 @@ void hacerDescribe(void);
 void loguearMetricas(void);
 void informarMetricas(int);
 void liberarEstadisticaMemoria(estadisticaMemoria*);
-void aumentarContadores(char*, cod_request, double);
+void aumentarContadores(char*, cod_request, double, consistencia);
 void escucharCambiosEnConfig(void);
 // planificar requests
 void procesarRequestSinPlanificar(char*);
