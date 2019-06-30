@@ -95,10 +95,11 @@ void inicializacionLissandraFileSystem(char* argv[]){
 			if(strcmp(tabla->d_name, ".") == 0 || strcmp(tabla->d_name, "..") == 0) continue;
 			char* pathTabla = string_from_format("%s/%s", pathTablas, (char*) tabla->d_name);
 			if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
-
+				pthread_detach(hiloDeCompactacion);
 				t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
 				hiloTabla->thread = &hiloDeCompactacion;
 				hiloTabla->nombreTabla = strdup(tabla->d_name);
+				hiloTabla->flag = 1;
 				list_add(listaDeTablas, hiloTabla);
 				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
 				pthread_detach(hiloDeCompactacion);
@@ -192,7 +193,6 @@ void levantarFS(char* pathBitmap){
 void liberarMemoriaLFS(){
 
 	void liberarRecursos(t_hiloTabla* tabla){
-		pthread_cancel(*(tabla->thread));
 		free(tabla->nombreTabla);
 		free(tabla);
 	}

@@ -47,6 +47,7 @@ typedef struct
 typedef struct{
 	pthread_t* thread;
 	char* nombreTabla;
+	int flag;
 } t_hiloTabla;
 
 #define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"

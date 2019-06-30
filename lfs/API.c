@@ -8,6 +8,7 @@
  * 	-> tiempoDeCompactacion :: int
  * Descripcion: permite la creación de una nueva tabla dentro del file system
  * Return: codigos de error o success*/
+
 errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numeroDeParticiones, char* tiempoDeCompactacion) {
 
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
@@ -49,9 +50,12 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 
 	if(error == SUCCESS){
 		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
+			pthread_detach(hiloDeCompactacion);
+			//TODO mutex
 			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
 			hiloTabla->thread = &hiloDeCompactacion;
 			hiloTabla->nombreTabla = strdup(nombreTabla);
+			hiloTabla->flag = 1;
 			list_add(listaDeTablas, hiloTabla);
 			log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", nombreTabla);
 		}else{
@@ -386,17 +390,13 @@ errorNo procesarDrop(char* nombreTabla){
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
 
-	void liberarRecursos(t_hiloTabla* tabla){
-		pthread_cancel(*(tabla->thread));
-		free(tabla->nombreTabla);
-		free(tabla);
-	}
 
 	errorNo error = SUCCESS;
 	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
-		list_remove_and_destroy_by_condition(listaDeTablas, (void*)encontrarTabla,(void*)liberarRecursos);
+		t_hiloTabla* tablaEncontrada = list_find(listaDeTablas, (void*)encontrarTabla);
+		tablaEncontrada->flag = 0;
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
 		rmdir(pathTabla);

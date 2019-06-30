@@ -17,6 +17,10 @@ void* hiloCompactacion(void* arg) {
 
 	while(1) {
 		sleep(tiempoEntreCompactaciones/1000); //TODO: usleep
+		if(finalizarHilo(pathTabla)){
+			log_info(logger_LFS, "Hilo de compactacion de %s terminado", pathTabla);
+			break;
+		}
 		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
 		log_info(logger_LFS, infoComienzoCompactacion);
 		free(infoComienzoCompactacion);
@@ -26,6 +30,35 @@ void* hiloCompactacion(void* arg) {
 		free(infoTerminoCompactacion);
 	}
 	free(pathTabla);
+	return NULL;
+}
+
+int finalizarHilo(char* pathTabla){
+	//TODO MUTEX
+	char* nombreTabla = string_reverse(pathTabla);
+	char** aux = string_split(nombreTabla, "/");
+	free(nombreTabla);
+	nombreTabla = string_reverse(aux[0]);
+	liberarArrayDeChar(aux);
+
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	void liberarRecursos(t_hiloTabla* tabla){
+		free(tabla->nombreTabla);
+		free(tabla);
+	}
+
+	t_hiloTabla* tablaEncontrada = list_find(listaDeTablas, (void*) encontrarTabla);
+
+	if(!tablaEncontrada->flag){
+		list_remove_and_destroy_by_condition(listaDeTablas, (void*)encontrarTabla, (void*)liberarRecursos);
+		free(nombreTabla);
+		return 1;
+	}
+	free(nombreTabla);
+	return 0;
 }
 
 /* compactar()
