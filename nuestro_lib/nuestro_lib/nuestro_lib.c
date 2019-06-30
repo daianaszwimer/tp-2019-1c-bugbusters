@@ -542,6 +542,7 @@ void enviarHandshakeMemoria(char* puertos, char* ips, char* numeros, int socket_
 	int tamanioPaquete = 3 * sizeof(int) + handshake->tamanioIps + handshake->tamanioPuertos + handshake->tamanioNumeros;
 	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanioPaquete);
 	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
+	free(handshakeAEnviar);
 	liberarHandshakeMemoria(handshake);
 }
 
