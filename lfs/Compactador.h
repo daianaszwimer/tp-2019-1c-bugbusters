@@ -1,4 +1,4 @@
-#include "Lissandra.h"
+#include "Helper.h"
 
 void* hiloCompactacion(void*);
 

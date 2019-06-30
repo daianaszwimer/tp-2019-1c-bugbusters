@@ -6,9 +6,8 @@
  * Descripcion: ejecuta la funcion compactar() cada cierta cantidad de tiempo (tiempoEntreCompactaciones) definido en la metadata de la tabla
  * Return:
  * 	-> :: void* */
-void* hiloCompactacion(void* args) {
-	char* nombreTabla;// Viene de lissandra
-	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
+void* hiloCompactacion(void* nombreTabla) {
+	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, (char*) nombreTabla);
 
 	char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
 	t_config* configMetadataTabla = config_create(pathMetadataTabla);
@@ -427,7 +426,7 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 
 		char* bloques = strdup("");
 		for (int i = 0; i < cantidadDeBloquesAPedir; i++) {
-			int bloqueDeParticion = obtenerBloqueDisponible(&error); //si hay un error se setea en errorNo
+			int bloqueDeParticion = obtenerBloqueDisponible();
 			if (bloqueDeParticion == -1) {
 				log_info(logger_LFS, "no hay bloques disponibles");
 			} else {

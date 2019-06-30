@@ -1,6 +1,5 @@
 #include "API.h"
 
-
 /* procesarCreate() [API]
  * Parametros:
  * 	-> nombreTabla :: char*
@@ -68,7 +67,7 @@ errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 		if (particionFile == NULL) {
 			errorNo = ERROR_CREANDO_ARCHIVO;
 		} else {
-			int bloqueDeParticion = obtenerBloqueDisponible(&errorNo); //si hay un error se setea en errorNo
+			int bloqueDeParticion = obtenerBloqueDisponible();
 			if(bloqueDeParticion == -1){
 				log_info(logger_LFS, "no hay bloques disponibles");
 			}else{
@@ -129,7 +128,7 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	return error;
 }
 
-//falta buscar en los bloques posta
+
 errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 
 	int ordenarRegistrosPorTimestamp(t_registro* registro1, t_registro* registro2){
@@ -159,7 +158,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 		if(!list_is_empty(listaDeRegistros)){
 			list_sort(listaDeRegistros, (void*) ordenarRegistrosPorTimestamp);
 			t_registro* registro = (t_registro*)listaDeRegistros->head->data;
-			string_append_with_format(&*mensaje, "%s %u \"%s\" %llu", nombreTabla, registro->key, registro->value, registro->timestamp);
+			string_append_with_format(&*mensaje, "%s %llu %u \"%s\"", nombreTabla, registro->timestamp, registro->key, registro->value);
 		}else{
 			//https://github.com/sisoputnfrba/foro/issues/1406
 			string_append_with_format(&*mensaje, "Registro no encontrado salu3");

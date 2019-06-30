@@ -83,6 +83,22 @@ void inicializacionLissandraFileSystem(char* argv[]){
 	levantarFS(pathBitmap);
 	free(pathBitmap);
 
+	DIR* tablas;
+	if((tablas = opendir(pathTablas)) == NULL){
+		perror("Open Tables");
+	}else{
+		struct dirent* tabla;
+		while((tabla = readdir(tablas)) != NULL){
+			if(strcmp(tabla->d_name, ".") == 0 || strcmp(tabla->d_name, "..") == 0) continue;
+			if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) tabla->d_name)){
+				pthread_detach(hiloDeCompactacion);
+				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
+			}else{
+				log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", tabla->d_name);
+			}
+		}
+	}
+
 	log_info(logger_LFS, "----------------Lissandra File System inicializado correctamente--------------");
 }
 
@@ -170,9 +186,9 @@ void liberarMemoriaLFS(){
 	free(pathBloques);
 	free(pathRaiz);
 	list_destroy_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
-	bitarray_destroy(bitarray);
 	munmap(bitmap, blocks/8);
 	close(bitmapDescriptor);
+	bitarray_destroy(bitarray);
 	free(memtable);
 	log_destroy(logger_LFS);
 
@@ -182,6 +198,7 @@ void liberarMemoriaLFS(){
 
 void* leerDeConsola(void* arg) {
 	char* mensajeDeError;
+	char* mensaje;
 	while (1) {
 		mensaje = readline(">");
 		if (!(strncmp(mensaje, "", 1) != 0)) {
@@ -329,34 +346,4 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	free(mensaje);
 	liberarArrayDeChar(requestSeparada);
 	log_info(logger_LFS, "---------------------------------------");
-}
-
-
-int obtenerBloqueDisponible(errorNo* errorNo) {
-
-	int index = 0;
-	while (index < blocks && bitarray_test_bit(bitarray, index) == 1) index++;
-	if(index >= blocks) {
-		index = -1;
-	}else{
-		bitarray_set_bit(bitarray, index);
-	}
-	return index;
-}
-
-
-/* vaciarTabla()
-  * Parametros:
- * 	-> tabla :: t_tabla*
- * Descripcion: vacia una tabla y todos sus registros
- * Return: void */
-void vaciarTabla(t_tabla *tabla) {
-	void eliminarRegistros(t_registro* registro) {
-	    free(registro->value);
-	    free(registro);
-	}
-    free(tabla->nombreTabla);
-    list_clean_and_destroy_elements(tabla->registros, (void*) eliminarRegistros);
-    free(tabla->registros);
-    free(tabla);
 }
