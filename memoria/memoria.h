@@ -136,7 +136,7 @@ void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
 t_marco* crearPagina(t_marco*,uint16_t, char*, unsigned long long);
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long);
-t_segmento* crearSegmento(char*);
+void crearSegmento(t_segmento*,char*);
 
 
 void procesarCreate(cod_request, char*,consistencia, t_caller, int);
