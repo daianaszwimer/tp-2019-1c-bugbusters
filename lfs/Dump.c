@@ -22,6 +22,8 @@ void* hiloDump(void* args) {
 	}
 }
 
+//TODO que pasa si se intenta dumpear a una tabla que fue dropeada
+
 /* dumpear() [VALGRINDEADO]
  * Parametros: void
  * Descripcion: baja los datos de la memtable a disco

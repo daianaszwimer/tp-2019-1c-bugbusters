@@ -70,9 +70,10 @@ char** separarRequest(char* text) {
 	char *next = text_to_iterate;
 	char *str = text_to_iterate;
 	int freeToken = 0;
+	char* token;
 
 	while(next[0] != '\0') {
-		char* token = strtok_r(str, " ", &next);
+		token = strtok_r(str, " ", &next);
 		if(token == NULL) {
 			break;
 		}

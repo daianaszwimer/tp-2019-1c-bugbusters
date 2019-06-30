@@ -46,9 +46,22 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			fclose(metadataFile);
 		}
 	}
-	free(pathTabla);
-	return error;
+
+	if(error == SUCCESS){
+		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
+			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
+			hiloTabla->thread = &hiloDeCompactacion;
+			hiloTabla->nombreTabla = strdup(nombreTabla);
+			list_add(listaDeTablas, hiloTabla);
+			log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", nombreTabla);
+		}else{
+			log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", nombreTabla);
+		}
 	}
+
+
+	return error;
+}
 
 /* crearParticiones()
  * Parametros:
@@ -83,6 +96,11 @@ errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 		fclose(particionFile);
 		free(pathParticion);
 	}
+
+	if(errorNo ==SUCCESS){
+
+	}
+
 	return errorNo;
 }
 
@@ -133,11 +151,6 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 
 	int ordenarRegistrosPorTimestamp(t_registro* registro1, t_registro* registro2){
 		return registro1->timestamp > registro2->timestamp;
-	}
-
-	void eliminarRegistro(t_registro* registro) {
-		free(registro->value);
-		free(registro);
 	}
 
 	errorNo error = SUCCESS;
@@ -282,6 +295,8 @@ t_list* buscarEnBloques(char** bloques, int key){
 				liberarArrayDeChar(registroSeparado);
 				if(key == tRegistro->key){
 					list_add(listaDeRegistros, tRegistro);
+				}else{
+					eliminarRegistro(tRegistro);
 				}
 				j = 0;
 				strcpy(registro, "");
@@ -366,13 +381,26 @@ char* obtenerMetadata(char* pathTabla){
 }
 
 errorNo procesarDrop(char* nombreTabla){
+
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	void liberarRecursos(t_hiloTabla* tabla){
+		pthread_cancel(*(tabla->thread));
+		free(tabla->nombreTabla);
+		free(tabla);
+	}
+
 	errorNo error = SUCCESS;
 	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
+		list_remove_and_destroy_by_condition(listaDeTablas, (void*)encontrarTabla,(void*)liberarRecursos);
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
 		rmdir(pathTabla);
+
 	}else{
 		error = TABLA_NO_EXISTE;
 	}

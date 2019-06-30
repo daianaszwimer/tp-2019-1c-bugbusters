@@ -82,6 +82,9 @@ void inicializacionLissandraFileSystem(char* argv[]){
 
 	levantarFS(pathBitmap);
 	free(pathBitmap);
+	//TODO sincronizar lista de tablas threads
+
+	listaDeTablas = list_create();
 
 	DIR* tablas;
 	if((tablas = opendir(pathTablas)) == NULL){
@@ -90,13 +93,20 @@ void inicializacionLissandraFileSystem(char* argv[]){
 		struct dirent* tabla;
 		while((tabla = readdir(tablas)) != NULL){
 			if(strcmp(tabla->d_name, ".") == 0 || strcmp(tabla->d_name, "..") == 0) continue;
-			if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) tabla->d_name)){
-				pthread_detach(hiloDeCompactacion);
+			char* pathTabla = string_from_format("%s/%s", pathTablas, (char*) tabla->d_name);
+			if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
+
+				t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
+				hiloTabla->thread = &hiloDeCompactacion;
+				hiloTabla->nombreTabla = strdup(tabla->d_name);
+				list_add(listaDeTablas, hiloTabla);
 				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
+				pthread_detach(hiloDeCompactacion);
 			}else{
 				log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", tabla->d_name);
 			}
 		}
+		closedir(tablas);
 	}
 
 	log_info(logger_LFS, "----------------Lissandra File System inicializado correctamente--------------");
@@ -180,7 +190,17 @@ void levantarFS(char* pathBitmap){
 }
 
 void liberarMemoriaLFS(){
+
+	void liberarRecursos(t_hiloTabla* tabla){
+		pthread_cancel(*(tabla->thread));
+		free(tabla->nombreTabla);
+		free(tabla);
+	}
+
 	log_info(logger_LFS, "Finalizando LFS");
+
+	list_destroy_and_destroy_elements(listaDeTablas, (void*) liberarRecursos);
+
 	free(pathTablas);
 	free(pathMetadata);
 	free(pathBloques);

@@ -6,9 +6,9 @@
  * Descripcion: ejecuta la funcion compactar() cada cierta cantidad de tiempo (tiempoEntreCompactaciones) definido en la metadata de la tabla
  * Return:
  * 	-> :: void* */
-void* hiloCompactacion(void* nombreTabla) {
-	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, (char*) nombreTabla);
+void* hiloCompactacion(void* arg) {
 
+	char* pathTabla = (char*)arg;
 	char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
 	t_config* configMetadataTabla = config_create(pathMetadataTabla);
 	int tiempoEntreCompactaciones = config_get_int_value(configMetadataTabla, "COMPACTION_TIME");
@@ -17,11 +17,11 @@ void* hiloCompactacion(void* nombreTabla) {
 
 	while(1) {
 		sleep(tiempoEntreCompactaciones/1000); //TODO: usleep
-		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", nombreTabla);
+		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
 		log_info(logger_LFS, infoComienzoCompactacion);
 		free(infoComienzoCompactacion);
 		compactar(pathTabla);
-		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", nombreTabla);
+		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
 		log_info(logger_LFS, infoTerminoCompactacion);
 		free(infoTerminoCompactacion);
 	}
@@ -205,6 +205,7 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 						break;
 					}
 					if (caracterLeido == '\n') {
+						registro[j] = '\0';
 						char** registroSeparado = string_n_split(registro, 3, ";");
 						tRegistro = (t_registro*) malloc(sizeof(t_registro));
 						convertirTimestamp(registroSeparado[0], &(tRegistro->timestamp));

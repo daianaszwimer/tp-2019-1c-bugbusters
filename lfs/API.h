@@ -1,4 +1,5 @@
 #include "Helper.h"
+#include "Compactador.h"
 
 errorNo procesarCreate(char*, char*, char*, char*);
 errorNo crearParticiones(char*, int);

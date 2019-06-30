@@ -3,7 +3,6 @@
 
 #include "Helper.h"
 #include <readline/readline.h>
-#include <pthread.h>
 #include "API.h"
 #include "Compactador.h"
 #include "Dump.h"
@@ -11,7 +10,6 @@
 pthread_t hiloLeerDeConsola;
 pthread_t hiloRecibirMemorias;
 pthread_t hiloDumpeo;
-pthread_t hiloDeCompactacion;
 
 char* bitmap;
 int bitmapDescriptor;

@@ -17,11 +17,11 @@
 #include <commons/bitarray.h>
 #include <sys/stat.h>
 #include <errno.h>
-//#include <stdarg.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <nuestro_lib/nuestro_lib.h>
+#include <pthread.h>
 
 typedef struct{
 	int valor;
@@ -44,8 +44,10 @@ typedef struct
 	t_list* tablas;
 } t_memtable;
 
-t_memtable* memtable;
-
+typedef struct{
+	pthread_t* thread;
+	char* nombreTabla;
+} t_hiloTabla;
 
 #define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"
 
@@ -53,6 +55,9 @@ t_log* logger_LFS;
 t_config* config;
 t_config *configMetadata;
 t_bitarray* bitarray;
+t_memtable* memtable;
+t_list* listaDeTablas;
+pthread_t hiloDeCompactacion;
 
 char* pathRaiz;
 char* pathTablas;
