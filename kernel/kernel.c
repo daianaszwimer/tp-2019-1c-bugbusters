@@ -126,7 +126,16 @@ void liberarMemoria(void) {
 	list_destroy_and_destroy_elements(tablasSC, (void*)liberarTabla);
 	list_destroy_and_destroy_elements(tablasSHC, (void*)liberarTabla);
 	list_destroy_and_destroy_elements(tablasEC, (void*)liberarTabla);
-	list_destroy_and_destroy_elements(cargaMemoria, (void*)liberarEstadisticaMemoria);
+
+	if(list_size(cargaMemoriaSC) > 0) {
+		list_destroy_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
+	}
+	if(list_size(cargaMemoriaSHC) > 0) {
+		list_destroy_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
+	}
+	if(list_size(cargaMemoriaEC) > 0) {
+		list_destroy_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
+	}
 
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
@@ -306,13 +315,26 @@ void loguearMetricas(void) {
 		informarMetricas(FALSE);
 		// limpio variables para empezar a contar de nuevo
 		pthread_mutex_lock(&semMMetricas);
-		tiempoSelect = 0.0;
-		tiempoInsert = 0.0;
-		cantidadSelect = 0;
-		cantidadInsert = 0;
-		cantidadTotalRequest = 0;
-		if (list_size(cargaMemoria) > 0) {
-			list_clean_and_destroy_elements(cargaMemoria, (void*)liberarEstadisticaMemoria);
+		tiempoSelectSC = 0;
+		tiempoInsertSC = 0;
+		cantidadSelectSC = 0;
+		cantidadInsertSC = 0;
+		if (list_size(cargaMemoriaSC) > 0) {
+			list_clean_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
+		}
+		tiempoSelectSHC = 0;
+		tiempoInsertSHC = 0;
+		cantidadSelectSHC = 0;
+		cantidadInsertSHC = 0;
+		if (list_size(cargaMemoriaSHC) > 0) {
+			list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
+		}
+		tiempoSelectEC = 0;
+		tiempoInsertEC = 0;
+		cantidadSelectEC = 0;
+		cantidadInsertEC = 0;
+		if (list_size(cargaMemoriaEC) > 0) {
+			list_clean_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
 		}
 		pthread_mutex_unlock(&semMMetricas);
 		sleep(30);
@@ -329,37 +351,62 @@ void loguearMetricas(void) {
 void informarMetricas(int mostrarPorConsola) {
 	// si es vacio no mostrar basura
 	pthread_mutex_lock(&semMMetricas);
-	double readLatency = tiempoSelect/cantidadSelect;
-	double writeLatency = tiempoInsert/cantidadInsert;
-	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
-		double estadistica = (double)estadisticaAMostrar->cantidadSelectInsert / cantidadTotalRequest;
+	double readLatencySC = tiempoSelectSC/cantidadSelectSC;
+		double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
+		double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
+		double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
+		double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
+		double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
+		void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
+			log_info(logger_KERNEL, "select insert %d y total %d", estadisticaAMostrar->cantidadSelectInsert, estadisticaAMostrar->cantidadTotal);
+			int estadistica = estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
+			if (mostrarPorConsola == TRUE) {
+				log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
+						estadisticaAMostrar->numeroMemoria, estadistica);
+			} else {
+				log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
+						estadisticaAMostrar->numeroMemoria, estadistica);
+			}
+		}
 		if (mostrarPorConsola == TRUE) {
-			log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
-					estadisticaAMostrar->numeroMemoria, estadistica);
+			log_info(logger_KERNEL, "Read Latency de SC: %f", readLatencySC);
+			log_info(logger_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+			log_info(logger_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+			log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+			log_info(logger_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+			log_info(logger_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
+			log_info(logger_KERNEL, "El memory load de SC es:");
+			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+			log_info(logger_KERNEL, "El memory load de SHC es:");
+			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+			log_info(logger_KERNEL, "El memory load de EC es:");
+			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+			log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+			log_info(logger_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+			log_info(logger_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+			log_info(logger_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+			log_info(logger_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+			log_info(logger_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
 		} else {
-			log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
-					estadisticaAMostrar->numeroMemoria, estadistica);
+			log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %f", readLatencySC);
+			log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+			log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+			log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+			log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+			log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
+			log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
+			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+			log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
+			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+			log_info(logger_METRICAS_KERNEL, "El memory load de EC es:");
+			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
 		}
-	}
-	if (mostrarPorConsola == TRUE) {
-		log_info(logger_KERNEL, "Read Latency: %f", readLatency);
-		log_info(logger_KERNEL, "Write Latency: %f", writeLatency);
-		if (list_size(cargaMemoria) > 0) {
-			log_info(logger_KERNEL, "El memory load es:");
-			list_iterate(cargaMemoria, (void*) mostrarCargaMemoria);
-		}
-		log_info(logger_KERNEL, "Cantidad de Reads: %d", cantidadSelect);
-		log_info(logger_KERNEL, "Cantidad de Writes: %d", cantidadInsert);
-	} else {
-		log_info(logger_METRICAS_KERNEL, "Read Latency: %f", readLatency);
-		log_info(logger_METRICAS_KERNEL, "Write Latency: %f", writeLatency);
-		if (list_size(cargaMemoria) > 0) {
-			log_info(logger_METRICAS_KERNEL, "El memory load es:");
-			list_iterate(cargaMemoria, (void*) mostrarCargaMemoria);
-		}
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads: %d", cantidadSelect);
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes: %d", cantidadInsert);
-	}
 	pthread_mutex_unlock(&semMMetricas);
 }
 
@@ -429,7 +476,6 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
 					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
 				}
-				log_info(logger_KERNEL, "voy a sumarle a select insert %d", cantidadASumarSelectInsert);
 				break;
 			case SHC:
 				memoriaCorrespondiente = list_find(cargaMemoriaSHC, (void*)encontrarTabla);
