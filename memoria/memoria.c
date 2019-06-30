@@ -39,7 +39,7 @@ int main(void) {
 
 void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
-	//maxValue = handshakeConLFS(); TODO handshake posta
+	//maxValue = handshakeConLFS();
 
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
 	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
