@@ -1,5 +1,11 @@
 #include "Compactador.h"
 
+/* hiloCompactacion()
+ * Parametros:
+ * 	-> nombreTabla ::  char*
+ * Descripcion: ejecuta la funcion compactar() cada cierta cantidad de tiempo (tiempoEntreCompactaciones) definido en la metadata de la tabla
+ * Return:
+ * 	-> :: void* */
 void* hiloCompactacion(void* args) {
 	char* nombreTabla;// Viene de lissandra
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
@@ -23,6 +29,13 @@ void* hiloCompactacion(void* args) {
 	free(pathTabla);
 }
 
+/* compactar()
+ * Parametros:
+ * 	-> pathTabla ::  char*
+ * Descripcion: convierte los tmp a tmpC, los lee, los compara con lo que ya hay en las particiones,
+ * y mergea todos los archivos quedandose con los timestamps mas altos en caso de que se repita la key
+ * Return:
+ * 	-> :: void */
 void compactar(char* pathTabla) {
 
 	DIR *tabla;
@@ -111,9 +124,16 @@ void compactar(char* pathTabla) {
 
 	list_destroy_and_destroy_elements(registrosDeTmpC, (void*) eliminarRegistro);
 	list_destroy_and_destroy_elements(particiones, (void*) eliminarParticion);
-	//free(puntoDeMontaje);
 }
 
+/* renombrarTmp_a_TmpC()
+ * Parametros:
+ * 	-> pathTabla ::  char*
+ * 	-> archivoDeLaTabla :: struct dirent*
+ * 	-> tabla :: DIR*
+ * Descripcion: renombro los temporales del dumpeo a temporales a compactar
+ * Return:
+ * 	-> :: void */
 void renombrarTmp_a_TmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* tabla) {
 	while ((archivoDeLaTabla = readdir(tabla)) != NULL) {
 		if (string_ends_with(archivoDeLaTabla->d_name, ".tmp")) {
@@ -130,6 +150,17 @@ void renombrarTmp_a_TmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* 
 	rewinddir(tabla);
 }
 
+/* leerDeTodosLosTmpC()
+ * Parametros:
+ * 	-> pathTabla ::  char*
+ * 	-> archivoDeLaTabla :: struct dirent*
+ * 	-> tabla :: DIR*
+ * 	-> particiones :: t_list*
+ * 	-> numeroDeParticiones :: int
+ * 	-> puntoDeMontaje :: char*
+ * Descripcion: leo todos los registros de todos los tmpC y devuelvo una lista con todos los registros
+ * Return:
+ * 	-> :: t_list* */
 t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* tabla, t_list* particiones, int numeroDeParticiones, char* puntoDeMontaje) {
 
 	t_registro* tRegistro;
@@ -158,11 +189,10 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 			int i = 0;
 			int j = 0;
 
-			char* registro = calloc(1, 25 + config_get_int_value(config, "TAMAÑO_VALUE"));
-			// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes
+			char* registro = calloc(1, 27 + config_get_int_value(config, "TAMAÑO_VALUE"));
+			// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes + 2 punto y coma
 			// 5 bytes son 5 char
 
-			//strcpy(registro, "");
 			while (bloques[i] != NULL) {
 				char* pathBloque = string_from_format("%sBloques/%s.bin", puntoDeMontaje, bloques[i]);
 				FILE* bloque = fopen(pathBloque, "r");
@@ -181,7 +211,6 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 						convertirTimestamp(registroSeparado[0], &(tRegistro->timestamp));
 						tRegistro->key = convertirKey(registroSeparado[1]);
 						tRegistro->value = strdup(registroSeparado[2]);
-						//log_debug(logger_LFS, registroSeparado[2]);
 
 						liberarArrayDeChar(registroSeparado);
 
@@ -221,6 +250,14 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 	return registrosDeTmpC;
 }
 
+/* leerDeTodasLasParticiones()
+ * Parametros:
+ * 	-> pathTabla ::  char*
+ * 	-> particiones :: unit16*
+ * 	-> puntoDeMontaje :: char*
+ * Descripcion: leo todos los registros de todas las particiones (que esten en el tmpC) y devuelvo una lista con todos los registros
+ * Return:
+ * 	-> :: t_list* */
 t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* puntoDeMontaje) {
 
 	t_int* particion;
@@ -236,8 +273,8 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
 		free(pathParticion);
 		config_destroy(particionConfig);
 
-		char* registro = calloc(1, 25 + config_get_int_value(config, "TAMAÑO_VALUE"));
-		// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes
+		char* registro = calloc(1, 27 + config_get_int_value(config, "TAMAÑO_VALUE"));
+		// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes + 2 punto y coma
 		// 5 bytes son 5 char
 
 		int z = 0;
@@ -278,6 +315,16 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
 	return registrosDeParticiones;
 }
 
+/* liberarBloquesDeTmpCyParticiones()
+ * Parametros:
+ * 	-> pathTabla ::  char*
+ * 	-> archivoDeLaTabla :: unit16*
+ * 	-> tabla :: DIR*
+ * 	-> particiones :: t_list*
+ * 	-> puntoDeMontaje :: char*
+ * Descripcion: libero todos los bloques de los tmpC y de las particiones (que esten en el tmpC)
+ * Return:
+ * 	-> :: void */
 void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* tabla, t_list* particiones, char* puntoDeMontaje) {
 
 	while ((archivoDeLaTabla = readdir(tabla)) != NULL) {
@@ -331,6 +378,17 @@ void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeL
 	}
 }
 
+/* guardarDatosNuevos()
+ * Parametros:
+ * 	-> pathTabla ::  char*
+ * 	-> registrosAEscribir :: unit16*
+ * 	-> particiones :: t_list*
+ * 	-> tamanioBloque :: int
+ * 	-> puntoDeMontaje :: char*
+ * 	-> numeroDeParticiones :: int
+ * Descripcion: pido bloques nuevos para cada particion y guardo los datos nuevos
+ * Return:
+ * 	-> :: void */
 void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* particiones, int tamanioBloque, char* puntoDeMontaje, int numeroDeParticiones) {
 
 	errorNo error;
@@ -348,8 +406,8 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 
 		t_list* registrosPorParticion = list_filter(registrosAEscribir, (void*) keyCorrespondeAParticion);
 
-		char* datosACompactar = calloc(1, 25 + config_get_int_value(config, "TAMAÑO_VALUE"));
-		// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes
+		char* datosACompactar = calloc(1, 27 + config_get_int_value(config, "TAMAÑO_VALUE"));
+		// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes + 2 punto y coma
 		// 5 bytes son 5 char
 
 		for (int j = 0; list_get(registrosPorParticion, j) != NULL; j++) {
@@ -404,10 +462,22 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 	}
 }
 
+/* eliminarParticion()
+ * Parametros:
+ * 	-> particionAEliminar ::  t_int*
+ * Descripcion: libero la memoria de un t_int* (particion)
+ * Return:
+ * 	-> :: void */
 void eliminarParticion(t_int* particionAEliminar) {
 	free(particionAEliminar);
 }
 
+/* eliminarRegistro()
+ * Parametros:
+ * 	-> registroAEliminar ::  t_registro*
+ * Descripcion: libero la memoria de un t_registro* (registro)
+ * Return:
+ * 	-> :: void */
 void eliminarRegistro(t_registro* registroAEliminar) {
 	free(registroAEliminar->value);
 	free(registroAEliminar);
