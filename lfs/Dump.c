@@ -22,7 +22,6 @@ void* hiloDump(void* args) {
 	}
 }
 
-//TODO: que se guarde sin comillas
 /* dumpear() [VALGRINDEADO]
  * Parametros: void
  * Descripcion: baja los datos de la memtable a disco
