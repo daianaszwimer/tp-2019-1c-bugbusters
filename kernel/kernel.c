@@ -7,23 +7,28 @@ int main(void) {
 
 	//Hilos
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)conectarAMemoria, NULL);
-	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
 	pthread_create(&hiloMetricas, NULL, (void*)loguearMetricas, NULL);
 	pthread_create(&hiloDescribe, NULL, (void*)hacerDescribe, NULL);
+	pthread_create(&hiloCambioEnConfig, NULL, (void*)escucharCambiosEnConfig, NULL);
+	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 
 	pthread_join(hiloConectarAMemoria, NULL);
-	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloPlanificarNew, NULL);
 	pthread_join(hiloPlanificarExec, NULL);
 	pthread_join(hiloMetricas, NULL);
 	pthread_join(hiloDescribe, NULL);
+	pthread_join(hiloLeerDeConsola, NULL);
+	pthread_join(hiloCambioEnConfig, NULL);
 
 	liberarMemoria();
 
 	return EXIT_SUCCESS;
 }
+
+// todo: hilo de gossiping
+// tener en cuenta caida de memoria y sacarla de las listas
 
 /* inicializarVariables()
  * Parametros:
@@ -34,10 +39,18 @@ int main(void) {
 void inicializarVariables() {
 	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
 	logger_METRICAS_KERNEL = log_create("metricas.log", "MetricasKernel", 0, LOG_LEVEL_DEBUG);
+
 	// Configs
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 	int multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
 	quantum = config_get_int_value(config, "QUANTUM");
+	sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
+	metadataRefresh = config_get_int_value(config, "METADATA_REFRESH");
+	numeroSeedRandom = config_get_int_value(config, "DAIU_NUMBER");
+	puertoMemoria = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
+	ipMemoria = strdup(config_get_string_value(config, "IP_MEMORIA"));
+	srand(numeroSeedRandom);
+
 	// Semáforos
 	sem_init(&semRequestNew, 0, 0);
 	sem_init(&semRequestReady, 0, 0);
@@ -45,6 +58,17 @@ void inicializarVariables() {
 	pthread_mutex_init(&semMColaNew, NULL);
 	pthread_mutex_init(&semMColaReady, NULL);
 	pthread_mutex_init(&semMMetricas, NULL);
+	pthread_mutex_init(&semMTablasSC, NULL);
+	pthread_mutex_init(&semMTablasSHC, NULL);
+	pthread_mutex_init(&semMTablasEC, NULL);
+	pthread_mutex_init(&semMQuantum, NULL);
+	pthread_mutex_init(&semMSleepEjecucion, NULL);
+	pthread_mutex_init(&semMMetadataRefresh, NULL);
+	pthread_mutex_init(&semMMemoriaSC, NULL);
+	pthread_mutex_init(&semMMemoriasSHC, NULL);
+	pthread_mutex_init(&semMMemoriasEC, NULL);
+	pthread_mutex_init(&semMMemorias, NULL);
+
 	// Colas de planificacion
 	new = queue_create();
 	ready = queue_create();
@@ -71,24 +95,53 @@ void inicializarVariables() {
  * 	-> void  */
 void liberarMemoria(void) {
 	liberar_conexion(conexionMemoria);
+
 	config_destroy(config);
+	free(ipMemoria);
+	free(puertoMemoria);
+
 	pthread_mutex_destroy(&semMColaNew);
 	pthread_mutex_destroy(&semMColaReady);
 	pthread_mutex_destroy(&semMMetricas);
+	pthread_mutex_destroy(&semMTablasSC);
+	pthread_mutex_destroy(&semMTablasSHC);
+	pthread_mutex_destroy(&semMTablasEC);
+	pthread_mutex_destroy(&semMQuantum);
+	pthread_mutex_destroy(&semMSleepEjecucion);
+	pthread_mutex_destroy(&semMMetadataRefresh);
+	pthread_mutex_destroy(&semMMemoriaSC);
+	pthread_mutex_destroy(&semMMemoriasSHC);
+	pthread_mutex_destroy(&semMMemoriasEC);
+	pthread_mutex_destroy(&semMMemorias);
+
 	sem_destroy(&semRequestNew);
 	sem_destroy(&semRequestReady);
 	sem_destroy(&semMultiprocesamiento);
+
 	queue_destroy(new);
 	queue_destroy(ready);
+
 	list_destroy_and_destroy_elements(memorias, (void*)liberarConfigMemoria);
-	list_destroy(memoriasShc);
-	list_destroy(memoriasEc);
+	liberarConfigMemoria(memoriaSc);
+	list_destroy_and_destroy_elements(memoriasShc, (void*)liberarConfigMemoria);
+	list_destroy_and_destroy_elements(memoriasEc, (void*)liberarConfigMemoria);
 	list_destroy_and_destroy_elements(tablasSC, (void*)liberarTabla);
 	list_destroy_and_destroy_elements(tablasSHC, (void*)liberarTabla);
 	list_destroy_and_destroy_elements(tablasEC, (void*)liberarTabla);
-	list_destroy_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
-	list_destroy_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
-	list_destroy_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
+
+	if(list_size(cargaMemoriaSC) > 0) {
+		list_destroy_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
+	}
+	if(list_size(cargaMemoriaSHC) > 0) {
+		list_destroy_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
+	}
+	if(list_size(cargaMemoriaEC) > 0) {
+		list_destroy_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
+	}
+
+	inotify_rm_watch(file_descriptor, watch_descriptor);
+	close(file_descriptor);
+
 	log_info(logger_KERNEL, "Estoy liberando toda la memoria, chau");
 	log_destroy(logger_KERNEL);
 	log_destroy(logger_METRICAS_KERNEL);
@@ -126,7 +179,9 @@ void procesarHandshake(t_handshake_memoria* handshakeRecibido) {
 		memoriaNueva->puerto = strdup(puertos[i]);// config_get_string_value(config, "PUERTO_MEMORIA");
 		memoriaNueva->numero = strdup(numeros[i]);
 		log_info(logger_KERNEL, "estoy agregando el ip: %s puerto: %s numero: %s", memoriaNueva->ip, memoriaNueva->puerto, memoriaNueva->numero);
+		pthread_mutex_lock(&semMMemorias);
 		list_add(memorias, memoriaNueva);
+		pthread_mutex_unlock(&semMMemorias);
 		memoriaNueva = NULL;
 	}
 	liberarArrayDeChar(ips);
@@ -150,14 +205,90 @@ void leerDeConsola(void){
 			pthread_cancel(hiloPlanificarExec);
 			pthread_cancel(hiloMetricas);
 			pthread_cancel(hiloDescribe);
+			pthread_cancel(hiloCambioEnConfig);
 			free(mensaje);
 			break;
 		}
+		planificarRequest(mensaje);
+	}
+}
+
+/* planificarRequest()
+ * Parametros:
+ * 	-> char* :: request
+ * Descripcion: recibe una request, si es ADD o METRICS lo ejecuta directamente, sino lo agrega a la cola de new.
+ * Return:
+ * 	-> :: void  */
+void planificarRequest(char* request) {
+	char** requestSeparada = string_n_split(request, 2, " ");
+	cod_request codigo = obtenerCodigoPalabraReservada(requestSeparada[0], KERNEL);
+	if (codigo == ADD || codigo == METRICS) {
+		// https://github.com/sisoputnfrba/foro/issues/1382
+		pthread_t hiloRequest;
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, request);
+		if(threadProcesar == 0){
+			pthread_attr_destroy(&attr);
+		} else {
+			log_error(logger_KERNEL, "Hubo un error al crear el hilo que ejecuta la request");
+		}
+	} else {
 		pthread_mutex_lock(&semMColaNew);
 		//agregar request a la cola de new
-		queue_push(new, mensaje);
+		queue_push(new, request);
 		pthread_mutex_unlock(&semMColaNew);
 		sem_post(&semRequestNew);
+	}
+	liberarArrayDeChar(requestSeparada);
+}
+
+void procesarRequestSinPlanificar(char* request) {
+	char** requestSeparada = string_n_split(request, 2, " ");
+	cod_request codigo = obtenerCodigoPalabraReservada(requestSeparada[0], KERNEL);
+	request_procesada* requestArmada = (request_procesada*) malloc(sizeof(request_procesada));
+	requestArmada->codigo = codigo;
+	requestArmada->request = strdup(request);
+	manejarRequest(requestArmada);
+	liberarRequestProcesada(requestArmada);
+	free(request);
+	liberarArrayDeChar(requestSeparada);
+}
+
+/* escucharCambiosEnConfig()
+ * Parametros:
+ * 	-> void
+ * Descripcion: es un hilo que escucha cambios en el config y actualiza las variables correspodientes.
+ * Return:
+ * 	-> :: void  */
+void escucharCambiosEnConfig(void) {
+	char buffer[BUF_LEN];
+	file_descriptor = inotify_init();
+	if (file_descriptor < 0) {
+		log_error(logger_KERNEL, "Inotify no se pudo inicializar correctamente");
+	}
+
+	watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config", IN_MODIFY);
+	while(1) {
+		int length = read(file_descriptor, buffer, BUF_LEN);
+		log_info(logger_KERNEL, "Cambió el archivo de config");
+		config_destroy(config);
+		config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
+		if (length < 0) {
+			log_error(logger_KERNEL, "Error en inotify");
+		} else {
+			pthread_mutex_lock(&semMQuantum);
+			quantum = config_get_int_value(config, "QUANTUM");
+			pthread_mutex_unlock(&semMQuantum);
+			pthread_mutex_lock(&semMSleepEjecucion);
+			sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
+			pthread_mutex_unlock(&semMSleepEjecucion);
+			pthread_mutex_lock(&semMMetadataRefresh);
+			metadataRefresh = config_get_int_value(config, "METADATA_REFRESH");
+			pthread_mutex_unlock(&semMMetadataRefresh);
+		}
+
 	}
 }
 
@@ -169,10 +300,9 @@ void leerDeConsola(void){
  * 	-> :: void  */
 void hacerDescribe(void) {
 	while(1) {
-		break;
-		int segundos = config_get_int_value(config, "METADATA_REFRESH");
-		// agregar a new? o ejecutarlo directamente?
-		usleep(segundos * 1000);
+		char* request = strdup("DESCRIBE");
+		procesarRequestSinPlanificar(request);
+		usleep(metadataRefresh * 1000);
 	}
 }
 
@@ -224,72 +354,61 @@ void informarMetricas(int mostrarPorConsola) {
 	// si es vacio no mostrar basura
 	pthread_mutex_lock(&semMMetricas);
 	double readLatencySC = tiempoSelectSC/cantidadSelectSC;
-	double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
-	double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
-	double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
-	double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
-	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
-	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
-		double estadistica = (double)estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
-		if (mostrarPorConsola == TRUE) {
-			log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
-					estadisticaAMostrar->numeroMemoria, estadistica);
-		} else {
-			log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
-					estadisticaAMostrar->numeroMemoria, estadistica);
+		double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
+		double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
+		double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
+		double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
+		double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
+		void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
+			log_info(logger_KERNEL, "select insert %d y total %d", estadisticaAMostrar->cantidadSelectInsert, estadisticaAMostrar->cantidadTotal);
+			int estadistica = estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
+			if (mostrarPorConsola == TRUE) {
+				log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
+						estadisticaAMostrar->numeroMemoria, estadistica);
+			} else {
+				log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
+						estadisticaAMostrar->numeroMemoria, estadistica);
+			}
 		}
-	}
-	if (mostrarPorConsola == TRUE) {
-		log_info(logger_KERNEL, "Read Latency de SC: %f", readLatencySC);
-		log_info(logger_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
-		log_info(logger_KERNEL, "Read Latency de EC: %f", readLatencyEC);
-		log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatencySC);
-		log_info(logger_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
-		log_info(logger_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
-		if (list_size(cargaMemoriaSC) > 0) {
+		if (mostrarPorConsola == TRUE) {
+			log_info(logger_KERNEL, "Read Latency de SC: %f", readLatencySC);
+			log_info(logger_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+			log_info(logger_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+			log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+			log_info(logger_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+			log_info(logger_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
 			log_info(logger_KERNEL, "El memory load de SC es:");
 			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
-		}
-		if (list_size(cargaMemoriaSHC) > 0) {
 			log_info(logger_KERNEL, "El memory load de SHC es:");
 			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
-		}
-		if (list_size(cargaMemoriaEC) > 0) {
 			log_info(logger_KERNEL, "El memory load de EC es:");
 			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
-		}
-		log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
-		log_info(logger_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
-		log_info(logger_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
-		log_info(logger_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
-		log_info(logger_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
-		log_info(logger_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
-	} else {
-		log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %f", readLatencySC);
-		log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
-		log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %f", readLatencyEC);
-		log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatencySC);
-		log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
-		log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
-		if (list_size(cargaMemoriaSC) > 0) {
+			log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+			log_info(logger_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+			log_info(logger_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+			log_info(logger_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+			log_info(logger_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+			log_info(logger_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+		} else {
+			log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %f", readLatencySC);
+			log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+			log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+			log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+			log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+			log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
 			log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
 			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
-		}
-		if (list_size(cargaMemoriaSHC) > 0) {
 			log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
 			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
-		}
-		if (list_size(cargaMemoriaEC) > 0) {
 			log_info(logger_METRICAS_KERNEL, "El memory load de EC es:");
 			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
 		}
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
-		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
-	}
 	pthread_mutex_unlock(&semMMetricas);
 }
 
@@ -303,13 +422,13 @@ void liberarEstadisticaMemoria(estadisticaMemoria* memoria) {
 	free(memoria->numeroMemoria);
 	free(memoria);
 }
+
 /* liberarConfigMemoria()
  * Parametros:
  * 	-> config_memoria* :: configALiberar
  * Descripcion: recibe una configMemoria y la libera.
  * Return:
  * 	-> :: void  */
-
 void liberarConfigMemoria(config_memoria* configALiberar) {
 	if (configALiberar != NULL) {
 		free(configALiberar->ip);
@@ -332,113 +451,113 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
  * Descripcion: aumenta las variables para las métricas.
  * Return:
  * 	-> :: void  */
-void aumentarContadores(consistencia consistenciaRequest, char* numeroMemoria, cod_request codigo, double cantidadTiempo) {
+void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidadTiempo, consistencia consistenciaRequest) {
 	estadisticaMemoria* memoriaCorrespondiente;
-	// si es un describe global va a entrar al "NINGUNA"
-	// cargo en el criterio segun el request o segun la memoria?
-	// o sea si tengo una memory que es SC y EC y le hago dos select que son de una tabla
-	// EC, en la cantidad total de request en mi lista de SC de esa memoria es de 2 o 0? porque
-	// no se hizo nada SC pero si se hizo a esa memoria PREGUNTAR
-	int encontrarTabla(estadisticaMemoria* memoria) {
-		return string_equals_ignore_case(memoria->numeroMemoria, numeroMemoria);
-	}
-	int cantidadASumarSelectInsert = codigo == SELECT || codigo == INSERT;
-	pthread_mutex_lock(&semMMetricas);
-	switch (consistenciaRequest) {
-		case SC:
-			memoriaCorrespondiente = list_find(cargaMemoriaSC, (void*)encontrarTabla);
-			if (memoriaCorrespondiente == NULL) {
-				memoriaCorrespondiente = NULL;
-				memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
-				memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
-				memoriaCorrespondiente->cantidadTotal = 1;
-				memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
-				list_add(cargaMemoriaSC, memoriaCorrespondiente);
-			} else {
-				// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
-				memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
-				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
-			}
-			break;
-		case SHC:
-			memoriaCorrespondiente = list_find(cargaMemoriaSHC, (void*)encontrarTabla);
-			if (memoriaCorrespondiente == NULL) {
-				memoriaCorrespondiente = NULL;
-				memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
-				memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
-				memoriaCorrespondiente->cantidadTotal = 1;
-				memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
-				list_add(cargaMemoriaSHC, memoriaCorrespondiente);
-			} else {
-				// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
-				memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
-				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
-			}
-			break;
-		case EC:
-			memoriaCorrespondiente = list_find(cargaMemoriaEC, (void*)encontrarTabla);
-			if (memoriaCorrespondiente == NULL) {
-				memoriaCorrespondiente = NULL;
-				memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
-				memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
-				memoriaCorrespondiente->cantidadTotal = 1;
-				memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
-				list_add(cargaMemoriaEC, memoriaCorrespondiente);
-			} else {
-				// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
-				memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
-				memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
-			}
-			break;
-		case NINGUNA:
-			// se agrega en todos los criterios? o en el criterio de la memoria? PREGUNTAR
-			break;
-		default:
-			// error
-			break;
-	}
-	if (codigo == SELECT) {
-		switch(consistenciaRequest) {
-		case SC:
-			tiempoSelectSC+=cantidadTiempo;
-			cantidadSelectSC++;
-			break;
-		case SHC:
-			tiempoSelectSHC+=cantidadTiempo;
-			cantidadSelectSHC++;
-			break;
-		case EC:
-			tiempoSelectEC+=cantidadTiempo;
-			cantidadSelectEC++;
-			break;
-		case NINGUNA:
-			// que se hace en el caso de describe global?
-			break;
-		default:
-			break;
+		// si es un describe global va a entrar al "NINGUNA"
+		// cargo en el criterio segun el request o segun la memoria?
+		// o sea si tengo una memory que es SC y EC y le hago dos select que son de una tabla
+		// EC, en la cantidad total de request en mi lista de SC de esa memoria es de 2 o 0? porque
+		// no se hizo nada SC pero si se hizo a esa memoria PREGUNTAR
+		int encontrarTabla(estadisticaMemoria* memoria) {
+			return string_equals_ignore_case(memoria->numeroMemoria, numeroMemoria);
 		}
-	} else if (codigo == INSERT) {
-		switch(consistenciaRequest) {
-		case SC:
-			tiempoInsertSC+=cantidadTiempo;
-			cantidadInsertSC++;
-			break;
-		case SHC:
-			tiempoInsertSHC+=cantidadTiempo;
-			cantidadInsertSHC++;
-			break;
-		case EC:
-			tiempoInsertEC+=cantidadTiempo;
-			cantidadInsertEC++;
-			break;
-		case NINGUNA:
-			// que se hace en el caso de describe global?
-			break;
-		default:
-			break;
+		int cantidadASumarSelectInsert = codigo == SELECT || codigo == INSERT;
+		pthread_mutex_lock(&semMMetricas);
+		switch (consistenciaRequest) {
+			case SC:
+				memoriaCorrespondiente = list_find(cargaMemoriaSC, (void*)encontrarTabla);
+				if (memoriaCorrespondiente == NULL) {
+					memoriaCorrespondiente = NULL;
+					memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+					memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = 1;
+					memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
+					list_add(cargaMemoriaSC, memoriaCorrespondiente);
+				} else {
+					// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+				}
+				break;
+			case SHC:
+				memoriaCorrespondiente = list_find(cargaMemoriaSHC, (void*)encontrarTabla);
+				if (memoriaCorrespondiente == NULL) {
+					memoriaCorrespondiente = NULL;
+					memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+					memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = 1;
+					memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
+					list_add(cargaMemoriaSHC, memoriaCorrespondiente);
+				} else {
+					// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+				}
+				break;
+			case EC:
+				memoriaCorrespondiente = list_find(cargaMemoriaEC, (void*)encontrarTabla);
+				if (memoriaCorrespondiente == NULL) {
+					memoriaCorrespondiente = NULL;
+					memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
+					memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = 1;
+					memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
+					list_add(cargaMemoriaEC, memoriaCorrespondiente);
+				} else {
+					// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
+					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
+					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+				}
+				break;
+			case NINGUNA:
+				// se agrega en todos los criterios? o en el criterio de la memoria? PREGUNTAR
+				break;
+			default:
+				// error
+				break;
 		}
-	}
-	pthread_mutex_unlock(&semMMetricas);
+		if (codigo == SELECT) {
+			switch(consistenciaRequest) {
+			case SC:
+				tiempoSelectSC+=cantidadTiempo;
+				cantidadSelectSC++;
+				break;
+			case SHC:
+				tiempoSelectSHC+=cantidadTiempo;
+				cantidadSelectSHC++;
+				break;
+			case EC:
+				tiempoSelectEC+=cantidadTiempo;
+				cantidadSelectEC++;
+				break;
+			case NINGUNA:
+				// que se hace en el caso de describe global?
+				break;
+			default:
+				break;
+			}
+		} else if (codigo == INSERT) {
+			switch(consistenciaRequest) {
+			case SC:
+				tiempoInsertSC+=cantidadTiempo;
+				cantidadInsertSC++;
+				break;
+			case SHC:
+				tiempoInsertSHC+=cantidadTiempo;
+				cantidadInsertSHC++;
+				break;
+			case EC:
+				tiempoInsertEC+=cantidadTiempo;
+				cantidadInsertEC++;
+				break;
+			case NINGUNA:
+				// que se hace en el caso de describe global?
+				break;
+			default:
+				break;
+			}
+		}
+		pthread_mutex_unlock(&semMMetricas);
 }
 
 /*
@@ -464,6 +583,7 @@ void planificarNewAReady(void) {
 			//cuando es run, en vez de pushear request, se pushea array de requests, antes se llama a reservar recursos que hace eso
 			reservarRecursos(request);
 		} else {
+			free(request);
 			//error
 		}
 	}
@@ -481,14 +601,17 @@ void planificarReadyAExec(void) {
 	pthread_attr_t attr;
 	request_procesada* request;
 	int threadProcesar;
+	int d;
+	int a;
 	while(1) {
 		sem_wait(&semRequestReady);
+		sem_getvalue(&semMultiprocesamiento, &a);
 		sem_wait(&semMultiprocesamiento);
+		sem_getvalue(&semMultiprocesamiento, &d);
 		request = (request_procesada*) malloc(sizeof(request_procesada));
 		pthread_mutex_lock(&semMColaReady);
 		request->codigo = ((request_procesada*) queue_peek(ready))->codigo;
 		if(request->codigo == RUN) {
-		//	request->request = (t_queue*) malloc(sizeof(((request_procesada*)queue_peek(ready))->request));
 			request->request = ((request_procesada*)queue_peek(ready))->request;
 		} else {
 			request->request = strdup((char*)((request_procesada*)queue_peek(ready))->request);
@@ -502,7 +625,7 @@ void planificarReadyAExec(void) {
 		if(threadProcesar == 0){
 			pthread_attr_destroy(&attr);
 		} else {
-			//informar error
+			log_error(logger_KERNEL, "Hubo un error al crear el hilo que ejecuta la request");
 		}
 	}
 }
@@ -527,6 +650,11 @@ void reservarRecursos(char* mensaje) {
 		archivoLql = fopen(parametros[1], "r");
 		if (archivoLql == NULL) {
 			log_error(logger_KERNEL, "No existe un archivo en esa ruta");
+			liberarArrayDeChar(parametros);
+			liberarArrayDeChar(request);
+			free(mensaje);
+			free(_request);
+			return;
 		} else {
 			_request->request = queue_create();
 			char letra;
@@ -606,7 +734,6 @@ void liberarRequestProcesada(request_procesada* request) {
 	// solo hacer este free si request fue a exit
 	free(request);
 	request = NULL;
-	log_info(logger_KERNEL, "libero request");
 }
 
 /* liberarColaRequest()
@@ -616,7 +743,6 @@ void liberarRequestProcesada(request_procesada* request) {
  * Return:
  *     -> void  */
 void liberarColaRequest(request_procesada* requestCola) {
-	//printf("Voy a liberar: %s    ", (char*) requestCola->request);
     free((char*) requestCola->request);
     requestCola->request = NULL;
     free(requestCola);
@@ -693,7 +819,6 @@ int manejarRequest(request_procesada* request) {
 			// la request. en tal caso se devuelve error para cortar ejecucion
 			break;
 	}
-	usleep(config_get_int_value(config, "SLEEP_EJECUCION")*1000);
 	return respuesta;
 }
 
@@ -710,9 +835,15 @@ void actualizarTablas(char* respuesta) {
 	int esDescribeGlobal = longitudDeArrayDeStrings(respuestaParseada) != 1;
 	// solo limpiar cuando es global!!!
 	if (esDescribeGlobal == TRUE) {
+		pthread_mutex_lock(&semMTablasSC);
 		list_clean_and_destroy_elements(tablasSC, (void*)liberarTabla);
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_lock(&semMTablasSHC);
 		list_clean_and_destroy_elements(tablasSHC, (void*)liberarTabla);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_lock(&semMTablasEC);
 		list_clean_and_destroy_elements(tablasEC, (void*)liberarTabla);
+		pthread_mutex_unlock(&semMTablasEC);
 		string_iterate_lines(respuestaParseada, (void*)agregarTablaACriterio);
 	} else {
 		agregarTablaACriterio(respuestaParseada[0]);
@@ -737,6 +868,9 @@ void agregarTablaACriterio(char* tabla) {
 	int esTabla(char* tablaActual) {
 		return string_equals_ignore_case(nombreTabla, tablaActual);
 	}
+	pthread_mutex_lock(&semMTablasSC);
+	pthread_mutex_lock(&semMTablasSHC);
+	pthread_mutex_lock(&semMTablasEC);
 	if (list_find(tablasSC, (void*)esTabla) != NULL) {
 		if (tipoConsistencia != SC) {
 			hayQueAgregar = TRUE;
@@ -744,6 +878,9 @@ void agregarTablaACriterio(char* tabla) {
 		} else {
 			free(nombreTabla);
 		}
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 	} else if (list_find(tablasSHC, (void*)esTabla) != NULL) {
 		if (tipoConsistencia != SHC) {
 			hayQueAgregar = TRUE;
@@ -751,6 +888,9 @@ void agregarTablaACriterio(char* tabla) {
 		} else {
 			free(nombreTabla);
 		}
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 	} else if (list_find(tablasEC, (void*)esTabla) != NULL) {
 		if (tipoConsistencia != EC) {
 			hayQueAgregar = TRUE;
@@ -758,23 +898,35 @@ void agregarTablaACriterio(char* tabla) {
 		} else {
 			free(nombreTabla);
 		}
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 	} else {
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 		hayQueAgregar = TRUE;
 	}
 	if (hayQueAgregar == TRUE) {
 		// tabla no existe en estructura o hay que agregarla en otra
 		switch(tipoConsistencia) {
 			case SC:
+				pthread_mutex_lock(&semMTablasSC);
 				list_add(tablasSC, nombreTabla);
-				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
+				pthread_mutex_unlock(&semMTablasSC);
+				//log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
 				break;
 			case SHC:
+				pthread_mutex_lock(&semMTablasSHC);
 				list_add(tablasSHC, nombreTabla);
-				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
+				pthread_mutex_unlock(&semMTablasSHC);
+				//log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
 				break;
 			case EC:
+				pthread_mutex_lock(&semMTablasEC);
 				list_add(tablasEC, nombreTabla);
-				log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
+				pthread_mutex_unlock(&semMTablasEC);
+				//log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
 				break;
 			default:
 				log_error(logger_KERNEL, "La tabla %s no tiene asociada un criterio válido y no se actualizó en la estructura de datos",
@@ -806,14 +958,30 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
 	int esTabla(char* tablaActual) {
 		return string_equals_ignore_case(tabla, tablaActual);
 	}
+	pthread_mutex_lock(&semMTablasSC);
+	pthread_mutex_lock(&semMTablasSHC);
+	pthread_mutex_lock(&semMTablasEC);
 	if (list_find(tablasSC, (void*) esTabla) != NULL) {
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 		return SC;
 	} else if (list_find(tablasSHC, (void*) esTabla) != NULL) {
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 		return SHC;
 	} else if(list_find(tablasEC, (void*) esTabla) != NULL) {
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
 		return EC;
 	} else {
-		return SC;
+		pthread_mutex_unlock(&semMTablasSC);
+		pthread_mutex_unlock(&semMTablasSHC);
+		pthread_mutex_unlock(&semMTablasEC);
+		log_error(logger_KERNEL, "No sé que consistencia tiene la tabla %s", tabla);
+		return CONSISTENCIA_INVALIDA;
 	}
 }
 
@@ -825,28 +993,92 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
  * En el caso de SHC necesita la key para calcular a qué memoria redirigir.
  * Return:
  * 	-> memoriaCorrespondiente :: config_memoria*  */
-config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia) {
+config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia, int key) {
 	config_memoria* memoriaCorrespondiente = NULL;
 	switch(tipoConsistencia) {
 		case SC:
+			pthread_mutex_lock(&semMMemoriaSC);
 			if (memoriaSc == NULL) {
+				pthread_mutex_unlock(&semMMemoriaSC);
 				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio SC");
 			} else {
-				memoriaCorrespondiente = memoriaSc;
+				memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));
+				memoriaCorrespondiente->ip = strdup(memoriaSc->ip);
+				memoriaCorrespondiente->puerto = strdup(memoriaSc->puerto);
+				memoriaCorrespondiente->numero = strdup(memoriaSc->numero);
+				pthread_mutex_unlock(&semMMemoriaSC);
 			}
 			break;
 		case SHC:
-			// todo: funcion hash
+			pthread_mutex_lock(&semMMemoriasSHC);
+			if (list_size(memoriasShc) != 0) {
+				unsigned int indiceSHC = obtenerIndiceHash(key, list_size(memoriasShc));
+				config_memoria* memAux = list_get(memoriasShc, indiceSHC);
+				memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));
+				memoriaCorrespondiente->ip = strdup(memAux->ip);
+				memoriaCorrespondiente->puerto = strdup(memAux->puerto);
+				memoriaCorrespondiente->numero = strdup(memAux->numero);
+				pthread_mutex_unlock(&semMMemoriasSHC);
+			} else {
+				pthread_mutex_unlock(&semMMemoriasSHC);
+				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio SHC");
+			}
 			break;
 		case EC:
-			// todo: funcion random
+			pthread_mutex_lock(&semMMemoriasEC);
+			if (list_size(memoriasEc) != 0) {
+				unsigned int indiceEC = obtenerIndiceRandom(list_size(memoriasEc));
+				config_memoria* memAux = list_get(memoriasEc, indiceEC);
+				memoriaCorrespondiente = (config_memoria*) malloc(sizeof(config_memoria));
+				memoriaCorrespondiente->ip = strdup(memAux->ip);
+				memoriaCorrespondiente->puerto = strdup(memAux->puerto);
+				memoriaCorrespondiente->numero = strdup(memAux->numero);
+				pthread_mutex_unlock(&semMMemoriasEC);
+			} else {
+				pthread_mutex_unlock(&semMMemoriasEC);
+				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio EC");
+			}
 			break;
 		default:
-			//error
 			log_error(logger_KERNEL, "No se puede resolver el request porque no tengo la metadata de la tabla");
 			break;
 	}
 	return memoriaCorrespondiente;
+}
+
+/* obtenerIndiceHash()
+ * Parametros:
+ * 	-> int :: key
+ * 	-> int :: maximo
+ * Descripcion: devuelve un numero en base a la key. Si la key es 0 devuelve cualquier número.
+ * El valor de retorno siempre es entre 0 y maximo
+ * Return:
+ * 	-> numero :: unsigned int  */
+unsigned int obtenerIndiceHash(int key, int maximo) {
+	if (key == 0) {
+		// https://github.com/sisoputnfrba/foro/issues/1326
+		return obtenerIndiceRandom(maximo);
+	} else {
+		unsigned int valorHash = 0;
+		unsigned int j = (key + 3) % 5 + maximo;
+		for (int i = 0; i < j; i++) {
+			valorHash += (key << j);
+		}
+		return valorHash % maximo;
+	}
+}
+
+/* obtenerIndiceRandom()
+ * Parametros:
+ * 	-> int :: maximo
+ * Descripcion: devuelve un numero random entre 0 y el max y
+ * usa como seed el DAIU_NUMBER de la config.
+ * Return:
+ * 	-> numero :: unsigned int  */
+unsigned int obtenerIndiceRandom(int maximo) {
+	unsigned int numero = 0;
+	numero = rand() % maximo;
+	return numero;
 }
 
 /* encontrarMemoriaPpal()
@@ -856,8 +1088,8 @@ config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia)
  * Return:
  * 	-> int  */
 int encontrarMemoriaPpal(config_memoria* memoria) {
-	return string_equals_ignore_case(memoria->ip, config_get_string_value(config, "IP_MEMORIA"))
-			&& string_equals_ignore_case(memoria->puerto, config_get_string_value(config, "PUERTO_MEMORIA"));
+	return string_equals_ignore_case(memoria->ip, ipMemoria)
+			&& string_equals_ignore_case(memoria->puerto, puertoMemoria);
 }
 /*
  * Funciones que procesan requests
@@ -871,6 +1103,13 @@ int encontrarMemoriaPpal(config_memoria* memoria) {
  * Return:
  * 	-> paqueteRecibido :: t_paquete*  */
 int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
+	pthread_mutex_lock(&semMMemorias);
+	if (list_size(memorias) == 0) {
+		pthread_mutex_unlock(&semMMemorias);
+		log_error(logger_KERNEL, "No puedo hacer %s porque no hay memorias levantadas", mensaje);
+		return FAILURE;
+	}
+	pthread_mutex_unlock(&semMMemorias);
 	clock_t tiempo;
 	double tiempoQueTardo = 0.0;
 	if (codigo == SELECT || codigo == INSERT) {
@@ -881,53 +1120,94 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	consistencia consistenciaTabla = NINGUNA;
 	int conexionTemporanea = conexionMemoria;
 	char** parametros = separarRequest(mensaje);
-	// si es un describe global no hay tabla
-	int cantidadParametros = longitudDeArrayDeStrings(parametros) - 1;
 	config_memoria* memoriaCorrespondiente;
-	if (codigo == DESCRIBE && cantidadParametros == PARAMETROS_DESCRIBE_GLOBAL) {
-		// describe global va siempre a la ppal, todo: que pasa si se desconecta?
-		memoriaCorrespondiente = list_find(memorias, (void*)encontrarMemoriaPpal);
+	char* numMemoria;
+	if (codigo == DESCRIBE) {
+		// https://github.com/sisoputnfrba/foro/issues/1391 chequearlo
+		pthread_mutex_lock(&semMMemorias);
+		unsigned int indice = obtenerIndiceRandom(list_size(memorias));
+		memoriaCorrespondiente = list_get(memorias, indice);
+		numMemoria = strdup(memoriaCorrespondiente->numero);
+		if (!string_equals_ignore_case(memoriaCorrespondiente->ip, ipMemoria)
+			|| !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
+			conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
+		}
+		pthread_mutex_unlock(&semMMemorias);
 	} else {
+		int key = 0;
 		if (codigo == CREATE) {
 			consistenciaTabla = obtenerEnumConsistencia(parametros[2]);
 		} else {
 			consistenciaTabla = obtenerConsistenciaTabla(parametros[1]);
 		}
-		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla);
+		if (codigo == SELECT || codigo == INSERT) {
+			key = (int) parametros[2];
+		}
+		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla, key);
 		if(memoriaCorrespondiente == NULL) {
 			respuesta = FAILURE;
 			liberarArrayDeChar(parametros);
 			return respuesta;
 		} else {
-			if (!string_equals_ignore_case(memoriaCorrespondiente->ip, config_get_string_value(config, "IP_MEMORIA"))
-				&& !string_equals_ignore_case(memoriaCorrespondiente->puerto, config_get_string_value(config, "PUERTO_MEMORIA"))) {
+			if (!string_equals_ignore_case(memoriaCorrespondiente->ip, ipMemoria)
+				|| !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
 				conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
 			}
+			numMemoria = strdup(memoriaCorrespondiente->numero);
+			liberarConfigMemoria(memoriaCorrespondiente);
 		}
 	}
 	enviar(consistenciaTabla, mensaje, conexionTemporanea);
 	paqueteRecibido = recibir(conexionTemporanea);
 	respuesta = paqueteRecibido->palabraReservada;
-	// todo: si la respuesta es full, forzar journal y mandar request de vuelta?
 	if (respuesta == SUCCESS) {
-		log_info(logger_KERNEL, "La respuesta del request %s es %s \n", mensaje, paqueteRecibido->request);
 		if (codigo == DESCRIBE) {
+			log_info(logger_KERNEL, "llego %s", paqueteRecibido->request);
 			actualizarTablas(paqueteRecibido->request);
 		}
-	} else {
+		if(codigo == SELECT) {
+			log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
+		} else {
+			log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
+		}
+	} else if (respuesta == MEMORIA_FULL) {
+		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		paqueteRecibido = recibir(conexionTemporanea);
+		respuesta = paqueteRecibido->palabraReservada;
+		if (respuesta == SUCCESS) {
+			enviar(consistenciaTabla, mensaje, conexionTemporanea);
+			paqueteRecibido = recibir(conexionTemporanea);
+			respuesta = paqueteRecibido->palabraReservada;
+			if (respuesta == SUCCESS) {
+				if(codigo == SELECT) {
+					log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
+				} else {
+					log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
+				}
+			} else {
+				log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
+			}
+		} else {
+			log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
+		}
+	}
+	else {
+		//todo: ver que pasa que se traba con describe y otras requests invalidas
+		perror("MSJ");
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
 	if (conexionTemporanea != conexionMemoria) {
 		liberar_conexion(conexionTemporanea);
 	}
 	eliminar_paquete(paqueteRecibido);
-	//free(memoriaCorrespondiente);
 	liberarArrayDeChar(parametros);
 	if (codigo == SELECT || codigo == INSERT) {
 		tiempo = clock() - tiempo;
-		tiempoQueTardo = ((double)tiempo)/CLOCKS_PER_SEC; // in seconds
+		tiempoQueTardo = ((double)tiempo)/CLOCKS_PER_SEC;
 	}
-	aumentarContadores(consistenciaTabla, memoriaCorrespondiente->numero, codigo, tiempoQueTardo);
+	log_debug(logger_KERNEL, "Le mande a a mem %s", numMemoria);
+	aumentarContadores(numMemoria, codigo, tiempoQueTardo, consistenciaTabla);
+	free(numMemoria);
 	return respuesta;
 }
 
@@ -940,16 +1220,18 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
  * Return:
  * 	-> void */
 void procesarJournal(int soloASHC) {
+	// todo: sumar a metrica
 	// ahora recorro la lista filtrada y creo las conexiones para mandar journal
 	// si la memoria es la ppal que ya estoy conectada, no me tengo que conectar
 	void enviarJournal(config_memoria* memoriaAConectarse) {
 		int conexionTemporanea = conexionMemoria;
-		if (!string_equals_ignore_case(memoriaAConectarse->ip, config_get_string_value(config, "IP_MEMORIA"))
-			&& !string_equals_ignore_case(memoriaAConectarse->puerto, config_get_string_value(config, "PUERTO_MEMORIA"))) {
+		if (!string_equals_ignore_case(memoriaAConectarse->ip, ipMemoria)
+			&& !string_equals_ignore_case(memoriaAConectarse->puerto, puertoMemoria)) {
 			conexionTemporanea = crearConexion(memoriaAConectarse->ip, memoriaAConectarse->puerto);
 		}
 		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
 		log_info(logger_KERNEL, "Se envió el JOURNAL a la memoria con numero %s", memoriaAConectarse->numero);
+		//todo: descomentar cuando memoria tenga journal
 		/*t_paquete* paqueteRecibido = recibir(conexionTemporanea);
 		int respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
@@ -963,13 +1245,16 @@ void procesarJournal(int soloASHC) {
 		// eliminar_paquete(paqueteRecibido);
 	}
 	if(soloASHC == TRUE) {
+		pthread_mutex_lock(&semMMemoriasSHC);
 		list_iterate(memoriasShc, (void*)enviarJournal);
+		pthread_mutex_unlock(&semMMemoriasSHC);
 	} else {
 		t_list* memoriasSinRepetir = list_create();
 		void agregarMemoriaSinRepetir(config_memoria* memoria) {
 			int existeUnaIgual(config_memoria* memoriaAgregada) {
 				return string_equals_ignore_case(memoriaAgregada->ip, memoria->ip) &&
-						string_equals_ignore_case(memoriaAgregada->puerto, memoria->puerto);
+						string_equals_ignore_case(memoriaAgregada->puerto, memoria->puerto) &&
+						string_equals_ignore_case(memoriaAgregada->numero, memoria->numero);
 			}
 			if (!list_any_satisfy(memoriasSinRepetir, (void*)existeUnaIgual)) {
 				list_add(memoriasSinRepetir, memoria);
@@ -977,12 +1262,24 @@ void procesarJournal(int soloASHC) {
 		}
 		// me guardo una lista con puerto e ip sii no existe en la lista
 		// porque una memoria puede tener + de 1 criterio
+		pthread_mutex_lock(&semMMemoriaSC);
 		if(memoriaSc != NULL) {
 			list_add(memoriasSinRepetir, memoriaSc);
 		}
+		pthread_mutex_unlock(&semMMemoriaSC);
+		pthread_mutex_lock(&semMMemoriasSHC);
 		list_iterate(memoriasShc,(void*)agregarMemoriaSinRepetir);
+		pthread_mutex_unlock(&semMMemoriasSHC);
+		pthread_mutex_lock(&semMMemoriasEC);
 		list_iterate(memoriasEc,(void*)agregarMemoriaSinRepetir);
+		pthread_mutex_unlock(&semMMemoriasEC);
+		pthread_mutex_lock(&semMMemoriaSC);
+		pthread_mutex_lock(&semMMemoriasSHC);
+		pthread_mutex_lock(&semMMemoriasEC);
 		list_iterate(memoriasSinRepetir, (void*)enviarJournal);
+		pthread_mutex_unlock(&semMMemoriaSC);
+		pthread_mutex_unlock(&semMMemoriasSHC);
+		pthread_mutex_unlock(&semMMemoriasEC);
 		list_destroy(memoriasSinRepetir);
 	}
 
@@ -1000,7 +1297,9 @@ void procesarRun(t_queue* colaRun) {
 	request_procesada* request;
 	int quantumActual = 0;
 	//el while es fin de Q o fin de cola
+	pthread_mutex_lock(&semMQuantum);
 	while(!queue_is_empty(colaRun) && quantumActual < quantum) {
+		pthread_mutex_unlock(&semMQuantum);
 		request = (request_procesada*) malloc(sizeof(request_procesada));
 		request->codigo = ((request_procesada*) queue_peek(colaRun))->codigo;
 		request->request = strdup((char*)((request_procesada*)queue_peek(colaRun))->request);
@@ -1018,12 +1317,14 @@ void procesarRun(t_queue* colaRun) {
 		free(queue_pop(colaRun));
 		liberarRequestProcesada(request);
 		quantumActual++;
+		usleep(sleepEjecucion*1000);
+		pthread_mutex_lock(&semMQuantum);
 	}
 	if (quantumActual == quantum && queue_is_empty(colaRun) == FALSE) {
+		pthread_mutex_unlock(&semMQuantum);
 		//termino por fin de q
 		log_info(logger_KERNEL, "Vuelvo a ready");
 		request_procesada* _request = (request_procesada*)(malloc(sizeof(request_procesada)));
-		//_request->request = (t_queue*) (malloc(sizeof(t_queue)));
 		_request->request = colaRun;
 		_request->codigo = RUN;
 		pthread_mutex_lock(&semMColaReady);
@@ -1031,6 +1332,7 @@ void procesarRun(t_queue* colaRun) {
 		pthread_mutex_unlock(&semMColaReady);
 		sem_post(&semRequestReady);
 	} else if (queue_is_empty(colaRun) == TRUE){
+		pthread_mutex_unlock(&semMQuantum);
 		// si estoy aca es porque ya ejecuto toda la cola
 		log_info(logger_KERNEL, "Finalizó la ejecución del script");
 		queue_destroy(colaRun);
@@ -1062,28 +1364,65 @@ int procesarAdd(char* mensaje) {
 	int esMemoriaCorrecta(config_memoria* memoriaActual) {
 		return string_equals_ignore_case(memoriaActual->numero, requestDividida[2]);
 	}
+	pthread_mutex_lock(&semMMemorias);
 	memoria = (config_memoria*) list_find(memorias, (void*)esMemoriaCorrecta);
 	if (memoria == NULL) {
+		pthread_mutex_unlock(&semMMemorias);
 		estado = FAILURE;
 		log_error(logger_KERNEL, "No encontré la memoria %s", requestDividida[2]);
 	} else {
+		config_memoria* memAux = (config_memoria*) malloc(sizeof(config_memoria));
+		memAux->ip = strdup(memoria->ip);
+		memAux->puerto = strdup(memoria->puerto);
+		memAux->numero = strdup(memoria->numero);
+		pthread_mutex_unlock(&semMMemorias);
+		int existeUnaIgual(config_memoria* memoriaEnLista) {
+			return string_equals_ignore_case(memoriaEnLista->ip, memAux->ip) &&
+					string_equals_ignore_case(memoriaEnLista->puerto, memAux->puerto) &&
+					string_equals_ignore_case(memoriaEnLista->numero, memAux->numero);
+		}
 		switch (_consistencia) {
 			case SC:
-				memoriaSc = memoria;
+				pthread_mutex_lock(&semMMemoriaSC);
+				if (memoriaSc != NULL) {
+					liberarConfigMemoria(memoriaSc);
+					memoriaSc = NULL;
+				}
+				memoriaSc = memAux;
+				pthread_mutex_unlock(&semMMemoriaSC);
+				log_info(logger_KERNEL, "Se agregó la memoria %s al criterio SC", memAux->numero);
 				break;
 			case SHC:
-				list_add(memoriasShc, memoria);
-				//procesarJournal(TRUE);
+				pthread_mutex_lock(&semMMemoriasSHC);
+				if (!list_any_satisfy(memoriasShc, (void*)existeUnaIgual)) {
+					list_add(memoriasShc, memAux);
+					pthread_mutex_unlock(&semMMemoriasSHC);
+					log_info(logger_KERNEL, "Se agregó la memoria %s al criterio SHC", memAux->numero);
+					procesarJournal(TRUE);
+				} else {
+					pthread_mutex_unlock(&semMMemoriasSHC);
+					log_info(logger_KERNEL, "La memoria %s ya existe en la lista de memorias SHC", memAux->numero);
+					liberarConfigMemoria(memAux);
+				}
 				break;
 			case EC:
-				list_add(memoriasEc, memoria);
+				pthread_mutex_lock(&semMMemoriasEC);
+				if (!list_any_satisfy(memoriasEc, (void*)existeUnaIgual)) {
+					list_add(memoriasEc, memAux);
+					pthread_mutex_unlock(&semMMemoriasEC);
+					log_info(logger_KERNEL, "Se agregó la memoria %s al criterio EC", memAux->numero);
+				} else {
+					pthread_mutex_unlock(&semMMemoriasEC);
+					log_info(logger_KERNEL, "La memoria %s ya existe en la lista de memorias EC", memAux->numero);
+					liberarConfigMemoria(memAux);
+				}
 				break;
 			default:
+				liberarConfigMemoria(memAux);
+				log_info(logger_KERNEL, "Ocurrió un error al agregar la memoria al criterio");
 				break;
 		}
 	}
-	//free(mensaje);
 	liberarArrayDeChar(requestDividida);
-	//free(memoria); hay que hacer este free???
 	return estado;
 }
