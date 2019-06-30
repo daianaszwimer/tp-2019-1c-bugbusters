@@ -125,7 +125,7 @@ void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
-void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresMemoria);
+void guardarRespuestaDeLFSaCACHE(char*,t_paquete*,t_erroresMemoria);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
@@ -135,7 +135,7 @@ void actualizarTimestamp(t_marco*);
 void actualizarPagina (t_marco*, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
-t_marco* crearPagina(t_marco*,uint16_t, char*, unsigned long long);
+t_marco* crearMarcoDePagina(t_marco*,uint16_t, char*, unsigned long long);
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long);
 void crearSegmento(t_segmento*,char*);
 
