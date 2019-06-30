@@ -38,3 +38,53 @@
 [INFO] 13:45:20:671 Lfs/(24109:24109): Se agrego la tabla a la memtable y se agrego el registro
 [INFO] 13:48:30:374 Lfs/(24222:24222): Se agrego la tabla a la memtable y se agrego el registro
 [INFO] 13:48:30:375 Lfs/(24222:24222): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 11:28:26:164 Lfs/(12433:12433): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 11:28:26:167 Lfs/(12433:12433): File System no detectado
+[INFO] 11:28:47:893 Lfs/(12433:12433): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 11:28:47:893 Lfs/(12433:12433): Hilo de consola creado
+[INFO] 11:28:47:893 Lfs/(12433:12433): Hilo de recibir memorias creado
+[INFO] 11:28:47:893 Lfs/(12433:12433): Hilo de Dump iniciado
+[INFO] 11:28:47:893 Lfs/(12433:12451): Lissandra lista para recibir Memorias
+[INFO] 11:29:00:522 Lfs/(12433:12450): Me llego un CREATE
+[INFO] 11:29:00:523 Lfs/(12433:12450): Mensaje a enviar:
+[INFO] 11:29:00:523 Lfs/(12433:12450): 
+[INFO] 11:29:04:18 Lfs/(12433:12433): Hilo de consola finalizado
+[INFO] 11:29:04:19 Lfs/(12433:12433): Hilo recibir memorias finalizado
+[INFO] 11:29:04:19 Lfs/(12433:12433): Hilo dumpeo finalizado
+[INFO] 11:29:04:19 Lfs/(12433:12433): Finalizando LFS
+[INFO] 11:29:35:52 Lfs/(12510:12510): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 11:29:35:62 Lfs/(12510:12510): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 11:29:35:62 Lfs/(12510:12510): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 16:30:00:298 Lfs/(16793:16793): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 16:30:00:299 Lfs/(16793:16793): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 16:30:00:299 Lfs/(16793:16793): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 16:32:54:412 Lfs/(16793:16793): Finalizando LFS
+[INFO] 16:50:33:722 Lfs/(17334:17334): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 16:50:33:722 Lfs/(17334:17334): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 16:50:33:722 Lfs/(17334:17334): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 16:57:41:479 Lfs/(17615:17615): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 16:57:41:479 Lfs/(17615:17615): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 16:57:41:479 Lfs/(17615:17615): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:10:40:867 Lfs/(18304:18304): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 17:10:40:867 Lfs/(18304:18304): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 17:10:40:867 Lfs/(18304:18304): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:24:42:603 Lfs/(18836:18836): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 17:24:42:603 Lfs/(18836:18836): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 17:24:42:603 Lfs/(18836:18836): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:25:29:385 Lfs/(18918:18918): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 17:25:29:385 Lfs/(18918:18918): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 17:25:29:385 Lfs/(18918:18918): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:28:59:488 Lfs/(19033:19033): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 17:28:59:489 Lfs/(19033:19033): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 17:28:59:489 Lfs/(19033:19033): Se agrego la tabla a la memtable y se agrego el registro
+[DEBUG] 17:29:43:565 Lfs/(19033:19033): Esta es la prueba 1
+[DEBUG] 17:30:08:983 Lfs/(19033:19033): Ahora es la prueba 2
+[INFO] 17:32:40:345 Lfs/(19361:19361): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 17:32:40:345 Lfs/(19361:19361): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 17:32:40:345 Lfs/(19361:19361): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:42:42:13 Lfs/(19786:19786): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 17:42:42:13 Lfs/(19786:19786): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 17:42:42:13 Lfs/(19786:19786): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 17:43:46:341 Lfs/(19924:19924): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 17:43:46:341 Lfs/(19924:19924): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 17:43:46:341 Lfs/(19924:19924): Se agrego la tabla a la memtable y se agrego el registro

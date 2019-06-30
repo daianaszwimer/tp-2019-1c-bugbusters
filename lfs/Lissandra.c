@@ -32,7 +32,6 @@ int main(int argc, char* argv[]) {
 	log_info(logger_LFS, "Hilo recibir memorias finalizado");
 	pthread_join(hiloDumpeo, NULL);
 	log_info(logger_LFS, "Hilo dumpeo finalizado");
-
 	liberarMemoriaLFS();
 	return EXIT_SUCCESS;
 }
@@ -145,7 +144,7 @@ void crearFSMetadata(char* pathBitmap, char* pathFileMetadata){
 
 void crearBloques(){
 	char* fileBloque;
-	for (int i = 1; i <= blocks; i++) {
+	for (int i = 0; i < blocks; i++) {
 		fileBloque = string_from_format("%s/%d.bin", pathBloques, i);
 		FILE* bloqueFile = fopen(fileBloque, "w");
 		if(bloqueFile){
@@ -182,6 +181,7 @@ void liberarMemoriaLFS(){
 }
 
 void* leerDeConsola(void* arg) {
+	char* mensajeDeError;
 	while (1) {
 		mensaje = readline(">");
 		if (!(strncmp(mensaje, "", 1) != 0)) {
@@ -190,14 +190,14 @@ void* leerDeConsola(void* arg) {
 			free(mensaje);
 			break;
 		}
-		if(!validarMensaje(mensaje, LFS, logger_LFS)){
+
+		if(validarMensaje(mensaje, LFS, &mensajeDeError) == SUCCESS){
 			char** request = string_n_split(mensaje, 2, " ");
 			cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0], LFS);
 			interpretarRequest(palabraReservada, mensaje, NULL);
 			liberarArrayDeChar(request);
-
 		}else{
-			log_error(logger_LFS, "Request invalida");
+			log_error(logger_LFS, mensajeDeError);
 		}
 		free(mensaje);
 	}
@@ -218,7 +218,7 @@ void* recibirMemorias(void* arg) {
 			if(!pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria, (void*) memoria_fd)) {
 				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
 				enviarHandshakeLFS(30, memoria_fd);
-				log_info(logger_LFS, mensaje);
+				log_debug(logger_LFS, mensaje);
 				pthread_detach(hiloRequest);
 				free(mensaje);
 			} else {
@@ -243,6 +243,7 @@ void* conectarConMemoria(void* arg) {
 			close(memoria_fd);
 			break;
 		}
+		log_info(logger_LFS, "Request: %s de la memoria %i",paqueteRecibido->request, memoria_fd);
 		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
 		eliminar_paquete(paqueteRecibido);
 	}
@@ -253,7 +254,6 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	char** requestSeparada = separarRequest(request);
 	errorNo errorNo = SUCCESS;
 	char* mensaje = strdup("");
-	//TODO case memoria se desconecto
 	if(memoria_fd != NULL){
 		log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
 	}
@@ -287,6 +287,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			log_info(logger_LFS, "Me llego un DESCRIBE");
 			break;
 		case DROP:
+			procesarDrop(requestSeparada[1]);
 			log_info(logger_LFS, "Me llego un DROP");
 			break;
 		default:
@@ -319,9 +320,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	}
 
 	free(mensajeDeError);
-
 	//sleep(3);
-	log_info(logger_LFS, "Mensaje a enviar:%s", mensaje);
 	if (memoria_fd != NULL) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{
@@ -329,6 +328,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	}
 	free(mensaje);
 	liberarArrayDeChar(requestSeparada);
+	log_info(logger_LFS, "---------------------------------------");
 }
 
 

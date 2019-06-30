@@ -41,7 +41,8 @@ typedef enum
 	SEGMENTOEXISTENTE = 99,
 	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101,
-	MEMORIAFULL =-10102
+	MEMORIAFULL =-10102,
+	JOURNALTIME
 } t_erroresMemoria;
 
 //-----------------STRUCTS------------------
@@ -113,7 +114,7 @@ void inicializacionDeMemoria(void);
 int obtenerIndiceMarcoDisponible();
 
 void leerDeConsola(void);
-int validarRequest(char*);
+void validarRequest(char*);
 
 void escucharMultiplesClientes(void);
 void interpretarRequest(int, char*,t_caller, int);
@@ -130,7 +131,7 @@ void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 
-void actualizarTimestamp(t_elemTablaDePaginas*);
+void actualizarTimestamp(t_marco*);
 void actualizarPagina (t_marco*, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
@@ -143,20 +144,21 @@ void procesarCreate(cod_request, char*,consistencia, t_caller, int);
 void create(cod_request,char*);
 t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 
-//void liberarElementoDePag(t_elemTablaDePaginas* self);
-
-void eliminarElemTablaDePaginas(t_elemTablaDePaginas*);
-//void eliminarPagina(t_pagina*);
 
 int obtenerPaginaDisponible(t_marco**);
 
-void eliminarElemTablaSegmentos(t_segmento*);
 void liberarTabla(t_segmento*);
-void liberarEstructurasMemoria(t_tablaDeSegmentos*);
+void eliminarElemTablaPagina(t_elemTablaDePaginas* );
+void eliminarElemTablaSegmentos(t_segmento*);
+void liberarEstructurasMemoria();
 void liberarMemoria();
 void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
 void procesarDescribe(cod_request, char*,t_caller,int);
 void procesarDrop(cod_request, char* ,consistencia , t_caller , int);
 
+int LRU(t_elemTablaDePaginas**);
+int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas*);
+int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
+t_elemTablaDePaginas* correrAlgoritmoLRU(int*);
 
 #endif /* MEMORIA_H_ */

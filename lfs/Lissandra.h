@@ -20,8 +20,6 @@
 #include <sys/mman.h>
 #include "API.h"
 #include "Dump.h"
-#include "Compactador.h"
-
 
 t_log* logger_LFS;
 t_config* config;
@@ -34,6 +32,10 @@ char* pathTablas;
 char* pathMetadata;
 char* pathBloques;
 int blocks;
+
+typedef struct{
+	int valor;
+} t_int;
 
 typedef struct{
 	unsigned long long timestamp;
@@ -78,8 +80,6 @@ int crearDirectorio(char*);
 void crearFS(char*, char*);
 errorNo crearParticiones(char*, int);
 void vaciarTabla(t_tabla*);
-t_list* obtenerRegistrosDeMemtable(char*, int);
-t_list* obtenerRegistrosDeTmp(char*, int);
 char* obtenerMetadata(char*);
 
 #endif /* LFS_H_ */

@@ -218,3 +218,397 @@
 [INFO] 10:52:04:619 Kernel/(10424:10441): pasaron 30s
 [INFO] 10:52:24:710 Kernel/(10424:10456): voy a asignar a la mem ip 127.0.0.1 puerto 8001
 [INFO] 10:52:35:59 Kernel/(10424:10441): pasaron 30s
+[INFO] 19:51:35:436 Kernel/(27235:27235): ----------------INICIO DE KERNEL--------------
+[INFO] 19:51:35:449 Kernel/(27235:27247): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 19:59:48:24 Kernel/(27532:27532): ----------------INICIO DE KERNEL--------------
+[INFO] 19:59:48:40 Kernel/(27532:27573): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 20:00:03:725 Kernel/(27532:27579): while
+[INFO] 22:42:49:266 Kernel/(3113:3113): ----------------INICIO DE KERNEL--------------
+[INFO] 22:42:49:271 Kernel/(3113:3125): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 22:42:53:630 Kernel/(3113:3134): Cambió el archivo de config
+[INFO] 09:22:03:52 Kernel/(3113:3951): Se agregó la memoria 1 al criterio SC
+[INFO] 09:22:03:53 Kernel/(3113:3951): libero request
+[INFO] 09:27:07:397 Kernel/(4092:4092): ----------------INICIO DE KERNEL--------------
+[INFO] 09:27:07:410 Kernel/(4092:4106): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 09:27:22:250 Kernel/(4092:4122): Cambió el archivo de config
+[INFO] 09:27:31:703 Kernel/(4092:4125): Se agregó la memoria 1 al criterio SC
+[INFO] 09:27:31:703 Kernel/(4092:4125): libero request
+[INFO] 09:29:03:533 Kernel/(4221:4221): ----------------INICIO DE KERNEL--------------
+[INFO] 09:29:03:551 Kernel/(4221:4231): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 09:29:24:675 Kernel/(4221:4246): Cambió el archivo de config
+[INFO] 09:29:24:711 Kernel/(4221:4251): Se agregó la memoria 1 al criterio SC
+[INFO] 09:29:24:712 Kernel/(4221:4251): libero request
+[INFO] 09:30:19:337 Kernel/(4221:4267): El request CREATE PELICULAS SC 2 35000 se realizó con éxito
+[INFO] 09:30:19:337 Kernel/(4221:4267): libero request
+[INFO] 09:30:31:155 Kernel/(4221:4267): Agregue la tabla PELICULAS al criterio SC
+[INFO] 09:30:31:157 Kernel/(4221:4267): El request DESCRIBE PELICULAS se realizó con éxito
+[INFO] 09:30:31:157 Kernel/(4221:4267): libero request
+[INFO] 09:30:41:760 Kernel/(4221:4267): El request INSERT PELICULAS 3128 "Terminator" se realizó con éxito
+[INFO] 09:30:41:761 Kernel/(4221:4267): libero request
+[INFO] 11:54:30:292 Kernel/(7200:7200): ----------------INICIO DE KERNEL--------------
+[INFO] 11:54:42:353 Kernel/(7200:7212): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 11:54:42:364 Kernel/(7200:7222): Cambió el archivo de config
+[INFO] 11:54:49:9 Kernel/(7200:7228): Se agregó la memoria 1 al criterio EC
+[ERROR] 11:57:36:144 Kernel/(7200:7308): No sé que consistencia tiene la tabla A
+[ERROR] 11:57:36:146 Kernel/(7200:7308): No se puede resolver el request porque no tengo la metadata de la tabla
+[INFO] 11:57:36:147 Kernel/(7200:7308): libero request
+[INFO] 12:07:21:825 Kernel/(7656:7656): ----------------INICIO DE KERNEL--------------
+[INFO] 12:07:21:835 Kernel/(7656:7666): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 12:07:25:458 Kernel/(7656:7674): Cambió el archivo de config
+[INFO] 12:07:33:116 Kernel/(7656:7678): Se agregó la memoria 1 al criterio EC
+[INFO] 12:07:33:120 Kernel/(7656:7678): libero request
+[INFO] 12:11:08:172 Kernel/(7656:7692): El request CREATE D EC 4 4000 se realizó con éxito
+[INFO] 12:11:08:174 Kernel/(7656:7692): libero request
+[INFO] 12:12:28:134 Kernel/(7656:7763): Se agregó la memoria 1 al criterio SC
+[INFO] 12:12:28:135 Kernel/(7656:7763): libero request
+[INFO] 12:12:41:864 Kernel/(7656:7747): El request DESCRIBE D se realizó con éxito
+[INFO] 12:12:41:865 Kernel/(7656:7747): libero request
+[INFO] 16:46:05:742 Kernel/(12459:12459): ----------------INICIO DE KERNEL--------------
+[INFO] 16:46:05:755 Kernel/(12459:12473): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 16:46:13:940 Kernel/(12459:12477): Agregue la tabla S al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla COSAS al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla AVES al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla COLORES al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla LULI al criterio EC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla SERIES al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla WILLY al criterio EC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla DAIU al criterio EC
+[INFO] 16:46:13:941 Kernel/(12459:12477): Agregue la tabla D al criterio EC
+[INFO] 16:46:13:941 Kernel/(12459:12477): El request DESCRIBE se realizó con éxito
+[INFO] 16:46:13:941 Kernel/(12459:12477): libero request
+[INFO] 16:46:38:3 Kernel/(12512:12512): ----------------INICIO DE KERNEL--------------
+[INFO] 16:46:39:13 Kernel/(12512:12520): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla S al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla COSAS al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla AVES al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla COLORES al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla LULI al criterio EC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla SERIES al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla WILLY al criterio EC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla DAIU al criterio EC
+[INFO] 16:46:41:332 Kernel/(12512:12524): Agregue la tabla D al criterio EC
+[INFO] 16:46:41:332 Kernel/(12512:12524): El request DESCRIBE se realizó con éxito
+[INFO] 16:46:41:332 Kernel/(12512:12524): libero request
+[INFO] 16:48:47:64 Kernel/(12569:12569): ----------------INICIO DE KERNEL--------------
+[INFO] 16:48:47:75 Kernel/(12569:12579): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 16:48:51:5 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:48:51:8 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:48:51:9 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:48:51:9 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:48:51:9 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:48:51:9 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:48:51:9 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:48:51:9 Kernel/(12569:12583): libero request
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:49:06:620 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:49:06:620 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:49:06:620 Kernel/(12569:12583): libero request
+[INFO] 16:49:32:295 Kernel/(12569:12584): Cambió el archivo de config
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:49:34:81 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:49:34:82 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:49:34:82 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:49:34:82 Kernel/(12569:12583): libero request
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:50:44:221 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:50:44:222 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:50:44:222 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:50:44:222 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:50:44:222 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:50:44:222 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:50:44:222 Kernel/(12569:12583): libero request
+[INFO] 16:53:14:318 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:53:14:319 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:53:14:319 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:53:14:319 Kernel/(12569:12583): libero request
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:53:29:921 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:53:29:921 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:53:29:921 Kernel/(12569:12583): libero request
+[INFO] 16:53:45:523 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:53:45:524 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:53:45:524 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:53:45:524 Kernel/(12569:12583): libero request
+[INFO] 16:54:01:126 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:54:01:126 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:54:01:126 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:54:01:126 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:54:01:126 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:54:01:126 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:54:01:126 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:54:01:126 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:54:01:126 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:54:01:127 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:54:01:127 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:54:01:127 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:54:01:127 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:54:01:127 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:54:01:127 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:54:01:127 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:54:01:127 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:54:01:127 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:54:01:127 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:54:01:127 Kernel/(12569:12583): libero request
+[INFO] 16:54:16:729 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:54:16:730 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:54:16:730 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:54:16:730 Kernel/(12569:12583): libero request
+[INFO] 16:54:23:727 Kernel/(12569:12584): Cambió el archivo de config
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:54:32:332 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:54:32:333 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:54:32:333 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:54:32:333 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:54:32:333 Kernel/(12569:12583): libero request
+[INFO] 16:54:38:877 Kernel/(12569:12584): Cambió el archivo de config
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:54:47:935 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:54:47:936 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:54:47:936 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:54:47:936 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:54:47:936 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:54:47:936 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:54:47:936 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:54:47:936 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:54:47:936 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:54:47:936 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:54:47:936 Kernel/(12569:12583): libero request
+[INFO] 16:55:03:537 Kernel/(12569:12583): Agregue la tabla S al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla COSAS al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla PELICULAS al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla POSTRES al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla AVES al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla COLORES al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla LULI al criterio EC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla FRUTAS al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla MARINOS al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla SERIES al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla LIBROS al criterio SC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla WILLY al criterio EC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla DAIU al criterio EC
+[INFO] 16:55:03:538 Kernel/(12569:12583): Agregue la tabla D al criterio EC
+[INFO] 16:55:03:538 Kernel/(12569:12583): El request DESCRIBE se realizó con éxito
+[INFO] 16:55:03:538 Kernel/(12569:12583): libero request
+[INFO] 17:02:04:999 Kernel/(12735:12735): ----------------INICIO DE KERNEL--------------
+[INFO] 17:02:04:999 Kernel/(12735:12777): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 17:02:10:200 Kernel/(12735:12781): Agregue la tabla S al criterio SC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla COSAS al criterio SC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla PELICULAS al criterio SC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla POSTRES al criterio SC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla AVES al criterio SC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla COLORES al criterio SC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla LULI al criterio EC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 17:02:10:201 Kernel/(12735:12781): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 17:02:10:202 Kernel/(12735:12781): Agregue la tabla FRUTAS al criterio SC
+[INFO] 17:02:10:202 Kernel/(12735:12781): Agregue la tabla MARINOS al criterio SC
+[INFO] 17:02:10:202 Kernel/(12735:12781): Agregue la tabla SERIES al criterio SC
+[INFO] 17:02:10:202 Kernel/(12735:12781): Agregue la tabla LIBROS al criterio SC
+[INFO] 17:02:10:202 Kernel/(12735:12781): Agregue la tabla WILLY al criterio EC
+[INFO] 17:02:10:202 Kernel/(12735:12781): Agregue la tabla DAIU al criterio EC
+[INFO] 17:02:10:202 Kernel/(12735:12781): Agregue la tabla D al criterio EC
+[INFO] 17:02:10:202 Kernel/(12735:12781): El request DESCRIBE se realizó con éxito
+[INFO] 17:02:10:202 Kernel/(12735:12781): libero request
+[INFO] 17:02:20:741 Kernel/(12735:12782): Cambió el archivo de config
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla S al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla COSAS al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla PELICULAS al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla PLATOS_PRINCIPALES al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla POSTRES al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla AVES al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla COLORES al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla LULI al criterio EC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla NOVELAS_ARGENTINAS al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla FRUTAS al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla MARINOS al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla SERIES al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla LIBROS al criterio SC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla WILLY al criterio EC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla DAIU al criterio EC
+[INFO] 17:10:46:853 Kernel/(12735:12781): Agregue la tabla D al criterio EC
+[INFO] 17:10:46:853 Kernel/(12735:12781): El request DESCRIBE se realizó con éxito
+[INFO] 17:10:46:853 Kernel/(12735:12781): libero request
+[INFO] 17:20:27:288 Kernel/(13220:13220): ----------------INICIO DE KERNEL--------------
+[INFO] 17:26:13:40 Kernel/(13572:13572): ----------------INICIO DE KERNEL--------------
+[INFO] 17:38:25:366 Kernel/(14251:14251): ----------------INICIO DE KERNEL--------------
+[DEBUG] 17:38:30:821 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:37:856 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[INFO] 17:38:37:856 Kernel/(14251:14266): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[DEBUG] 17:38:40:202 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:41:371 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:42:372 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:43:373 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:44:374 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:45:375 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:46:376 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:47:376 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:48:377 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:49:378 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[DEBUG] 17:38:50:379 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
