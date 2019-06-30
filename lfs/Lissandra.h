@@ -82,8 +82,6 @@ int crearDirectorio(char*);
 void crearFS(char*, char*);
 errorNo crearParticiones(char*, int);
 void vaciarTabla(t_tabla*);
-t_list* obtenerRegistrosDeMemtable(char*, int);
-t_list* obtenerRegistrosDeTmp(char*, int);
 char* obtenerMetadata(char*);
 
 #endif /* LFS_H_ */
