@@ -82,7 +82,9 @@ void inicializarVariables() {
 	tablasSHC = list_create();
 	tablasEC = list_create();
 	// Metricas
-	cargaMemoria = list_create();
+	cargaMemoriaSC = list_create();
+	cargaMemoriaSHC = list_create();
+	cargaMemoriaEC = list_create();
 }
 
 /* liberarMemoria()
@@ -917,19 +919,19 @@ void agregarTablaACriterio(char* tabla) {
 				pthread_mutex_lock(&semMTablasSC);
 				list_add(tablasSC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasSC);
-				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
+				//log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
 				break;
 			case SHC:
 				pthread_mutex_lock(&semMTablasSHC);
 				list_add(tablasSHC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasSHC);
-				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
+				//log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
 				break;
 			case EC:
 				pthread_mutex_lock(&semMTablasEC);
 				list_add(tablasEC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasEC);
-				log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
+				//log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
 				break;
 			default:
 				log_error(logger_KERNEL, "La tabla %s no tiene asociada un criterio válido y no se actualizó en la estructura de datos",
@@ -1209,7 +1211,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		tiempoQueTardo = ((double)tiempo)/CLOCKS_PER_SEC;
 	}
 	log_debug(logger_KERNEL, "Le mande a a mem %s", numMemoria);
-	aumentarContadores(numMemoria, codigo, tiempoQueTardo);
+	aumentarContadores(numMemoria, codigo, tiempoQueTardo, consistenciaTabla);
 	free(numMemoria);
 	return respuesta;
 }
