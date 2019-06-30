@@ -261,7 +261,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case DROP:
 			log_info(logger_MEMORIA, "Me llego un DROP");
-		//	procesarDrop(codRequest, request ,consistenciaMemoria, caller, i);
+			procesarDrop(codRequest, request ,consistenciaMemoria, caller, i);
 			break;
 		case JOURNAL:
 			log_info(logger_MEMORIA, "Me llego un JOURNAL");
@@ -1008,7 +1008,7 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
  * 	VALGRIND :: NO */
 void liberarTabla(t_segmento* segmento){
 	int listaIgual(t_segmento* segmentoComparar){
-		if(segmentoComparar->path == segmento->path){
+		if(strcmp(segmentoComparar->path, segmento->path)){
 			return TRUE;
 		}else{
 			return FALSE;
@@ -1106,35 +1106,32 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-//void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int i) {
-//	t_segmento* tablaDeSegmentosEnCache = malloc(sizeof(t_segmento));
-//	t_paquete* valorDeLFS = malloc(sizeof(t_paquete));
-//	valorDeLFS->palabraReservada=SUCCESS;
-//	valorDeLFS->request=strdup("");
-//	valorDeLFS->tamanio=sizeof(valorDeLFS->request);
-//	char** requestSeparada = separarRequest(request);
-//	char* segmentoABuscar=strdup(requestSeparada[1]);
-//	//valorDeLFS = intercambiarConFileSystem(codRequest,request);
-//	if(consistencia == EC || caller == CONSOLE){
-//		int encontrarTabla(t_segmento* segmento){
-//			return string_equals_ignore_case(segmento->path, segmentoABuscar);
-//		}
-//		tablaDeSegmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
-//
-//		if(tablaDeSegmentosEnCache!= NULL){
-//			log_info(logger_MEMORIA,"La %s fue eliminada de MEMORIA",tablaDeSegmentosEnCache->path);
-//			liberarTabla(tablaDeSegmentosEnCache);
-//		}else{
-//			log_info(logger_MEMORIA,"La %s no existe en MEMORIA",segmentoABuscar);
-//		}
-//	}
-//	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,i));
-//	eliminar_paquete(valorDeLFS);
-//	valorDeLFS= NULL;
-//	free(tablaDeSegmentosEnCache);
-//	tablaDeSegmentosEnCache=NULL;
-//	liberarArrayDeChar(requestSeparada);
-//	requestSeparada=NULL;
-//	free(segmentoABuscar);
-//	segmentoABuscar=NULL;
-//}
+void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int i) {
+	t_paquete* valorDeLFS = malloc(sizeof(t_paquete));
+	valorDeLFS->palabraReservada=SUCCESS;
+	valorDeLFS->request=strdup("");
+	valorDeLFS->tamanio=sizeof(valorDeLFS->request);
+	char** requestSeparada = separarRequest(request);
+	char* segmentoABuscar=strdup(requestSeparada[1]);
+	//t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
+	if(consistencia == EC || caller == CONSOLE){
+		int encontrarTabla(t_segmento* segmento){
+			return string_equals_ignore_case(segmento->path, segmentoABuscar);
+		}
+		t_segmento* segmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+
+		if(segmentosEnCache!= NULL){
+			log_info(logger_MEMORIA,"La %s fue eliminada de MEMORIA",segmentosEnCache->path);
+			liberarTabla(segmentosEnCache);
+		}else{
+			log_info(logger_MEMORIA,"La %s no existe en MEMORIA",segmentoABuscar);
+		}
+	}
+	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,i));
+	eliminar_paquete(valorDeLFS);
+	valorDeLFS= NULL;
+	liberarArrayDeChar(requestSeparada);
+	requestSeparada=NULL;
+	free(segmentoABuscar);
+	segmentoABuscar=NULL;
+}
