@@ -162,6 +162,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 			string_append_with_format(&*mensaje, "%s %u \"%s\" %llu", nombreTabla, registro->key, registro->value, registro->timestamp);
 		}else{
 			//https://github.com/sisoputnfrba/foro/issues/1406
+			error = KEY_NO_EXISTE;
 			string_append_with_format(&*mensaje, "Registro no encontrado salu3");
 		}
 		list_destroy(listaDeRegistrosDeMemtable);

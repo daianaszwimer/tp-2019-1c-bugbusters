@@ -321,28 +321,35 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 
 	t_paquete* valorDeLFS=NULL;
 	t_elemTablaDePaginas* elementoEncontrado;
-	t_paquete* valorEncontrado;
+
 
 
 	int resultadoCache;
 
 	if(consistenciaMemoria == EC || caller == CONSOLE){		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
+		t_paquete* valorEncontrado;
 		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado);
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 			actualizarTimestamp(elementoEncontrado->marco);
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
+			eliminar_paquete(valorEncontrado);
+			valorEncontrado=NULL;
 
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
 			guardarRespuestaDeLFSaCACHE(request,valorDeLFS, resultadoCache);
+			eliminar_paquete(valorDeLFS);
+			valorDeLFS=NULL;
 		}
 	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+		eliminar_paquete(valorDeLFS);
+		valorDeLFS=NULL;
 	}else{
 		log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 
@@ -390,6 +397,8 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			paqueteAuxiliar->request = strdup(requestAEnviar);
 			paqueteAuxiliar->tamanio=sizeof(elementoDePagEnCache->marco->value);
 
+			free(requestAEnviar);
+			requestAEnviar=NULL;
 			*elementoEncontrado=elementoDePagEnCache;
 			*valorEncontrado = paqueteAuxiliar;
 			free(segmentoABuscar);
@@ -449,8 +458,6 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 	 case(ANOTHER_COMPONENT):
 	 		log_info(logger_MEMORIA, valorAEnviar->request);
 			enviar(codResultado, valorAEnviar->request, socketKernel);
-			eliminar_paquete(valorAEnviar);
-			valorAEnviar=NULL;
 	 	 	break;
 	 	 case(CONSOLE):
 	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
@@ -461,6 +468,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 		break;
 
 	}
+
 	free(errorDefault);
 	errorDefault=NULL;
  }
@@ -687,17 +695,17 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			int resultadoCache= estaEnMemoria(palabraReservada, request,NULL,&elementoEncontrado);
 			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
-			char* consultaALFS=malloc(sizeof(char*));
-			*consultaALFS = '\0';
-			string_append_with_format(&consultaALFS,"%s%s%s%s%s","SELECT"," ",requestSeparada[1]," ",requestSeparada[2]);
 
 			t_paquete* insertALFS =  intercambiarConFileSystem(palabraReservada,request);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
 				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
+				eliminar_paquete(insertALFS);
+				insertALFS=NULL;
 			}else{
 				enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
+				eliminar_paquete(insertALFS);
+				insertALFS=NULL;
 			}
-			eliminar_paquete(insertALFS);
 		}else{
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 		}
@@ -1083,8 +1091,7 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
  * 	-> void ::
  * 	VALGRIND :: NO*/
 void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int i){
-	t_paquete* describeLFS = (t_paquete*) malloc(sizeof(t_paquete));
-	describeLFS=intercambiarConFileSystem(codRequest,request);
+	t_paquete* describeLFS=intercambiarConFileSystem(codRequest,request);
 	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,(int) list_get(descriptoresClientes,i));
 	eliminar_paquete(describeLFS);
 	describeLFS=NULL;
