@@ -39,12 +39,12 @@ typedef struct
 
 t_log* logger_KERNEL;
 t_log* logger_METRICAS_KERNEL;
-int conexionMemoria = 0;
 int quantum = 0;
 char* ipMemoria;
 char* puertoMemoria;
 int sleepEjecucion = 0;
 int metadataRefresh = 0;
+int sleepGossiping = 0;
 unsigned int numeroSeedRandom = 0;
 t_config* config;
 t_queue* new;
@@ -106,8 +106,8 @@ pthread_t hiloDescribe;				// hilo para hacer describe cada x secs
 pthread_t hiloCambioEnConfig;		// hilo que escucha los cambios en el archivo de configuración
 
 void inicializarVariables(void);
-void conectarAMemoria(void);
-void procesarHandshake(t_handshake_memoria*);
+void hacerGossiping(void);
+void procesarGossiping(t_gossiping*);
 void liberarMemoria(void);
 void liberarConfigMemoria(config_memoria*);
 void liberarRequestProcesada(request_procesada*);
@@ -136,7 +136,6 @@ unsigned int obtenerIndiceHash(int, int);
 void actualizarTablas(char*);
 void agregarTablaACriterio(char*);
 void liberarTabla(char*);
-int encontrarMemoriaPpal(config_memoria*);
 consistencia obtenerConsistenciaTabla(char*);
 // procesan requests
 void procesarJournal(int);

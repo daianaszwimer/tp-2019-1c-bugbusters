@@ -185,7 +185,8 @@ void escucharMultiplesClientes() {
 
 	/* fd = file descriptor (id de Socket)
 	 * fd_set es Set de fd's (una coleccion)*/
-
+	t_list* clientesGossiping = list_create();
+	t_list* clientesRequest = list_create();
 	descriptoresClientes = list_create();	// Lista de descriptores de todos los clientes conectados (podemos conectar infinitos clientes)
 	int numeroDeClientes = 0;				// Cantidad de clientes conectados
 	int valorMaximo = 0;					// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
@@ -214,20 +215,30 @@ void escucharMultiplesClientes() {
 
 			for(int i=0; i<numeroDeClientes; i++) {
 				if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
-
-					paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
-					cod_request palabraReservada = paqueteRecibido->palabraReservada;
-					char* request = paqueteRecibido->request;
-					printf("El codigo que recibi es: %i \n", palabraReservada);
-					printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-					if(palabraReservada != -1){
-						interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
-						free(request);
-						request=NULL;
-					}else{
-						log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
-						list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
+					int esElCliente(int clienteFd) {
+						return clienteFd == (int) list_get(descriptoresClientes,i);
 					}
+					if (list_any_satisfy(clientesGossiping, (void*)esElCliente)) {
+						// mandar lista de gossiping
+					} else {
+						// si no es gossiping, es de request
+						paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
+						cod_request palabraReservada = paqueteRecibido->palabraReservada;
+						char* request = paqueteRecibido->request;
+						printf("El codigo que recibi es: %i \n", palabraReservada);
+						printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+						if(palabraReservada != -1){
+							interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
+						}else{
+							log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
+							list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
+							list_remove_by_condition(clientesGossiping, (void*)esElCliente);
+							list_remove_by_condition(clientesRequest, (void*)esElCliente);
+						}
+						eliminar_paquete(paqueteRecibido);
+						paqueteRecibido=NULL;
+					}
+
 				}
 //				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 
@@ -236,16 +247,29 @@ void escucharMultiplesClientes() {
 
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
-				// todo: por ahora que no tenemos gossiping vamos a levantar siempre 3 memorias con estos 3 datos hardcodeados
-				enviarHandshakeMemoria("8001", "127.0.0.1", "1", descriptorCliente);
-				numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
-				numeroDeClientes++;
+				//enviarGossiping("8001", "127.0.0.1", "1", descriptorCliente);
+				t_handshake_memoria* handshake = recibirHandshakeMemoria(descriptorCliente);
+				if (handshake->tipoComponente == KERNEL || handshake->tipoComponente == MEMORIA) {
+					numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
+					numeroDeClientes++;
+					if (handshake->tipoRol == REQUEST) {
+						list_add(clientesRequest, descriptorCliente);
+					} else if (handshake->tipoRol == GOSSIPING) {
+						list_add(clientesGossiping, descriptorCliente);
+						if (handshake->tipoComponente == KERNEL) {
+							// por ahora queda asi porque kernel no manda mensaje
+							enviarGossiping("8001", "127.0.0.1", "1", descriptorCliente);
+						}
+					}
+				} else {
+					log_error(logger_MEMORIA, "Solo se puede conectar un kernel o una memoria, rechazando conexión...");
+				}
+				free(handshake);
 			}
 	//	}
 	}
-	eliminar_paquete(paqueteRecibido);
-	paqueteRecibido=NULL;
-
+	list_destroy(clientesGossiping);
+	list_destroy(clientesRequest);
 }
 
 

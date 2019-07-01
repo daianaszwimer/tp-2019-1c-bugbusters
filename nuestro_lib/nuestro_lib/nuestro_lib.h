@@ -39,6 +39,12 @@ typedef enum
 
 typedef enum
 {
+	REQUEST,
+	GOSSIPING
+} rol;
+
+typedef enum
+{
 	SC,
 	SHC,
 	EC,
@@ -90,12 +96,18 @@ typedef struct
 	char* puertos;
 	int tamanioNumeros;
 	char* numeros;
-} t_handshake_memoria;
+} t_gossiping;
 
 typedef struct
 {
 	int tamanioValue;
 } t_handshake_lfs;
+
+typedef struct
+{
+	Componente tipoComponente;
+	rol tipoRol;
+} t_handshake_memoria;
 
 typedef enum
 {
@@ -135,21 +147,24 @@ void* recibir_buffer(int*, int);
 int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
-t_handshake_memoria* recibirHandshakeMemoria(int);
+t_gossiping* recibirGossiping(int);
 t_handshake_lfs* recibirHandshakeLFS(int);
+t_handshake_memoria* recibirHandshakeMemoria(int);
 
 ////cliente
 
-void* serializar_handshake_memoria(t_handshake_memoria*, int);
+void* serializar_gossiping(t_gossiping*, int);
 void* serializar_handshake_lfs(t_handshake_lfs*, int);
 void* serializar_paquete(t_paquete* , int);
+void* serializar_handshake_memoria(t_handshake_memoria*, int);
 void enviar(cod_request, char*, int);
-void enviarHandshakeMemoria(char*, char*, char*, int);
+void enviarGossiping(char*, char*, char*, int);
 void enviarHandshakeLFS(int, int);
+void enviarHandshakeMemoria(rol, Componente, int);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 void liberarArrayDeChar(char**);
-void liberarHandshakeMemoria(t_handshake_memoria*);
+void liberarHandshakeMemoria(t_gossiping*);
 
 /* Multiplexacion */
 void eliminarClientesCerrados(t_list*, int*);
