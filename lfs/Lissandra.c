@@ -217,7 +217,7 @@ void* recibirMemorias(void* arg) {
 		if(memoria_fd > 0) {
 			if(!pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria, (void*) memoria_fd)) {
 				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
-				enviarHandshakeLFS(30, memoria_fd);
+				enviarHandshakeLFS(config_get_int_value(config,"TAMAÑO_VALUE"), memoria_fd);
 				log_debug(logger_LFS, mensaje);
 				pthread_detach(hiloRequest);
 				free(mensaje);
