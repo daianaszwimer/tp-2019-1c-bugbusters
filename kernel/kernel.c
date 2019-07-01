@@ -6,7 +6,7 @@ int main(void) {
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 
 	//Hilos
-	pthread_create(&hiloConectarAMemoria, NULL, (void*)conectarAMemoria, NULL);
+	pthread_create(&hiloConectarAMemoria, NULL, (void*)hacerGossiping, NULL);
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
 	pthread_create(&hiloPlanificarExec, NULL, (void*)planificarReadyAExec, NULL);
 	pthread_create(&hiloMetricas, NULL, (void*)loguearMetricas, NULL);
@@ -50,6 +50,7 @@ void inicializarVariables() {
 	puertoMemoria = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
 	ipMemoria = strdup(config_get_string_value(config, "IP_MEMORIA"));
 	srand(numeroSeedRandom);
+	sleepGossiping = config_get_int_value(config, "SLEEP_GOSSIPING");
 
 	// Semáforos
 	sem_init(&semRequestNew, 0, 0);
@@ -94,8 +95,6 @@ void inicializarVariables() {
  * Return:
  * 	-> void  */
 void liberarMemoria(void) {
-	liberar_conexion(conexionMemoria);
-
 	config_destroy(config);
 	free(ipMemoria);
 	free(puertoMemoria);
@@ -128,16 +127,9 @@ void liberarMemoria(void) {
 	list_destroy_and_destroy_elements(tablasSC, (void*)liberarTabla);
 	list_destroy_and_destroy_elements(tablasSHC, (void*)liberarTabla);
 	list_destroy_and_destroy_elements(tablasEC, (void*)liberarTabla);
-
-	if(list_size(cargaMemoriaSC) > 0) {
-		list_destroy_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
-	}
-	if(list_size(cargaMemoriaSHC) > 0) {
-		list_destroy_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
-	}
-	if(list_size(cargaMemoriaEC) > 0) {
-		list_destroy_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
-	}
+	list_destroy_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
+	list_destroy_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
+	list_destroy_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
 
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
@@ -147,40 +139,65 @@ void liberarMemoria(void) {
 	log_destroy(logger_METRICAS_KERNEL);
 }
 
-/* conectarAMemoria()
+/* hacerGossiping()
  * Parametros:
  * 	-> void
- * Descripcion: conecta kernel con memoria.
+ * Descripcion: hace gossiping cada x cantidad de tiempo.
  * Return:
  * 	-> :: void  */
-void conectarAMemoria(void) {
-	t_handshake_memoria* handshake;
-	conexionMemoria = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
-	handshake = recibirHandshakeMemoria(conexionMemoria);
-	procesarHandshake(handshake);
-	liberarHandshakeMemoria(handshake);
+void hacerGossiping(void) {
+	t_gossiping* gossiping;
+	int conexion = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+	enviarHandshakeMemoria(GOSSIPING, KERNEL, conexion);
+	gossiping = recibirGossiping(conexion);
+	procesarGossiping(gossiping);
+	liberar_conexion(conexion);
+	free(gossiping);
+	gossiping = NULL;
+	while(1) {
+		// gaston nos dijo que siempre le pregunta a la ppal y si se cae le pregunta a otra
+		// si se cae le pregunto a otra memoria
+		// si me devuelve memorias de menos las borro
+		usleep(sleepGossiping * 1000);
+		conexion = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
+		enviarHandshakeMemoria(GOSSIPING, KERNEL, conexion);
+		gossiping = recibirGossiping(conexion);
+		procesarGossiping(gossiping);
+		liberar_conexion(conexion);
+		free(gossiping);
+		gossiping = NULL;
+	}
 }
 
-/* procesarHandshake()
+/* procesarGossiping()
  * Parametros:
- * 	-> t_handshake_memoria* :: handshakeRecibido
+ * 	-> t_gossiping* :: gossipingRecibido
  * Descripcion: guarda las memorias levantadas en una lista.
  * Return:
  * 	-> :: void  */
-void procesarHandshake(t_handshake_memoria* handshakeRecibido) {
+void procesarGossiping(t_gossiping* gossipingRecibido) {
 	size_t i = 0;
-	char** ips = string_split(handshakeRecibido->ips, ",");
-	char** puertos = string_split(handshakeRecibido->puertos, ",");
-	char** numeros = string_split(handshakeRecibido->numeros, ",");
+	char** ips = string_split(gossipingRecibido->ips, ",");
+	char** puertos = string_split(gossipingRecibido->puertos, ",");
+	char** numeros = string_split(gossipingRecibido->numeros, ",");
 	for(i = 0; ips[i] != NULL; i++)
 	{
 		config_memoria* memoriaNueva = (config_memoria*) malloc(sizeof(config_memoria));
-		memoriaNueva->ip = strdup(ips[i]);// config_get_string_value(config, "IP_MEMORIA");
-		memoriaNueva->puerto = strdup(puertos[i]);// config_get_string_value(config, "PUERTO_MEMORIA");
+		memoriaNueva->ip = strdup(ips[i]);
+		memoriaNueva->puerto = strdup(puertos[i]);
 		memoriaNueva->numero = strdup(numeros[i]);
-		log_info(logger_KERNEL, "estoy agregando el ip: %s puerto: %s numero: %s", memoriaNueva->ip, memoriaNueva->puerto, memoriaNueva->numero);
+
+		int existeUnaIgual(config_memoria* memoriaAgregada) {
+			return string_equals_ignore_case(memoriaAgregada->ip, memoriaNueva->ip) &&
+					string_equals_ignore_case(memoriaAgregada->puerto, memoriaNueva->puerto) &&
+					string_equals_ignore_case(memoriaAgregada->numero, memoriaNueva->numero);
+		}
+
 		pthread_mutex_lock(&semMMemorias);
-		list_add(memorias, memoriaNueva);
+		if (!list_any_satisfy(memorias, (void*)existeUnaIgual)) {
+			log_info(logger_KERNEL, "estoy agregando el ip: %s puerto: %s numero: %s", memoriaNueva->ip, memoriaNueva->puerto, memoriaNueva->numero);
+			list_add(memorias, memoriaNueva);
+		}
 		pthread_mutex_unlock(&semMMemorias);
 		memoriaNueva = NULL;
 	}
@@ -302,7 +319,9 @@ void hacerDescribe(void) {
 	while(1) {
 		char* request = strdup("DESCRIBE");
 		procesarRequestSinPlanificar(request);
+		pthread_mutex_lock(&semMMetadataRefresh);
 		usleep(metadataRefresh * 1000);
+		pthread_mutex_unlock(&semMMetadataRefresh);
 	}
 }
 
@@ -1081,16 +1100,6 @@ unsigned int obtenerIndiceRandom(int maximo) {
 	return numero;
 }
 
-/* encontrarMemoriaPpal()
- * Parametros:
- * 	-> config_memoria* :: memoria
- * Descripcion: devuelve TRUE cuando encuentra la memoria ppal.
- * Return:
- * 	-> int  */
-int encontrarMemoriaPpal(config_memoria* memoria) {
-	return string_equals_ignore_case(memoria->ip, ipMemoria)
-			&& string_equals_ignore_case(memoria->puerto, puertoMemoria);
-}
 /*
  * Funciones que procesan requests
 */
@@ -1118,7 +1127,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	t_paquete* paqueteRecibido;
 	int respuesta;
 	consistencia consistenciaTabla = NINGUNA;
-	int conexionTemporanea = conexionMemoria;
+	int conexionTemporanea;
 	char** parametros = separarRequest(mensaje);
 	config_memoria* memoriaCorrespondiente;
 	char* numMemoria;
@@ -1128,11 +1137,9 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		unsigned int indice = obtenerIndiceRandom(list_size(memorias));
 		memoriaCorrespondiente = list_get(memorias, indice);
 		numMemoria = strdup(memoriaCorrespondiente->numero);
-		if (!string_equals_ignore_case(memoriaCorrespondiente->ip, ipMemoria)
-			|| !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
-			conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
-		}
+		conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
 		pthread_mutex_unlock(&semMMemorias);
+		enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
 	} else {
 		int key = 0;
 		if (codigo == CREATE) {
@@ -1149,10 +1156,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			liberarArrayDeChar(parametros);
 			return respuesta;
 		} else {
-			if (!string_equals_ignore_case(memoriaCorrespondiente->ip, ipMemoria)
-				|| !string_equals_ignore_case(memoriaCorrespondiente->puerto, puertoMemoria)) {
-				conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
-			}
+			conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
+			enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
 			numMemoria = strdup(memoriaCorrespondiente->numero);
 			liberarConfigMemoria(memoriaCorrespondiente);
 		}
@@ -1192,13 +1197,9 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		}
 	}
 	else {
-		//todo: ver que pasa que se traba con describe y otras requests invalidas
-		perror("MSJ");
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
-	if (conexionTemporanea != conexionMemoria) {
-		liberar_conexion(conexionTemporanea);
-	}
+	liberar_conexion(conexionTemporanea);
 	eliminar_paquete(paqueteRecibido);
 	liberarArrayDeChar(parametros);
 	if (codigo == SELECT || codigo == INSERT) {
@@ -1224,11 +1225,8 @@ void procesarJournal(int soloASHC) {
 	// ahora recorro la lista filtrada y creo las conexiones para mandar journal
 	// si la memoria es la ppal que ya estoy conectada, no me tengo que conectar
 	void enviarJournal(config_memoria* memoriaAConectarse) {
-		int conexionTemporanea = conexionMemoria;
-		if (!string_equals_ignore_case(memoriaAConectarse->ip, ipMemoria)
-			&& !string_equals_ignore_case(memoriaAConectarse->puerto, puertoMemoria)) {
-			conexionTemporanea = crearConexion(memoriaAConectarse->ip, memoriaAConectarse->puerto);
-		}
+		int	conexionTemporanea = crearConexion(memoriaAConectarse->ip, memoriaAConectarse->puerto);
+		enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
 		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
 		log_info(logger_KERNEL, "Se envió el JOURNAL a la memoria con numero %s", memoriaAConectarse->numero);
 		//todo: descomentar cuando memoria tenga journal
@@ -1239,9 +1237,7 @@ void procesarJournal(int soloASHC) {
 		} else {
 			log_error(logger_KERNEL, "El request %s no es válido", "JOURNAL");
 		}*/
-		if (conexionTemporanea != conexionMemoria) {
-			liberar_conexion(conexionTemporanea);
-		}
+		liberar_conexion(conexionTemporanea);
 		// eliminar_paquete(paqueteRecibido);
 	}
 	if(soloASHC == TRUE) {
@@ -1317,7 +1313,9 @@ void procesarRun(t_queue* colaRun) {
 		free(queue_pop(colaRun));
 		liberarRequestProcesada(request);
 		quantumActual++;
+		pthread_mutex_lock(&semMSleepEjecucion);
 		usleep(sleepEjecucion*1000);
+		pthread_mutex_unlock(&semMSleepEjecucion);
 		pthread_mutex_lock(&semMQuantum);
 	}
 	if (quantumActual == quantum && queue_is_empty(colaRun) == FALSE) {
@@ -1337,6 +1335,7 @@ void procesarRun(t_queue* colaRun) {
 		log_info(logger_KERNEL, "Finalizó la ejecución del script");
 		queue_destroy(colaRun);
 	} else {
+		pthread_mutex_unlock(&semMQuantum);
 		log_error(logger_KERNEL, "Se cancelo el script");
 		liberarRequestProcesada(request);
 		queue_destroy_and_destroy_elements(colaRun, (void*)liberarColaRequest);
