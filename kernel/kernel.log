@@ -612,3 +612,7 @@
 [DEBUG] 17:38:48:377 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
 [DEBUG] 17:38:49:378 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
 [DEBUG] 17:38:50:379 Kernel/(14251:14271): Estoy esperando que se conecte por lo menos una memoria
+[INFO] 20:24:43:390 Kernel/(27304:27304): ----------------INICIO DE KERNEL--------------
+[INFO] 20:24:43:399 Kernel/(27304:27330): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[ERROR] 20:24:43:426 Kernel/(27304:27336): El request DESCRIBE no es válido y me llegó como rta �RIBE
+[DEBUG] 20:24:43:428 Kernel/(27304:27336): Le mande a a mem 1

@@ -27,9 +27,6 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
-// todo: hilo de gossiping
-// tener en cuenta caida de memoria y sacarla de las listas
-
 /* inicializarVariables()
  * Parametros:
  * 	-> void
@@ -1097,6 +1094,44 @@ unsigned int obtenerIndiceRandom(int maximo) {
 	return numero;
 }
 
+void eliminarMemoria(char* puerto, char* ip, char* numero) {
+	// la busco en mi lista de memorias y en mi listas de criterios
+	int esMemoriaAEliminar(config_memoria* memoriaEnLista) {
+		return string_equals_ignore_case(memoriaEnLista->ip, ip) &&
+				string_equals_ignore_case(memoriaEnLista->puerto, puerto) &&
+				string_equals_ignore_case(memoriaEnLista->numero, numero);
+	}
+	pthread_mutex_lock(&semMMemorias);
+	list_remove_and_destroy_by_condition(memorias,(void*)esMemoriaAEliminar, (void*)liberarConfigMemoria);
+	pthread_mutex_unlock(&semMMemorias);
+	pthread_mutex_lock(&semMMemoriaSC);
+	if (memoriaSc != NULL && string_equals_ignore_case(memoriaSc->ip, ip) &&
+				string_equals_ignore_case(memoriaSc->puerto, puerto) &&
+				string_equals_ignore_case(memoriaSc->numero, numero)) {
+		liberarConfigMemoria(memoriaSc);
+		memoriaSc = NULL;
+	}
+	pthread_mutex_unlock(&semMMemoriaSC);
+	pthread_mutex_lock(&semMMemoriasSHC);
+	list_remove_and_destroy_by_condition(memoriasShc,(void*)esMemoriaAEliminar, (void*)liberarConfigMemoria);
+	pthread_mutex_unlock(&semMMemoriasSHC);
+	pthread_mutex_lock(&semMMemoriasEC);
+	list_remove_and_destroy_by_condition(memoriasEc,(void*)esMemoriaAEliminar, (void*)liberarConfigMemoria);
+	pthread_mutex_unlock(&semMMemoriasEC);
+}
+
+int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
+	int conexionTemporanea = crearConexion(ip, puerto);
+	if (conexionTemporanea == -1) {
+		// eliminar memoria de lista de memorias y de criterios
+		eliminarMemoria(puerto, ip, numero);
+		return ERROR_GENERICO;
+	}
+	log_info(logger_KERNEL, "puerto %s ip %s num %s", puerto, ip,numero);
+	enviarHandshakeMemoria(tipoRol, KERNEL, conexionTemporanea);
+	return conexionTemporanea;
+}
+
 /*
  * Funciones que procesan requests
 */
@@ -1134,9 +1169,18 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		unsigned int indice = obtenerIndiceRandom(list_size(memorias));
 		memoriaCorrespondiente = list_get(memorias, indice);
 		numMemoria = strdup(memoriaCorrespondiente->numero);
-		conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
+		char* ip = strdup(memoriaCorrespondiente->ip);
+		char* puerto = strdup(memoriaCorrespondiente->puerto);
 		pthread_mutex_unlock(&semMMemorias);
-		enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
+		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
+		free(ip);
+		free(puerto);
+		if(conexionTemporanea == ERROR_GENERICO) {
+			log_error(logger_KERNEL, "Se cayo la memoria %s, eliminandola de las memorias...", numMemoria);
+			free(numMemoria);
+			liberarArrayDeChar(parametros);
+			return ERROR_GENERICO;
+		}
 	} else {
 		int key = 0;
 		if (codigo == CREATE) {
@@ -1153,10 +1197,15 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			liberarArrayDeChar(parametros);
 			return respuesta;
 		} else {
-			conexionTemporanea = crearConexion(memoriaCorrespondiente->ip, memoriaCorrespondiente->puerto);
-			enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
 			numMemoria = strdup(memoriaCorrespondiente->numero);
 			liberarConfigMemoria(memoriaCorrespondiente);
+			conexionTemporanea = conectarseAMemoria(REQUEST, memoriaCorrespondiente->puerto, memoriaCorrespondiente->ip, numMemoria);
+			if(conexionTemporanea == ERROR_GENERICO) {
+				log_error(logger_KERNEL, "Se cayo la memoria %s, eliminandola de las memorias...", numMemoria);
+				free(numMemoria);
+				liberarArrayDeChar(parametros);
+				return ERROR_GENERICO;
+			}
 		}
 	}
 	enviar(consistenciaTabla, mensaje, conexionTemporanea);

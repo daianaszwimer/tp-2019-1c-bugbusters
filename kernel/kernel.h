@@ -118,6 +118,7 @@ void informarMetricas(int);
 void liberarEstadisticaMemoria(estadisticaMemoria*);
 void aumentarContadores(char*, cod_request, double, consistencia);
 void escucharCambiosEnConfig(void);
+int conectarseAMemoria(rol, char*, char*, char*);
 // planificar requests
 void procesarRequestSinPlanificar(char*);
 void planificarRequest(char*);
