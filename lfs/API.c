@@ -1,6 +1,5 @@
 #include "API.h"
 
-
 /* procesarCreate() [API]
  * Parametros:
  * 	-> nombreTabla :: char*
@@ -9,6 +8,7 @@
  * 	-> tiempoDeCompactacion :: int
  * Descripcion: permite la creación de una nueva tabla dentro del file system
  * Return: codigos de error o success*/
+
 errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numeroDeParticiones, char* tiempoDeCompactacion) {
 
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
@@ -47,9 +47,25 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			fclose(metadataFile);
 		}
 	}
-	free(pathTabla);
-	return error;
+
+	if(error == SUCCESS){
+		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
+			pthread_detach(hiloDeCompactacion);
+			//TODO mutex
+			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
+			hiloTabla->thread = &hiloDeCompactacion;
+			hiloTabla->nombreTabla = strdup(nombreTabla);
+			hiloTabla->flag = 1;
+			list_add(listaDeTablas, hiloTabla);
+			log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", nombreTabla);
+		}else{
+			log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", nombreTabla);
+		}
 	}
+
+
+	return error;
+}
 
 /* crearParticiones()
  * Parametros:
@@ -68,7 +84,7 @@ errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 		if (particionFile == NULL) {
 			errorNo = ERROR_CREANDO_ARCHIVO;
 		} else {
-			int bloqueDeParticion = obtenerBloqueDisponible(&errorNo); //si hay un error se setea en errorNo
+			int bloqueDeParticion = obtenerBloqueDisponible();
 			if(bloqueDeParticion == -1){
 				log_info(logger_LFS, "no hay bloques disponibles");
 			}else{
@@ -84,6 +100,11 @@ errorNo crearParticiones(char* pathTabla, int numeroDeParticiones){
 		fclose(particionFile);
 		free(pathParticion);
 	}
+
+	if(errorNo ==SUCCESS){
+
+	}
+
 	return errorNo;
 }
 
@@ -129,16 +150,11 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	return error;
 }
 
-//falta buscar en los bloques posta
+
 errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 
 	int ordenarRegistrosPorTimestamp(t_registro* registro1, t_registro* registro2){
 		return registro1->timestamp > registro2->timestamp;
-	}
-
-	void eliminarRegistro(t_registro* registro) {
-		free(registro->value);
-		free(registro);
 	}
 
 	errorNo error = SUCCESS;
@@ -159,7 +175,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 		if(!list_is_empty(listaDeRegistros)){
 			list_sort(listaDeRegistros, (void*) ordenarRegistrosPorTimestamp);
 			t_registro* registro = (t_registro*)listaDeRegistros->head->data;
-			string_append_with_format(&*mensaje, "%s %u \"%s\" %llu", nombreTabla, registro->key, registro->value, registro->timestamp);
+			string_append_with_format(&*mensaje, "%s %llu %u \"%s\"", nombreTabla, registro->timestamp, registro->key, registro->value);
 		}else{
 			//https://github.com/sisoputnfrba/foro/issues/1406
 			error = KEY_NO_EXISTE;
@@ -284,6 +300,8 @@ t_list* buscarEnBloques(char** bloques, int key){
 				liberarArrayDeChar(registroSeparado);
 				if(key == tRegistro->key){
 					list_add(listaDeRegistros, tRegistro);
+				}else{
+					eliminarRegistro(tRegistro);
 				}
 				j = 0;
 				strcpy(registro, "");
@@ -368,13 +386,22 @@ char* obtenerMetadata(char* pathTabla){
 }
 
 errorNo procesarDrop(char* nombreTabla){
+
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+
 	errorNo error = SUCCESS;
 	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
+		t_hiloTabla* tablaEncontrada = list_find(listaDeTablas, (void*)encontrarTabla);
+		tablaEncontrada->flag = 0;
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
 		rmdir(pathTabla);
+
 	}else{
 		error = TABLA_NO_EXISTE;
 	}

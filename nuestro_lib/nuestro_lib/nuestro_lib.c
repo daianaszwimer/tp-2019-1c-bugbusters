@@ -70,9 +70,10 @@ char** separarRequest(char* text) {
 	char *next = text_to_iterate;
 	char *str = text_to_iterate;
 	int freeToken = 0;
+	char* token;
 
 	while(next[0] != '\0') {
-		char* token = strtok_r(str, " ", &next);
+		token = strtok_r(str, " ", &next);
 		if(token == NULL) {
 			break;
 		}
@@ -553,6 +554,96 @@ void* serializar_handshake_lfs(t_handshake_lfs* handshake, int tamanio)
 	return buffer;
 }
 
+/* enviarGossiping()
+ * Parametros:
+ * 	-> char* :: puertos
+ * 	-> char* :: ips
+ * 	-> int :: socket_cliente
+ * Descripcion: recibe la data a enviar, la serializa y la manda
+ * Return:
+ * 	-> :: void  */
+void enviarGossiping(char* puertos, char* ips, char* numeros, int socket_cliente)
+{
+	t_gossiping* gossiping = malloc(sizeof(t_gossiping));
+	gossiping->tamanioIps = strlen(ips) + 1;
+	gossiping->ips = malloc(gossiping->tamanioIps);
+	memcpy(gossiping->ips, ips, gossiping->tamanioIps);
+
+
+	gossiping->tamanioPuertos = strlen(puertos) + 1;
+	gossiping->puertos = malloc(gossiping->tamanioPuertos);
+	memcpy(gossiping->puertos, puertos, gossiping->tamanioPuertos);
+
+
+	gossiping->tamanioNumeros = strlen(numeros) + 1;
+	gossiping->numeros = malloc(gossiping->tamanioNumeros);
+	memcpy(gossiping->numeros, numeros, gossiping->tamanioNumeros);
+
+
+	int tamanioPaquete = 3 * sizeof(int) + gossiping->tamanioIps + gossiping->tamanioPuertos + gossiping->tamanioNumeros;
+	void* gossipingAEnviar = serializar_gossiping(gossiping, tamanioPaquete);
+	send(socket_cliente, gossipingAEnviar, tamanioPaquete, 0);
+	liberarHandshakeMemoria(gossiping);
+	free(gossipingAEnviar);
+	gossipingAEnviar=NULL;
+}
+
+/* recibirGossiping()
+ * Parametros:
+ * 	-> int :: socket
+ * Descripcion: recibe el gossiping y lo deserealiza
+ * Return:
+ * 	-> gossiping :: t_gossiping  */
+t_gossiping* recibirGossiping(int socket)
+{
+	t_gossiping* gossiping = malloc(sizeof(t_gossiping));
+	recv(socket, &gossiping->tamanioIps, sizeof(int), MSG_WAITALL);
+	char* ipsRecibidos = malloc(gossiping->tamanioIps);
+	recv(socket, ipsRecibidos, gossiping->tamanioIps, MSG_WAITALL);
+
+	recv(socket, &gossiping->tamanioPuertos, sizeof(int), MSG_WAITALL);
+	char* puertosRecibidos = malloc(gossiping->tamanioPuertos);
+	recv(socket, puertosRecibidos, gossiping->tamanioPuertos, MSG_WAITALL);
+
+	recv(socket, &gossiping->tamanioNumeros, sizeof(int), MSG_WAITALL);
+	char* numerosRecibidos = malloc(gossiping->tamanioNumeros);
+	recv(socket, numerosRecibidos, gossiping->tamanioNumeros, MSG_WAITALL);
+
+	gossiping->puertos = puertosRecibidos;
+	gossiping->ips = ipsRecibidos;
+	gossiping->numeros = numerosRecibidos;
+
+	return gossiping;
+}
+
+/* serializar_gossiping()
+ * Parametros:
+ * 	-> t_gossiping* ::  gossiping
+ * 	-> int :: tamanio
+ * Descripcion: serializa un t_gossiping.
+ * Return:
+ * 	-> buffer :: void*  */
+void* serializar_gossiping(t_gossiping* gossiping, int tamanio)
+{
+	void * buffer = malloc(tamanio);
+	int desplazamiento = 0;
+
+	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
+	// destino es un string
+	memcpy(buffer + desplazamiento, &gossiping->tamanioIps, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, gossiping->ips, gossiping->tamanioIps);
+	desplazamiento += gossiping->tamanioIps;
+	memcpy(buffer + desplazamiento, &gossiping->tamanioPuertos, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, gossiping->puertos, gossiping->tamanioPuertos);
+	desplazamiento += gossiping->tamanioPuertos;
+	memcpy(buffer + desplazamiento, &gossiping->tamanioNumeros, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(buffer + desplazamiento, gossiping->numeros, gossiping->tamanioNumeros);
+	return buffer;
+}
+
 /* enviarHandshakeMemoria()
  * Parametros:
  * 	-> char* :: puertos
@@ -561,66 +652,38 @@ void* serializar_handshake_lfs(t_handshake_lfs* handshake, int tamanio)
  * Descripcion: recibe la data a enviar, la serializa y la manda
  * Return:
  * 	-> :: void  */
-void enviarHandshakeMemoria(char* puertos, char* ips, char* numeros, int socket_cliente)
+void enviarHandshakeMemoria(rol tipoRol, Componente tipoComponente, int socket_cliente)
 {
 	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
-	handshake->tamanioIps = strlen(ips) + 1;
-	handshake->ips = malloc(handshake->tamanioIps);
-	memcpy(handshake->ips, ips, handshake->tamanioIps);
-
-
-	handshake->tamanioPuertos = strlen(puertos) + 1;
-	handshake->puertos = malloc(handshake->tamanioPuertos);
-	memcpy(handshake->puertos, puertos, handshake->tamanioPuertos);
-
-
-	handshake->tamanioNumeros = strlen(numeros) + 1;
-	handshake->numeros = malloc(handshake->tamanioNumeros);
-	memcpy(handshake->numeros, numeros, handshake->tamanioNumeros);
-
-
-	int tamanioPaquete = 3 * sizeof(int) + handshake->tamanioIps + handshake->tamanioPuertos + handshake->tamanioNumeros;
+	handshake->tipoComponente = tipoComponente;
+	handshake->tipoRol = tipoRol;
+	int tamanioPaquete = sizeof(int) * 2;
 	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanioPaquete);
 	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
 	free(handshakeAEnviar);
-	liberarHandshakeMemoria(handshake);
-	//free(handshakeAEnviar);
-	//handshakeAEnviar=NULL;
+	free(handshake);
 }
 
-/* recibirHandshakeMemoria()
+/* recibirGossiping()
  * Parametros:
  * 	-> int :: socket
- * Descripcion: recibe el handshake que le llega de memoria y lo deserealiza
+ * Descripcion: recibe el handshake y lo deserealiza
  * Return:
- * 	-> handshake :: t_handshake_memoria  */
+ * 	-> gossiping :: t_gossiping  */
 t_handshake_memoria* recibirHandshakeMemoria(int socket)
 {
-	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
-	recv(socket, &handshake->tamanioIps, sizeof(int), MSG_WAITALL);
-	char* ipsRecibidos = malloc(handshake->tamanioIps);
-	recv(socket, ipsRecibidos, handshake->tamanioIps, MSG_WAITALL);
+	t_handshake_memoria* gossiping = malloc(sizeof(t_handshake_memoria));
+	recv(socket, &gossiping->tipoComponente, sizeof(int), MSG_WAITALL);
+	recv(socket, &gossiping->tipoRol, sizeof(int), MSG_WAITALL);
 
-	recv(socket, &handshake->tamanioPuertos, sizeof(int), MSG_WAITALL);
-	char* puertosRecibidos = malloc(handshake->tamanioPuertos);
-	recv(socket, puertosRecibidos, handshake->tamanioPuertos, MSG_WAITALL);
-
-	recv(socket, &handshake->tamanioNumeros, sizeof(int), MSG_WAITALL);
-	char* numerosRecibidos = malloc(handshake->tamanioNumeros);
-	recv(socket, numerosRecibidos, handshake->tamanioNumeros, MSG_WAITALL);
-
-	handshake->puertos = puertosRecibidos;
-	handshake->ips = ipsRecibidos;
-	handshake->numeros = numerosRecibidos;
-
-	return handshake;
+	return gossiping;
 }
 
-/* serializar_handshake_memoria()
+/* serializar_gossiping()
  * Parametros:
- * 	-> t_handshake_memoria* ::  handshake
+ * 	-> t_gossiping* ::  gossiping
  * 	-> int :: tamanio
- * Descripcion: serializa un t_handshake_memoria.
+ * Descripcion: serializa un t_gossiping.
  * Return:
  * 	-> buffer :: void*  */
 void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
@@ -630,17 +693,9 @@ void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
 
 	// memcpy(destino, origen, n) = copia n cantidad de caracteres de origen en destino
 	// destino es un string
-	memcpy(buffer + desplazamiento, &handshake->tamanioIps, sizeof(int));
+	memcpy(buffer + desplazamiento, &handshake->tipoComponente, sizeof(int));
 	desplazamiento += sizeof(int);
-	memcpy(buffer + desplazamiento, handshake->ips, handshake->tamanioIps);
-	desplazamiento += handshake->tamanioIps;
-	memcpy(buffer + desplazamiento, &handshake->tamanioPuertos, sizeof(int));
-	desplazamiento += sizeof(int);
-	memcpy(buffer + desplazamiento, handshake->puertos, handshake->tamanioPuertos);
-	desplazamiento += handshake->tamanioPuertos;
-	memcpy(buffer + desplazamiento, &handshake->tamanioNumeros, sizeof(int));
-	desplazamiento += sizeof(int);
-	memcpy(buffer + desplazamiento, handshake->numeros, handshake->tamanioNumeros);
+	memcpy(buffer + desplazamiento, &handshake->tipoRol, sizeof(int));
 	return buffer;
 }
 
@@ -715,7 +770,7 @@ void eliminar_paquete(t_paquete* paquete)
  * Descripcion: libera lo que está adentro del handshake.
  * Return:
  * 	-> :: void */
-void liberarHandshakeMemoria(t_handshake_memoria* memoriaALiberar) {
+void liberarHandshakeMemoria(t_gossiping* memoriaALiberar) {
 	free(memoriaALiberar->ips);
 	free(memoriaALiberar->numeros);
 	free(memoriaALiberar->puertos);

@@ -22,6 +22,8 @@ void* hiloDump(void* args) {
 	}
 }
 
+//TODO que pasa si se intenta dumpear a una tabla que fue dropeada
+
 /* dumpear() [VALGRINDEADO]
  * Parametros: void
  * Descripcion: baja los datos de la memtable a disco
@@ -76,7 +78,7 @@ errorNo dumpear() {
 				char* tamanioTmp = string_from_format("SIZE=%d", strlen(datosADumpear));
 				char* bloques = strdup("");
 				for(int i=0; i<cantidadDeBloquesAPedir;i++) {
-					int bloqueDeParticion = obtenerBloqueDisponible(&error); //si hay un error se setea en errorNo
+					int bloqueDeParticion = obtenerBloqueDisponible();
 					if(bloqueDeParticion == -1){
 						log_info(logger_LFS, "no hay bloques disponibles");
 					} else {

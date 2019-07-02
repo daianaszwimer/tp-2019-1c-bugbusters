@@ -6,10 +6,9 @@
  * Descripcion: ejecuta la funcion compactar() cada cierta cantidad de tiempo (tiempoEntreCompactaciones) definido en la metadata de la tabla
  * Return:
  * 	-> :: void* */
-void* hiloCompactacion(void* args) {
-	char* nombreTabla;// Viene de lissandra
-	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
+void* hiloCompactacion(void* arg) {
 
+	char* pathTabla = (char*)arg;
 	char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
 	t_config* configMetadataTabla = config_create(pathMetadataTabla);
 	int tiempoEntreCompactaciones = config_get_int_value(configMetadataTabla, "COMPACTION_TIME");
@@ -18,15 +17,48 @@ void* hiloCompactacion(void* args) {
 
 	while(1) {
 		sleep(tiempoEntreCompactaciones/1000); //TODO: usleep
-		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", nombreTabla);
+		if(finalizarHilo(pathTabla)){
+			log_info(logger_LFS, "Hilo de compactacion de %s terminado", pathTabla);
+			break;
+		}
+		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
 		log_info(logger_LFS, infoComienzoCompactacion);
 		free(infoComienzoCompactacion);
 		compactar(pathTabla);
-		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", nombreTabla);
+		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
 		log_info(logger_LFS, infoTerminoCompactacion);
 		free(infoTerminoCompactacion);
 	}
 	free(pathTabla);
+	return NULL;
+}
+
+int finalizarHilo(char* pathTabla){
+	//TODO MUTEX
+	char* nombreTabla = string_reverse(pathTabla);
+	char** aux = string_split(nombreTabla, "/");
+	free(nombreTabla);
+	nombreTabla = string_reverse(aux[0]);
+	liberarArrayDeChar(aux);
+
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	void liberarRecursos(t_hiloTabla* tabla){
+		free(tabla->nombreTabla);
+		free(tabla);
+	}
+
+	t_hiloTabla* tablaEncontrada = list_find(listaDeTablas, (void*) encontrarTabla);
+
+	if(!tablaEncontrada->flag){
+		list_remove_and_destroy_by_condition(listaDeTablas, (void*)encontrarTabla, (void*)liberarRecursos);
+		free(nombreTabla);
+		return 1;
+	}
+	free(nombreTabla);
+	return 0;
 }
 
 /* compactar()
@@ -206,6 +238,7 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 						break;
 					}
 					if (caracterLeido == '\n') {
+						registro[j] = '\0';
 						char** registroSeparado = string_n_split(registro, 3, ";");
 						tRegistro = (t_registro*) malloc(sizeof(t_registro));
 						convertirTimestamp(registroSeparado[0], &(tRegistro->timestamp));
@@ -427,7 +460,7 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 
 		char* bloques = strdup("");
 		for (int i = 0; i < cantidadDeBloquesAPedir; i++) {
-			int bloqueDeParticion = obtenerBloqueDisponible(&error); //si hay un error se setea en errorNo
+			int bloqueDeParticion = obtenerBloqueDisponible();
 			if (bloqueDeParticion == -1) {
 				log_info(logger_LFS, "no hay bloques disponibles");
 			} else {
