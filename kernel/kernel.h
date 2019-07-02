@@ -33,7 +33,6 @@ typedef struct
 typedef struct
 {
 	int cantidadSelectInsert;
-	int cantidadTotal;
 	char* numeroMemoria;
 } estadisticaMemoria;
 

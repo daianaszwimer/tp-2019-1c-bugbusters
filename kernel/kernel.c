@@ -378,14 +378,16 @@ void informarMetricas(int mostrarPorConsola) {
 		double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
 		double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
 		double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
+		int cantidadTotalSelectInsert = cantidadSelectSC + cantidadSelectSHC + cantidadSelectEC + cantidadInsertSC + cantidadInsertSHC + cantidadInsertEC;
 		void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
-			log_info(logger_KERNEL, "select insert %d y total %d", estadisticaAMostrar->cantidadSelectInsert, estadisticaAMostrar->cantidadTotal);
-			int estadistica = estadisticaAMostrar->cantidadSelectInsert / estadisticaAMostrar->cantidadTotal;
+			// https://github.com/sisoputnfrba/foro/issues/1419
+			log_info(logger_KERNEL, "select insert %d y total %d", estadisticaAMostrar->cantidadSelectInsert, cantidadTotalSelectInsert);
+			double estadistica = estadisticaAMostrar->cantidadSelectInsert / cantidadTotalSelectInsert;
 			if (mostrarPorConsola == TRUE) {
-				log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
+				log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
 						estadisticaAMostrar->numeroMemoria, estadistica);
 			} else {
-				log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %d",
+				log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
 						estadisticaAMostrar->numeroMemoria, estadistica);
 			}
 		}
@@ -480,7 +482,6 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 		int encontrarTabla(estadisticaMemoria* memoria) {
 			return string_equals_ignore_case(memoria->numeroMemoria, numeroMemoria);
 		}
-		int cantidadASumarSelectInsert = codigo == SELECT || codigo == INSERT;
 		pthread_mutex_lock(&semMMetricas);
 		switch (consistenciaRequest) {
 			case SC:
@@ -488,14 +489,11 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 				if (memoriaCorrespondiente == NULL) {
 					memoriaCorrespondiente = NULL;
 					memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
-					memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
-					memoriaCorrespondiente->cantidadTotal = 1;
+					memoriaCorrespondiente->cantidadSelectInsert = 1;
 					memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
 					list_add(cargaMemoriaSC, memoriaCorrespondiente);
 				} else {
-					// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
-					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
-					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+					memoriaCorrespondiente->cantidadSelectInsert ++;
 				}
 				break;
 			case SHC:
@@ -503,14 +501,11 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 				if (memoriaCorrespondiente == NULL) {
 					memoriaCorrespondiente = NULL;
 					memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
-					memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
-					memoriaCorrespondiente->cantidadTotal = 1;
+					memoriaCorrespondiente->cantidadSelectInsert = 1;
 					memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
 					list_add(cargaMemoriaSHC, memoriaCorrespondiente);
 				} else {
-					// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
-					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
-					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+					memoriaCorrespondiente->cantidadSelectInsert ++;
 				}
 				break;
 			case EC:
@@ -518,14 +513,11 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 				if (memoriaCorrespondiente == NULL) {
 					memoriaCorrespondiente = NULL;
 					memoriaCorrespondiente = (estadisticaMemoria*) malloc(sizeof(estadisticaMemoria));
-					memoriaCorrespondiente->cantidadSelectInsert = cantidadASumarSelectInsert;
-					memoriaCorrespondiente->cantidadTotal = 1;
+					memoriaCorrespondiente->cantidadSelectInsert = 1;
 					memoriaCorrespondiente->numeroMemoria = strdup(numeroMemoria);
 					list_add(cargaMemoriaEC, memoriaCorrespondiente);
 				} else {
-					// se actualiza solo? porque no es un puntero un int, ver si hay que hacer otra cosa
-					memoriaCorrespondiente->cantidadSelectInsert += cantidadASumarSelectInsert;
-					memoriaCorrespondiente->cantidadTotal = memoriaCorrespondiente->cantidadTotal + 1;
+					memoriaCorrespondiente->cantidadSelectInsert ++;
 				}
 				break;
 			case NINGUNA:
@@ -537,23 +529,23 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 		}
 		if (codigo == SELECT) {
 			switch(consistenciaRequest) {
-			case SC:
-				tiempoSelectSC+=cantidadTiempo;
-				cantidadSelectSC++;
-				break;
-			case SHC:
-				tiempoSelectSHC+=cantidadTiempo;
-				cantidadSelectSHC++;
-				break;
-			case EC:
-				tiempoSelectEC+=cantidadTiempo;
-				cantidadSelectEC++;
-				break;
-			case NINGUNA:
-				// que se hace en el caso de describe global?
-				break;
-			default:
-				break;
+				case SC:
+					tiempoSelectSC+=cantidadTiempo;
+					cantidadSelectSC++;
+					break;
+				case SHC:
+					tiempoSelectSHC+=cantidadTiempo;
+					cantidadSelectSHC++;
+					break;
+				case EC:
+					tiempoSelectEC+=cantidadTiempo;
+					cantidadSelectEC++;
+					break;
+				case NINGUNA:
+					// que se hace en el caso de describe global?
+					break;
+				default:
+					break;
 			}
 		} else if (codigo == INSERT) {
 			switch(consistenciaRequest) {
@@ -1210,9 +1202,9 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	if (codigo == SELECT || codigo == INSERT) {
 		tiempo = clock() - tiempo;
 		tiempoQueTardo = ((double)tiempo)/CLOCKS_PER_SEC;
+		aumentarContadores(numMemoria, codigo, tiempoQueTardo, consistenciaTabla);
 	}
 	log_debug(logger_KERNEL, "Le mande a a mem %s", numMemoria);
-	aumentarContadores(numMemoria, codigo, tiempoQueTardo, consistenciaTabla);
 	free(numMemoria);
 	return respuesta;
 }
