@@ -269,27 +269,27 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 	switch(codRequest) {
 
 		case SELECT:
-			log_info(logger_MEMORIA, "Me llego un SELECT");
+			log_debug(logger_MEMORIA, "Me llego un SELECT");
 			procesarSelect(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case INSERT:
-			log_info(logger_MEMORIA, "Me llego un INSERT");
+			log_debug(logger_MEMORIA, "Me llego un INSERT");
 			procesarInsert(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case CREATE:
-			log_info(logger_MEMORIA, "Me llego un CREATE");
+			log_debug(logger_MEMORIA, "Me llego un CREATE");
 			procesarCreate(codRequest, request,consistenciaMemoria, caller, i);
 			break;
 		case DESCRIBE:
-			log_info(logger_MEMORIA, "Me llego un DESCRIBE");
+			log_debug(logger_MEMORIA, "Me llego un DESCRIBE");
 			procesarDescribe(codRequest, request,caller,i);
 			break;
 		case DROP:
-			log_info(logger_MEMORIA, "Me llego un DROP");
+			log_debug(logger_MEMORIA, "Me llego un DROP");
 			procesarDrop(codRequest, request ,consistenciaMemoria, caller, i);
 			break;
 		case JOURNAL:
-			log_info(logger_MEMORIA, "Me llego un JOURNAL");
+			log_debug(logger_MEMORIA, "Me llego un JOURNAL");
 			break;
 		case NUESTRO_ERROR:
 			 if(caller == ANOTHER_COMPONENT){
