@@ -40,8 +40,6 @@ int main(void) {
 void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
 
-	//maxValue = handshakeConLFS();
-
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
 	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
 
@@ -118,14 +116,13 @@ void leerDeConsola(void){
  * 	-> resultadoVlidacion :: int
  * VALGRIND:: NO */
 void validarRequest(char* mensaje){
-	int tamanioMax = handshake->tamanioValue;
 	char** request = string_n_split(mensaje, 2, " ");
 	char** requestSeparada= separarRequest(mensaje);
 	char* mensajeDeError;
 	int mensajeValido = validarMensaje(mensaje, MEMORIA, &mensajeDeError);
 	int palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
 	if(mensajeValido == SUCCESS){
-		if(!(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],tamanioMax,logger_MEMORIA) == NUESTRO_ERROR)){
+		if(!(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],maxValue,logger_MEMORIA) == NUESTRO_ERROR)){
 			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
 		}
 	}else{
@@ -151,9 +148,11 @@ void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_FS"),
 			config_get_string_value(config, "PUERTO_FS"));
-	handshake = recibirHandshakeLFS(conexionLfs);
+	handshakeLFS = recibirHandshakeLFS(conexionLfs);
+	maxValue= handshakeLFS->tamanioValue;
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
-	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshake->tamanioValue);
+	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
+//	eliminar_paquete(handshakeLFS); TODO VER SI REALMENTE SE ELIMINA
 }
 
 
@@ -421,7 +420,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			char* requestAEnviar= strdup("");
 			string_append_with_format(&requestAEnviar,"%s%s%s%s%c%s%c",segmentoABuscar," ",parametros[2]," ",'"',elementoDePagEnCache->marco->value,'"');
 			paqueteAuxiliar->request = strdup(requestAEnviar);
-			paqueteAuxiliar->tamanio=sizeof(elementoDePagEnCache->marco->value);
+			paqueteAuxiliar->tamanio=sizeof(maxValue);
 
 			free(requestAEnviar);
 			requestAEnviar=NULL;
@@ -564,7 +563,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			valorAEnviarSeparado=NULL;
 	 			liberarArrayDeChar(requestSeparada); //(4)
 	 			requestSeparada=NULL;
-			}else{//TODO CREO Q SOLO ME PUEDEN DECIR Q NO EXITE LA TABLA
+			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
 				log_info(logger_MEMORIA,error);
 	 			free(respuesta);
@@ -801,7 +800,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 
 			}
-		}//TODO Liberar memoria
+		}
 	}
 	free(nuevaKeyChar);
 	nuevaKeyChar=NULL;
@@ -823,7 +822,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
  * 	-> paqueteAEnviar:: t_paquete*
  * 	VALGRIND :: EN PROCESO */
 t_paquete* armarPaqueteDeRtaAEnviar(char* request){
-	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete)); //TODO: Ver free
+	t_paquete* paqueteAEnviar= malloc(sizeof(t_paquete));
 
 	paqueteAEnviar->palabraReservada= SUCCESS;
 	char** requestRespuesta= string_n_split(request,2," ");
@@ -942,7 +941,6 @@ void crearSegmento(t_segmento* nuevoSegmento,char* pathNuevoSegmento){
  * 	-> void ::
  * 	VALGRIND :: NO*/
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
-	//TODO, si lfs dio ok, igual calcular en mem?
 	t_paquete* valorDeLFS=intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
@@ -968,7 +966,7 @@ void create(cod_request codRequest,char* request){
 	if(rtaCache == SEGMENTOINEXISTENTE){
 		char** requestSeparada = separarRequest(request);
 		t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
-		crearSegmento(nuevoSegmento,requestSeparada[1]); //TODO: Ver free
+		crearSegmento(nuevoSegmento,requestSeparada[1]);
 		list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
 		liberarArrayDeChar(requestSeparada);
 		requestSeparada=NULL;
@@ -1022,7 +1020,7 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 	if(index == NUESTRO_ERROR){
 		return MEMORIAFULL;
 	}else{
-		*pagLibre = memoria + sizeof(t_marco)*index;
+		*pagLibre = memoria + (sizeof(unsigned long long)+sizeof(uint16_t)+maxValue)*index;
 		return index;
 	}
 
@@ -1101,7 +1099,7 @@ void liberarMemoria(){
  * 	VALGRIND :: SI*/
 void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 	bitarray_clean_bit(bitarray, elem->numeroDePag);
-	memset(marcoAEliminar->value, 0, sizeof(marcoAEliminar->value));
+	memset(marcoAEliminar->value, 0, maxValue);
 	free(marcoAEliminar);
 }
 

@@ -42,16 +42,15 @@ typedef enum
 	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101,
 	MEMORIAFULL =-10102,
-	JOURNALTIME
+	JOURNALTIME = -10103
 } t_erroresMemoria;
 
 //-----------------STRUCTS------------------
-//int maxValue = 20;
 
 typedef struct{
 	unsigned long long timestamp;
 	uint16_t key;
-	char value[20]; // al inicializarse, lfs me tiene q decir el tamanio
+	char value[]; // al inicializarse, lfs me tiene q decir el tamanio
 }t_marco;
 
 typedef struct{
@@ -78,9 +77,10 @@ typedef struct{
 
 //-------------VARIABLES GLOBALES-------------------------
 
+
 t_log* logger_MEMORIA;
 t_config* config;
-t_handshake_lfs* handshake;
+t_handshake_lfs* handshakeLFS;
 
 t_tablaDeSegmentos* tablaDeSegmentos;
 t_segmento* tablaA;
@@ -102,6 +102,7 @@ void* memoria;
 int marcosTotales;
 int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
+int maxValue;
 
 t_list* descriptoresClientes ;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
