@@ -777,20 +777,15 @@ void procesarRequest(request_procesada* request) {
  * Return:
  * 	-> requestEsValida :: bool  */
 int validarRequest(char* mensaje) {
-	int codValidacion = validarMensaje(mensaje, KERNEL, logger_KERNEL);
-	switch(codValidacion) {
-		case EXIT_SUCCESS:
-			return TRUE;
-			break;
-		case EXIT_FAILURE:
-		case NUESTRO_ERROR:
-			return FALSE;
-			//informar error
-			break;
-		default:
-			return FALSE;
-			break;
+	char* mensajeError;
+	if(validarMensaje(mensaje, KERNEL, &mensajeError) == SUCCESS){
+		return TRUE;
+	}else{
+		//TODO loggear request que esta siendo no valida
+		log_error(logger_KERNEL, mensajeError);
+		return FALSE;
 	}
+
 }
 
 /*
@@ -1148,7 +1143,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	if (list_size(memorias) == 0) {
 		pthread_mutex_unlock(&semMMemorias);
 		log_error(logger_KERNEL, "No puedo hacer %s porque no hay memorias levantadas", mensaje);
-		return ERROR_GENERICO;
+		return FAILURE;
 	}
 	pthread_mutex_unlock(&semMMemorias);
 	clock_t tiempo;
@@ -1193,7 +1188,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		}
 		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla, key);
 		if(memoriaCorrespondiente == NULL) {
-			respuesta = ERROR_GENERICO;
+			respuesta = FAILURE;
 			liberarArrayDeChar(parametros);
 			return respuesta;
 		} else {
@@ -1403,7 +1398,7 @@ int procesarAdd(char* mensaje) {
 	consistencia _consistencia;
 	_consistencia = obtenerEnumConsistencia(requestDividida[4]);
 	if (_consistencia == CONSISTENCIA_INVALIDA) {
-		estado = ERROR_GENERICO;
+		estado = FAILURE;
 		log_error(logger_KERNEL, "El criterio %s no es válido", requestDividida[4]);
 	}
 	int esMemoriaCorrecta(config_memoria* memoriaActual) {
@@ -1413,7 +1408,7 @@ int procesarAdd(char* mensaje) {
 	memoria = (config_memoria*) list_find(memorias, (void*)esMemoriaCorrecta);
 	if (memoria == NULL) {
 		pthread_mutex_unlock(&semMMemorias);
-		estado = ERROR_GENERICO;
+		estado = FAILURE;
 		log_error(logger_KERNEL, "No encontré la memoria %s", requestDividida[2]);
 	} else {
 		config_memoria* memAux = (config_memoria*) malloc(sizeof(config_memoria));

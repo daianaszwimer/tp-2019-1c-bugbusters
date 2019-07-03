@@ -7,7 +7,7 @@
 void* hiloDump(void* args) {
 	int tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
 	while(1) {
-		sleep(tiempoDump/1000);
+		sleep(tiempoDump/1000); //TODO: usleep
 		log_info(logger_LFS, "Dump iniciado");
 		errorNo resultado = dumpear();
 		switch(resultado) {
@@ -21,6 +21,8 @@ void* hiloDump(void* args) {
 		}
 	}
 }
+
+//TODO que pasa si se intenta dumpear a una tabla que fue dropeada
 
 /* dumpear() [VALGRINDEADO]
  * Parametros: void
@@ -63,11 +65,11 @@ errorNo dumpear() {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				// Guardo lo de la tabla en el archivo temporal
-				char* datosADumpear = malloc(sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE") + sizeof(unsigned long long));
+				char* datosADumpear = malloc(sizeof(unsigned long long) + sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE"));
 				strcpy(datosADumpear, "");
 				for(int j = 0; list_get(tabla->registros,j) != NULL; j++) {
 					t_registro* registro = list_get(tabla->registros,j);
-					string_append_with_format(&datosADumpear, "%u;%s;%llu\n", registro->key, registro->value, registro->timestamp);
+					string_append_with_format(&datosADumpear, "%llu;%u;%s\n", registro->timestamp, registro->key, registro->value);
 				}
 				int cantidadDeBloquesAPedir = strlen(datosADumpear) / tamanioBloque;
 				if(strlen(datosADumpear) % tamanioBloque != 0) {
@@ -76,7 +78,7 @@ errorNo dumpear() {
 				char* tamanioTmp = string_from_format("SIZE=%d", strlen(datosADumpear));
 				char* bloques = strdup("");
 				for(int i=0; i<cantidadDeBloquesAPedir;i++) {
-					int bloqueDeParticion = obtenerBloqueDisponible(&error); //si hay un error se setea en errorNo
+					int bloqueDeParticion = obtenerBloqueDisponible();
 					if(bloqueDeParticion == -1){
 						log_info(logger_LFS, "no hay bloques disponibles");
 					} else {

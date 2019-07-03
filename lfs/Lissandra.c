@@ -32,7 +32,6 @@ int main(int argc, char* argv[]) {
 	log_info(logger_LFS, "Hilo recibir memorias finalizado");
 	pthread_join(hiloDumpeo, NULL);
 	log_info(logger_LFS, "Hilo dumpeo finalizado");
-
 	liberarMemoriaLFS();
 	return EXIT_SUCCESS;
 }
@@ -83,6 +82,33 @@ void inicializacionLissandraFileSystem(char* argv[]){
 
 	levantarFS(pathBitmap);
 	free(pathBitmap);
+	//TODO sincronizar lista de tablas threads
+
+	listaDeTablas = list_create();
+
+	DIR* tablas;
+	if((tablas = opendir(pathTablas)) == NULL){
+		perror("Open Tables");
+	}else{
+		struct dirent* tabla;
+		while((tabla = readdir(tablas)) != NULL){
+			if(strcmp(tabla->d_name, ".") == 0 || strcmp(tabla->d_name, "..") == 0) continue;
+			char* pathTabla = string_from_format("%s/%s", pathTablas, (char*) tabla->d_name);
+			if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
+				pthread_detach(hiloDeCompactacion);
+				t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
+				hiloTabla->thread = &hiloDeCompactacion;
+				hiloTabla->nombreTabla = strdup(tabla->d_name);
+				hiloTabla->flag = 1;
+				list_add(listaDeTablas, hiloTabla);
+				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
+				pthread_detach(hiloDeCompactacion);
+			}else{
+				log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", tabla->d_name);
+			}
+		}
+		closedir(tablas);
+	}
 
 	log_info(logger_LFS, "----------------Lissandra File System inicializado correctamente--------------");
 }
@@ -145,7 +171,7 @@ void crearFSMetadata(char* pathBitmap, char* pathFileMetadata){
 
 void crearBloques(){
 	char* fileBloque;
-	for (int i = 1; i <= blocks; i++) {
+	for (int i = 0; i < blocks; i++) {
 		fileBloque = string_from_format("%s/%d.bin", pathBloques, i);
 		FILE* bloqueFile = fopen(fileBloque, "w");
 		if(bloqueFile){
@@ -165,15 +191,24 @@ void levantarFS(char* pathBitmap){
 }
 
 void liberarMemoriaLFS(){
+
+	void liberarRecursos(t_hiloTabla* tabla){
+		free(tabla->nombreTabla);
+		free(tabla);
+	}
+
 	log_info(logger_LFS, "Finalizando LFS");
+
+	list_destroy_and_destroy_elements(listaDeTablas, (void*) liberarRecursos);
+
 	free(pathTablas);
 	free(pathMetadata);
 	free(pathBloques);
 	free(pathRaiz);
 	list_destroy_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
-	bitarray_destroy(bitarray);
 	munmap(bitmap, blocks/8);
 	close(bitmapDescriptor);
+	bitarray_destroy(bitarray);
 	free(memtable);
 	log_destroy(logger_LFS);
 
@@ -182,6 +217,8 @@ void liberarMemoriaLFS(){
 }
 
 void* leerDeConsola(void* arg) {
+	char* mensajeDeError;
+	char* mensaje;
 	while (1) {
 		mensaje = readline(">");
 		if (!(strncmp(mensaje, "", 1) != 0)) {
@@ -190,14 +227,14 @@ void* leerDeConsola(void* arg) {
 			free(mensaje);
 			break;
 		}
-		if(!validarMensaje(mensaje, LFS, logger_LFS)){
+
+		if(validarMensaje(mensaje, LFS, &mensajeDeError) == SUCCESS){
 			char** request = string_n_split(mensaje, 2, " ");
 			cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0], LFS);
 			interpretarRequest(palabraReservada, mensaje, NULL);
 			liberarArrayDeChar(request);
-
 		}else{
-			log_error(logger_LFS, "Request invalida");
+			log_error(logger_LFS, mensajeDeError);
 		}
 		free(mensaje);
 	}
@@ -218,7 +255,7 @@ void* recibirMemorias(void* arg) {
 			if(!pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria, (void*) memoria_fd)) {
 				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
 				enviarHandshakeLFS(30, memoria_fd);
-				log_info(logger_LFS, mensaje);
+				log_debug(logger_LFS, mensaje);
 				pthread_detach(hiloRequest);
 				free(mensaje);
 			} else {
@@ -243,6 +280,7 @@ void* conectarConMemoria(void* arg) {
 			close(memoria_fd);
 			break;
 		}
+		log_info(logger_LFS, "Request: %s de la memoria %i",paqueteRecibido->request, memoria_fd);
 		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
 		eliminar_paquete(paqueteRecibido);
 	}
@@ -253,7 +291,6 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	char** requestSeparada = separarRequest(request);
 	errorNo errorNo = SUCCESS;
 	char* mensaje = strdup("");
-	//TODO case memoria se desconecto
 	if(memoria_fd != NULL){
 		log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
 	}
@@ -287,6 +324,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			log_info(logger_LFS, "Me llego un DESCRIBE");
 			break;
 		case DROP:
+			procesarDrop(requestSeparada[1]);
 			log_info(logger_LFS, "Me llego un DROP");
 			break;
 		default:
@@ -319,9 +357,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	}
 
 	free(mensajeDeError);
-
 	//sleep(3);
-	log_info(logger_LFS, "Mensaje a enviar:%s", mensaje);
 	if (memoria_fd != NULL) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{
@@ -329,34 +365,5 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	}
 	free(mensaje);
 	liberarArrayDeChar(requestSeparada);
-}
-
-
-int obtenerBloqueDisponible(errorNo* errorNo) {
-
-	int index = 0;
-	while (index < blocks && bitarray_test_bit(bitarray, index) == 1) index++;
-	if(index >= blocks) {
-		index = -1;
-	}else{
-		bitarray_set_bit(bitarray, index);
-	}
-	return index;
-}
-
-
-/* vaciarTabla()
-  * Parametros:
- * 	-> tabla :: t_tabla*
- * Descripcion: vacia una tabla y todos sus registros
- * Return: void */
-void vaciarTabla(t_tabla *tabla) {
-	void eliminarRegistros(t_registro* registro) {
-	    free(registro->value);
-	    free(registro);
-	}
-    free(tabla->nombreTabla);
-    list_clean_and_destroy_elements(tabla->registros, (void*) eliminarRegistros);
-    free(tabla->registros);
-    free(tabla);
+	log_info(logger_LFS, "---------------------------------------");
 }
