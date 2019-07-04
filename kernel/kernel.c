@@ -19,8 +19,8 @@ int main(void) {
 	pthread_join(hiloPlanificarExec, NULL);
 	pthread_join(hiloMetricas, NULL);
 	pthread_join(hiloDescribe, NULL);
-	pthread_join(hiloLeerDeConsola, NULL);
 	pthread_join(hiloCambioEnConfig, NULL);
+	pthread_join(hiloLeerDeConsola, NULL);
 
 	liberarMemoria();
 
@@ -66,6 +66,7 @@ void inicializarVariables() {
 	pthread_mutex_init(&semMMemoriasSHC, NULL);
 	pthread_mutex_init(&semMMemoriasEC, NULL);
 	pthread_mutex_init(&semMMemorias, NULL);
+	pthread_mutex_init(&semMConfig, NULL);
 
 	// Colas de planificacion
 	new = queue_create();
@@ -92,6 +93,7 @@ void inicializarVariables() {
  * Return:
  * 	-> void  */
 void liberarMemoria(void) {
+	log_info(logger_KERNEL, "Estoy liberando toda la memoria...");
 	config_destroy(config);
 	free(ipMemoria);
 	free(puertoMemoria);
@@ -109,6 +111,7 @@ void liberarMemoria(void) {
 	pthread_mutex_destroy(&semMMemoriasSHC);
 	pthread_mutex_destroy(&semMMemoriasEC);
 	pthread_mutex_destroy(&semMMemorias);
+	pthread_mutex_destroy(&semMConfig);
 
 	sem_destroy(&semRequestNew);
 	sem_destroy(&semRequestReady);
@@ -131,7 +134,7 @@ void liberarMemoria(void) {
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
 
-	log_info(logger_KERNEL, "Estoy liberando toda la memoria, chau");
+	log_info(logger_KERNEL, "Memoria liberada, chau");
 	log_destroy(logger_KERNEL);
 	log_destroy(logger_METRICAS_KERNEL);
 }
@@ -144,25 +147,37 @@ void liberarMemoria(void) {
  * 	-> :: void  */
 void hacerGossiping(void) {
 	t_gossiping* gossiping;
-	int conexion = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
-	enviarHandshakeMemoria(GOSSIPING, KERNEL, conexion);
-	gossiping = recibirGossiping(conexion);
-	procesarGossiping(gossiping);
-	liberar_conexion(conexion);
-	free(gossiping);
-	gossiping = NULL;
-	while(1) {
-		// gaston nos dijo que siempre le pregunta a la ppal y si se cae le pregunta a otra
-		// si se cae le pregunto a otra memoria
-		// si me devuelve memorias de menos las borro
-		usleep(sleepGossiping * 1000);
-		conexion = crearConexion(config_get_string_value(config, "IP_MEMORIA"), config_get_string_value(config, "PUERTO_MEMORIA"));
-		enviarHandshakeMemoria(GOSSIPING, KERNEL, conexion);
+	pthread_mutex_lock(&semMConfig);
+	char* ip = strdup(config_get_string_value(config, "IP_MEMORIA"));
+	char* puerto = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
+	pthread_mutex_unlock(&semMConfig);
+	// todo: semaforo para config
+	int conexion = conectarseAMemoria(GOSSIPING, puerto, ip, "");
+	if (conexion == FAILURE) {
+		log_error(logger_KERNEL, "La mem ppal no está levantada");
+	} else {
 		gossiping = recibirGossiping(conexion);
 		procesarGossiping(gossiping);
 		liberar_conexion(conexion);
 		free(gossiping);
 		gossiping = NULL;
+	}
+	while(1) {
+		// gaston nos dijo que siempre le pregunta a la ppal y si se cae le pregunta a otra
+		// si se cae le pregunto a otra memoria
+		// si me devuelve memorias de menos las borro
+		usleep(sleepGossiping * 1000);
+		// todo: mandar numero de memoria correspondiente
+		conexion = conectarseAMemoria(GOSSIPING, puerto, ip, "");
+		if (conexion == FAILURE) {
+			log_error(logger_KERNEL, "La mem ppal no está levantada");
+		} else {
+			gossiping = recibirGossiping(conexion);
+			procesarGossiping(gossiping);
+			liberar_conexion(conexion);
+			free(gossiping);
+			gossiping = NULL;
+		}
 	}
 }
 
@@ -264,7 +279,7 @@ void procesarRequestSinPlanificar(char* request) {
 	request_procesada* requestArmada = (request_procesada*) malloc(sizeof(request_procesada));
 	requestArmada->codigo = codigo;
 	requestArmada->request = strdup(request);
-	manejarRequest(requestArmada);
+	manejarRequest(requestArmada, FALSE);
 	liberarRequestProcesada(requestArmada);
 	free(request);
 	liberarArrayDeChar(requestSeparada);
@@ -287,8 +302,10 @@ void escucharCambiosEnConfig(void) {
 	while(1) {
 		int length = read(file_descriptor, buffer, BUF_LEN);
 		log_info(logger_KERNEL, "Cambió el archivo de config");
+		pthread_mutex_lock(&semMConfig);
 		config_destroy(config);
 		config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
+		pthread_mutex_unlock(&semMConfig);
 		if (length < 0) {
 			log_error(logger_KERNEL, "Error en inotify");
 		} else {
@@ -303,6 +320,16 @@ void escucharCambiosEnConfig(void) {
 			pthread_mutex_unlock(&semMMetadataRefresh);
 		}
 
+		inotify_rm_watch(file_descriptor, watch_descriptor);
+		close(file_descriptor);
+
+
+		file_descriptor = inotify_init();
+		if (file_descriptor < 0) {
+			log_error(logger_KERNEL, "Inotify no se pudo inicializar correctamente");
+		}
+
+		watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config", IN_MODIFY);
 	}
 }
 
@@ -313,12 +340,14 @@ void escucharCambiosEnConfig(void) {
  * Return:
  * 	-> :: void  */
 void hacerDescribe(void) {
+	int tiempoSleep = 0;
 	while(1) {
 		char* request = strdup("DESCRIBE");
 		procesarRequestSinPlanificar(request);
 		pthread_mutex_lock(&semMMetadataRefresh);
-		usleep(metadataRefresh * 1000);
+		tiempoSleep = metadataRefresh;
 		pthread_mutex_unlock(&semMMetadataRefresh);
+		usleep(tiempoSleep * 1000);
 	}
 }
 
@@ -764,7 +793,7 @@ void liberarColaRequest(request_procesada* requestCola) {
  * Return:
  * 	-> :: void  */
 void procesarRequest(request_procesada* request) {
-	manejarRequest(request);
+	manejarRequest(request, FALSE);
 	liberarRequestProcesada(request);
 	request = NULL;
 	sem_post(&semMultiprocesamiento);
@@ -798,7 +827,7 @@ int validarRequest(char* mensaje) {
  * Descripcion: toma un request y se fija a quién delegarselo, toma la respuesta y la devuelve.
  * Return:
  * 	-> respuesta :: t_paquete*  */
-int manejarRequest(request_procesada* request) {
+int manejarRequest(request_procesada* request, int fromRun) {
 	int respuesta = 0;
 	//devolver la respuesta para usarla en el run
 	switch(request->codigo) {
@@ -817,7 +846,12 @@ int manejarRequest(request_procesada* request) {
 			respuesta = procesarAdd((char*) request->request);
 			break;
 		case RUN:
-			procesarRun((t_queue*) request->request);
+			if (fromRun) {
+				log_error(logger_KERNEL, "Metiste un run adentro de un run y es ilegal, no lo voy a ejecutar!");
+				respuesta = FAILURE;
+			} else {
+				procesarRun((t_queue*) request->request);
+			}
 			break;
 		case METRICS:
 			informarMetricas(TRUE);
@@ -1120,7 +1154,7 @@ int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
 	if (conexionTemporanea == -1) {
 		// eliminar memoria de lista de memorias y de criterios
 		eliminarMemoria(puerto, ip, numero);
-		return ERROR_GENERICO;
+		return FAILURE;
 	}
 	log_info(logger_KERNEL, "puerto %s ip %s num %s", puerto, ip,numero);
 	enviarHandshakeMemoria(tipoRol, KERNEL, conexionTemporanea);
@@ -1170,11 +1204,11 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
 		free(ip);
 		free(puerto);
-		if(conexionTemporanea == ERROR_GENERICO) {
+		if(conexionTemporanea == FAILURE) {
 			log_error(logger_KERNEL, "Se cayo la memoria %s, eliminandola de las memorias...", numMemoria);
 			free(numMemoria);
 			liberarArrayDeChar(parametros);
-			return ERROR_GENERICO;
+			return FAILURE;
 		}
 	} else {
 		int key = 0;
@@ -1193,16 +1227,17 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			return respuesta;
 		} else {
 			numMemoria = strdup(memoriaCorrespondiente->numero);
-			liberarConfigMemoria(memoriaCorrespondiente);
 			conexionTemporanea = conectarseAMemoria(REQUEST, memoriaCorrespondiente->puerto, memoriaCorrespondiente->ip, numMemoria);
-			if(conexionTemporanea == ERROR_GENERICO) {
+			if(conexionTemporanea == FAILURE) {
 				log_error(logger_KERNEL, "Se cayo la memoria %s, eliminandola de las memorias...", numMemoria);
 				free(numMemoria);
 				liberarArrayDeChar(parametros);
-				return ERROR_GENERICO;
+				return FAILURE;
 			}
+			liberarConfigMemoria(memoriaCorrespondiente);
 		}
 	}
+	// todo: chequear que memoria no se haya caido en enviar y recibir
 	enviar(consistenciaTabla, mensaje, conexionTemporanea);
 	paqueteRecibido = recibir(conexionTemporanea);
 	respuesta = paqueteRecibido->palabraReservada;
@@ -1333,6 +1368,7 @@ void procesarRun(t_queue* colaRun) {
 	// usar inotify por si cambia Q
 	request_procesada* request;
 	int quantumActual = 0;
+	int sleep = 0;
 	//el while es fin de Q o fin de cola
 	pthread_mutex_lock(&semMQuantum);
 	while(!queue_is_empty(colaRun) && quantumActual < quantum) {
@@ -1342,7 +1378,7 @@ void procesarRun(t_queue* colaRun) {
 		request->request = strdup((char*)((request_procesada*)queue_peek(colaRun))->request);
 
 		if (validarRequest((char*) request->request) == TRUE) {
-			if (manejarRequest(request) != SUCCESS) {
+			if (manejarRequest(request, TRUE) != SUCCESS) {
 				break;
 				//libero recursos, mato hilo, lo saco de la cola, e informo error
 			}
@@ -1355,8 +1391,9 @@ void procesarRun(t_queue* colaRun) {
 		liberarRequestProcesada(request);
 		quantumActual++;
 		pthread_mutex_lock(&semMSleepEjecucion);
-		usleep(sleepEjecucion*1000);
+		sleep = sleepEjecucion;
 		pthread_mutex_unlock(&semMSleepEjecucion);
+		usleep(sleep*1000);
 		pthread_mutex_lock(&semMQuantum);
 	}
 	if (quantumActual == quantum && queue_is_empty(colaRun) == FALSE) {
