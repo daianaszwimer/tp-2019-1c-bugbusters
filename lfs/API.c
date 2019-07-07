@@ -11,6 +11,7 @@
 
 errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numeroDeParticiones, char* tiempoDeCompactacion) {
 
+	string_to_upper(nombreTabla);
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
 	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
@@ -121,6 +122,7 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	int encontrarTabla(t_tabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
+	string_to_upper(nombreTabla);
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
 
@@ -159,6 +161,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 		return registro1->timestamp > registro2->timestamp;
 	}
 
+	string_to_upper(nombreTabla);
 	errorNo error = SUCCESS;
 	t_list* listaDeRegistros = list_create();
 
@@ -200,6 +203,7 @@ t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
 	char* pathFile;
 	t_list* listaDeRegistros = list_create();
 	t_list* listaDeRegistrosEnBloques;
+	string_to_upper(nombreTabla);
 	pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
@@ -325,6 +329,7 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 	errorNo error = SUCCESS;
 	char* pathTablas = string_from_format("%sTablas", pathRaiz);
 	char* pathTabla;
+	string_to_upper(nombreTabla);
 	if(nombreTabla != NULL){
 		pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 		char* metadata = obtenerMetadata(pathTabla);
@@ -390,7 +395,7 @@ char* obtenerMetadata(char* pathTabla){
 }
 
 errorNo procesarDrop(char* nombreTabla){
-
+	string_to_upper(nombreTabla);
 	int encontrarTabla(t_hiloTabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
