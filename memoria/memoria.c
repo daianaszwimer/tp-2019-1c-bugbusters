@@ -1304,7 +1304,7 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 		i=0;
 	}
 
-	t_list* listaVictima=list_create();
+	t_list* listaVictima;
 	t_elemTablaDePaginas* elementoVictima=(t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
 	elementoVictima =NULL;
 
@@ -1312,7 +1312,8 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 		list_sort(elemSinModificar, (void*) menorTimestamp);
 		listaVictima = list_take_and_remove(elemSinModificar, 0);
 		elementoVictima= list_get(listaVictima,0);
-		list_destroy_and_destroy_elements(elemSinModificar,(void*)eliminarElemTablaPagina);
+//		list_destroy_and_destroy_elements(elemSinModificar,(void*)eliminarElemTablaPagina);
+		list_destroy(elemSinModificar);
 		int desvinculacion=desvincularVictimaDeSuSegmento(elementoVictima);
 		if(desvinculacion == SUCCESS){
 			*rta=SUCCESS;
