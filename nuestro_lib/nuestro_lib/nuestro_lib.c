@@ -801,8 +801,9 @@ void liberar_conexion(int socket_cliente)
  * 	-> :: void  */
 void eliminarClientesCerrados(t_list* descriptores, int* numeroDeClientes) {
 	for(int i = 0; i < *numeroDeClientes; i++) {
-		if((int) list_get(descriptores,i) == -1) {
-			int valorRemovido = (int) list_remove(descriptores, i);
+		t_int* fd = list_get(descriptores,i);
+		if(fd->valor == -1) {
+			list_remove(descriptores, i);
 			*numeroDeClientes -= 1;
 		}
 	}
@@ -819,8 +820,9 @@ void eliminarClientesCerrados(t_list* descriptores, int* numeroDeClientes) {
 int maximo(t_list* descriptores, int descriptorServidor, int numeroDeClientes) {
 	int max = descriptorServidor;
 	for(int i = 0; i < numeroDeClientes; i++) {
-		if((int) list_get(descriptores,i) > max) {
-			max = (int) list_get(descriptores,i);
+		t_int* descriptor = list_get(descriptores,i);
+		if(descriptor->valor > max) {
+			max = descriptor->valor;
 		}
 	}
 	return max;
