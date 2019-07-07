@@ -430,6 +430,13 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			liberarArrayDeChar(parametros);
 			parametros=NULL;
 			return EXIT_SUCCESS;
+		}else if (elementoDePagEnCache != NULL){
+			*elementoEncontrado=elementoDePagEnCache;
+			free(segmentoABuscar);
+			segmentoABuscar=NULL;
+			liberarArrayDeChar(parametros);
+			parametros=NULL;
+			return EXIT_SUCCESS;
 		}else{
 			free(segmentoABuscar);
 			segmentoABuscar=NULL;
@@ -663,7 +670,7 @@ void guardarRespuestaDeLFSaCACHE(char* request,t_paquete* nuevoPaquete,t_errores
 		char* nuevoValor= strdup(requestSeparada[2]);
 		unsigned long long nuevoTimestamp;
 		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no chequeo, viene de LFS
-		t_marco* pagLibre = NULL;
+		t_marco* pagLibre = malloc(sizeof(unsigned long long)+sizeof(uint16_t)+maxValue);
 		int index= obtenerPaginaDisponible(&pagLibre);
 		if(index == MEMORIAFULL){
 			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
@@ -776,7 +783,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
 	}else{
-		t_marco* pagLibre = NULL;
+		t_marco* pagLibre =NULL;
 		int index =obtenerPaginaDisponible(&pagLibre);
 		if(index == MEMORIAFULL){
 		log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
@@ -854,9 +861,10 @@ void actualizarTimestamp(t_marco* marco){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: SI*/
-void actualizarPagina (t_marco* pagina, char* nuevoValue){
-	pagina->timestamp =  obtenerHoraActual();
-	strcpy(pagina->value,nuevoValue);
+void actualizarPagina (t_marco* marco, char* nuevoValue){
+	marco->timestamp =  obtenerHoraActual();
+	//strcpy(marco->value,'/0');
+	strcpy(marco->value,nuevoValue);
 }
 
 /* actualizarElementoEnTablaDePagina()
@@ -1020,6 +1028,7 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 		return MEMORIAFULL;
 	}else{
 		*pagLibre = memoria + (sizeof(unsigned long long)+sizeof(uint16_t)+maxValue)*index;
+		*pagLibre = malloc(sizeof(unsigned long long)+sizeof(uint16_t)+maxValue);
 		return index;
 	}
 
