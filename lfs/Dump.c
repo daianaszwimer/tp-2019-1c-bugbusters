@@ -113,8 +113,8 @@ errorNo dumpear() {
 				// Vacio la memtable
 				list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
 			}
+			closedir(dir);
 		}
-		closedir(dir);
 	}
 	return error;
 }
