@@ -42,16 +42,15 @@ typedef enum
 	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101,
 	MEMORIAFULL =-10102,
-	JOURNALTIME
+	JOURNALTIME = -10103
 } t_erroresMemoria;
 
 //-----------------STRUCTS------------------
-//int maxValue = 20;
 
 typedef struct{
 	unsigned long long timestamp;
 	uint16_t key;
-	char value[20]; // al inicializarse, lfs me tiene q decir el tamanio
+	char value[]; // al inicializarse, lfs me tiene q decir el tamanio
 }t_marco;
 
 typedef struct{
@@ -78,9 +77,10 @@ typedef struct{
 
 //-------------VARIABLES GLOBALES-------------------------
 
+
 t_log* logger_MEMORIA;
 t_config* config;
-t_handshake_lfs* handshake;
+t_handshake_lfs* handshakeLFS;
 
 t_tablaDeSegmentos* tablaDeSegmentos;
 t_segmento* tablaA;
@@ -102,10 +102,12 @@ void* memoria;
 int marcosTotales;
 int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
+int maxValue;
 
 t_list* descriptoresClientes ;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
-
+t_list* clientesGossiping;
+t_list* clientesRequest;
 
 //------------------ --- FUNCIONES--------------------------------
 
@@ -125,7 +127,7 @@ void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
-void guardarRespuestaDeLFSaCACHE(t_paquete*,t_erroresMemoria);
+void guardarRespuestaDeLFSaCACHE(char*,t_paquete*,t_erroresMemoria);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
@@ -135,9 +137,9 @@ void actualizarTimestamp(t_marco*);
 void actualizarPagina (t_marco*, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
-t_marco* crearPagina(t_marco*,uint16_t, char*, unsigned long long);
+t_marco* crearMarcoDePagina(t_marco*,uint16_t, char*, unsigned long long);
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long);
-t_segmento* crearSegmento(char*);
+void crearSegmento(t_segmento*,char*);
 
 
 void procesarCreate(cod_request, char*,consistencia, t_caller, int);
@@ -148,9 +150,9 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 int obtenerPaginaDisponible(t_marco**);
 
 void liberarTabla(t_segmento*);
-void liberarElemTablaPagina(t_elemTablaDePaginas* );
-void liberarElemTablaSegmentos(t_segmento*);
-void liberarEstructurasMemoria(t_tablaDeSegmentos*);
+void eliminarElemTablaPagina(t_elemTablaDePaginas* );
+void eliminarElemTablaSegmentos(t_segmento*);
+void liberarEstructurasMemoria();
 void liberarMemoria();
 void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
 void procesarDescribe(cod_request, char*,t_caller,int);
