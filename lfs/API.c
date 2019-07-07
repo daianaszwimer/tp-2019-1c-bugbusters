@@ -132,6 +132,7 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 		registro->key = key;
 		registro->value = strdup(value);
 		registro->timestamp = timestamp;
+		pthread_mutex_lock(&mutexMemtable);
 		t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
 		if (tabla == NULL) {
 			log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
@@ -141,6 +142,7 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 			list_add(memtable->tablas, tabla);
 		}
 		list_add(tabla->registros, registro);
+		pthread_mutex_unlock(&mutexMemtable);
 	} else {
 		error = TABLA_NO_EXISTE;
 	}
@@ -264,12 +266,14 @@ t_list* obtenerRegistrosDeMemtable(char* nombreTabla, int key){
 	}
 
 	t_list* listaDeRegistros;
+	pthread_mutex_lock(&mutexMemtable);
 	t_tabla* table = list_find(memtable->tablas, (void*) encontrarTabla);
 	if(table == NULL){
 		listaDeRegistros = list_create();
 	}else{
 		listaDeRegistros = list_filter(table->registros, (void*) encontrarRegistro);
 	}
+	pthread_mutex_unlock(&mutexMemtable);
 	return listaDeRegistros;
 }
 

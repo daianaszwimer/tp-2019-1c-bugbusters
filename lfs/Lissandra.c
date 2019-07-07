@@ -191,6 +191,8 @@ void levantarFS(char* pathBitmap){
 	bitmapDescriptor = open(pathBitmap, O_RDWR);
 	bitmap = mmap(NULL, blocks/8, PROT_READ | PROT_WRITE, MAP_SHARED, bitmapDescriptor, 0);
 	bitarray = bitarray_create_with_mode(bitmap, blocks/8, LSB_FIRST);
+
+	pthread_mutex_init(&mutexMemtable, NULL);
 }
 
 void liberarMemoriaLFS(){
@@ -215,6 +217,7 @@ void liberarMemoriaLFS(){
 	free(memtable);
 	log_destroy(logger_LFS);
 
+	pthread_mutex_destroy(&mutexMemtable);
 	config_destroy(configMetadata);
 	config_destroy(config);
 }

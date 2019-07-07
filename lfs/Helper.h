@@ -69,4 +69,8 @@ int blocks;
 int obtenerBloqueDisponible();
 void vaciarTabla(t_tabla*);
 
+// SEMAFOROS
+pthread_mutex_t mutexMemtable;
+
+
 #endif /* HELPER_H_ */

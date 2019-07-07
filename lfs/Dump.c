@@ -43,6 +43,7 @@ errorNo dumpear() {
 	int tamanioBloque = config_get_int_value(configMetadata, "BLOCK_SIZE");
 	config_destroy(configMetadata);
 	// Refactor list_iterate
+	pthread_mutex_lock(&mutexMemtable);
 	for(int i = 0; list_get(memtable->tablas,i) != NULL; i++) { // Recorro las tablas de la memtable
 		tabla = list_get(memtable->tablas,i);
 		char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, tabla->nombreTabla);
@@ -116,5 +117,6 @@ errorNo dumpear() {
 	}
 	// Vacio la memtable
 	list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
+	pthread_mutex_unlock(&mutexMemtable);
 	return error;
 }
