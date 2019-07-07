@@ -57,7 +57,7 @@ t_config* config;
 t_config *configMetadata;
 t_bitarray* bitarray;
 t_memtable* memtable;
-t_list* listaDeTablas;
+t_list* diegote;
 pthread_t hiloDeCompactacion;
 
 char* pathRaiz;
@@ -71,6 +71,6 @@ void vaciarTabla(t_tabla*);
 
 // SEMAFOROS
 pthread_mutex_t mutexMemtable;
-
+pthread_mutex_t mutexDiegote;
 
 #endif /* HELPER_H_ */

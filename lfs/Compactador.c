@@ -50,13 +50,15 @@ int finalizarHilo(char* pathTabla){
 		free(tabla);
 	}
 
-	t_hiloTabla* tablaEncontrada = list_find(listaDeTablas, (void*) encontrarTabla);
-
+	pthread_mutex_lock(&diegote);
+	t_hiloTabla* tablaEncontrada = list_find(diegote, (void*) encontrarTabla);
 	if(!tablaEncontrada->flag){
-		list_remove_and_destroy_by_condition(listaDeTablas, (void*)encontrarTabla, (void*)liberarRecursos);
+		list_remove_and_destroy_by_condition(diegote, (void*)encontrarTabla, (void*)liberarRecursos);
 		free(nombreTabla);
 		return 1;
 	}
+	pthread_mutex_unlock(&diegote);
+
 	free(nombreTabla);
 	return 0;
 }

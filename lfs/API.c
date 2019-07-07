@@ -14,7 +14,6 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 	string_to_upper(nombreTabla);
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
-	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
@@ -57,7 +56,9 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			hiloTabla->thread = &hiloDeCompactacion;
 			hiloTabla->nombreTabla = strdup(nombreTabla);
 			hiloTabla->flag = 1;
-			list_add(listaDeTablas, hiloTabla);
+			pthread_mutex_lock(&diegote);
+			list_add(diegote, hiloTabla);
+			pthread_mutex_unlock(&diegote);
 			log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", nombreTabla);
 		}else{
 			log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", nombreTabla);
@@ -362,8 +363,7 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 			closedir (dir);
 			(*mensaje)[strlen(*mensaje) - 1] = 0;
 		} else {
-			// todo error desconocido, no pudo abrir Tablas
-
+			perror("Error al abrir directorio de tablas");
 		}
 	}
 	free(pathTablas);
@@ -371,7 +371,7 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 }
 
 char* obtenerMetadata(char* pathTabla){
-	char* mensaje;
+	char* mensaje = strdup("");
 	DIR* dir = opendir(pathTabla);
 	if(dir != NULL){
 		closedir(dir);
@@ -380,16 +380,17 @@ char* obtenerMetadata(char* pathTabla){
 		free(pathMetadata);
 		if(metadata != NULL){
 			if(config_has_property(metadata, "CONSISTENCY") && config_has_property(metadata, "PARTITIONS") && config_has_property(metadata, "COMPACTION_TIME")){
-				mensaje = string_from_format("%s %i %i", config_get_string_value(metadata, "CONSISTENCY"), config_get_int_value(metadata, "PARTITIONS"), config_get_int_value(metadata, "COMPACTION_TIME"));
+				string_append_with_format(&mensaje,"%s %i %i", config_get_string_value(metadata, "CONSISTENCY"), config_get_int_value(metadata, "PARTITIONS"), config_get_int_value(metadata, "COMPACTION_TIME"));
 			}else{
-				//todo no posee alguna de las keys
+				log_error(logger_LFS,"El metadata de la tabla %s no tiene alguna de las config", pathTabla);
 			}
 			config_destroy(metadata);
 		}else{
-			//todo no se pudo levantar la metadata XD
+			log_error(logger_LFS, "No se pudo levantar como config el metadata de la tabla %s", pathTabla);
 		}
 	}else{
-		//TODO tabla no existe o error
+		log_error(logger_LFS, "No se pudo abrir el metadata de la tabla %s", pathTabla);
+		perror("Error");
 	}
 	return mensaje;
 }
@@ -405,12 +406,13 @@ errorNo procesarDrop(char* nombreTabla){
 	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
-		t_hiloTabla* tablaEncontrada = list_find(listaDeTablas, (void*)encontrarTabla);
+		pthread_mutex_lock(&diegote);
+		t_hiloTabla* tablaEncontrada = list_find(diegote, (void*)encontrarTabla);
 		tablaEncontrada->flag = 0;
+		pthread_mutex_unlock(&diegote);
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
 		rmdir(pathTabla);
-
 	}else{
 		error = TABLA_NO_EXISTE;
 	}

@@ -82,9 +82,8 @@ void inicializacionLissandraFileSystem(char* argv[]){
 
 	levantarFS(pathBitmap);
 	free(pathBitmap);
-	//TODO sincronizar lista de tablas threads
 
-	listaDeTablas = list_create();
+	diegote = list_create();
 
 	DIR* tablas;
 	if((tablas = opendir(pathTablas)) == NULL){
@@ -100,7 +99,7 @@ void inicializacionLissandraFileSystem(char* argv[]){
 				hiloTabla->thread = &hiloDeCompactacion;
 				hiloTabla->nombreTabla = strdup(tabla->d_name);
 				hiloTabla->flag = 1;
-				list_add(listaDeTablas, hiloTabla);
+				list_add(diegote, hiloTabla);
 				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
 				pthread_detach(hiloDeCompactacion);
 			}else{
@@ -114,11 +113,18 @@ void inicializacionLissandraFileSystem(char* argv[]){
 }
 
 void crearFS(char* pathBitmap, char* pathFileMetadata) {
-	//TODO catchear todos los errores
-	mkdir(pathRaiz, S_IRWXU);
-	mkdir(pathTablas, S_IRWXU);
-	mkdir(pathMetadata, S_IRWXU);
-	mkdir(pathBloques, S_IRWXU);
+	if(mkdir(pathRaiz, S_IRWXU) == -1){
+		perror("Error al crear directorio raiz");
+	}
+	if(mkdir(pathTablas, S_IRWXU) == -1){
+		perror("Error al crear directorio de tablas");
+	}
+	if(mkdir(pathMetadata, S_IRWXU) == -1){
+		perror("Error al crear metadata del FS");
+	}
+	if(mkdir(pathBloques, S_IRWXU) == -1){
+		perror("Error al crear directorio de bloques");
+	}
 
 	crearFSMetadata(pathBitmap, pathFileMetadata);
 	crearBloques();
@@ -161,7 +167,7 @@ void crearFSMetadata(char* pathBitmap, char* pathFileMetadata){
 	blocks = atoi(numeroDeBloques);
 
 	if(ftruncate(bitmapDescriptor, atoi(numeroDeBloques)/8)){
-		//todo error al truncar archivo
+		perror("Error al truncar archivo de bitmap");
 	}
 
 	bitmap = mmap(NULL, blocks/8, PROT_READ | PROT_WRITE, MAP_SHARED, bitmapDescriptor, 0);
@@ -204,7 +210,7 @@ void liberarMemoriaLFS(){
 
 	log_info(logger_LFS, "Finalizando LFS");
 
-	list_destroy_and_destroy_elements(listaDeTablas, (void*) liberarRecursos);
+	list_destroy_and_destroy_elements(diegote, (void*) liberarRecursos);
 
 	free(pathTablas);
 	free(pathMetadata);
@@ -317,7 +323,6 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			break;
 		case CREATE:
 			log_info(logger_LFS, "Me llego un CREATE");
-			//TODO validar los tipos de los parametros (ejemplo, SC, cantidad de particiones, etc.)
 			errorNo = procesarCreate(requestSeparada[1], requestSeparada[2], requestSeparada[3], requestSeparada[4]);
 			break;
 		case DESCRIBE:
@@ -355,7 +360,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			log_error(logger_LFS, mensajeDeError);
 			break;
 		case KEY_NO_EXISTE:
-			mensajeDeError = string_from_format("La KEY %s no existe", requestSeparada[2]); // TODO mostrar bien mensaje de error
+			mensajeDeError = string_from_format("La KEY %s no existe", requestSeparada[2]);
 			log_info(logger_LFS, mensajeDeError);
 			break;
 		default:
