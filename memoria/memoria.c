@@ -164,8 +164,8 @@ void escucharMultiplesClientes() {
 
 	/* fd = file descriptor (id de Socket)
 	 * fd_set es Set de fd's (una coleccion)*/
-	t_list* clientesGossiping = list_create();
-	t_list* clientesRequest = list_create();
+	clientesGossiping = list_create();
+	clientesRequest = list_create();
 	descriptoresClientes = list_create();	// Lista de descriptores de todos los clientes conectados (podemos conectar infinitos clientes)
 	int numeroDeClientes = 0;				// Cantidad de clientes conectados
 	int valorMaximo = 0;					// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
@@ -238,8 +238,7 @@ void escucharMultiplesClientes() {
 			}
 
 	}
-	list_destroy(clientesGossiping);
-	list_destroy(clientesRequest);
+
 }
 
 
@@ -1086,6 +1085,8 @@ void liberarMemoria(){
 	FD_ZERO(&descriptoresDeInteres);
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
+	list_destroy(clientesGossiping);
+	list_destroy(clientesRequest);
 }
 
 
