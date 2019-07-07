@@ -110,11 +110,11 @@ errorNo dumpear() {
 				free(tamanioTmp);
 				free(datosADumpear);
 				fclose(fileTmp);
-				// Vacio la memtable
-				list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
 			}
 		}
 		closedir(dir);
 	}
+	// Vacio la memtable
+	list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
 	return error;
 }
