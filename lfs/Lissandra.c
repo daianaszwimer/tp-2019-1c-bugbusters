@@ -358,6 +358,13 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 
 	free(mensajeDeError);
 	//sleep(3);
+	if(string_is_empty(mensaje)){
+			string_append_with_format(&mensaje, "Request ejecutada correctamente");
+	}
+
+	log_warning(logger_LFS,mensaje);
+	log_warning(logger_LFS,mensajeDeError);
+
 	if (memoria_fd != NULL) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{
