@@ -776,6 +776,7 @@ void liberarHandshakeMemoria(t_gossiping* memoriaALiberar) {
 	free(memoriaALiberar->numeros);
 	free(memoriaALiberar->puertos);
 	free(memoriaALiberar);
+	memoriaALiberar = NULL;
 }
 
 /*liberar_conexion()

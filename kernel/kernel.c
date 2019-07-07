@@ -148,19 +148,17 @@ void liberarMemoria(void) {
 void hacerGossiping(void) {
 	t_gossiping* gossiping;
 	pthread_mutex_lock(&semMConfig);
-	char* ip = strdup(config_get_string_value(config, "IP_MEMORIA"));
-	char* puerto = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
+	char* ipPpal = strdup(config_get_string_value(config, "IP_MEMORIA"));
+	char* puertoPpal = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
 	pthread_mutex_unlock(&semMConfig);
-	// todo: semaforo para config
-	int conexion = conectarseAMemoria(GOSSIPING, puerto, ip, "");
+	int conexion = conectarseAMemoria(GOSSIPING, puertoPpal, ipPpal, "");
 	if (conexion == FAILURE) {
-		log_error(logger_KERNEL, "La mem ppal no está levantada");
+		log_error(logger_KERNEL, "La mem ppal no está levantada, conectando con otra memoria...");
 	} else {
 		gossiping = recibirGossiping(conexion);
 		procesarGossiping(gossiping);
 		liberar_conexion(conexion);
-		free(gossiping);
-		gossiping = NULL;
+		liberarHandshakeMemoria(gossiping);
 	}
 	while(1) {
 		// gaston nos dijo que siempre le pregunta a la ppal y si se cae le pregunta a otra
@@ -168,17 +166,18 @@ void hacerGossiping(void) {
 		// si me devuelve memorias de menos las borro
 		usleep(sleepGossiping * 1000);
 		// todo: mandar numero de memoria correspondiente
-		conexion = conectarseAMemoria(GOSSIPING, puerto, ip, "");
+		conexion = conectarseAMemoria(GOSSIPING, puertoPpal, ipPpal, "");
 		if (conexion == FAILURE) {
 			log_error(logger_KERNEL, "La mem ppal no está levantada");
 		} else {
 			gossiping = recibirGossiping(conexion);
 			procesarGossiping(gossiping);
 			liberar_conexion(conexion);
-			free(gossiping);
-			gossiping = NULL;
+			liberarHandshakeMemoria(gossiping);
 		}
 	}
+	free(ipPpal);
+	free(puertoPpal);
 }
 
 /* procesarGossiping()
@@ -407,7 +406,6 @@ void informarMetricas(int mostrarPorConsola) {
 		int cantidadTotalSelectInsert = cantidadSelectSC + cantidadSelectSHC + cantidadSelectEC + cantidadInsertSC + cantidadInsertSHC + cantidadInsertEC;
 		void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
 			// https://github.com/sisoputnfrba/foro/issues/1419
-			log_info(logger_KERNEL, "select insert %d y total %d", estadisticaAMostrar->cantidadSelectInsert, cantidadTotalSelectInsert);
 			double estadistica = estadisticaAMostrar->cantidadSelectInsert / cantidadTotalSelectInsert;
 			if (mostrarPorConsola == TRUE) {
 				log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
@@ -500,11 +498,6 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
  * 	-> :: void  */
 void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidadTiempo, consistencia consistenciaRequest) {
 	estadisticaMemoria* memoriaCorrespondiente;
-		// si es un describe global va a entrar al "NINGUNA"
-		// cargo en el criterio segun el request o segun la memoria?
-		// o sea si tengo una memory que es SC y EC y le hago dos select que son de una tabla
-		// EC, en la cantidad total de request en mi lista de SC de esa memoria es de 2 o 0? porque
-		// no se hizo nada SC pero si se hizo a esa memoria PREGUNTAR
 		int encontrarTabla(estadisticaMemoria* memoria) {
 			return string_equals_ignore_case(memoria->numeroMemoria, numeroMemoria);
 		}
@@ -546,11 +539,7 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 					memoriaCorrespondiente->cantidadSelectInsert ++;
 				}
 				break;
-			case NINGUNA:
-				// se agrega en todos los criterios? o en el criterio de la memoria? PREGUNTAR
-				break;
 			default:
-				// error
 				break;
 		}
 		if (codigo == SELECT) {
@@ -566,9 +555,6 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 				case EC:
 					tiempoSelectEC+=cantidadTiempo;
 					cantidadSelectEC++;
-					break;
-				case NINGUNA:
-					// que se hace en el caso de describe global?
 					break;
 				default:
 					break;
@@ -586,9 +572,6 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 			case EC:
 				tiempoInsertEC+=cantidadTiempo;
 				cantidadInsertEC++;
-				break;
-			case NINGUNA:
-				// que se hace en el caso de describe global?
 				break;
 			default:
 				break;
@@ -810,8 +793,7 @@ int validarRequest(char* mensaje) {
 	if(validarMensaje(mensaje, KERNEL, &mensajeError) == SUCCESS){
 		return TRUE;
 	}else{
-		//TODO loggear request que esta siendo no valida
-		log_error(logger_KERNEL, mensajeError);
+		log_error(logger_KERNEL, "%s. Request que generó error: %s", mensajeError, mensaje);
 		return FALSE;
 	}
 
@@ -875,6 +857,7 @@ void actualizarTablas(char* respuesta) {
 	// separo por ; y despues itero sobre eso
 	char** respuestaParseada = string_split(respuesta, ";");
 	int esDescribeGlobal = longitudDeArrayDeStrings(respuestaParseada) != 1;
+	// todo: chequear que variable este funcionando como se espera?
 	// solo limpiar cuando es global!!!
 	if (esDescribeGlobal == TRUE) {
 		pthread_mutex_lock(&semMTablasSC);
@@ -1156,7 +1139,6 @@ int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
 		eliminarMemoria(puerto, ip, numero);
 		return FAILURE;
 	}
-	log_info(logger_KERNEL, "puerto %s ip %s num %s", puerto, ip,numero);
 	enviarHandshakeMemoria(tipoRol, KERNEL, conexionTemporanea);
 	return conexionTemporanea;
 }
@@ -1429,6 +1411,7 @@ void procesarRun(t_queue* colaRun) {
  * Return:
  * 	-> void  */
 int procesarAdd(char* mensaje) {
+	// todo: validar que en add no manden cualquier fruta
 	int estado = SUCCESS;
 	char** requestDividida = separarRequest(mensaje);
 	config_memoria* memoria;

@@ -616,3 +616,6 @@
 [INFO] 20:24:43:399 Kernel/(27304:27330): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
 [ERROR] 20:24:43:426 Kernel/(27304:27336): El request DESCRIBE no es válido y me llegó como rta �RIBE
 [DEBUG] 20:24:43:428 Kernel/(27304:27336): Le mande a a mem 1
+[INFO] 11:05:25:27 Kernel/(14976:14976): ----------------INICIO DE KERNEL--------------
+[ERROR] 11:05:25:37 Kernel/(14976:14989): La mem ppal no está levantada, conectando con otra memoria...
+[ERROR] 11:05:25:52 Kernel/(14976:14993): No puedo hacer DESCRIBE porque no hay memorias levantadas
