@@ -815,6 +815,8 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+		eliminar_paquete(paqueteAEnviar);
+
 	}else{
 		t_marco* pagLibre =NULL;
 		int index =obtenerPaginaDisponible(&pagLibre);
@@ -855,6 +857,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+				eliminar_paquete(paqueteAEnviar);
 
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
 
@@ -865,13 +868,13 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+				eliminar_paquete(paqueteAEnviar);
 
 			}
 		}
 	}
 	free(nuevaKeyChar);
 	nuevaKeyChar=NULL;
-	eliminar_paquete(paqueteAEnviar);
 	free(nuevaTabla);
 	nuevaTabla=NULL;
 	free(nuevoValor);
@@ -1243,7 +1246,7 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 	int i =0;
 	int retorno=NUESTRO_ERROR;
-	t_segmento* segmento=(t_segmento*)malloc(sizeof(t_segmento));
+	t_segmento* segmento;
 	segmento=NULL;
 		int contieneElElementoVictima(t_elemTablaDePaginas* elem){
 			if(elem->numeroDePag == elemVictima->numeroDePag){
@@ -1257,7 +1260,7 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 
 	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
 		segmento = list_get(tablaDeSegmentos->segmentos,i);
-		list_remove_by_condition(segmento->tablaDePagina,(void*)contieneElElementoVictima);
+		list_remove_and_destroy_by_condition(segmento->tablaDePagina,(void*)contieneElElementoVictima,(void*)eliminarElemTablaPagina);
 		i++;
 	}
 
@@ -1305,12 +1308,12 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 	}
 
 	t_list* listaVictima;
-	t_elemTablaDePaginas* elementoVictima=(t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+	t_elemTablaDePaginas* elementoVictima;
 	elementoVictima =NULL;
 
 	if (!list_is_empty(elemSinModificar)) {
 		list_sort(elemSinModificar, (void*) menorTimestamp);
-		listaVictima = list_take_and_remove(elemSinModificar, 0);
+		listaVictima = list_take_and_remove(elemSinModificar, 1);
 		elementoVictima= list_get(listaVictima,0);
 //		list_destroy_and_destroy_elements(elemSinModificar,(void*)eliminarElemTablaPagina);
 		list_destroy(elemSinModificar);
