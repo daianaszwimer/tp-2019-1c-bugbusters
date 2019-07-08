@@ -250,6 +250,7 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 				liberarArrayDeChar(bloques);
 
 				char** registros = string_split(datosDelTmpC, "\n");
+				free(datosDelTmpC);
 
 				for (int j = 0; registros[j] != NULL; j++) {
 					char** registroSeparado = string_split(registros[j], ";");
@@ -284,6 +285,7 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 						list_add(registrosDeTmpC, tRegistro);
 					}
 				}
+				liberarArrayDeChar(registros);
 			}
 		}
 	}
@@ -338,6 +340,7 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
 			}
 
 			char** registros = string_split(datosDeLasParticiones, "\n");
+			free(datosDeLasParticiones);
 
 			for (int j = 0; registros[j] != NULL; j++) {
 				char** registroSeparado = string_split(registros[j], ";");
@@ -348,6 +351,7 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
 				liberarArrayDeChar(registroSeparado);
 				list_add(registrosDeParticiones, tRegistro);
 			}
+			liberarArrayDeChar(registros);
 		}
 		liberarArrayDeChar(bloques);
 	}
