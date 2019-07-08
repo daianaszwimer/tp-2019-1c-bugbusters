@@ -20,6 +20,8 @@ int main(void) {
 	//sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
 	pthread_mutex_init(&semMBitarray, NULL);
+	pthread_mutex_init(&semMTablaSegmentos, NULL);
+
 	// 	HILOS
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
@@ -92,7 +94,6 @@ void leerDeConsola(void){
 	char* mensaje;
 	log_info(logger_MEMORIA, "Vamos a leer de consola");
 	while (1) {
-		//sem_wait(&semLeerDeConsola);
 		mensaje = readline(">");
 		if (!strcmp(mensaje, "\0")) {
 			pthread_cancel(hiloEscucharMultiplesClientes);
@@ -100,8 +101,7 @@ void leerDeConsola(void){
 			break;
 		}
 		validarRequest(mensaje);
-//		free(mensaje);
-//		mensaje=NULL;
+
 	}
 }
 
@@ -146,6 +146,7 @@ void validarRequest(char* mensaje){
  * 	-> :: void
  * VALGRIND:: SI */
 void conectarAFileSystem() {
+	//TODO MUTEX EN CONFIG
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_FS"),
 			config_get_string_value(config, "PUERTO_FS"));
@@ -319,7 +320,6 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 	t_paquete* paqueteRecibido;
 
 	enviar(palabraReservada, request, conexionLfs);
-	//sem_post(&semLeerDeConsola);
 	usleep(config_get_int_value(config, "RETARDO_FS")*1000);
 	paqueteRecibido = recibir(conexionLfs);
 
@@ -347,8 +347,6 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 
 	t_paquete* valorDeLFS=NULL;
 	t_elemTablaDePaginas* elementoEncontrado;
-
-
 
 	int resultadoCache;
 
@@ -406,8 +404,10 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 	int encontrarTabla(t_segmento* segmento){
 		return string_equals_ignore_case(segmento->path, segmentoABuscar);
 	}
-
+	pthread_mutex_lock(&semMTablaSegmentos);
 	t_segmento* segmentoEnCache = list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	pthread_mutex_unlock(&semMTablaSegmentos);
+
 	if(segmentoEnCache!= NULL){
 
 		int encontrarElemTablaDePag(t_elemTablaDePaginas* elemDePagina){
@@ -469,7 +469,9 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	int encontrarTabla(t_segmento* segmento){
 			return string_equals_ignore_case(segmento->path, segmentoABuscar);
 	}
+	pthread_mutex_lock(&semMTablaSegmentos);
 	return list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	pthread_mutex_unlock(&semMTablaSegmentos);
 }
 
 /* enviarAlDestinatarioCorrecto()
@@ -1145,6 +1147,7 @@ void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
  * 	VALGRIND :: NO */
 void liberarMemoria(){
 	pthread_mutex_destroy(&semMBitarray);
+	pthread_mutex_destroy(&semMTablaSegmentos);
 	log_info(logger_MEMORIA, "Finaliza MEMORIA");
 	bitarray_destroy(bitarray);
 	free(bitarrayString);
