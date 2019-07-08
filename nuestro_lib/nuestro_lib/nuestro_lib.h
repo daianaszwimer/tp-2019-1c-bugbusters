@@ -70,6 +70,7 @@ typedef enum
 	CONSISTENCIA_NO_VALIDA,
 	FAILURE = -1,
 	MEMORIA_FULL = 10102,
+	COMPONENTE_CAIDO = -2
 } errorNo;
 
 typedef enum
@@ -161,7 +162,7 @@ void* serializar_gossiping(t_gossiping*, int);
 void* serializar_handshake_lfs(t_handshake_lfs*, int);
 void* serializar_paquete(t_paquete* , int);
 void* serializar_handshake_memoria(t_handshake_memoria*, int);
-void enviar(cod_request, char*, int);
+int enviar(cod_request, char*, int);
 void enviarGossiping(char*, char*, char*, int);
 void enviarHandshakeLFS(int, int);
 void enviarHandshakeMemoria(rol, Componente, int);
