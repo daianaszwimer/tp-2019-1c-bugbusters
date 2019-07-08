@@ -162,4 +162,9 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas*);
 int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
 t_elemTablaDePaginas* correrAlgoritmoLRU(int*);
 
+void procesarJournal(cod_request, char*, t_caller, int);
+t_list* obtenerTablasModificadas(t_segmento*);
+int tablaDePaginaModificada(t_elemTablaDePaginas*);
+
+
 #endif /* MEMORIA_H_ */

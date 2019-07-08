@@ -289,6 +289,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case JOURNAL:
 			log_debug(logger_MEMORIA, "Me llego un JOURNAL");
+			procesarJournal(codRequest, request, caller, i);
 			break;
 		case NUESTRO_ERROR:
 			 if(caller == ANOTHER_COMPONENT){
@@ -1332,3 +1333,47 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 }
 
 
+
+void procesarJournal(cod_request codRequest, char* request, t_caller caller, int i) {
+	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
+	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
+	 *  con el que está en el FS.
+	 **/
+	t_list* elemModificados = list_create();
+
+	void encontrarElemModificado(t_segmento* segmento){
+		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
+			if(elemPagina->modificado == MODIFICADO){
+				list_add(elemModificados, elemPagina);
+				puts(elemPagina->marco->value);
+			}
+		}
+		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
+	}
+	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
+}
+
+
+
+
+//void procesarJournal(cod_request codRequest, char* request, t_caller caller, int i) {
+//	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
+//	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
+//	 *  con el que está en el FS.
+//	 **/
+//	t_list* paginasModificadas = list_map(tablaDeSegmentos->segmentos,(void*) obtenerTablasModificadas);
+//}
+//
+//t_list* obtenerTablasModificadas(t_segmento* segmento){
+//	t_list* tablasModificadas = list_filter(segmento->tablaDePagina,(void*) tablaDePaginaModificada);
+//	return tablasModificadas;
+//}
+//
+//int tablaDePaginaModificada(t_elemTablaDePaginas* elementoTP){
+//	if(elementoTP->modificado==MODIFICADO){
+//		printf("El codigo que recibi es: %i \n", elementoTP->marco->value );
+//		return TRUE;
+//	}else{
+//		return FALSE;
+//	}
+//}

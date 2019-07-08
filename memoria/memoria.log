@@ -1,62 +1,3 @@
-<<<<<<< HEAD
-[INFO] 22:45:57:884 Memoria/(4375:4375): Servidor listo para recibir al cliente
-[INFO] 09:49:07:21 Memoria/(5198:5198): Servidor listo para recibir al cliente
-[INFO] 14:11:20:469 Memoria/(10723:10723): Servidor listo para recibir al cliente
-[ERROR] 14:15:45:526 Memoria/(10723:10723): el cliente se desconecto. Terminando servidor
-[INFO] 14:17:08:400 Memoria/(10908:10908): Servidor listo para recibir al cliente
-[ERROR] 14:17:23:943 Memoria/(10908:10908): el cliente se desconecto. Terminando servidor
-[INFO] 14:31:13:335 Memoria/(11046:11046): Servidor listo para recibir al cliente
-[ERROR] 14:32:07:412 Memoria/(11046:11046): el cliente se desconecto. Terminando servidor
-[INFO] 14:42:47:451 Memoria/(11268:11268): Servidor listo para recibir al cliente
-[ERROR] 14:43:30:923 Memoria/(11268:11268): el cliente se desconecto. Terminando servidor
-[INFO] 14:46:34:697 Memoria/(11468:11468): Servidor listo para recibir al cliente
-[ERROR] 14:46:40:254 Memoria/(11468:11468): el cliente se desconecto. Terminando servidor
-[INFO] 14:47:47:532 Memoria/(11553:11553): Servidor listo para recibir al cliente
-[ERROR] 14:48:01:542 Memoria/(11553:11553): el cliente se desconecto. Terminando servidor
-[INFO] 14:48:51:2 Memoria/(11647:11647): Servidor listo para recibir al cliente
-[ERROR] 14:49:08:416 Memoria/(11647:11647): el cliente se desconecto. Terminando servidor
-[INFO] 14:57:42:531 Memoria/(11851:11851): Servidor listo para recibir al cliente
-[INFO] 14:58:02:693 Memoria/(11851:11851): Me llego un SELECT
-[INFO] 14:59:21:86 Memoria/(11974:11974): Servidor listo para recibir al cliente
-[INFO] 14:59:28:478 Memoria/(11974:11974): Me llego un SELECT
-[INFO] 14:59:54:583 Memoria/(12014:12014): Servidor listo para recibir al cliente
-[INFO] 15:00:02:222 Memoria/(12014:12014): Me llego un INSERT
-[INFO] 15:07:34:309 Memoria/(12213:12213): Servidor listo para recibir al cliente
-[INFO] 15:11:30:743 Memoria/(12213:12213): Me llego un SELECT
-[INFO] 15:14:34:917 Memoria/(12358:12358): Servidor listo para recibir al cliente
-[INFO] 15:14:48:156 Memoria/(12358:12358): Me llego un SELECT
-[INFO] 15:20:09:743 Memoria/(12577:12577): Servidor listo para recibir al cliente
-[INFO] 15:20:47:886 Memoria/(12577:12577): Me llego un SELECT
-[INFO] 15:21:58:651 Memoria/(12701:12701): Servidor listo para recibir al cliente
-[INFO] 15:22:17:308 Memoria/(12701:12701): Me llego un SELECT
-[INFO] 16:03:28:681 Memoria/(13720:13720): Servidor listo para recibir al cliente
-[WARNING] 16:03:51:920 Memoria/(13720:13720): Operacion desconocida. No quieras meter la pata
-[INFO] 16:59:11:53 Memoria/(14496:14496): Servidor listo para recibir al cliente
-[INFO] 16:59:59:974 Memoria/(14496:14496): Me llego un SELECT
-[INFO] 17:00:19:25 Memoria/(14519:14519): Servidor listo para recibir al cliente
-[INFO] 17:01:24:164 Memoria/(14519:14519): Me llego un INSERT
-[INFO] 17:52:41:60 Memoria/(4213:4213): Servidor listo para recibir al cliente
-[INFO] 19:01:54:439 Memoria/(8539:8539): Servidor listo para recibir al cliente
-[INFO] 19:01:54:439 Memoria/(8539:8539): Me llego un SELECT
-[INFO] 19:18:44:166 Memoria/(9712:9712): Servidor listo para recibir al cliente
-[INFO] 19:18:44:166 Memoria/(9712:9712): Me llego un SELECT
-[INFO] 19:22:41:993 Memoria/(10226:10226): Servidor listo para recibir al cliente
-[INFO] 19:22:41:994 Memoria/(10226:10226): Me llego un SELECT
-[INFO] 11:18:54:676 Memoria/(12133:12133): Servidor listo para recibir al cliente
-[INFO] 11:23:15:253 Memoria/(12332:12332): Servidor listo para recibir al cliente
-[INFO] 17:28:13:55 Memoria/(20981:20981): Servidor listo para recibir al cliente
-[INFO] 17:29:31:399 Memoria/(21086:21086): Servidor listo para recibir al cliente
-[INFO] 17:55:43:126 Memoria/(22385:22385): Servidor listo para recibir al cliente
-[INFO] 10:08:09:180 Memoria/(11092:11098): Memoria lista para recibir al kernel
-[INFO] 10:08:49:278 Memoria/(11111:11117): Memoria lista para recibir al kernel
-[INFO] 10:09:09:530 Memoria/(11111:11118): Antes de enviar mensaje
-[INFO] 10:09:09:530 Memoria/(11111:11118): despues de enviar mensaje
-[INFO] 10:09:09:531 Memoria/(11111:11118): Me respuesta, del SELECT, de LFS
-[INFO] 10:09:58:138 Memoria/(11111:11118): Antes de enviar mensaje
-[INFO] 10:09:58:138 Memoria/(11111:11118): despues de enviar mensaje
-[INFO] 10:12:00:158 Memoria/(11165:11180): Memoria lista para recibir al kernel
-=======
->>>>>>> master
 [INFO] 16:40:45:926 Memoria/(24752:24752): SE CONECTO CN LFS
 [INFO] 16:40:45:936 Memoria/(24752:24760): Vamos a leer de consola
 [INFO] 16:40:45:936 Memoria/(24752:24762): Memoria lista para recibir al kernel
@@ -141,6 +82,7 @@
 [INFO] 15:17:31:754 Memoria/(15166:15166): SE CONECTO CN LFS
 [INFO] 15:17:31:763 Memoria/(15166:15176): Vamos a leer de consola
 [INFO] 15:17:31:772 Memoria/(15166:15177): Memoria lista para recibir al kernel
+<<<<<<< HEAD
 [INFO] 17:10:02:475 Memoria/(4545:4545): SE CONECTO CON LFS
 [INFO] 17:10:02:521 Memoria/(4545:4545): Recibi de LFS TAMAÑO_VALUE: 255
 [INFO] 17:23:09:847 Memoria/(5038:5038): SE CONECTO CON LFS
@@ -1308,3 +1250,97 @@
 [INFO] 00:50:31:491 Memoria/(4522:4587): La respuesta a: SELECT HOLA 3 no es valida, KEY INEXISTENTE
 [INFO] 00:50:34:845 Memoria/(4522:4588): S SC 3 30000;MARINOS2 EC 1 1000000;J SC 3 30000;HU SC 3 30000;TABLA98 SC 3 30000;TF SC 3 30000;AVES SC 5 1000000;T SC 3 30000;TABLA2 SC 2 30000;TABLALH SC 3 30000;Y SC 3 30000;HOLA EC 1 1000000;MAMIFEROS SC 3 1000000;TB SC 3 30000;TG SC 3 30000;TABLAJIJO SC 2 30000;MARINOS SC 1 1000000;A SC 3 30000;TC SC 3 30000;TT SC 3 30000;F SC 3 30000
 [INFO] 00:50:34:849 Memoria/(4522:4588): Se desconecto el kernel 47
+=======
+[INFO] 20:43:04:307 Memoria/(20625:20625): SE CONECTO CON LFS
+[INFO] 20:43:04:311 Memoria/(20625:20625): Recibi de LFS TAMAÑO_VALUE: 255
+[INFO] 20:43:04:312 Memoria/(20625:20625): INICIO DE MEMORIA
+[INFO] 20:43:04:335 Memoria/(20625:20636): Vamos a leer de consola
+[INFO] 20:43:04:355 Memoria/(20625:20637): Memoria lista para recibir al kernel
+[INFO] 20:43:20:648 Memoria/(20625:20636): entre a interpretarr request
+[DEBUG] 20:43:20:656 Memoria/(20625:20636): Me llego un CREATE
+[INFO] 20:43:21:261 Memoria/(20625:20636): NO EXISTE EL SEGMENTO
+[INFO] 20:43:21:262 Memoria/(20625:20636): La request: CREATE TABLAFLACO SC 3 60000 se ha realizado con exito
+[INFO] 20:43:33:963 Memoria/(20625:20636): entre a interpretarr request
+[DEBUG] 20:43:33:977 Memoria/(20625:20636): Me llego un INSERT
+[INFO] 20:43:44:207 Memoria/(20625:20636): La request: INSERT ABLAFLACO 1 "Hola" se ha realizado con exito
+[INFO] 20:44:21:78 Memoria/(20625:20636): entre a interpretarr request
+[DEBUG] 20:44:21:79 Memoria/(20625:20636): Me llego un SELECT
+[INFO] 20:44:21:79 Memoria/(20625:20636): ME LO TIENE QUE DECIR LFS
+[INFO] 20:44:21:682 Memoria/(20625:20636): La respuesta a: SELECT TABLAFLACO 1 no es valida, KEY INEXISTENTE
+[INFO] 20:45:04:493 Memoria/(20625:20636): entre a interpretarr request
+[DEBUG] 20:45:04:493 Memoria/(20625:20636): Me llego un SELECT
+[INFO] 20:45:04:493 Memoria/(20625:20636): ME LO TIENE QUE DECIR LFS
+[INFO] 20:45:05:115 Memoria/(20625:20636): La respuesta a: SELECT TABLAFLACO 1 no es valida, KEY INEXISTENTE
+[INFO] 20:52:45:585 Memoria/(20734:20734): SE CONECTO CON LFS
+[INFO] 20:52:45:591 Memoria/(20734:20734): Recibi de LFS TAMAÑO_VALUE: 255
+[INFO] 20:52:45:591 Memoria/(20734:20734): INICIO DE MEMORIA
+[INFO] 20:52:45:594 Memoria/(20734:20742): Vamos a leer de consola
+[INFO] 20:52:45:605 Memoria/(20734:20743): Memoria lista para recibir al kernel
+[INFO] 20:53:04:743 Memoria/(20734:20742): entre a interpretarr request
+[DEBUG] 20:53:04:746 Memoria/(20734:20742): Me llego un CREATE
+[INFO] 20:53:05:359 Memoria/(20734:20742): NO EXISTE EL SEGMENTO
+[INFO] 20:53:05:370 Memoria/(20734:20742): La request: CREATE TABLA001 SC 3 60000 se ha realizado con exito
+[INFO] 20:53:24:952 Memoria/(20734:20742): entre a interpretarr request
+[DEBUG] 20:53:24:958 Memoria/(20734:20742): Me llego un INSERT
+[INFO] 20:53:31:530 Memoria/(20734:20742): La request: INSERT TABLA0001 1 "AAH" se ha realizado con exito
+[ERROR] 20:53:59:463 Memoria/(20734:20742): Cantidad de parametros invalidos para la request ingresada
+[INFO] 20:54:09:734 Memoria/(20734:20742): entre a interpretarr request
+[DEBUG] 20:54:09:735 Memoria/(20734:20742): Me llego un SELECT
+[INFO] 20:54:09:736 Memoria/(20734:20742): ME LO TIENE QUE DECIR LFS
+[INFO] 20:54:10:387 Memoria/(20734:20742): La respuesta a: SELECT TABLA001 1 no es valida, KEY INEXISTENTE
+[INFO] 20:54:23:200 Memoria/(20734:20742): entre a interpretarr request
+[DEBUG] 20:54:23:213 Memoria/(20734:20742): Me llego un INSERT
+[INFO] 20:54:28:296 Memoria/(20734:20742): La request: INSERT TABLA001 1 "AHA" se ha realizado con exito
+[INFO] 20:54:39:135 Memoria/(20734:20742): entre a interpretarr request
+[DEBUG] 20:54:39:139 Memoria/(20734:20742): Me llego un SELECT
+[INFO] 20:54:39:139 Memoria/(20734:20742): LO ENCONTRE EN CACHEE!
+[INFO] 20:54:39:144 Memoria/(20734:20742): La respuesta a la request: SELECT TABLA001 1 es: AHA
+[INFO] 20:54:57:487 Memoria/(20734:20742): entre a interpretarr request
+[DEBUG] 20:54:57:490 Memoria/(20734:20742): Me llego un INSERT
+[INFO] 09:42:29:26 Memoria/(20905:20905): SE CONECTO CON LFS
+[INFO] 09:42:29:27 Memoria/(20905:20905): Recibi de LFS TAMAÑO_VALUE: 255
+[INFO] 09:42:29:27 Memoria/(20905:20905): INICIO DE MEMORIA
+[INFO] 09:42:29:35 Memoria/(20905:20922): Vamos a leer de consola
+[INFO] 09:42:29:49 Memoria/(20905:20923): Memoria lista para recibir al kernel
+[ERROR] 09:42:47:143 Memoria/(20905:20922): Cantidad de parametros invalidos para la request ingresada
+[INFO] 09:43:03:927 Memoria/(20905:20922): entre a interpretarr request
+[DEBUG] 09:43:03:935 Memoria/(20905:20922): Me llego un CREATE
+[INFO] 09:43:04:549 Memoria/(20905:20922): NO EXISTE EL SEGMENTO
+[INFO] 09:43:04:552 Memoria/(20905:20922): La request: CREATE TABLA002 SC 3 60000 se ha realizado con exito
+[INFO] 09:43:33:602 Memoria/(20905:20922): entre a interpretarr request
+[DEBUG] 09:43:33:607 Memoria/(20905:20922): Me llego un INSERT
+[INFO] 09:43:38:892 Memoria/(20905:20922): La request: INSERT TABLA002 1 "Hola" se ha realizado con exito
+[INFO] 09:44:29:902 Memoria/(20905:20922): entre a interpretarr request
+[DEBUG] 09:44:29:902 Memoria/(20905:20922): Me llego un SELECT
+[INFO] 09:44:29:903 Memoria/(20905:20922): LO ENCONTRE EN CACHEE!
+[INFO] 09:44:29:903 Memoria/(20905:20922): La respuesta a la request: SELECT TABLA002 1 es: Hola
+[INFO] 09:49:50:88 Memoria/(21272:21272): SE CONECTO CON LFS
+[INFO] 09:49:50:91 Memoria/(21272:21272): Recibi de LFS TAMAÑO_VALUE: 255
+[INFO] 09:49:50:91 Memoria/(21272:21272): INICIO DE MEMORIA
+[INFO] 09:49:50:100 Memoria/(21272:21299): Vamos a leer de consola
+[INFO] 09:49:50:114 Memoria/(21272:21300): Memoria lista para recibir al kernel
+[INFO] 09:50:42:67 Memoria/(21272:21299): entre a interpretarr request
+[DEBUG] 09:50:42:95 Memoria/(21272:21299): Me llego un CREATE
+[INFO] 09:50:42:704 Memoria/(21272:21299): NO EXISTE EL SEGMENTO
+[INFO] 09:50:42:704 Memoria/(21272:21299): La request: CREATE TABLA003 SC 3 60000 se ha realizado con exito
+[INFO] 09:51:13:388 Memoria/(21272:21299): entre a interpretarr request
+[DEBUG] 09:51:13:394 Memoria/(21272:21299): Me llego un INSERT
+[INFO] 09:51:22:262 Memoria/(21272:21299): La request: INSERT TABLA003 1 "Hola" se ha realizado con exito
+[INFO] 09:51:34:684 Memoria/(21272:21299): entre a interpretarr request
+[DEBUG] 09:51:34:694 Memoria/(21272:21299): Me llego un SELECT
+[INFO] 09:51:34:694 Memoria/(21272:21299): LO ENCONTRE EN CACHEE!
+[INFO] 09:51:34:694 Memoria/(21272:21299): La respuesta a la request: SELECT TABLA003 1 es: Hola
+[INFO] 09:51:47:119 Memoria/(21272:21299): entre a interpretarr request
+[DEBUG] 09:51:47:124 Memoria/(21272:21299): Me llego un INSERT
+[INFO] 10:08:37:832 Memoria/(21423:21423): SE CONECTO CON LFS
+[INFO] 10:08:37:832 Memoria/(21423:21423): Recibi de LFS TAMAÑO_VALUE: 255
+[INFO] 10:08:37:832 Memoria/(21423:21423): INICIO DE MEMORIA
+[INFO] 10:08:37:836 Memoria/(21423:21462): Vamos a leer de consola
+[INFO] 10:08:37:844 Memoria/(21423:21463): Memoria lista para recibir al kernel
+[INFO] 10:08:52:225 Memoria/(21423:21462): entre a interpretarr request
+[DEBUG] 10:08:52:229 Memoria/(21423:21462): Me llego un CREATE
+[INFO] 10:08:52:858 Memoria/(21423:21462): NO EXISTE EL SEGMENTO
+[INFO] 10:08:52:862 Memoria/(21423:21462): La request: CREATE TABLA004 SC 3 60000 se ha realizado con exito
+[INFO] 10:09:12:554 Memoria/(21423:21462): entre a interpretarr request
+[DEBUG] 10:09:12:555 Memoria/(21423:21462): Me llego un INSERT
+>>>>>>> 39d219b78bc4fe0f1eacb1a431134056db6ec9f9
