@@ -69,7 +69,7 @@ typedef enum
 	TIMESTAMP_NO_NUMERICO,
 	CONSISTENCIA_NO_VALIDA,
 	FAILURE = -1,
-	MEMORIA_FULL = 10102,
+	MEMORIA_FULL =-10102,
 } errorNo;
 
 typedef enum

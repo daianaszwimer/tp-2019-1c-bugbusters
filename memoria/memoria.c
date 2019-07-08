@@ -575,17 +575,28 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			valorAEnviarSeparado=NULL;
 	 			liberarArrayDeChar(requestSeparada); //(4)
 	 			requestSeparada=NULL;
+			}else if(codResultado == MEMORIA_FULL){
+				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," NO ha podido realizarse.La memoria se encuentra FULL");
+				log_info(logger_MEMORIA,respuesta);
+				free(respuesta);
+				respuesta=NULL;
+				free(error);
+				error=NULL;
+				liberarArrayDeChar(valorAEnviarSeparado); //(3)
+				valorAEnviarSeparado=NULL;
+				liberarArrayDeChar(requestSeparada); //(4)
+				requestSeparada=NULL;
 			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
 				log_info(logger_MEMORIA,error);
-	 			free(respuesta);
-	 			respuesta=NULL;
-	 			free(error);
-	 			error=NULL;
-	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
-	 			valorAEnviarSeparado=NULL;
-	 			liberarArrayDeChar(requestSeparada); //(4)
-	 			requestSeparada=NULL;
+				free(respuesta);
+				respuesta=NULL;
+				free(error);
+				error=NULL;
+				liberarArrayDeChar(valorAEnviarSeparado); //(3)
+				valorAEnviarSeparado=NULL;
+				liberarArrayDeChar(requestSeparada); //(4)
+				requestSeparada=NULL;
 			}
 			break;
 			}
@@ -678,7 +689,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no chequeo, viene de LFS
  		t_marco* pagLibre = NULL;
  		int index= obtenerPaginaDisponible(&pagLibre);
- 		if(index == MEMORIAFULL){
+ 		if(index == MEMORIA_FULL){
  			t_elemTablaDePaginas* elementoAInsertar= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
  			elementoAInsertar->marco=NULL;
  			int rtaLRU;
@@ -828,7 +839,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 	}else{
 		t_marco* pagLibre =NULL;
 		int index =obtenerPaginaDisponible(&pagLibre);
-		if(index == MEMORIAFULL){
+		if(index == MEMORIA_FULL){
 			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
 			t_elemTablaDePaginas* elementoAInsertar;
 			int rtaLRU;
@@ -838,6 +849,8 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 					t_segmento* tablaBuscada;
 					tablaBuscada = encontrarSegmento(nuevaTabla);
 					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+					enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
+					eliminar_paquete(paqueteAEnviar);
 					free(nuevaTabla);
 					nuevaTabla=NULL;
 				} else if (resultadoCache == SEGMENTOINEXISTENTE) {
@@ -847,13 +860,15 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 					pthread_mutex_lock(&semMTablaSegmentos);
 					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
 					pthread_mutex_unlock(&semMTablaSegmentos);
-
+					enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
+					eliminar_paquete(paqueteAEnviar);
 					free(nuevaTabla);
 					nuevaTabla=NULL;
 				}
 			} else {
-				log_info(logger_MEMORIA,
-						"NO hay paginas para reemplazar, hay q hacer journaling");
+				enviarAlDestinatarioCorrecto(palabraReservada, MEMORIA_FULL,request, paqueteAEnviar,caller,indiceKernel);
+				eliminar_paquete(paqueteAEnviar);
+
 			}
 		}else{
 			if(resultadoCache == KEYINEXISTENTE){
@@ -1101,7 +1116,7 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* req
 int obtenerPaginaDisponible(t_marco** pagLibre){
 	int index= obtenerIndiceMarcoDisponible();
 	if(index == NUESTRO_ERROR){
-		return MEMORIAFULL;
+		return MEMORIA_FULL;
 	}else{
 		*pagLibre = memoria + (sizeof(unsigned long long)+sizeof(uint16_t)+maxValue)*index;
 		return index;
