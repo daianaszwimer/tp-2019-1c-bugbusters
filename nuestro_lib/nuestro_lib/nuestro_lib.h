@@ -121,6 +121,10 @@ typedef enum
 	ANOTHER_COMPONENT
 } t_caller;
 
+typedef struct{
+	int valor;
+} t_int;
+
 int convertirKey(char*);
 void convertirTimestamp(char*, unsigned long long*);
 void iterator(char*);
