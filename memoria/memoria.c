@@ -41,10 +41,10 @@ void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
 
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	marcosTotales = config_get_int_value(config, "TAM_MEM")/sizeof(t_marco);
+	marcosTotales = config_get_int_value(config, "TAM_MEM")/(27+maxValue);
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
-	bitarrayString= strdup("");
+	bitarrayString = string_repeat('0', marcosTotales);
 	bitarray= bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
 	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
@@ -152,7 +152,7 @@ void conectarAFileSystem() {
 	maxValue= handshakeLFS->tamanioValue;
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
-//	eliminar_paquete(handshakeLFS); TODO VER SI REALMENTE SE ELIMINA
+	free(handshakeLFS);
 }
 
 
@@ -178,37 +178,32 @@ void escucharMultiplesClientes() {
 			FD_SET(descriptorServidor, &descriptoresDeInteres);					// Agregamos el descriptorServidor a la lista de interes
 
 			for (int i=0; i< numeroDeClientes; i++) {
-				t_int* fdAAgregar = list_get(descriptoresClientes,i);
-				FD_SET(fdAAgregar->valor , &descriptoresDeInteres); // Agregamos a la lista de interes, los descriptores de los clientes
+				FD_SET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres); // Agregamos a la lista de interes, los descriptores de los clientes
 			}
 
 			valorMaximo = maximo(descriptoresClientes, descriptorServidor, numeroDeClientes); // Se el valor del descriptor mas grande. Si no hay ningun cliente, devuelve el fd del servidor
 			select(valorMaximo + 1, &descriptoresDeInteres, NULL, NULL, NULL); 				  // Espera hasta que algún cliente tenga algo que decir
 
 			for(int i=0; i<numeroDeClientes; i++) {
-				t_int* descriptorConectado = list_get(descriptoresClientes,i);
-				if (FD_ISSET(descriptorConectado->valor , &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
+				if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
 
 					int esElCliente(int clienteFd) {
-						t_int* descriptorSuperCliente =list_get(descriptoresClientes,i);
-						return clienteFd == descriptorSuperCliente->valor ;
+						return clienteFd == (int) list_get(descriptoresClientes,i);
 					}
 					if (list_any_satisfy(clientesGossiping, (void*)esElCliente)) {
 						// mandar lista de gossiping
 					} else {
 						// si no es gossiping, es de request
-						paqueteRecibido = recibir(descriptorConectado->valor); // Recibo de ese cliente en particular
+						paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
 						cod_request palabraReservada = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
 						printf("El codigo que recibi es: %i \n", palabraReservada);
-						printf("Del fd %i \n", descriptorConectado->valor); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+						printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 						if(palabraReservada != -1){
 							interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
 						}else{
-							log_info(logger_MEMORIA, "Se desconecto el kernel %i", descriptorConectado);
-							t_int* listAux = malloc(sizeof(t_int));
-							listAux->valor = -1;
-							list_replace(descriptoresClientes, i, listAux); // Si el cliente se desconecta le pongo un -1 en su fd}
+							log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
+							list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
 							list_remove_by_condition(clientesGossiping, (void*)esElCliente);
 							list_remove_by_condition(clientesRequest, (void*)esElCliente);
 						}
@@ -225,18 +220,12 @@ void escucharMultiplesClientes() {
 				//enviarGossiping("8001", "127.0.0.1", "1", descriptorCliente);
 				t_handshake_memoria* handshake = recibirHandshakeMemoria(descriptorCliente);
 				if (handshake->tipoComponente == KERNEL || handshake->tipoComponente == MEMORIA) {
-					t_int* listAux = malloc(sizeof(t_int));
-					listAux->valor = descriptorCliente;
-					list_add(descriptoresClientes, listAux); // Agrego el fd del cliente a la lista de fd's
+					numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 					numeroDeClientes++;
 					if (handshake->tipoRol == REQUEST) {
-						t_int* listAux = malloc(sizeof(t_int));
-						listAux->valor = descriptorCliente;
-						list_add(clientesRequest, listAux);
+						list_add(clientesRequest, (void*)descriptorCliente);
 					} else if (handshake->tipoRol == GOSSIPING) {
-						t_int* listAux = malloc(sizeof(t_int));
-						listAux->valor = descriptorCliente;
-						list_add(clientesGossiping, listAux);
+						list_add(clientesGossiping,(void*) descriptorCliente);
 						if (handshake->tipoComponente == KERNEL) {
 							// por ahora queda asi porque kernel no manda mensaje
 							enviarGossiping("8001", "127.0.0.1", "1", descriptorCliente);
@@ -300,6 +289,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case JOURNAL:
 			log_debug(logger_MEMORIA, "Me llego un JOURNAL");
+			procesarJournal(codRequest, request, caller, i);
 			break;
 		case NUESTRO_ERROR:
 			 if(caller == ANOTHER_COMPONENT){
@@ -375,7 +365,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
-			guardarRespuestaDeLFSaCACHE(request,valorDeLFS, resultadoCache);
+			guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
 			eliminar_paquete(valorDeLFS);
 			valorDeLFS=NULL;
 		}
@@ -672,40 +662,73 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
    * Return:
    * 	-> :: void
    * VALGRIND:: NO*/
-void guardarRespuestaDeLFSaCACHE(char* request,t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
+ void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
 
-	if(nuevoPaquete->palabraReservada == SUCCESS){
-		char** requestSeparada= separarRequest(request);
-		char* nuevaTabla= strdup(requestSeparada[0]);
-		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
-		char* nuevoValor= strdup(requestSeparada[2]);
-		unsigned long long nuevoTimestamp;
-		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no chequeo, viene de LFS
-		t_marco* pagLibre = malloc(sizeof(unsigned long long)+sizeof(uint16_t)+maxValue);
-		int index= obtenerPaginaDisponible(&pagLibre);
-		if(index == MEMORIAFULL){
-			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
-			//TODO
-		}else{
-			if(tipoError== KEYINEXISTENTE){
-				t_segmento* tablaBuscada = encontrarSegmento(nuevaTabla);
-				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
-			}else if(tipoError == SEGMENTOINEXISTENTE){
-				t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
-				crearSegmento(nuevoSegmento,nuevaTabla);
-				list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
-				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
+ 	if(nuevoPaquete->palabraReservada == SUCCESS){
+ 		char** requestSeparada= separarRequest(nuevoPaquete->request);
+ 		char* nuevaTabla= strdup(requestSeparada[0]);
+ 		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
+ 		char* nuevoValor= strdup(requestSeparada[2]);
+ 		unsigned long long nuevoTimestamp;
+ 		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no chequeo, viene de LFS
+ 		t_marco* pagLibre = NULL;
+ 		int index= obtenerPaginaDisponible(&pagLibre);
+ 		if(index == MEMORIAFULL){
+ 			t_elemTablaDePaginas* elementoAInsertar= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
+ 			elementoAInsertar->marco=NULL;
+ 			int rtaLRU;
+ 			elementoAInsertar=correrAlgoritmoLRU(&rtaLRU);
+ 			if (rtaLRU == SUCCESS){
+ 				if (tipoError == KEYINEXISTENTE) {
+ 					t_segmento* tablaBuscada = malloc(sizeof(t_segmento));
+ 					tablaBuscada->tablaDePagina=NULL;
+ 					tablaBuscada = encontrarSegmento(nuevaTabla);
+ 					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+ 					free(nuevaTabla);
+ 					nuevaTabla=NULL;
+ 					free(tablaBuscada);
+ 					tablaBuscada=NULL;
+ 				} else if (tipoError == SEGMENTOINEXISTENTE) {
+ 					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
+ 					crearSegmento(nuevoSegmento, nuevaTabla);
+ 					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+ 					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
 
-			}
-		}
-		free(nuevaTabla);
-		nuevaTabla=NULL;
-		liberarArrayDeChar(requestSeparada);
-		requestSeparada=NULL;
-		free(nuevoValor);
-		nuevoValor=NULL;
-	}
-}
+ 					free(nuevaTabla);
+ 					nuevaTabla=NULL;
+ 				}
+
+ 				//free(elementoAInsertar);
+ 			} else {
+ 				log_info(logger_MEMORIA,
+ 						"NO hay paginas para reemplazar, hay q hacer journaling");
+ 			}
+ 		}else{
+ 			if(tipoError== KEYINEXISTENTE){
+ 				t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
+ 				tablaBuscada= encontrarSegmento(nuevaTabla);
+ 				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
+
+ 				free(tablaBuscada);
+ 				tablaBuscada=NULL;
+ 			}else if(tipoError == SEGMENTOINEXISTENTE){
+ 				t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
+ 				crearSegmento(nuevoSegmento,nuevaTabla);
+ 				list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
+ 				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
+
+ 				free(nuevaTabla);
+ 				nuevaTabla=NULL;
+ 			}
+ 		}
+ 	liberarArrayDeChar(requestSeparada);
+ 	requestSeparada=NULL;
+ 	free(nuevaTabla);
+ 	nuevaTabla=NULL;
+ 	free(nuevoValor);
+ 	nuevoValor=NULL;
+ 	}
+ }
 
 /* procesarInsert()
  * Parametros:
@@ -793,18 +816,43 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+		eliminar_paquete(paqueteAEnviar);
+
 	}else{
 		t_marco* pagLibre =NULL;
 		int index =obtenerPaginaDisponible(&pagLibre);
 		if(index == MEMORIAFULL){
-		log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
-		//TODO
+			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
+			t_elemTablaDePaginas* elementoAInsertar;
+			int rtaLRU;
+			elementoAInsertar=correrAlgoritmoLRU(&rtaLRU);
+			if (rtaLRU == SUCCESS){
+				if (resultadoCache == KEYINEXISTENTE) {
+					t_segmento* tablaBuscada;
+					tablaBuscada = encontrarSegmento(nuevaTabla);
+					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+					free(nuevaTabla);
+					nuevaTabla=NULL;
+				} else if (resultadoCache == SEGMENTOINEXISTENTE) {
+					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
+					crearSegmento(nuevoSegmento, nuevaTabla);
+					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
+
+					free(nuevaTabla);
+					nuevaTabla=NULL;
+				}
+			} else {
+				log_info(logger_MEMORIA,
+						"NO hay paginas para reemplazar, hay q hacer journaling");
+			}
 		}else{
 			if(resultadoCache == KEYINEXISTENTE){
 				t_segmento* tablaDestino = encontrarSegmento(nuevaTabla);
 				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+				eliminar_paquete(paqueteAEnviar);
 
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
 
@@ -815,13 +863,13 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+				eliminar_paquete(paqueteAEnviar);
 
 			}
 		}
 	}
 	free(nuevaKeyChar);
 	nuevaKeyChar=NULL;
-	eliminar_paquete(paqueteAEnviar);
 	free(nuevaTabla);
 	nuevaTabla=NULL;
 	free(nuevoValor);
@@ -1039,7 +1087,6 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 		return MEMORIAFULL;
 	}else{
 		*pagLibre = memoria + (sizeof(unsigned long long)+sizeof(uint16_t)+maxValue)*index;
-		*pagLibre = malloc(sizeof(unsigned long long)+sizeof(uint16_t)+maxValue);
 		return index;
 	}
 
@@ -1099,13 +1146,14 @@ void liberarMemoria(){
 	bitarray_destroy(bitarray);
 	free(bitarrayString);
 	bitarrayString=NULL;
-//	free(memoria);
+	free(memoria);
 //	memoria=NULL;
 	liberar_conexion(conexionLfs);
 	FD_ZERO(&descriptoresDeInteres);
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
 	list_destroy(clientesGossiping);
+	list_destroy(descriptoresClientes);
 	list_destroy(clientesRequest);
 }
 
@@ -1121,7 +1169,8 @@ void liberarMemoria(){
 void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 	bitarray_clean_bit(bitarray, elem->numeroDePag);
 	memset(marcoAEliminar->value, 0, maxValue);
-	free(marcoAEliminar);
+//	free(marcoAEliminar->value);
+//	free(marcoAEliminar);
 }
 
 /* procesarDescribe()
@@ -1183,3 +1232,143 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	free(segmentoABuscar);
 	segmentoABuscar=NULL;
 }
+
+/* desvincularVictimaDeSuSegmento()
+ *	-> t_elemTablaDePaginas* :: elemVictima
+ * Descripcion: Le quita al segmento la pagina indicada
+ * Return:
+ * 	-> void ::
+ * 	VALGRIND :: NO*/
+int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
+	int i =0;
+	int retorno=NUESTRO_ERROR;
+	t_segmento* segmento;
+	segmento=NULL;
+		int contieneElElementoVictima(t_elemTablaDePaginas* elem){
+			if(elem->numeroDePag == elemVictima->numeroDePag){
+				retorno = SUCCESS;
+				puts(elem->marco->value);
+				return SUCCESS;
+			}else{
+				return NUESTRO_ERROR;
+			}
+		}
+
+	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
+		segmento = list_get(tablaDeSegmentos->segmentos,i);
+		list_remove_and_destroy_by_condition(segmento->tablaDePagina,(void*)contieneElElementoVictima,(void*)eliminarElemTablaPagina);
+		i++;
+	}
+
+	return retorno;
+}
+
+/* menorTimestamp()
+ * desvincularVictimaDeSuSegmento:
+ *	-> t_elemTablaDePaginas* :: primerElem
+ *	-> t_elemTablaDePaginas* :: segundoElem
+ * Descripcion: Indica si es cierto que el primer elemento contiene un timestamp menor que el segundo.
+ * Return:
+ * 	-> int :: bool
+ * 	VALGRIND :: SI*/
+ int menorTimestamp(t_elemTablaDePaginas* primerElem,t_elemTablaDePaginas* segundoElem) {
+	return primerElem->marco->timestamp <= segundoElem->marco->timestamp;
+}
+
+/* correrAlgoritmoLRU()
+ * desvincularVictimaDeSuSegmento:
+ *	-> t_elemTablaDePaginas** :: primerElem
+ * Descripcion: Revisa si existe un pag sin modificar y , de hacerlo, la elige como victima para darsela
+ * 				a la nueva request ingresada.
+ * Return:
+ * 	-> int :: bool-rta del algoritmo LRU
+ * 	VALGRIND :: NO*/
+ t_elemTablaDePaginas* correrAlgoritmoLRU(int* rta) {
+	log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutarse el algoritmo de reemplazo");
+	int i=0, j= 0;
+
+	t_list* elemSinModificar=list_create();
+
+	while(list_get(tablaDeSegmentos->segmentos,j)!=NULL){
+		t_segmento* segmento=list_get(tablaDeSegmentos->segmentos,j);
+
+		while (list_get(segmento->tablaDePagina, i) != NULL) {
+			t_elemTablaDePaginas* elemenetoTablaDePag =list_get(segmento->tablaDePagina, i);
+			if (elemenetoTablaDePag->modificado == SINMODIFICAR) {
+				list_add(elemSinModificar, elemenetoTablaDePag);
+			}
+			i++;
+		}
+		j++;
+		i=0;
+	}
+
+	//t_list* listaVictima;
+	t_elemTablaDePaginas* elementoVictima;
+	elementoVictima =NULL;
+
+	if (!list_is_empty(elemSinModificar)) {
+		list_sort(elemSinModificar, (void*) menorTimestamp);
+		//listaVictima = list_take_and_remove(elemSinModificar, 1);
+		elementoVictima= list_get(elemSinModificar,0);
+//		list_destroy_and_destroy_elements(elemSinModificar,(void*)eliminarElemTablaPagina);
+		list_destroy(elemSinModificar);
+		int desvinculacion=desvincularVictimaDeSuSegmento(elementoVictima);
+		if(desvinculacion == SUCCESS){
+			*rta=SUCCESS;
+		}else{
+			*rta=NUESTRO_ERROR;
+		}
+
+	} else {
+		*rta=JOURNALTIME;
+	}
+//	list_clean_and_destroy_elements(elemSinModificar,(void*)liberarElemTablaPagina);
+	return elementoVictima;
+}
+
+
+
+void procesarJournal(cod_request codRequest, char* request, t_caller caller, int i) {
+	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
+	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
+	 *  con el que está en el FS.
+	 **/
+	t_list* elemModificados = list_create();
+
+	void encontrarElemModificado(t_segmento* segmento){
+		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
+			if(elemPagina->modificado == MODIFICADO){
+				list_add(elemModificados, elemPagina);
+				puts(elemPagina->marco->value);
+			}
+		}
+		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
+	}
+	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
+}
+
+
+
+
+//void procesarJournal(cod_request codRequest, char* request, t_caller caller, int i) {
+//	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
+//	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
+//	 *  con el que está en el FS.
+//	 **/
+//	t_list* paginasModificadas = list_map(tablaDeSegmentos->segmentos,(void*) obtenerTablasModificadas);
+//}
+//
+//t_list* obtenerTablasModificadas(t_segmento* segmento){
+//	t_list* tablasModificadas = list_filter(segmento->tablaDePagina,(void*) tablaDePaginaModificada);
+//	return tablasModificadas;
+//}
+//
+//int tablaDePaginaModificada(t_elemTablaDePaginas* elementoTP){
+//	if(elementoTP->modificado==MODIFICADO){
+//		printf("El codigo que recibi es: %i \n", elementoTP->marco->value );
+//		return TRUE;
+//	}else{
+//		return FALSE;
+//	}
+//}

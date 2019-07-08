@@ -111,8 +111,8 @@ errorNo dumpear() {
 				free(datosADumpear);
 				fclose(fileTmp);
 			}
+			closedir(dir);
 		}
-		closedir(dir);
 	}
 	// Vacio la memtable
 	list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);

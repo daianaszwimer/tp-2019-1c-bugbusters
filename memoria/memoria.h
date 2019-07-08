@@ -127,7 +127,7 @@ void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
-void guardarRespuestaDeLFSaCACHE(char*,t_paquete*,t_erroresMemoria);
+void guardarRespuestaDeLFSaCACHE(t_paquete* ,t_erroresMemoria);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
@@ -158,9 +158,13 @@ void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
 void procesarDescribe(cod_request, char*,t_caller,int);
 void procesarDrop(cod_request, char* ,consistencia , t_caller , int);
 
-int LRU(t_elemTablaDePaginas**);
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas*);
 int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
 t_elemTablaDePaginas* correrAlgoritmoLRU(int*);
+
+void procesarJournal(cod_request, char*, t_caller, int);
+t_list* obtenerTablasModificadas(t_segmento*);
+int tablaDePaginaModificada(t_elemTablaDePaginas*);
+
 
 #endif /* MEMORIA_H_ */
