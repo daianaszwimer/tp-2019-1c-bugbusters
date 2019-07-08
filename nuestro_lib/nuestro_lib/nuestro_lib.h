@@ -69,7 +69,7 @@ typedef enum
 	TIMESTAMP_NO_NUMERICO,
 	CONSISTENCIA_NO_VALIDA,
 	FAILURE = -1,
-	MEMORIA_FULL = 10102,
+	MEMORIA_FULL = -10102,
 	COMPONENTE_CAIDO = -2
 } errorNo;
 
@@ -120,6 +120,10 @@ typedef enum
 	CONSOLE,
 	ANOTHER_COMPONENT
 } t_caller;
+
+typedef struct{
+	int valor;
+} t_int;
 
 int convertirKey(char*);
 void convertirTimestamp(char*, unsigned long long*);

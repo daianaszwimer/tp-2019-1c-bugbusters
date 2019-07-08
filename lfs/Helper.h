@@ -23,9 +23,6 @@
 #include <nuestro_lib/nuestro_lib.h>
 #include <pthread.h>
 
-typedef struct{
-	int valor;
-} t_int;
 
 typedef struct{
 	unsigned long long timestamp;

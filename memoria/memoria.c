@@ -19,11 +19,12 @@ int main(void) {
 	//	SEMAFOROS
 	//sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
-	//pthread_mutex_init(&terminarHilo, NULL);
+	pthread_mutex_init(&semMBitarray, NULL);
+	pthread_mutex_init(&semMTablaSegmentos, NULL);
 
 	// 	HILOS
-	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
+	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 
 	pthread_join(hiloLeerDeConsola, NULL);
 	log_info(logger_MEMORIA, "Hilo de consola finalizado");
@@ -72,7 +73,9 @@ void inicializacionDeMemoria(){
  * VALGRIND:: SI */
 int obtenerIndiceMarcoDisponible() {
 	int index = 0;
+	pthread_mutex_lock(&semMBitarray);
 	while(index < marcosTotales && bitarray_test_bit(bitarray, index)) index++;
+	pthread_mutex_unlock(&semMBitarray);
 	if(index >= marcosTotales) {
 		index = NUESTRO_ERROR;
 	}
@@ -91,7 +94,6 @@ void leerDeConsola(void){
 	char* mensaje;
 	log_info(logger_MEMORIA, "Vamos a leer de consola");
 	while (1) {
-		//sem_wait(&semLeerDeConsola);
 		mensaje = readline(">");
 		if (!strcmp(mensaje, "\0")) {
 			pthread_cancel(hiloEscucharMultiplesClientes);
@@ -99,8 +101,7 @@ void leerDeConsola(void){
 			break;
 		}
 		validarRequest(mensaje);
-//		free(mensaje);
-//		mensaje=NULL;
+
 	}
 }
 
@@ -145,6 +146,7 @@ void validarRequest(char* mensaje){
  * 	-> :: void
  * VALGRIND:: SI */
 void conectarAFileSystem() {
+	//TODO MUTEX EN CONFIG
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_FS"),
 			config_get_string_value(config, "PUERTO_FS"));
@@ -318,7 +320,6 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 	t_paquete* paqueteRecibido;
 
 	enviar(palabraReservada, request, conexionLfs);
-	//sem_post(&semLeerDeConsola);
 	usleep(config_get_int_value(config, "RETARDO_FS")*1000);
 	paqueteRecibido = recibir(conexionLfs);
 
@@ -342,12 +343,10 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
  * Return:
  * 	-> :: void
  * VALGRIND:: NO */
-void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int i) {
+void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int indiceKernel) {
 
 	t_paquete* valorDeLFS=NULL;
 	t_elemTablaDePaginas* elementoEncontrado;
-
-
 
 	int resultadoCache;
 
@@ -357,14 +356,14 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 			actualizarTimestamp(elementoEncontrado->marco);
-			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, (int) list_get(descriptoresClientes,i));
+			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, indiceKernel);
 			eliminar_paquete(valorEncontrado);
 			valorEncontrado=NULL;
 
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
 			guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
 			eliminar_paquete(valorDeLFS);
 			valorDeLFS=NULL;
@@ -372,7 +371,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller, (int) list_get(descriptoresClientes,i));
+		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
 		eliminar_paquete(valorDeLFS);
 		valorDeLFS=NULL;
 	}else{
@@ -401,12 +400,13 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 	char** parametros = separarRequest(request);
 	char* segmentoABuscar=strdup(parametros[1]);
 	uint16_t keyABuscar= convertirKey(parametros[2]);
-
 	int encontrarTabla(t_segmento* segmento){
 		return string_equals_ignore_case(segmento->path, segmentoABuscar);
 	}
-
+	pthread_mutex_lock(&semMTablaSegmentos);
 	t_segmento* segmentoEnCache = list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	pthread_mutex_unlock(&semMTablaSegmentos);
+
 	if(segmentoEnCache!= NULL){
 
 		int encontrarElemTablaDePag(t_elemTablaDePaginas* elemDePagina){
@@ -468,7 +468,10 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	int encontrarTabla(t_segmento* segmento){
 			return string_equals_ignore_case(segmento->path, segmentoABuscar);
 	}
-	return list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	pthread_mutex_lock(&semMTablaSegmentos);
+	t_segmento* segmentoEncontrado= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	pthread_mutex_unlock(&semMTablaSegmentos);
+	return segmentoEncontrado;
 }
 
 /* enviarAlDestinatarioCorrecto()
@@ -484,12 +487,14 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  * Return:
  * 	-> :: void
  * VALGRIND:: NO*/
- void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int socketKernel){
+ void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int indiceKernel){
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
 	 		log_info(logger_MEMORIA, valorAEnviar->request);
-			enviar(codResultado, valorAEnviar->request, socketKernel);
+			pthread_mutex_lock(&semMDescriptores);
+			enviar(codResultado, valorAEnviar->request, (int) list_get(descriptoresClientes,indiceKernel));
+			pthread_mutex_unlock(&semMDescriptores);
 	 	 	break;
 	 	 case(CONSOLE):
 	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
@@ -570,17 +575,28 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	 			valorAEnviarSeparado=NULL;
 	 			liberarArrayDeChar(requestSeparada); //(4)
 	 			requestSeparada=NULL;
+			}else if(codResultado == MEMORIA_FULL){
+				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," NO ha podido realizarse.La memoria se encuentra FULL");
+				log_info(logger_MEMORIA,respuesta);
+				free(respuesta);
+				respuesta=NULL;
+				free(error);
+				error=NULL;
+				liberarArrayDeChar(valorAEnviarSeparado); //(3)
+				valorAEnviarSeparado=NULL;
+				liberarArrayDeChar(requestSeparada); //(4)
+				requestSeparada=NULL;
 			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
 				log_info(logger_MEMORIA,error);
-	 			free(respuesta);
-	 			respuesta=NULL;
-	 			free(error);
-	 			error=NULL;
-	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
-	 			valorAEnviarSeparado=NULL;
-	 			liberarArrayDeChar(requestSeparada); //(4)
-	 			requestSeparada=NULL;
+				free(respuesta);
+				respuesta=NULL;
+				free(error);
+				error=NULL;
+				liberarArrayDeChar(valorAEnviarSeparado); //(3)
+				valorAEnviarSeparado=NULL;
+				liberarArrayDeChar(requestSeparada); //(4)
+				requestSeparada=NULL;
 			}
 			break;
 			}
@@ -635,6 +651,21 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 			liberarArrayDeChar(requestSeparada);
 			requestSeparada=NULL;
 	 	 	break;
+	 	 case(JOURNAL):
+			if(codResultado == SUCCESS){
+				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
+				log_info(logger_MEMORIA,error);
+			}else{
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				log_info(logger_MEMORIA,error);
+			}
+			free(respuesta);
+			respuesta=NULL;
+			free(error);
+			error=NULL;
+			liberarArrayDeChar(requestSeparada);
+			requestSeparada=NULL;
+	 	 	break;
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
  			free(respuesta);
@@ -673,7 +704,7 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no chequeo, viene de LFS
  		t_marco* pagLibre = NULL;
  		int index= obtenerPaginaDisponible(&pagLibre);
- 		if(index == MEMORIAFULL){
+ 		if(index == MEMORIA_FULL){
  			t_elemTablaDePaginas* elementoAInsertar= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
  			elementoAInsertar->marco=NULL;
  			int rtaLRU;
@@ -692,13 +723,13 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
  					crearSegmento(nuevoSegmento, nuevaTabla);
  					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+ 					pthread_mutex_lock(&semMTablaSegmentos);
  					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
+ 					pthread_mutex_unlock(&semMTablaSegmentos);
 
  					free(nuevaTabla);
  					nuevaTabla=NULL;
  				}
-
- 				//free(elementoAInsertar);
  			} else {
  				log_info(logger_MEMORIA,
  						"NO hay paginas para reemplazar, hay q hacer journaling");
@@ -715,7 +746,9 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  				t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
  				crearSegmento(nuevoSegmento,nuevaTabla);
  				list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
+ 				pthread_mutex_lock(&semMTablaSegmentos);
  				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
+ 				pthread_mutex_unlock(&semMTablaSegmentos);
 
  				free(nuevaTabla);
  				nuevaTabla=NULL;
@@ -752,22 +785,22 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  * Return:
  * 	-> :: void
  * 	VALGRIND :: NO*/
-void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int i) {
+void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int indiceKernel) {
 		t_elemTablaDePaginas* elementoEncontrado= NULL;
 		char** requestSeparada = separarRequest(request);
 
 		if(consistenciaMemoria == EC || caller == CONSOLE){
 			int resultadoCache= estaEnMemoria(palabraReservada, request,NULL,&elementoEncontrado);
-			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,i);
+			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,indiceKernel);
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
 
 			t_paquete* insertALFS =  intercambiarConFileSystem(palabraReservada,request);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
-				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
+				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,indiceKernel);
 				eliminar_paquete(insertALFS);
 				insertALFS=NULL;
 			}else{
-				enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller, (int) list_get(descriptoresClientes,i));
+				enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller,indiceKernel);
 				eliminar_paquete(insertALFS);
 				insertALFS=NULL;
 			}
@@ -794,7 +827,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
  * Return:
  * 	-> :: void
  * 	VALGRIND :: NO*/
-void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int i){
+void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int indiceKernel){
 	t_paquete* paqueteAEnviar;
 
 	char** requestSeparada = separarRequest(request);
@@ -815,13 +848,13 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, indiceKernel);
 		eliminar_paquete(paqueteAEnviar);
 
 	}else{
 		t_marco* pagLibre =NULL;
 		int index =obtenerPaginaDisponible(&pagLibre);
-		if(index == MEMORIAFULL){
+		if(index == MEMORIA_FULL){
 			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
 			t_elemTablaDePaginas* elementoAInsertar;
 			int rtaLRU;
@@ -831,27 +864,33 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 					t_segmento* tablaBuscada;
 					tablaBuscada = encontrarSegmento(nuevaTabla);
 					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+					enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
+					eliminar_paquete(paqueteAEnviar);
 					free(nuevaTabla);
 					nuevaTabla=NULL;
 				} else if (resultadoCache == SEGMENTOINEXISTENTE) {
 					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 					crearSegmento(nuevoSegmento, nuevaTabla);
 					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+					pthread_mutex_lock(&semMTablaSegmentos);
 					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
-
+					pthread_mutex_unlock(&semMTablaSegmentos);
+					enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
+					eliminar_paquete(paqueteAEnviar);
 					free(nuevaTabla);
 					nuevaTabla=NULL;
 				}
 			} else {
-				log_info(logger_MEMORIA,
-						"NO hay paginas para reemplazar, hay q hacer journaling");
+				enviarAlDestinatarioCorrecto(palabraReservada, MEMORIA_FULL,request, paqueteAEnviar,caller,indiceKernel);
+				eliminar_paquete(paqueteAEnviar);
+
 			}
 		}else{
 			if(resultadoCache == KEYINEXISTENTE){
 				t_segmento* tablaDestino = encontrarSegmento(nuevaTabla);
 				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
 				eliminar_paquete(paqueteAEnviar);
 
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
@@ -859,10 +898,12 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 				crearSegmento(nuevoSegmento,nuevaTabla);
 				t_elemTablaDePaginas* nuevaElemTablaDePagina = crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp);
+				pthread_mutex_lock(&semMTablaSegmentos);
 				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
+				pthread_mutex_unlock(&semMTablaSegmentos);
 				list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, (int) list_get(descriptoresClientes,i));
+				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
 				eliminar_paquete(paqueteAEnviar);
 
 			}
@@ -973,8 +1014,9 @@ t_marco* crearMarcoDePagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue,
  * 	VALGRIND :: SI*/
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
 	t_elemTablaDePaginas* nuevoElemento= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-
+	pthread_mutex_lock(&semMBitarray);
 	bitarray_set_bit(bitarray, id);
+	pthread_mutex_unlock(&semMBitarray);
 	nuevoElemento->numeroDePag = id;
 	nuevoElemento->marco = crearMarcoDePagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
 	nuevoElemento->modificado = SINMODIFICAR;
@@ -1006,12 +1048,12 @@ void crearSegmento(t_segmento* nuevoSegmento,char* pathNuevoSegmento){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socketKernel){
+void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel){
 	t_paquete* valorDeLFS=intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
 	}
-	enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,socketKernel));
+	enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,indiceKernel);
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS=NULL;
 }
@@ -1033,7 +1075,10 @@ void create(cod_request codRequest,char* request){
 		char** requestSeparada = separarRequest(request);
 		t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 		crearSegmento(nuevoSegmento,requestSeparada[1]);
+		pthread_mutex_lock(&semMTablaSegmentos);
 		list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
+		pthread_mutex_unlock(&semMTablaSegmentos);
+
 		liberarArrayDeChar(requestSeparada);
 		requestSeparada=NULL;
 	}
@@ -1053,8 +1098,10 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* req
 	int encontrarTabla(t_segmento* segmento){
 		return string_equals_ignore_case(segmento->path, segmentoABuscar);
 	}
-
+	pthread_mutex_lock(&semMTablaSegmentos);
 	t_segmento* segmentosEnCache = list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+	pthread_mutex_unlock(&semMTablaSegmentos);
+
 	if(segmentosEnCache!= NULL){
 		liberarArrayDeChar(parametros);
 		parametros=NULL;
@@ -1084,7 +1131,7 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* req
 int obtenerPaginaDisponible(t_marco** pagLibre){
 	int index= obtenerIndiceMarcoDisponible();
 	if(index == NUESTRO_ERROR){
-		return MEMORIAFULL;
+		return MEMORIA_FULL;
 	}else{
 		*pagLibre = memoria + (sizeof(unsigned long long)+sizeof(uint16_t)+maxValue)*index;
 		return index;
@@ -1100,7 +1147,7 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
  * Return:
  * 	-> :: void
  * 	VALGRIND :: NO */
-void liberarTabla(t_segmento* segmento){
+void eliminarSegmento(t_segmento* segmento){
 	int listaIgual(t_segmento* segmentoComparar){
 		if(strcmp(segmentoComparar->path, segmento->path)){
 			return TRUE;
@@ -1108,7 +1155,9 @@ void liberarTabla(t_segmento* segmento){
 			return FALSE;
 		}
 	}
-	list_remove_and_destroy_by_condition(tablaDeSegmentos->segmentos,(void*) listaIgual, (void*) eliminarElemTablaPagina);
+	pthread_mutex_lock(&semMTablaSegmentos);
+	list_remove_and_destroy_by_condition(tablaDeSegmentos->segmentos,(void*) listaIgual, (void*) eliminarElemTablaSegmentos);
+	pthread_mutex_unlock(&semMTablaSegmentos);
 }
 
 /* liberarEstructurasMemoria()
@@ -1120,8 +1169,11 @@ void liberarTabla(t_segmento* segmento){
  * 	-> :: void
  * 	VALGRIND :: NO */
 void liberarEstructurasMemoria(){
+	pthread_mutex_lock(&semMTablaSegmentos);
 	list_destroy_and_destroy_elements(tablaDeSegmentos->segmentos, (void*) eliminarElemTablaSegmentos);
 	free(tablaDeSegmentos);
+	pthread_mutex_unlock(&semMTablaSegmentos);
+
 }
 void eliminarElemTablaSegmentos(t_segmento* segmento){
 	free(segmento->path);
@@ -1142,12 +1194,13 @@ void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
  * 	-> :: void
  * 	VALGRIND :: NO */
 void liberarMemoria(){
+	pthread_mutex_destroy(&semMBitarray);
+	pthread_mutex_destroy(&semMTablaSegmentos);
 	log_info(logger_MEMORIA, "Finaliza MEMORIA");
 	bitarray_destroy(bitarray);
 	free(bitarrayString);
 	bitarrayString=NULL;
 	free(memoria);
-//	memoria=NULL;
 	liberar_conexion(conexionLfs);
 	FD_ZERO(&descriptoresDeInteres);
 	log_destroy(logger_MEMORIA);
@@ -1167,7 +1220,9 @@ void liberarMemoria(){
  * 	-> void ::
  * 	VALGRIND :: SI*/
 void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
+	pthread_mutex_lock(&semMBitarray);
 	bitarray_clean_bit(bitarray, elem->numeroDePag);
+	pthread_mutex_unlock(&semMBitarray);
 	memset(marcoAEliminar->value, 0, maxValue);
 //	free(marcoAEliminar->value);
 //	free(marcoAEliminar);
@@ -1184,9 +1239,9 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int i){
+void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int indiceKernel){
 	t_paquete* describeLFS=intercambiarConFileSystem(codRequest,request);
-	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,(int) list_get(descriptoresClientes,i));
+	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,indiceKernel);
 	eliminar_paquete(describeLFS);
 	describeLFS=NULL;
 }
@@ -1203,11 +1258,8 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int i) {
-	t_paquete* valorDeLFS = malloc(sizeof(t_paquete));
-	valorDeLFS->palabraReservada=SUCCESS;
-	valorDeLFS->request=strdup("");
-	valorDeLFS->tamanio=sizeof(valorDeLFS->request);
+void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel) {
+	t_paquete* valorDeLFS;
 	char** requestSeparada = separarRequest(request);
 	char* segmentoABuscar=strdup(requestSeparada[1]);
 	valorDeLFS = intercambiarConFileSystem(codRequest,request);
@@ -1215,16 +1267,17 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 		int encontrarTabla(t_segmento* segmento){
 			return string_equals_ignore_case(segmento->path, segmentoABuscar);
 		}
+		pthread_mutex_lock(&semMTablaSegmentos);
 		t_segmento* segmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
+		pthread_mutex_unlock(&semMTablaSegmentos);
 
 		if(segmentosEnCache!= NULL){
-			log_info(logger_MEMORIA,"La %s fue eliminada de MEMORIA",segmentosEnCache->path);
-			liberarTabla(segmentosEnCache);
+			eliminarSegmento(segmentosEnCache);
 		}else{
 			log_info(logger_MEMORIA,"La %s no existe en MEMORIA",segmentoABuscar);
 		}
 	}
-	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,(int) list_get(descriptoresClientes,i));
+	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,indiceKernel);
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS= NULL;
 	liberarArrayDeChar(requestSeparada);
@@ -1254,11 +1307,18 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 			}
 		}
 
+	pthread_mutex_lock(&semMTablaSegmentos);
 	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
 		segmento = list_get(tablaDeSegmentos->segmentos,i);
+		pthread_mutex_unlock(&semMTablaSegmentos);
 		list_remove_and_destroy_by_condition(segmento->tablaDePagina,(void*)contieneElElementoVictima,(void*)eliminarElemTablaPagina);
 		i++;
+		pthread_mutex_lock(&semMTablaSegmentos);
+
 	}
+	pthread_mutex_unlock(&semMTablaSegmentos);
+
+
 
 	return retorno;
 }
@@ -1289,9 +1349,10 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 
 	t_list* elemSinModificar=list_create();
 
+	pthread_mutex_lock(&semMTablaSegmentos);
 	while(list_get(tablaDeSegmentos->segmentos,j)!=NULL){
 		t_segmento* segmento=list_get(tablaDeSegmentos->segmentos,j);
-
+		pthread_mutex_unlock(&semMTablaSegmentos);
 		while (list_get(segmento->tablaDePagina, i) != NULL) {
 			t_elemTablaDePaginas* elemenetoTablaDePag =list_get(segmento->tablaDePagina, i);
 			if (elemenetoTablaDePag->modificado == SINMODIFICAR) {
@@ -1301,17 +1362,17 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 		}
 		j++;
 		i=0;
-	}
+		pthread_mutex_lock(&semMTablaSegmentos);
 
-	//t_list* listaVictima;
+	}
+	pthread_mutex_unlock(&semMTablaSegmentos);
+
 	t_elemTablaDePaginas* elementoVictima;
 	elementoVictima =NULL;
 
 	if (!list_is_empty(elemSinModificar)) {
 		list_sort(elemSinModificar, (void*) menorTimestamp);
-		//listaVictima = list_take_and_remove(elemSinModificar, 1);
 		elementoVictima= list_get(elemSinModificar,0);
-//		list_destroy_and_destroy_elements(elemSinModificar,(void*)eliminarElemTablaPagina);
 		list_destroy(elemSinModificar);
 		int desvinculacion=desvincularVictimaDeSuSegmento(elementoVictima);
 		if(desvinculacion == SUCCESS){
@@ -1323,24 +1384,39 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 	} else {
 		*rta=JOURNALTIME;
 	}
-//	list_clean_and_destroy_elements(elemSinModificar,(void*)liberarElemTablaPagina);
 	return elementoVictima;
 }
 
 
 
-void procesarJournal(cod_request codRequest, char* request, t_caller caller, int i) {
+
+
+void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int i) {
 	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
 	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
 	 *  con el que está en el FS.
 	 **/
-	t_list* elemModificados = list_create();
 
+	t_paquete* insertJournalLFS;
 	void encontrarElemModificado(t_segmento* segmento){
 		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
 			if(elemPagina->modificado == MODIFICADO){
-				list_add(elemModificados, elemPagina);
-				puts(elemPagina->marco->value);
+				char* requestAEnviar= strdup("");
+				string_append_with_format(&requestAEnviar,"%s%s%s%s%i%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
+
+				insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar);
+				printf("Realizo JOURNAL a: %s%s%i%s%c%s%c\n",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
+
+				if(insertJournalLFS->palabraReservada== EXIT_SUCCESS){
+					enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+					eliminar_paquete(insertJournalLFS);
+					insertJournalLFS=NULL;
+				}else{
+					enviarAlDestinatarioCorrecto(palabraReservada,insertJournalLFS->palabraReservada,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+					eliminar_paquete(insertJournalLFS);
+					insertJournalLFS=NULL;
+				}
+
 			}
 		}
 		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
@@ -1348,27 +1424,3 @@ void procesarJournal(cod_request codRequest, char* request, t_caller caller, int
 	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
 }
 
-
-
-
-//void procesarJournal(cod_request codRequest, char* request, t_caller caller, int i) {
-//	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
-//	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
-//	 *  con el que está en el FS.
-//	 **/
-//	t_list* paginasModificadas = list_map(tablaDeSegmentos->segmentos,(void*) obtenerTablasModificadas);
-//}
-//
-//t_list* obtenerTablasModificadas(t_segmento* segmento){
-//	t_list* tablasModificadas = list_filter(segmento->tablaDePagina,(void*) tablaDePaginaModificada);
-//	return tablasModificadas;
-//}
-//
-//int tablaDePaginaModificada(t_elemTablaDePaginas* elementoTP){
-//	if(elementoTP->modificado==MODIFICADO){
-//		printf("El codigo que recibi es: %i \n", elementoTP->marco->value );
-//		return TRUE;
-//	}else{
-//		return FALSE;
-//	}
-//}
