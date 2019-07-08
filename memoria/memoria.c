@@ -178,37 +178,32 @@ void escucharMultiplesClientes() {
 			FD_SET(descriptorServidor, &descriptoresDeInteres);					// Agregamos el descriptorServidor a la lista de interes
 
 			for (int i=0; i< numeroDeClientes; i++) {
-				t_int* fdAAgregar = list_get(descriptoresClientes,i);
-				FD_SET(fdAAgregar->valor , &descriptoresDeInteres); // Agregamos a la lista de interes, los descriptores de los clientes
+				FD_SET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres); // Agregamos a la lista de interes, los descriptores de los clientes
 			}
 
 			valorMaximo = maximo(descriptoresClientes, descriptorServidor, numeroDeClientes); // Se el valor del descriptor mas grande. Si no hay ningun cliente, devuelve el fd del servidor
 			select(valorMaximo + 1, &descriptoresDeInteres, NULL, NULL, NULL); 				  // Espera hasta que algún cliente tenga algo que decir
 
 			for(int i=0; i<numeroDeClientes; i++) {
-				t_int* descriptorConectado = list_get(descriptoresClientes,i);
-				if (FD_ISSET(descriptorConectado->valor , &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
+				if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
 
 					int esElCliente(int clienteFd) {
-						t_int* descriptorSuperCliente =list_get(descriptoresClientes,i);
-						return clienteFd == descriptorSuperCliente->valor ;
+						return clienteFd == (int) list_get(descriptoresClientes,i);
 					}
 					if (list_any_satisfy(clientesGossiping, (void*)esElCliente)) {
 						// mandar lista de gossiping
 					} else {
 						// si no es gossiping, es de request
-						paqueteRecibido = recibir(descriptorConectado->valor); // Recibo de ese cliente en particular
+						paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
 						cod_request palabraReservada = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
 						printf("El codigo que recibi es: %i \n", palabraReservada);
-						printf("Del fd %i \n", descriptorConectado->valor); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+						printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
 						if(palabraReservada != -1){
 							interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
 						}else{
-							log_info(logger_MEMORIA, "Se desconecto el kernel %i", descriptorConectado);
-							t_int* listAux = malloc(sizeof(t_int));
-							listAux->valor = -1;
-							list_replace(descriptoresClientes, i, listAux); // Si el cliente se desconecta le pongo un -1 en su fd}
+							log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
+							list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
 							list_remove_by_condition(clientesGossiping, (void*)esElCliente);
 							list_remove_by_condition(clientesRequest, (void*)esElCliente);
 						}
@@ -225,18 +220,12 @@ void escucharMultiplesClientes() {
 				//enviarGossiping("8001", "127.0.0.1", "1", descriptorCliente);
 				t_handshake_memoria* handshake = recibirHandshakeMemoria(descriptorCliente);
 				if (handshake->tipoComponente == KERNEL || handshake->tipoComponente == MEMORIA) {
-					t_int* listAux = malloc(sizeof(t_int));
-					listAux->valor = descriptorCliente;
-					list_add(descriptoresClientes, listAux); // Agrego el fd del cliente a la lista de fd's
+					numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
 					numeroDeClientes++;
 					if (handshake->tipoRol == REQUEST) {
-						t_int* listAux = malloc(sizeof(t_int));
-						listAux->valor = descriptorCliente;
-						list_add(clientesRequest, listAux);
+						list_add(clientesRequest, descriptorCliente);
 					} else if (handshake->tipoRol == GOSSIPING) {
-						t_int* listAux = malloc(sizeof(t_int));
-						listAux->valor = descriptorCliente;
-						list_add(clientesGossiping, listAux);
+						list_add(clientesGossiping, descriptorCliente);
 						if (handshake->tipoComponente == KERNEL) {
 							// por ahora queda asi porque kernel no manda mensaje
 							enviarGossiping("8001", "127.0.0.1", "1", descriptorCliente);
