@@ -675,13 +675,9 @@ void planificarReadyAExec(void) {
 	pthread_attr_t attr;
 	request_procesada* request;
 	int threadProcesar;
-	int d;
-	int a;
 	while(1) {
 		sem_wait(&semRequestReady);
-		sem_getvalue(&semMultiprocesamiento, &a);
 		sem_wait(&semMultiprocesamiento);
-		sem_getvalue(&semMultiprocesamiento, &d);
 		request = (request_procesada*) malloc(sizeof(request_procesada));
 		pthread_mutex_lock(&semMColaReady);
 		request->codigo = ((request_procesada*) queue_peek(ready))->codigo;
@@ -1200,7 +1196,7 @@ int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
 	return conexionTemporanea;
 }
 
-t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key, int memoriaRandom, char* numMemoria) {
+t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key, int memoriaRandom, char** numMemoria) {
 	// manda request hasta que encuentra memoria que no este caida
 	char* ip;
 	char* puerto;
@@ -1214,7 +1210,7 @@ t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key
 			pthread_mutex_lock(&semMMemorias);
 			unsigned int indice = obtenerIndiceRandom(list_size(memorias));
 			memoriaCorrespondiente = list_get(memorias, indice);
-			numMemoria = strdup(memoriaCorrespondiente->numero);
+			*numMemoria = strdup(memoriaCorrespondiente->numero);
 			ip = strdup(memoriaCorrespondiente->ip);
 			puerto = strdup(memoriaCorrespondiente->puerto);
 			pthread_mutex_unlock(&semMMemorias);
@@ -1226,7 +1222,7 @@ t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key
 				paqueteError->palabraReservada = FAILURE;
 				return paqueteError;
 			} else {
-				numMemoria = strdup(memoriaCorrespondiente->numero);
+				*numMemoria = strdup(memoriaCorrespondiente->numero);
 				ip = strdup(memoriaCorrespondiente->ip);
 				puerto = strdup(memoriaCorrespondiente->puerto);
 				liberarConfigMemoria(memoriaCorrespondiente);
@@ -1235,7 +1231,6 @@ t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key
 		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
 		free(ip);
 		free(puerto);
-		numMemoria = NULL;
 		ip = NULL;
 		puerto = NULL;
 		if(conexionTemporanea != FAILURE) {
@@ -1248,13 +1243,16 @@ t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key
 				}
 			}
 		}
+		free(numMemoria);
+		numMemoria = NULL;
 
 	}
 }
 
-int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom, char* numMemoria) {
+int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom, char** numMemoria) {
 	char* ip;
 	char* puerto;
+	char* numAux;
 	int conexionTemporanea;
 	while(1) {
 		// si la respuesta es distinto de componente caido hago return
@@ -1270,15 +1268,15 @@ int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom
 			pthread_mutex_lock(&semMMemorias);
 			unsigned int indice = obtenerIndiceRandom(list_size(memorias));
 			memoriaCorrespondiente = list_get(memorias, indice);
-			numMemoria = strdup(memoriaCorrespondiente->numero);
+			*numMemoria = strdup(memoriaCorrespondiente->numero);
 			ip = strdup(memoriaCorrespondiente->ip);
 			puerto = strdup(memoriaCorrespondiente->puerto);
+			//tood: usar esto en las fcuniones de reconectar
+			numAux = strdup(memoriaCorrespondiente->numero);
 			pthread_mutex_unlock(&semMMemorias);
-			conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
-			free(numMemoria);
+			conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numAux);
 			free(ip);
 			free(puerto);
-			numMemoria = NULL;
 			ip = NULL;
 			puerto = NULL;
 		} else {
@@ -1287,12 +1285,15 @@ int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom
 				return FAILURE;
 			} else {
 				conexionTemporanea = conectarseAMemoria(REQUEST, memoriaCorrespondiente->puerto, memoriaCorrespondiente->ip, memoriaCorrespondiente->numero);
+				*numMemoria = strdup(memoriaCorrespondiente->numero);
 				liberarConfigMemoria(memoriaCorrespondiente);
 			}
 		}
 		if(conexionTemporanea != FAILURE) {
 			return conexionTemporanea;
 		}
+		free(numMemoria);
+		numMemoria = NULL;
 	}
 }
 
@@ -1329,6 +1330,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	char* numMemoria;
 	char* puerto;
 	char* ip;
+	int key = 0;
 	if (codigo == DESCRIBE) {
 		// https://github.com/sisoputnfrba/foro/issues/1391 chequearlo
 		pthread_mutex_lock(&semMMemorias);
@@ -1340,15 +1342,15 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		pthread_mutex_unlock(&semMMemorias);
 		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
 		if(conexionTemporanea == FAILURE) {
-			conexionTemporanea = reintentarConexion(NINGUNA, 0, 1, numMemoria);
+			free(numMemoria);
+			numMemoria = NULL;
+			conexionTemporanea = reintentarConexion(consistenciaTabla, 0, 1, &numMemoria);
 			if (conexionTemporanea == FAILURE) {
-				free(numMemoria);
 				liberarArrayDeChar(parametros);
 				return FAILURE;
 			}
 		}
 	} else {
-		int key = 0;
 		if (codigo == CREATE) {
 			consistenciaTabla = obtenerEnumConsistencia(parametros[2]);
 		} else {
@@ -1368,22 +1370,27 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			puerto = strdup(memoriaCorrespondiente->puerto);
 			conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
 			if(conexionTemporanea == FAILURE) {
-				conexionTemporanea = reintentarConexion(NINGUNA, 0, 1);
 				free(numMemoria);
-				liberarArrayDeChar(parametros);
-				// todo: intentar conectar con otra
-				return FAILURE;
+				conexionTemporanea = reintentarConexion(NINGUNA, 0, 1, &numMemoria);
+				free(ip);
+				free(puerto);
+				numMemoria = NULL;
+				ip = NULL;
+				puerto = NULL;
+				if (conexionTemporanea == FAILURE) {
+					liberarArrayDeChar(parametros);
+					return FAILURE;
+				}
 			}
 			liberarConfigMemoria(memoriaCorrespondiente);
 		}
 	}
-	// todo: chequear que memoria no se haya caido en enviar y recibir
 	int respuestaEnviar = enviar(consistenciaTabla, mensaje, conexionTemporanea);
 	if (respuestaEnviar == COMPONENTE_CAIDO) {
-		// reintentar
-		eliminarMemoria(puerto, ip, numMemoria);
+		paqueteRecibido = reenviarRequest(consistenciaTabla, mensaje, key, codigo == DESCRIBE, &numMemoria);
+	} else {
+		paqueteRecibido = recibir(conexionTemporanea);
 	}
-	paqueteRecibido = recibir(conexionTemporanea);
 	respuesta = paqueteRecibido->palabraReservada;
 	if (respuesta == SUCCESS) {
 		if (codigo == DESCRIBE) {
@@ -1395,7 +1402,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 		}
 	} else if (respuesta == MEMORIA_FULL) {
-		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		respuestaEnviar = enviar(NINGUNA, "JOURNAL", conexionTemporanea);
 		paqueteRecibido = recibir(conexionTemporanea);
 		respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
@@ -1415,8 +1422,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 		}
 	} else if (respuesta == COMPONENTE_CAIDO) {
-		eliminarMemoria(puerto, ip, numMemoria);
-		// intento reconectar
+		// todo: vale la pena?
+		reenviarRequest(consistenciaTabla, mensaje, key, codigo == DESCRIBE, numMemoria);
 	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
@@ -1580,7 +1587,10 @@ void procesarRun(t_queue* colaRun) {
  * 	-> void  */
 int procesarAdd(char* mensaje) {
 	// todo: validar que en add no manden cualquier fruta
-	int estado = SUCCESS;
+	int estado = validarRequest(mensaje);
+	if (estado != TRUE) {
+		return estado;
+	}
 	char** requestDividida = separarRequest(mensaje);
 	config_memoria* memoria;
 	consistencia _consistencia;

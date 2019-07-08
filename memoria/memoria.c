@@ -197,9 +197,9 @@ void escucharMultiplesClientes() {
 						paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
 						cod_request palabraReservada = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
-						printf("El codigo que recibi es: %i \n", palabraReservada);
 						printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-						if(palabraReservada != -1){
+						if(palabraReservada != COMPONENTE_CAIDO){
+							printf("El codigo que recibi es: %i \n", palabraReservada);
 							interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
 						}else{
 							log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
