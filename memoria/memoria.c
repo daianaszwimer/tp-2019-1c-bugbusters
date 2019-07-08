@@ -1093,7 +1093,6 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 		return MEMORIAFULL;
 	}else{
 		*pagLibre = memoria + (sizeof(unsigned long long)+sizeof(uint16_t)+maxValue)*index;
-		*pagLibre = malloc(sizeof(unsigned long long)+sizeof(uint16_t)+maxValue);
 		return index;
 	}
 
