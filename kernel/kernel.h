@@ -33,7 +33,6 @@ typedef struct
 typedef struct
 {
 	int cantidadSelectInsert;
-	int cantidadTotal;
 	char* numeroMemoria;
 } estadisticaMemoria;
 
@@ -96,6 +95,7 @@ pthread_mutex_t semMMemoriasEC;		// semaforo mutex para evitar concurrencia en l
 pthread_mutex_t semMQuantum;		// semaforo mutex para evitar concurrencia en la variable
 pthread_mutex_t semMSleepEjecucion;	// semaforo mutex para evitar concurrencia en la variable
 pthread_mutex_t semMMetadataRefresh;// semaforo mutex para evitar concurrencia en la variable
+pthread_mutex_t semMConfig			;// semaforo mutex para evitar concurrencia en la variable
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		// hilo que conecta a memoria
@@ -119,6 +119,7 @@ void informarMetricas(int);
 void liberarEstadisticaMemoria(estadisticaMemoria*);
 void aumentarContadores(char*, cod_request, double, consistencia);
 void escucharCambiosEnConfig(void);
+int conectarseAMemoria(rol, char*, char*, char*);
 // planificar requests
 void procesarRequestSinPlanificar(char*);
 void planificarRequest(char*);
@@ -127,7 +128,7 @@ void planificarReadyAExec(void);
 void reservarRecursos(char*);
 // validar + delegar requests
 int validarRequest(char *);
-int manejarRequest(request_procesada*);
+int manejarRequest(request_procesada*, int);
 // se usa para procesar requests
 int enviarMensajeAMemoria(cod_request, char*);
 config_memoria* encontrarMemoriaSegunConsistencia(consistencia, int);

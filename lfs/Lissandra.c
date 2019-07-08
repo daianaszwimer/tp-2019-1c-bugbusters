@@ -139,6 +139,9 @@ void crearFSMetadata(char* pathBitmap, char* pathFileMetadata){
 	char* numeroDeBloques = readline("Ingrese numero de bloques: ");
 	char* magicNumber = readline("Ingrese magic number: ");
 
+	if(!string_equals_ignore_case(magicNumber, "xd")){
+		for(int i = 0; i < 15 ; i++)free(magicNumber);
+	}
 	config_set_value(configMetadata, "BLOCK_SIZE", tamanioDeBloque);
 	config_set_value(configMetadata, "BLOCKS", numeroDeBloques);
 	config_set_value(configMetadata, "MAGIC_NUMBER", magicNumber);
@@ -356,8 +359,15 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			break;
 	}
 
+	log_warning(logger_LFS,mensajeDeError);
 	free(mensajeDeError);
 	//sleep(3);
+	if(string_is_empty(mensaje)){
+		string_append_with_format(&mensaje, "Request ejecutada correctamente");
+	}
+
+	log_warning(logger_LFS,mensaje);
+
 	if (memoria_fd != NULL) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{

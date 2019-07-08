@@ -1210,7 +1210,7 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	valorDeLFS->tamanio=sizeof(valorDeLFS->request);
 	char** requestSeparada = separarRequest(request);
 	char* segmentoABuscar=strdup(requestSeparada[1]);
-	//t_paquete* valorDeLFS = intercambiarConFileSystem(codRequest,request);
+	valorDeLFS = intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		int encontrarTabla(t_segmento* segmento){
 			return string_equals_ignore_case(segmento->path, segmentoABuscar);
