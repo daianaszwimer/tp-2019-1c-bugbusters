@@ -6,6 +6,13 @@
 #include "API.h"
 #include "Compactador.h"
 #include "Dump.h"
+#include <sys/inotify.h>
+
+// Variables para inotify
+#define EVENT_SIZE  ( sizeof (struct inotify_event) + 24 )
+#define BUF_LEN     ( 1024 * EVENT_SIZE )
+int file_descriptor;
+int watch_descriptor;
 
 pthread_t hiloLeerDeConsola;
 pthread_t hiloRecibirMemorias;
@@ -14,7 +21,7 @@ pthread_t hiloDumpeo;
 char* bitmap;
 int bitmapDescriptor;
 
-void inicializacionLissandraFileSystem(char**);
+void inicializacionLissandraFileSystem();
 void crearFSMetadata(char*, char*);
 void levantarFS();
 void crearFS(char*, char*);
@@ -24,4 +31,5 @@ void* leerDeConsola(void*);
 void* recibirMemorias(void*);
 void* conectarConMemoria(void*);
 void interpretarRequest(cod_request, char*, int*);
+void* escucharCambiosEnConfig();
 #endif /* LFS_H_ */

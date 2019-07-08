@@ -19,7 +19,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 	DIR *dir = opendir(pathTabla);
 	if (dir) {
 		error = TABLA_EXISTE;
-		free(dir);
+		closedir(dir);
 	} else {
 		/* Creamos la carpeta de la tabla */
 		int resultadoCreacionDirectorio = mkdir(pathTabla, S_IRWXU);
@@ -34,6 +34,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			if (metadataFile == NULL) {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
+				fclose(metadataFile);
 				t_config *metadataConfig = config_create(metadataPath);
 				config_set_value(metadataConfig, "CONSISTENCY",	tipoDeConsistencia);
 				config_set_value(metadataConfig, "PARTITIONS", numeroDeParticiones);
@@ -44,7 +45,6 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			}
 
 			free(metadataPath);
-			fclose(metadataFile);
 		}
 	}
 
@@ -55,10 +55,10 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
 			hiloTabla->thread = &hiloDeCompactacion;
 			hiloTabla->nombreTabla = strdup(nombreTabla);
-			hiloTabla->flag = 1;
-			pthread_mutex_lock(&diegote);
+			hiloTabla->finalizarCompactacion = 1;
+			pthread_mutex_lock(&mutexDiegote);
 			list_add(diegote, hiloTabla);
-			pthread_mutex_unlock(&diegote);
+			pthread_mutex_unlock(&mutexDiegote);
 			log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", nombreTabla);
 		}else{
 			log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", nombreTabla);
@@ -131,6 +131,7 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
 	if (dir) {
+		closedir(dir);
 		t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
 		registro->key = key;
 		registro->value = strdup(value);
@@ -151,7 +152,6 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	}
 
 	free(pathTabla);
-	free(dir);
 	return error;
 }
 
@@ -170,6 +170,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 	DIR* dir = opendir(pathTabla);
 	free(pathTabla);
 	if(dir){
+		closedir(dir);
 		//TODO validar q onda la funcion convertirKey, retorna -1 si hay error
 		int _key = convertirKey(key);
 		t_list* listaDeRegistrosDeMemtable = obtenerRegistrosDeMemtable(nombreTabla, _key);
@@ -194,7 +195,6 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 		error = TABLA_NO_EXISTE;
 	}
 	list_destroy(listaDeRegistros);
-	free(dir);
 	return error;
 }
 
@@ -330,8 +330,8 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 	errorNo error = SUCCESS;
 	char* pathTablas = string_from_format("%sTablas", pathRaiz);
 	char* pathTabla;
-	string_to_upper(nombreTabla);
 	if(nombreTabla != NULL){
+		string_to_upper(nombreTabla);
 		pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 		char* metadata = obtenerMetadata(pathTabla);
 		string_append_with_format(&*mensaje, "%s %s", nombreTabla, metadata);
@@ -401,15 +401,14 @@ errorNo procesarDrop(char* nombreTabla){
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
 
-
 	errorNo error = SUCCESS;
 	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
-		pthread_mutex_lock(&diegote);
+		pthread_mutex_lock(&mutexDiegote);
 		t_hiloTabla* tablaEncontrada = list_find(diegote, (void*)encontrarTabla);
-		tablaEncontrada->flag = 0;
-		pthread_mutex_unlock(&diegote);
+		tablaEncontrada->finalizarCompactacion = 0;
+		pthread_mutex_unlock(&mutexDiegote);
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
 		rmdir(pathTabla);

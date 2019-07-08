@@ -6,21 +6,28 @@
  * */
 int main(int argc, char* argv[]) {
 
+	pathConfig = argv[1];
 	inicializacionLissandraFileSystem(argv);
 
-	if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
+	if(!pthread_create(&hiloDeInotify, NULL, (void*)escucharCambiosEnConfig, NULL)){
+		log_info(logger_LFS, "Hilo de inotify creado");
+	}else{
+		log_error(logger_LFS, "Error al crear hilo de inotify");
+	}
+
+	if(!pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL)){
 		log_info(logger_LFS, "Hilo de consola creado");
 	}else{
 		log_error(logger_LFS, "Error al crear hilo de consola");
 	}
 
-	if(!pthread_create(&hiloRecibirMemorias, NULL, recibirMemorias, NULL)){
+	if(!pthread_create(&hiloRecibirMemorias, NULL, (void*)recibirMemorias, NULL)){
 		log_info(logger_LFS, "Hilo de recibir memorias creado");
 	}else{
 		log_error(logger_LFS, "Error al crear hilo recibir memorias");
 	}
 
-	if(!pthread_create(&hiloDumpeo, NULL, hiloDump, NULL)){
+	if(!pthread_create(&hiloDumpeo, NULL, (void*)hiloDump, NULL)){
 		log_info(logger_LFS, "Hilo de Dump iniciado");
 	}else{
 		log_error(logger_LFS, "Error al crear hilo Dumpeo");
@@ -32,18 +39,19 @@ int main(int argc, char* argv[]) {
 	log_info(logger_LFS, "Hilo recibir memorias finalizado");
 	pthread_join(hiloDumpeo, NULL);
 	log_info(logger_LFS, "Hilo dumpeo finalizado");
+	pthread_join(hiloDeInotify, NULL);
+	log_info(logger_LFS, "Hilo inotify finalizado");
 	liberarMemoriaLFS();
 	return EXIT_SUCCESS;
 }
 
 
-void inicializacionLissandraFileSystem(char* argv[]){
+void inicializacionLissandraFileSystem(){
 	logger_LFS = log_create("LissandraFileSystem.log", "Lfs", 1, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------Inicializacion de Lissandra File System--------------");
 
-	if(argv[1] != NULL){
-		char* configPath = argv[1];
-		config = config_create(configPath);
+	if(pathConfig != NULL){
+		config = config_create(pathConfig);
 	}else{
 
 		config = config_create("/home/utnso/tp-2019-1c-bugbusters/lfs/LissandraFileSystem.config");
@@ -60,6 +68,8 @@ void inicializacionLissandraFileSystem(char* argv[]){
 		exit(EXIT_FAILURE);
 	}
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
+	retardo = config_get_int_value(config, "RETARDO");
+	tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
 
 	pathRaiz = strdup(puntoDeMontaje);
 	pathTablas = string_from_format("%sTablas", pathRaiz);
@@ -98,7 +108,7 @@ void inicializacionLissandraFileSystem(char* argv[]){
 				t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
 				hiloTabla->thread = &hiloDeCompactacion;
 				hiloTabla->nombreTabla = strdup(tabla->d_name);
-				hiloTabla->flag = 1;
+				hiloTabla->finalizarCompactacion = 1;
 				list_add(diegote, hiloTabla);
 				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
 				pthread_detach(hiloDeCompactacion);
@@ -199,6 +209,10 @@ void levantarFS(char* pathBitmap){
 	bitarray = bitarray_create_with_mode(bitmap, blocks/8, LSB_FIRST);
 
 	pthread_mutex_init(&mutexMemtable, NULL);
+	pthread_mutex_init(&mutexDiegote, NULL);
+	pthread_mutex_init(&mutexConfig, NULL);
+	pthread_mutex_init(&mutexRetardo, NULL);
+	pthread_mutex_init(&mutexTiempoDump, NULL);
 }
 
 void liberarMemoriaLFS(){
@@ -224,6 +238,11 @@ void liberarMemoriaLFS(){
 	log_destroy(logger_LFS);
 
 	pthread_mutex_destroy(&mutexMemtable);
+	pthread_mutex_destroy(&mutexDiegote);
+	pthread_mutex_destroy(&mutexConfig);
+	pthread_mutex_destroy(&mutexRetardo);
+	pthread_mutex_destroy(&mutexTiempoDump);
+
 	config_destroy(configMetadata);
 	config_destroy(config);
 }
@@ -236,6 +255,7 @@ void* leerDeConsola(void* arg) {
 		if (!(strncmp(mensaje, "", 1) != 0)) {
 			pthread_cancel(hiloRecibirMemorias);
 			pthread_cancel(hiloDumpeo);
+			pthread_cancel(hiloDeInotify);
 			free(mensaje);
 			break;
 		}
@@ -256,9 +276,9 @@ void* leerDeConsola(void* arg) {
 void* recibirMemorias(void* arg) {
 	char* puerto = config_get_string_value(config, "PUERTO");
 	char* ip = config_get_string_value(config, "IP");
+	int tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
 	int lissandraFS_fd = iniciar_servidor(puerto, ip);
 	log_info(logger_LFS, "Lissandra lista para recibir Memorias");
-
 	pthread_t hiloRequest;
 
 	while (1) {
@@ -266,7 +286,7 @@ void* recibirMemorias(void* arg) {
 		if(memoria_fd > 0) {
 			if(!pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria, (void*) memoria_fd)) {
 				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
-				enviarHandshakeLFS(config_get_int_value(config,"TAMAÑO_VALUE"), memoria_fd);
+				enviarHandshakeLFS(tamanioValue, memoria_fd);
 				log_debug(logger_LFS, mensaje);
 				pthread_detach(hiloRequest);
 				free(mensaje);
@@ -367,21 +387,63 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			break;
 	}
 
-	log_warning(logger_LFS,mensajeDeError);
 	free(mensajeDeError);
-	//sleep(3);
-	if(string_is_empty(mensaje)){
-		string_append_with_format(&mensaje, "Request ejecutada correctamente");
-	}
-
-	log_warning(logger_LFS,mensaje);
+	usleep(retardo*1000);
 
 	if (memoria_fd != NULL) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{
 		log_info(logger_LFS, mensaje);
 	}
+
 	free(mensaje);
 	liberarArrayDeChar(requestSeparada);
 	log_info(logger_LFS, "---------------------------------------");
+}
+
+void* escucharCambiosEnConfig(void* arg) {
+
+	char buffer[BUF_LEN];
+	file_descriptor = inotify_init();
+	if (file_descriptor < 0) {
+		log_error(logger_LFS, "Inotify no se pudo inicializar correctamente");
+		return NULL;
+	}
+	char* configPath;
+	if(arg != NULL){
+		configPath = (char*) arg;
+	}else{
+		configPath = "/home/utnso/tp-2019-1c-bugbusters/lfs/LissandraFileSystem.config";
+	}
+
+	watch_descriptor = inotify_add_watch(file_descriptor, configPath, IN_MODIFY);
+	while(1) {
+		int length = read(file_descriptor, buffer, BUF_LEN);
+		log_info(logger_LFS, "Cambió el archivo de config");
+		pthread_mutex_lock(&mutexConfig);
+		config_destroy(config);
+		config = leer_config(configPath);
+		pthread_mutex_unlock(&mutexConfig);
+		if (length < 0) {
+			log_error(logger_LFS, "Error en inotify");
+			return NULL;
+		} else {
+			pthread_mutex_lock(&mutexRetardo);
+			retardo = config_get_int_value(config, "RETARDO");
+			pthread_mutex_unlock(&mutexRetardo);
+			pthread_mutex_lock(&mutexTiempoDump);
+			tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
+			pthread_mutex_unlock(&mutexTiempoDump);
+		}
+
+		inotify_rm_watch(file_descriptor, watch_descriptor);
+		close(file_descriptor);
+
+		file_descriptor = inotify_init();
+		if (file_descriptor < 0) {
+			log_error(logger_LFS, "Inotify no se pudo inicializar correctamente");
+		}
+
+		watch_descriptor = inotify_add_watch(file_descriptor, configPath, IN_MODIFY);
+	}
 }

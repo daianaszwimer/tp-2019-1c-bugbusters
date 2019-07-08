@@ -47,7 +47,9 @@ typedef struct
 typedef struct{
 	pthread_t* thread;
 	char* nombreTabla;
-	int flag;
+	int finalizarCompactacion;
+	int blocked;
+	t_list* requests;
 } t_hiloTabla;
 
 #define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"
@@ -59,7 +61,9 @@ t_bitarray* bitarray;
 t_memtable* memtable;
 t_list* diegote;
 pthread_t hiloDeCompactacion;
+pthread_t hiloDeInotify;
 
+char* pathConfig;
 char* pathRaiz;
 char* pathTablas;
 char* pathMetadata;
@@ -72,5 +76,12 @@ void vaciarTabla(t_tabla*);
 // SEMAFOROS
 pthread_mutex_t mutexMemtable;
 pthread_mutex_t mutexDiegote;
+pthread_mutex_t mutexConfig;
+pthread_mutex_t mutexRetardo;
+pthread_mutex_t mutexTiempoDump;
+
+//VARIABLES CONFIG
+int retardo;
+int tiempoDump;
 
 #endif /* HELPER_H_ */
