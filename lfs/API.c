@@ -49,13 +49,15 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 	}
 
 	if(error == SUCCESS){
-		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
+		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) strdup(pathTabla))){
 			pthread_detach(hiloDeCompactacion);
 			//TODO mutex
 			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
 			hiloTabla->thread = &hiloDeCompactacion;
 			hiloTabla->nombreTabla = strdup(nombreTabla);
-			hiloTabla->finalizarCompactacion = 1;
+			hiloTabla->finalizarCompactacion = 0;
+			hiloTabla->blocked = 0;
+			hiloTabla->requests = queue_create();
 			pthread_mutex_lock(&mutexDiegote);
 			list_add(diegote, hiloTabla);
 			pthread_mutex_unlock(&mutexDiegote);
@@ -64,7 +66,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", nombreTabla);
 		}
 	}
-
+	free(pathTabla);
 
 	return error;
 }
@@ -407,7 +409,7 @@ errorNo procesarDrop(char* nombreTabla){
 	if(tabla){
 		pthread_mutex_lock(&mutexDiegote);
 		t_hiloTabla* tablaEncontrada = list_find(diegote, (void*)encontrarTabla);
-		tablaEncontrada->finalizarCompactacion = 0;
+		tablaEncontrada->finalizarCompactacion = 1;
 		pthread_mutex_unlock(&mutexDiegote);
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
@@ -440,7 +442,9 @@ void borrarArchivosYLiberarBloques(DIR* tabla, char* pathTabla){
 				FILE* bloque = fopen(pathBloque, "w");
 				free(pathBloque);
 				fclose(bloque);
+				pthread_mutex_lock(&mutexBitmap);
 				bitarray_clean_bit(bitarray, strtol(bloques[i], NULL, 10));
+				pthread_mutex_unlock(&mutexBitmap);
 				i++;
 			}
 			liberarArrayDeChar(bloques);

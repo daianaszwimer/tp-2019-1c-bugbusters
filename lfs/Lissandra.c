@@ -7,18 +7,12 @@
 int main(int argc, char* argv[]) {
 
 	pathConfig = argv[1];
-	inicializacionLissandraFileSystem(argv);
+	inicializacionLissandraFileSystem();
 
 	if(!pthread_create(&hiloDeInotify, NULL, (void*)escucharCambiosEnConfig, NULL)){
 		log_info(logger_LFS, "Hilo de inotify creado");
 	}else{
 		log_error(logger_LFS, "Error al crear hilo de inotify");
-	}
-
-	if(!pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL)){
-		log_info(logger_LFS, "Hilo de consola creado");
-	}else{
-		log_error(logger_LFS, "Error al crear hilo de consola");
 	}
 
 	if(!pthread_create(&hiloRecibirMemorias, NULL, (void*)recibirMemorias, NULL)){
@@ -31,6 +25,12 @@ int main(int argc, char* argv[]) {
 		log_info(logger_LFS, "Hilo de Dump iniciado");
 	}else{
 		log_error(logger_LFS, "Error al crear hilo Dumpeo");
+	}
+
+	if(!pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL)){
+		log_info(logger_LFS, "Hilo de consola creado");
+	}else{
+		log_error(logger_LFS, "Error al crear hilo de consola");
 	}
 
 	pthread_join(hiloLeerDeConsola, NULL);
@@ -108,8 +108,12 @@ void inicializacionLissandraFileSystem(){
 				t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
 				hiloTabla->thread = &hiloDeCompactacion;
 				hiloTabla->nombreTabla = strdup(tabla->d_name);
-				hiloTabla->finalizarCompactacion = 1;
+				hiloTabla->finalizarCompactacion = 0;
+				hiloTabla->blocked = 0;
+				hiloTabla->requests = queue_create();
+				pthread_mutex_lock(&mutexDiegote);
 				list_add(diegote, hiloTabla);
+				pthread_mutex_unlock(&mutexDiegote);
 				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
 				pthread_detach(hiloDeCompactacion);
 			}else{
@@ -213,28 +217,38 @@ void levantarFS(char* pathBitmap){
 	pthread_mutex_init(&mutexConfig, NULL);
 	pthread_mutex_init(&mutexRetardo, NULL);
 	pthread_mutex_init(&mutexTiempoDump, NULL);
+	pthread_mutex_init(&mutexBitmap, NULL);
 }
 
 void liberarMemoriaLFS(){
-
 	void liberarRecursos(t_hiloTabla* tabla){
+		void liberarRequest(t_request* request){
+			free(request->parametros);
+			free(request);
+		}
+		queue_destroy_and_destroy_elements(tabla->requests, (void*)liberarRequest);
 		free(tabla->nombreTabla);
 		free(tabla);
 	}
 
 	log_info(logger_LFS, "Finalizando LFS");
 
+	pthread_mutex_lock(&mutexDiegote);
 	list_destroy_and_destroy_elements(diegote, (void*) liberarRecursos);
+	pthread_mutex_unlock(&mutexDiegote);
 
 	free(pathTablas);
 	free(pathMetadata);
 	free(pathBloques);
 	free(pathRaiz);
+	pthread_mutex_lock(&mutexMemtable);
 	list_destroy_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
+	free(memtable);
+	pthread_mutex_unlock(&mutexMemtable);
 	munmap(bitmap, blocks/8);
 	close(bitmapDescriptor);
 	bitarray_destroy(bitarray);
-	free(memtable);
+
 	log_destroy(logger_LFS);
 
 	pthread_mutex_destroy(&mutexMemtable);
@@ -242,6 +256,7 @@ void liberarMemoriaLFS(){
 	pthread_mutex_destroy(&mutexConfig);
 	pthread_mutex_destroy(&mutexRetardo);
 	pthread_mutex_destroy(&mutexTiempoDump);
+	pthread_mutex_destroy(&mutexBitmap);
 
 	config_destroy(configMetadata);
 	config_destroy(config);
@@ -263,8 +278,15 @@ void* leerDeConsola(void* arg) {
 		if(validarMensaje(mensaje, LFS, &mensajeDeError) == SUCCESS){
 			char** request = string_n_split(mensaje, 2, " ");
 			cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0], LFS);
-			interpretarRequest(palabraReservada, mensaje, NULL);
 			liberarArrayDeChar(request);
+			char** requestSeparada = separarRequest(mensaje);
+			char* tabla = requestSeparada[1];
+			if(tabla == NULL || !estaBloqueada(tabla)){ //SI LA TABLA ES NULL, VINO UN DESCRIBE, SI NO, HAY Q VALIDAR SI LA TABLA ESTA BLOQUEADA
+				interpretarRequest(palabraReservada, mensaje, NULL);
+			}else{
+				encolarRequest(tabla, palabraReservada, mensaje, NULL);
+			}
+			liberarArrayDeChar(requestSeparada);
 		}else{
 			log_error(logger_LFS, mensajeDeError);
 		}
@@ -313,92 +335,50 @@ void* conectarConMemoria(void* arg) {
 			break;
 		}
 		log_info(logger_LFS, "Request: %s de la memoria %i",paqueteRecibido->request, memoria_fd);
-		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
+		char** requestSeparada = separarRequest(paqueteRecibido->request);
+		char* tabla = requestSeparada[1];
+		if(tabla == NULL || !estaBloqueada(tabla)){
+			interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
+		}else{
+			encolarRequest(tabla, palabraReservada, paqueteRecibido->request, &memoria_fd);
+			log_info(logger_LFS, "Tabla bloqueada. Request encola3");
+		}
+		liberarArrayDeChar(requestSeparada);
+
 		eliminar_paquete(paqueteRecibido);
 	}
 	return NULL;
 }
 
-void interpretarRequest(cod_request palabraReservada, char* request, int* memoria_fd) {
-	char** requestSeparada = separarRequest(request);
-	errorNo errorNo = SUCCESS;
-	char* mensaje = strdup("");
-	if(memoria_fd != NULL){
-		log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
+void encolarRequest(char* nombreTabla, cod_request palabraReservada, char* mensaje, int* memoria_fd){
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
-	switch (palabraReservada){
-		case SELECT:
-			log_info(logger_LFS, "Me llego un SELECT");
-			errorNo = procesarSelect(requestSeparada[1], requestSeparada[2], &mensaje);
-			break;
-		case INSERT:
-			log_info(logger_LFS, "Me llego un INSERT");
-			unsigned long long timestamp;
-			if(longitudDeArrayDeStrings(requestSeparada) == 5) { //4 parametros + INSERT
-				convertirTimestamp(requestSeparada[4], &timestamp);
-				errorNo = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], timestamp);
-			} else {
-				errorNo = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], obtenerHoraActual());
-			}
-			break;
-		case CREATE:
-			log_info(logger_LFS, "Me llego un CREATE");
-			errorNo = procesarCreate(requestSeparada[1], requestSeparada[2], requestSeparada[3], requestSeparada[4]);
-			break;
-		case DESCRIBE:
-			if(longitudDeArrayDeStrings(requestSeparada) == 2){
-				errorNo = procesarDescribe(requestSeparada[1], &mensaje);
-			}else{
-				errorNo = procesarDescribe(NULL, &mensaje);
-			}
+	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla);
 
-			log_info(logger_LFS, "Me llego un DESCRIBE");
-			break;
-		case DROP:
-			procesarDrop(requestSeparada[1]);
-			log_info(logger_LFS, "Me llego un DROP");
-			break;
-		default:
-			break;
+	t_request* request = (t_request*) malloc(sizeof(t_request));
+	request->cod_request = palabraReservada;
+	request->parametros = strdup(mensaje);
+	request->memoria_fd = memoria_fd;
+	pthread_mutex_lock(&mutexDiegote);
+	queue_push(tabla->requests, request);
+	pthread_mutex_unlock(&mutexDiegote);
+}
+
+int estaBloqueada(char* nombreTabla){
+	int estaBloqueada = 0;
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
 
-	char* mensajeDeError;
-	switch(errorNo){
-		case SUCCESS:
-			mensajeDeError=strdup("Request ejecutada correctamente");
-			break;
-		case TABLA_EXISTE:
-			mensajeDeError = string_from_format("La tabla %s ya existe", requestSeparada[1]);
-			log_error(logger_LFS, mensajeDeError);
-			break;
-		case ERROR_CREANDO_ARCHIVO:
-			mensajeDeError = string_from_format("Error al crear un archivo de la tabla %s", requestSeparada[1]);
-			log_error(logger_LFS, mensajeDeError);
-			break;
-		case TABLA_NO_EXISTE:
-			mensajeDeError = string_from_format("La tabla %s no existe", requestSeparada[1]);
-			log_error(logger_LFS, mensajeDeError);
-			break;
-		case KEY_NO_EXISTE:
-			mensajeDeError = string_from_format("La KEY %s no existe", requestSeparada[2]);
-			log_info(logger_LFS, mensajeDeError);
-			break;
-		default:
-			break;
+	pthread_mutex_lock(&mutexDiegote);
+	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla); // si no esta cargada la tabla, tabla es = null, con lo cual no esta bloqueada
+
+	if(tabla != NULL){
+		estaBloqueada = tabla->blocked;
 	}
-
-	free(mensajeDeError);
-	usleep(retardo*1000);
-
-	if (memoria_fd != NULL) {
-		enviar(errorNo, mensaje, *memoria_fd);
-	}else{
-		log_info(logger_LFS, mensaje);
-	}
-
-	free(mensaje);
-	liberarArrayDeChar(requestSeparada);
-	log_info(logger_LFS, "---------------------------------------");
+	pthread_mutex_unlock(&mutexDiegote);
+	return estaBloqueada;
 }
 
 void* escucharCambiosEnConfig(void* arg) {
@@ -419,7 +399,7 @@ void* escucharCambiosEnConfig(void* arg) {
 	watch_descriptor = inotify_add_watch(file_descriptor, configPath, IN_MODIFY);
 	while(1) {
 		int length = read(file_descriptor, buffer, BUF_LEN);
-		log_info(logger_LFS, "Cambió el archivo de config");
+		log_info(logger_LFS, "Cambio el archivo de config");
 		pthread_mutex_lock(&mutexConfig);
 		config_destroy(config);
 		config = leer_config(configPath);

@@ -16,7 +16,6 @@ void* hiloCompactacion(void* arg) {
 	config_destroy(configMetadataTabla);
 
 	while(1) {
-		usleep(tiempoEntreCompactaciones*1000);
 		if(finalizarHilo(pathTabla)){
 			log_info(logger_LFS, "Hilo de compactacion de %s terminado", pathTabla);
 			break;
@@ -28,13 +27,14 @@ void* hiloCompactacion(void* arg) {
 		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
 		log_info(logger_LFS, infoTerminoCompactacion);
 		free(infoTerminoCompactacion);
+		usleep(tiempoEntreCompactaciones*1000);
 	}
 	free(pathTabla);
 	return NULL;
 }
 
 int finalizarHilo(char* pathTabla){
-	//TODO MUTEX
+	int finalizarHilo = 0;
 	char* nombreTabla = string_reverse(pathTabla);
 	char** aux = string_split(nombreTabla, "/");
 	free(nombreTabla);
@@ -45,22 +45,27 @@ int finalizarHilo(char* pathTabla){
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
 
+	void liberarRequest(t_request* request){
+		free(request->parametros);
+		free(request);
+	}
+
 	void liberarRecursos(t_hiloTabla* tabla){
+		queue_destroy_and_destroy_elements(tabla->requests, (void*)liberarRequest);
 		free(tabla->nombreTabla);
 		free(tabla);
 	}
 
 	pthread_mutex_lock(&mutexDiegote);
 	t_hiloTabla* tablaEncontrada = list_find(diegote, (void*) encontrarTabla);
-	if(!tablaEncontrada->finalizarCompactacion){
+	if(tablaEncontrada != NULL && tablaEncontrada->finalizarCompactacion){
 		list_remove_and_destroy_by_condition(diegote, (void*)encontrarTabla, (void*)liberarRecursos);
-		free(nombreTabla);
-		return 1;
+		finalizarHilo = 1;
 	}
 	pthread_mutex_unlock(&mutexDiegote);
 
 	free(nombreTabla);
-	return 0;
+	return finalizarHilo;
 }
 
 /* compactar()
@@ -129,6 +134,12 @@ void compactar(char* pathTabla) {
 	// Verificamos si hay datos que compactar
 	if (registrosDeTmpC->elements_count != 0) {
 
+		char* nombreTabla = string_reverse(pathTabla);
+		char** aux = string_split(nombreTabla, "/");
+		free(nombreTabla);
+		nombreTabla = string_reverse(aux[0]);
+		liberarArrayDeChar(aux);
+
 		// Leemos todos los registros de las particiones y los guardamos en una lista
 		registrosDeParticiones = leerDeTodasLasParticiones(pathTabla, particiones);
 
@@ -137,6 +148,8 @@ void compactar(char* pathTabla) {
 		t_list* registrosAEscribir = list_map(registrosDeTmpC, (void*) obtenerTimestampMasAltoSiExiste);
 
 		// TODO: Bloquear tabla
+		setBlockTo(nombreTabla, 1);
+		//sleep(20); sirve para simular una compactacion larga
 
 		// Liberamos los bloques que contienen el archivo “.tmpc” y los que contienen el archivo “.bin”
 		liberarBloquesDeTmpCyParticiones(pathTabla, archivoDeLaTabla, tabla, particiones);
@@ -144,7 +157,10 @@ void compactar(char* pathTabla) {
 		// Grabamos los datos en el nuevo archivo “.bin”
 		guardarDatosNuevos(pathTabla, registrosAEscribir, particiones, tamanioBloque, numeroDeParticiones);
 
+		setBlockTo(nombreTabla, 0);
 		// TODO: Desbloquear la tabla y dejar un registro de cuanto tiempo estuvo bloqueada la tabla para realizar esta operatoria
+
+		procesarRequestsEncoladas(nombreTabla);
 
 		list_destroy_and_destroy_elements(registrosDeParticiones, (void*) eliminarRegistro);
 		list_destroy_and_destroy_elements(registrosAEscribir, (void*) eliminarRegistro);
@@ -157,6 +173,49 @@ void compactar(char* pathTabla) {
 
 	list_destroy_and_destroy_elements(registrosDeTmpC, (void*) eliminarRegistro);
 	list_destroy_and_destroy_elements(particiones, (void*) eliminarParticion);
+}
+
+void procesarRequestsEncoladas(char* nombreTabla){
+	pthread_t hiloProcesarRequests;
+	if(!pthread_create(&hiloProcesarRequests, NULL, (void*)procesarRequests, (void*)strdup(nombreTabla))){
+		log_info(logger_LFS, "Hilo de procesar requests de %s", nombreTabla);
+	}else{
+		log_error(logger_LFS, "Error al crear hilo procesar requests de %s", nombreTabla);
+	}
+	free(nombreTabla);
+	pthread_detach(hiloProcesarRequests);
+}
+
+void* procesarRequests(void* args){
+	char* nombreTabla = (char*)args;
+
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	pthread_mutex_lock(&mutexDiegote);
+	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla);
+	free(nombreTabla);
+	t_request* request;
+	while((request = queue_pop(tabla->requests)) != NULL){
+		interpretarRequest(request->cod_request, request->parametros, request->memoria_fd);
+		free(request->parametros);
+		free(request);
+	}
+	pthread_mutex_unlock(&mutexDiegote);
+	return NULL;
+}
+
+void setBlockTo(char* nombreTabla, int value){
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	pthread_mutex_lock(&mutexDiegote);
+	t_hiloTabla* tabla = list_find(diegote, (void*) encontrarTabla);
+
+	tabla->blocked = value;
+	pthread_mutex_unlock(&mutexDiegote);
 }
 
 /* renombrarTmp_a_TmpC()
@@ -401,7 +460,9 @@ void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeL
 				while (bloques[i] != NULL) {
 					char* pathBloque = string_from_format("%sBloques/%s.bin", pathRaiz, bloques[i]);
 					FILE* bloque = fopen(pathBloque, "w");
+					pthread_mutex_lock(&mutexBitmap);
 					bitarray_clean_bit(bitarray, (int) strtol(bloques[i], NULL, 10));
+					pthread_mutex_unlock(&mutexBitmap);
 					free(pathBloque);
 					fclose(bloque);
 					i++;
