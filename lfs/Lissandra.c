@@ -86,7 +86,7 @@ void inicializacionLissandraFileSystem(char* argv[]){
 
 	listaDeTablas = list_create();
 
-	/*DIR* tablas;
+	DIR* tablas;
 	if((tablas = opendir(pathTablas)) == NULL){
 		perror("Open Tables");
 	}else{
@@ -108,7 +108,7 @@ void inicializacionLissandraFileSystem(char* argv[]){
 			}
 		}
 		closedir(tablas);
-	}*/
+	}
 
 	log_info(logger_LFS, "----------------Lissandra File System inicializado correctamente--------------");
 }
@@ -277,7 +277,7 @@ void* conectarConMemoria(void* arg) {
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
 		cod_request palabraReservada = paqueteRecibido->palabraReservada;
 		//si viene -1 es porque se desconecto la memoria
-		if (palabraReservada == -1){
+		if (palabraReservada == COMPONENTE_CAIDO){
 			eliminar_paquete(paqueteRecibido);
 			log_debug(logger_LFS, "Se desconecto la memoria %i", memoria_fd);
 			close(memoria_fd);

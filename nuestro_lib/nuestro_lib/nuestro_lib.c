@@ -484,7 +484,7 @@ t_paquete* recibir(int socket)
 	int recibido = 0;
 	recibido = recv(socket, &paquete->palabraReservada, sizeof(int), MSG_WAITALL);
 	if(recibido == 0) {
-		paquete->palabraReservada = -1;
+		paquete->palabraReservada = COMPONENTE_CAIDO;
 		void* requestRecibido = malloc(sizeof(int));
 		paquete->request = requestRecibido;
 		return paquete;
@@ -517,7 +517,7 @@ int crearConexion(char* ip, char* puerto)
 
 	if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1) {
 		// printf("error");
-		return -1;
+		return COMPONENTE_CAIDO;
 	}
 
 	freeaddrinfo(server_info);
@@ -709,7 +709,7 @@ void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
  * 				y finalmente se libera el paquete que se envio.
  * Return:
  * 	-> :: void  */
-void enviar(int cod, char* mensaje, int socket_cliente)
+int enviar(int cod, char* mensaje, int socket_cliente)
 {
 	t_paquete* paquete = (t_paquete*) malloc(sizeof(t_paquete));
 	paquete->palabraReservada = cod;
@@ -722,10 +722,13 @@ void enviar(int cod, char* mensaje, int socket_cliente)
 	void* paqueteAEnviar = serializar_paquete(paquete, tamanioPaquete);
 	//enviamos
 
-	send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0);
+	if (send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0) == -1) {
+		return COMPONENTE_CAIDO;
+	}
 
 	free(paqueteAEnviar);
 	eliminar_paquete(paquete);
+	return SUCCESS;
 }
 
 
@@ -802,9 +805,8 @@ void liberar_conexion(int socket_cliente)
  * 	-> :: void  */
 void eliminarClientesCerrados(t_list* descriptores, int* numeroDeClientes) {
 	for(int i = 0; i < *numeroDeClientes; i++) {
-		t_int* fd = list_get(descriptores,i);
-		if(fd->valor == -1) {
-			list_remove(descriptores, i);
+		if((int) list_get(descriptores,i) == -1) {
+			int valorRemovido = (int) list_remove(descriptores, i);
 			*numeroDeClientes -= 1;
 		}
 	}
@@ -821,9 +823,8 @@ void eliminarClientesCerrados(t_list* descriptores, int* numeroDeClientes) {
 int maximo(t_list* descriptores, int descriptorServidor, int numeroDeClientes) {
 	int max = descriptorServidor;
 	for(int i = 0; i < numeroDeClientes; i++) {
-		t_int* descriptor = list_get(descriptores,i);
-		if(descriptor->valor > max) {
-			max = descriptor->valor;
+		if((int) list_get(descriptores,i) > max) {
+			max = (int) list_get(descriptores,i);
 		}
 	}
 	return max;
