@@ -7,22 +7,7 @@
 int main(int argc, char* argv[]) {
 
 	inicializacionLissandraFileSystem(argv);
-	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, "TABLA1");
 
-	unsigned long long tiempo1 = obtenerHoraActual();
-	procesarInsert("TABLA1", 2, "\"Esta es la pruebaaaa\"", tiempo1);
-	procesarInsert("TABLA1", 6, "\"Esta es la prueba 5\"", tiempo1);
-	sleep(2);
-	unsigned long long tiempo2 = obtenerHoraActual();
-	procesarInsert("TABLA1", 3, "\"Ahora es la prueba 2\"", tiempo2);
-	//errorNo error = dumpear();
-	procesarInsert("TABLA1", 44, "\"Esta es la prueba 3\"",
-			obtenerHoraActual());
-	procesarInsert("TABLA1", 655, "\"Ahora es la prueba 4\"",
-			obtenerHoraActual());
-	errorNo error = dumpear();
-	compactar(pathTabla);
-/*
 	if(!pthread_create(&hiloLeerDeConsola, NULL, leerDeConsola, NULL)){
 		log_info(logger_LFS, "Hilo de consola creado");
 	}else{
@@ -46,7 +31,7 @@ int main(int argc, char* argv[]) {
 	pthread_join(hiloRecibirMemorias, NULL);
 	log_info(logger_LFS, "Hilo recibir memorias finalizado");
 	pthread_join(hiloDumpeo, NULL);
-	log_info(logger_LFS, "Hilo dumpeo finalizado");*/
+	log_info(logger_LFS, "Hilo dumpeo finalizado");
 	liberarMemoriaLFS();
 	return EXIT_SUCCESS;
 }
@@ -101,7 +86,7 @@ void inicializacionLissandraFileSystem(char* argv[]){
 
 	listaDeTablas = list_create();
 
-	/*DIR* tablas;
+	DIR* tablas;
 	if((tablas = opendir(pathTablas)) == NULL){
 		perror("Open Tables");
 	}else{
@@ -123,7 +108,7 @@ void inicializacionLissandraFileSystem(char* argv[]){
 			}
 		}
 		closedir(tablas);
-	}*/
+	}
 
 	log_info(logger_LFS, "----------------Lissandra File System inicializado correctamente--------------");
 }
