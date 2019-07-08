@@ -16,18 +16,8 @@
 #include <semaphore.h>
 #include <sys/time.h>
 #include <commons/bitarray.h>
+#include<math.h>
 
-//---DESCRIPCION FUNCIONALIDADES ACTUALES---
-/*funcionalidades actuales de MEMORIA:
-(obseracion1: la memoria oseee un atributo en el .h con su consistencia
- observacion2: posee una tablaA 1 "hola")
-	1. SELECT
-		-SC:SHC: reconoce que debe realizarle la consulta a LFS(pero como aun lisandra no puede hacer un insert, no nos permite hacer nuestro select)
-		asi que simplemente loggea que se le consultara a LFS.
-		-EV:
-			* si se le consulta sobre la tabla y key que posee(observacion2), devuelve correctamente el valor a quien se lo haya consultado(kernel o desde la consola)
-			* si se le consulta sobre algo inexistente, al igual que en SC, loggea que se le consulta a LFS
-*/
 
 //----------------ENUMS--------------------
 typedef enum
