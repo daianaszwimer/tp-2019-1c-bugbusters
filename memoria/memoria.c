@@ -291,7 +291,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			break;
 		case JOURNAL:
 			log_debug(logger_MEMORIA, "Me llego un JOURNAL");
-//			procesarJournal(codRequest, request, caller, i);
+			procesarJournal(codRequest, request, caller, i);
 			break;
 		case NUESTRO_ERROR:
 			 if(caller == ANOTHER_COMPONENT){
@@ -637,6 +637,21 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 			requestSeparada=NULL;
 			break;
 	 	 case(DROP):
+			if(codResultado == SUCCESS){
+				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
+				log_info(logger_MEMORIA,error);
+			}else{
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				log_info(logger_MEMORIA,error);
+			}
+			free(respuesta);
+			respuesta=NULL;
+			free(error);
+			error=NULL;
+			liberarArrayDeChar(requestSeparada);
+			requestSeparada=NULL;
+	 	 	break;
+	 	 case(JOURNAL):
 			if(codResultado == SUCCESS){
 				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,error);
@@ -1372,34 +1387,40 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 	return elementoVictima;
 }
 
-//void procesarJournal(cod_request codRequest, char* request, t_caller caller, int i) {
-//	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
-//	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
-//	 *  con el que está en el FS.
-//	 **/
-////	t_list* elemModificados = list_create();
-//	t_int* resultadoInsertLFS;
-//	void encontrarElemModificado(t_segmento* segmento){
-//		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
-//			if(elemPagina->modificado == MODIFICADO){
-////				list_add(elemModificados, elemPagina);
-//
-////				t_paquete* paqueteAuxiliar=malloc(sizeof(t_paquete));
-////				paqueteAuxiliar->palabraReservada=SUCCESS;
-//				char* requestAEnviar= strdup("");
-//				string_append_with_format(&requestAEnviar,"%s%s%s%s%i%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
-////				paqueteAuxiliar->request = strdup(requestAEnviar);
-////				paqueteAuxiliar->tamanio=sizeof(maxValue);
-//
-//				t_paquete* insertJournalLFS=intercambiarConFileSystem(INSERT,requestAEnviar);
-//				list_add(resultadoInsertLFS,insertJournalLFS->palabraReservada);
-//
-//
-//				printf("ValorModificado %s\n",requestAEnviar);
-//			}
-//		}
-//		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
-//	}
-//	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
-//}
-//
+
+
+
+
+void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int i) {
+	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
+	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
+	 *  con el que está en el FS.
+	 **/
+
+	t_paquete* insertJournalLFS;
+	void encontrarElemModificado(t_segmento* segmento){
+		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
+			if(elemPagina->modificado == MODIFICADO){
+				char* requestAEnviar= strdup("");
+				string_append_with_format(&requestAEnviar,"%s%s%s%s%i%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
+
+				insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar);
+				printf("Realizo JOURNAL a: %s%s%i%s%c%s%c\n",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
+
+				if(insertJournalLFS->palabraReservada== EXIT_SUCCESS){
+					enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+					eliminar_paquete(insertJournalLFS);
+					insertJournalLFS=NULL;
+				}else{
+					enviarAlDestinatarioCorrecto(palabraReservada,insertJournalLFS->palabraReservada,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+					eliminar_paquete(insertJournalLFS);
+					insertJournalLFS=NULL;
+				}
+
+			}
+		}
+		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
+	}
+	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
+}
+
