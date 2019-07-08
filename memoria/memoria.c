@@ -44,7 +44,7 @@ void inicializacionDeMemoria(){
 	marcosTotales = config_get_int_value(config, "TAM_MEM")/(27+maxValue);
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
-	bitarrayString= strdup("");
+	bitarrayString = string_repeat('0', marcosTotales);
 	bitarray= bitarray_create_with_mode(bitarrayString,marcosTotales,LSB_FIRST);
 	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
@@ -152,7 +152,7 @@ void conectarAFileSystem() {
 	maxValue= handshakeLFS->tamanioValue;
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
-//	eliminar_paquete(handshakeLFS); TODO VER SI REALMENTE SE ELIMINA
+	free(handshakeLFS);
 }
 
 
@@ -823,20 +823,16 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		int index =obtenerPaginaDisponible(&pagLibre);
 		if(index == MEMORIAFULL){
 			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
-			t_elemTablaDePaginas* elementoAInsertar= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-			elementoAInsertar->marco=NULL;
+			t_elemTablaDePaginas* elementoAInsertar;
 			int rtaLRU;
 			elementoAInsertar=correrAlgoritmoLRU(&rtaLRU);
 			if (rtaLRU == SUCCESS){
 				if (resultadoCache == KEYINEXISTENTE) {
-					t_segmento* tablaBuscada = malloc(sizeof(t_segmento));
-					tablaBuscada->tablaDePagina=NULL;
+					t_segmento* tablaBuscada;
 					tablaBuscada = encontrarSegmento(nuevaTabla);
 					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
 					free(nuevaTabla);
 					nuevaTabla=NULL;
-					free(tablaBuscada);
-					tablaBuscada=NULL;
 				} else if (resultadoCache == SEGMENTOINEXISTENTE) {
 					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 					crearSegmento(nuevoSegmento, nuevaTabla);
@@ -846,8 +842,6 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 					free(nuevaTabla);
 					nuevaTabla=NULL;
 				}
-
-				//free(elementoAInsertar);
 			} else {
 				log_info(logger_MEMORIA,
 						"NO hay paginas para reemplazar, hay q hacer journaling");
@@ -1153,13 +1147,14 @@ void liberarMemoria(){
 	bitarray_destroy(bitarray);
 	free(bitarrayString);
 	bitarrayString=NULL;
-//	free(memoria);
+	free(memoria);
 //	memoria=NULL;
 	liberar_conexion(conexionLfs);
 	FD_ZERO(&descriptoresDeInteres);
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
 	list_destroy(clientesGossiping);
+	list_destroy(descriptoresClientes);
 	list_destroy(clientesRequest);
 }
 
@@ -1175,7 +1170,8 @@ void liberarMemoria(){
 void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 	bitarray_clean_bit(bitarray, elem->numeroDePag);
 	memset(marcoAEliminar->value, 0, maxValue);
-	free(marcoAEliminar);
+//	free(marcoAEliminar->value);
+//	free(marcoAEliminar);
 }
 
 /* procesarDescribe()
@@ -1308,14 +1304,14 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 		i=0;
 	}
 
-	t_list* listaVictima;
+	//t_list* listaVictima;
 	t_elemTablaDePaginas* elementoVictima;
 	elementoVictima =NULL;
 
 	if (!list_is_empty(elemSinModificar)) {
 		list_sort(elemSinModificar, (void*) menorTimestamp);
-		listaVictima = list_take_and_remove(elemSinModificar, 1);
-		elementoVictima= list_get(listaVictima,0);
+		//listaVictima = list_take_and_remove(elemSinModificar, 1);
+		elementoVictima= list_get(elemSinModificar,0);
 //		list_destroy_and_destroy_elements(elemSinModificar,(void*)eliminarElemTablaPagina);
 		list_destroy(elemSinModificar);
 		int desvinculacion=desvincularVictimaDeSuSegmento(elementoVictima);
