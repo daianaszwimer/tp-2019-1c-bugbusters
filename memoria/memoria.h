@@ -93,6 +93,7 @@ sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
 pthread_mutex_t terminarHilo;
 pthread_mutex_t semMBitarray;
 pthread_mutex_t semMTablaSegmentos;
+pthread_mutex_t semMDescriptores;
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 //pthread_attr_t attr;
@@ -151,7 +152,7 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 
 int obtenerPaginaDisponible(t_marco**);
 
-void liberarTabla(t_segmento*);
+void eliminarSegmento(t_segmento*);
 void eliminarElemTablaPagina(t_elemTablaDePaginas* );
 void eliminarElemTablaSegmentos(t_segmento*);
 void liberarEstructurasMemoria();
