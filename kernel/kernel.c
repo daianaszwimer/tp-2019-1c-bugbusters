@@ -415,22 +415,22 @@ void loguearMetricas(void) {
 		informarMetricas(FALSE);
 		// limpio variables para empezar a contar de nuevo
 		pthread_mutex_lock(&semMMetricas);
-		tiempoSelectSC = 0;
-		tiempoInsertSC = 0;
+		tiempoSelectSC = 0.0;
+		tiempoInsertSC = 0.0;
 		cantidadSelectSC = 0;
 		cantidadInsertSC = 0;
 		if (list_size(cargaMemoriaSC) > 0) {
 			list_clean_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
 		}
-		tiempoSelectSHC = 0;
-		tiempoInsertSHC = 0;
+		tiempoSelectSHC = 0.0;
+		tiempoInsertSHC = 0.0;
 		cantidadSelectSHC = 0;
 		cantidadInsertSHC = 0;
 		if (list_size(cargaMemoriaSHC) > 0) {
 			list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
 		}
-		tiempoSelectEC = 0;
-		tiempoInsertEC = 0;
+		tiempoSelectEC = 0.0;
+		tiempoInsertEC = 0.0;
 		cantidadSelectEC = 0;
 		cantidadInsertEC = 0;
 		if (list_size(cargaMemoriaEC) > 0) {
@@ -452,62 +452,62 @@ void informarMetricas(int mostrarPorConsola) {
 	// si es vacio no mostrar basura
 	pthread_mutex_lock(&semMMetricas);
 	double readLatencySC = tiempoSelectSC/cantidadSelectSC;
-		double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
-		double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
-		double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
-		double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
-		double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
-		int cantidadTotalSelectInsert = cantidadSelectSC + cantidadSelectSHC + cantidadSelectEC + cantidadInsertSC + cantidadInsertSHC + cantidadInsertEC;
-		void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
-			// https://github.com/sisoputnfrba/foro/issues/1419
-			double estadistica = estadisticaAMostrar->cantidadSelectInsert / cantidadTotalSelectInsert;
-			if (mostrarPorConsola == TRUE) {
-				log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
-						estadisticaAMostrar->numeroMemoria, estadistica);
-			} else {
-				log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
-						estadisticaAMostrar->numeroMemoria, estadistica);
-			}
-		}
+	double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
+	double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
+	double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
+	double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
+	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
+	int cantidadTotalSelectInsert = cantidadSelectSC + cantidadSelectSHC + cantidadSelectEC + cantidadInsertSC + cantidadInsertSHC + cantidadInsertEC;
+	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
+		// https://github.com/sisoputnfrba/foro/issues/1419
+		double estadistica = (double)estadisticaAMostrar->cantidadSelectInsert / (double)cantidadTotalSelectInsert;
 		if (mostrarPorConsola == TRUE) {
-			log_info(logger_KERNEL, "Read Latency de SC: %f", readLatencySC);
-			log_info(logger_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
-			log_info(logger_KERNEL, "Read Latency de EC: %f", readLatencyEC);
-			log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatencySC);
-			log_info(logger_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
-			log_info(logger_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
-			log_info(logger_KERNEL, "El memory load de SC es:");
-			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
-			log_info(logger_KERNEL, "El memory load de SHC es:");
-			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
-			log_info(logger_KERNEL, "El memory load de EC es:");
-			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
-			log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
-			log_info(logger_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
-			log_info(logger_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
-			log_info(logger_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
-			log_info(logger_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
-			log_info(logger_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+			log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
+					estadisticaAMostrar->numeroMemoria, estadistica);
 		} else {
-			log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %f", readLatencySC);
-			log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
-			log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %f", readLatencyEC);
-			log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatencySC);
-			log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
-			log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
-			log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
-			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
-			log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
-			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
-			log_info(logger_METRICAS_KERNEL, "El memory load de EC es:");
-			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+			log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
+					estadisticaAMostrar->numeroMemoria, estadistica);
 		}
+	}
+	if (mostrarPorConsola == TRUE) {
+		log_info(logger_KERNEL, "Read Latency de SC: %f", readLatencySC);
+		log_info(logger_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+		log_info(logger_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+		log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+		log_info(logger_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+		log_info(logger_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
+		log_info(logger_KERNEL, "El memory load de SC es:");
+		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+		log_info(logger_KERNEL, "El memory load de SHC es:");
+		list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+		log_info(logger_KERNEL, "El memory load de EC es:");
+		list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+		log_info(logger_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+		log_info(logger_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+		log_info(logger_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+		log_info(logger_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+		log_info(logger_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+	} else {
+		log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %f", readLatencySC);
+		log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+		log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
+		log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
+		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+		log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
+		list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+		log_info(logger_METRICAS_KERNEL, "El memory load de EC es:");
+		list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+	}
 	pthread_mutex_unlock(&semMMetricas);
 }
 
@@ -1203,6 +1203,7 @@ t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key
 	int conexionTemporanea;
 	int respuesta;
 	int respuestaEnviar;
+	char* numAux;
 	while(1) {
 		// si la respuesta es distinto de componente caido hago return
 		config_memoria* memoriaCorrespondiente;
@@ -1213,6 +1214,7 @@ t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key
 			*numMemoria = strdup(memoriaCorrespondiente->numero);
 			ip = strdup(memoriaCorrespondiente->ip);
 			puerto = strdup(memoriaCorrespondiente->puerto);
+			numAux = strdup(memoriaCorrespondiente->numero);
 			pthread_mutex_unlock(&semMMemorias);
 		} else {
 			memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(tipoConsistencia, key);
@@ -1223,12 +1225,13 @@ t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key
 				return paqueteError;
 			} else {
 				*numMemoria = strdup(memoriaCorrespondiente->numero);
+				numAux = strdup(memoriaCorrespondiente->numero);
 				ip = strdup(memoriaCorrespondiente->ip);
 				puerto = strdup(memoriaCorrespondiente->puerto);
 				liberarConfigMemoria(memoriaCorrespondiente);
 			}
 		}
-		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
+		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numAux);
 		free(ip);
 		free(puerto);
 		ip = NULL;
@@ -1275,10 +1278,12 @@ int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom
 			numAux = strdup(memoriaCorrespondiente->numero);
 			pthread_mutex_unlock(&semMMemorias);
 			conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numAux);
+			free(numAux);
 			free(ip);
 			free(puerto);
 			ip = NULL;
 			puerto = NULL;
+			numAux = NULL;
 		} else {
 			memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(tipoConsistencia, key);
 			if(memoriaCorrespondiente == NULL) {
@@ -1415,6 +1420,9 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 				} else {
 					log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 				}
+			} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
+				respuesta = SUCCESS;
+				log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
 			} else {
 				log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 			}
@@ -1423,7 +1431,10 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		}
 	} else if (respuesta == COMPONENTE_CAIDO) {
 		// todo: vale la pena?
-		reenviarRequest(consistenciaTabla, mensaje, key, codigo == DESCRIBE, numMemoria);
+		reenviarRequest(consistenciaTabla, mensaje, key, codigo == DESCRIBE, &numMemoria);
+	} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
+		respuesta = SUCCESS;
+		log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
 	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
@@ -1536,10 +1547,12 @@ void procesarRun(t_queue* colaRun) {
 
 		if (validarRequest((char*) request->request) == TRUE) {
 			if (manejarRequest(request, TRUE) != SUCCESS) {
+				pthread_mutex_lock(&semMQuantum);
 				break;
 				//libero recursos, mato hilo, lo saco de la cola, e informo error
 			}
 		} else {
+			pthread_mutex_lock(&semMQuantum);
 			break;
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
 		}
@@ -1586,7 +1599,6 @@ void procesarRun(t_queue* colaRun) {
  * Return:
  * 	-> void  */
 int procesarAdd(char* mensaje) {
-	// todo: validar que en add no manden cualquier fruta
 	int estado = validarRequest(mensaje);
 	if (estado != TRUE) {
 		return estado;
