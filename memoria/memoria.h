@@ -91,6 +91,7 @@ t_marco* frame0;
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
 pthread_mutex_t terminarHilo;
+pthread_mutex_t semMBitarray;
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 //pthread_attr_t attr;

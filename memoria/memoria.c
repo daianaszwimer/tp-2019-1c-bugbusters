@@ -19,8 +19,7 @@ int main(void) {
 	//	SEMAFOROS
 	//sem_init(&semLeerDeConsola, 0, 1);
 	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
-	//pthread_mutex_init(&terminarHilo, NULL);
-
+	pthread_mutex_init(&semMBitarray, NULL);
 	// 	HILOS
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
@@ -72,7 +71,9 @@ void inicializacionDeMemoria(){
  * VALGRIND:: SI */
 int obtenerIndiceMarcoDisponible() {
 	int index = 0;
+	pthread_mutex_lock(&semMBitarray);
 	while(index < marcosTotales && bitarray_test_bit(bitarray, index)) index++;
+	pthread_mutex_unlock(&semMBitarray);
 	if(index >= marcosTotales) {
 		index = NUESTRO_ERROR;
 	}
@@ -973,8 +974,9 @@ t_marco* crearMarcoDePagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue,
  * 	VALGRIND :: SI*/
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* pagLibre, uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
 	t_elemTablaDePaginas* nuevoElemento= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
-
+	pthread_mutex_lock(&semMBitarray);
 	bitarray_set_bit(bitarray, id);
+	pthread_mutex_unlock(&semMBitarray);
 	nuevoElemento->numeroDePag = id;
 	nuevoElemento->marco = crearMarcoDePagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
 	nuevoElemento->modificado = SINMODIFICAR;
@@ -1142,12 +1144,12 @@ void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
  * 	-> :: void
  * 	VALGRIND :: NO */
 void liberarMemoria(){
+	pthread_mutex_destroy(&semMBitarray);
 	log_info(logger_MEMORIA, "Finaliza MEMORIA");
 	bitarray_destroy(bitarray);
 	free(bitarrayString);
 	bitarrayString=NULL;
 	free(memoria);
-//	memoria=NULL;
 	liberar_conexion(conexionLfs);
 	FD_ZERO(&descriptoresDeInteres);
 	log_destroy(logger_MEMORIA);
@@ -1167,7 +1169,9 @@ void liberarMemoria(){
  * 	-> void ::
  * 	VALGRIND :: SI*/
 void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
+	pthread_mutex_lock(&semMBitarray);
 	bitarray_clean_bit(bitarray, elem->numeroDePag);
+	pthread_mutex_unlock(&semMBitarray);
 	memset(marcoAEliminar->value, 0, maxValue);
 //	free(marcoAEliminar->value);
 //	free(marcoAEliminar);
