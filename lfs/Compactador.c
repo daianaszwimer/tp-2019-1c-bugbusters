@@ -284,7 +284,10 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 
 			char* pathTmpC = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 			t_config* configTmpC = config_create(pathTmpC);
-			char** bloques = config_get_array_value(configTmpC, "BLOCKS");
+			char* bloquesString = config_get_string_value(configTmpC, "BLOCKS");
+			bloquesString++;
+			bloquesString[strlen(bloquesString) -1] = 0;
+			char** bloques = string_split(bloquesString, ",");
 			int size = config_get_int_value(configTmpC, "SIZE");
 			free(pathTmpC);
 			config_destroy(configTmpC);
@@ -381,7 +384,10 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, int tama
 		particion = list_get(particiones, i);
 		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, particion->valor);
 		t_config* particionConfig = config_create(pathParticion);
-		char** bloques = config_get_array_value(particionConfig, "BLOCKS");
+		char* bloquesString = config_get_string_value(particionConfig, "BLOCKS");
+		bloquesString++;
+		bloquesString[strlen(bloquesString) -1] = 0;
+		char** bloques = string_split(bloquesString, ",");
 		int size = config_get_int_value(particionConfig, "SIZE");
 		free(pathParticion);
 		config_destroy(particionConfig);
@@ -444,7 +450,10 @@ void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeL
 		if (string_ends_with(archivoDeLaTabla->d_name, ".tmpc")) {
 			char* pathTmpC = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 			t_config* configTmpC = config_create(pathTmpC);
-			char** bloques = config_get_array_value(configTmpC, "BLOCKS");
+			char* bloquesString = config_get_string_value(configTmpC, "BLOCKS");
+			bloquesString++;
+			bloquesString[strlen(bloquesString) -1] = 0;
+			char** bloques = string_split(bloquesString, ",");
 			config_destroy(configTmpC);
 			int i = 0;
 			while (bloques[i] != NULL) {
@@ -476,7 +485,10 @@ void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeL
 				char* particionPath = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 				t_config* configParticion = config_create(particionPath);
 				free(particionPath);
-				char** bloques = config_get_array_value(configParticion, "BLOCKS");
+				char* bloquesString = config_get_string_value(configParticion, "BLOCKS");
+				bloquesString++;
+				bloquesString[strlen(bloquesString) -1] = 0;
+				char** bloques = string_split(bloquesString, ",");
 				config_destroy(configParticion);
 				int i = 0;
 				while (bloques[i] != NULL) {
