@@ -484,7 +484,7 @@ t_paquete* recibir(int socket)
 	int recibido = 0;
 	recibido = recv(socket, &paquete->palabraReservada, sizeof(int), MSG_WAITALL);
 	if(recibido == 0) {
-		paquete->palabraReservada = -1;
+		paquete->palabraReservada = COMPONENTE_CAIDO;
 		void* requestRecibido = malloc(sizeof(int));
 		paquete->request = requestRecibido;
 		return paquete;
@@ -517,7 +517,7 @@ int crearConexion(char* ip, char* puerto)
 
 	if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1) {
 		// printf("error");
-		return -1;
+		return COMPONENTE_CAIDO;
 	}
 
 	freeaddrinfo(server_info);
@@ -596,10 +596,17 @@ void enviarGossiping(char* puertos, char* ips, char* numeros, int socket_cliente
  * Descripcion: recibe el gossiping y lo deserealiza
  * Return:
  * 	-> gossiping :: t_gossiping  */
-t_gossiping* recibirGossiping(int socket)
+t_gossiping* recibirGossiping(int socket, int* resultado)
 {
 	t_gossiping* gossiping = malloc(sizeof(t_gossiping));
-	recv(socket, &gossiping->tamanioIps, sizeof(int), MSG_WAITALL);
+	int rta = recv(socket, &gossiping->tamanioIps, sizeof(int), MSG_WAITALL);
+	if (rta == 0) {
+		*resultado = COMPONENTE_CAIDO;
+		gossiping->ips = strdup("");
+		gossiping->puertos = strdup("");
+		gossiping->numeros = strdup("");
+		return gossiping;
+	}
 	char* ipsRecibidos = malloc(gossiping->tamanioIps);
 	recv(socket, ipsRecibidos, gossiping->tamanioIps, MSG_WAITALL);
 
@@ -614,6 +621,8 @@ t_gossiping* recibirGossiping(int socket)
 	gossiping->puertos = puertosRecibidos;
 	gossiping->ips = ipsRecibidos;
 	gossiping->numeros = numerosRecibidos;
+
+	*resultado = SUCCESS;
 
 	return gossiping;
 }
@@ -709,7 +718,7 @@ void* serializar_handshake_memoria(t_handshake_memoria* handshake, int tamanio)
  * 				y finalmente se libera el paquete que se envio.
  * Return:
  * 	-> :: void  */
-void enviar(int cod, char* mensaje, int socket_cliente)
+int enviar(int cod, char* mensaje, int socket_cliente)
 {
 	t_paquete* paquete = (t_paquete*) malloc(sizeof(t_paquete));
 	paquete->palabraReservada = cod;
@@ -722,10 +731,13 @@ void enviar(int cod, char* mensaje, int socket_cliente)
 	void* paqueteAEnviar = serializar_paquete(paquete, tamanioPaquete);
 	//enviamos
 
-	send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0);
+	if (send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0) == -1) {
+		return COMPONENTE_CAIDO;
+	}
 
 	free(paqueteAEnviar);
 	eliminar_paquete(paquete);
+	return SUCCESS;
 }
 
 

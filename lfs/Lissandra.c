@@ -326,9 +326,9 @@ void* conectarConMemoria(void* arg) {
 	int memoria_fd = (int)arg;
 	while (1) {
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
-		cod_request palabraReservada = paqueteRecibido->palabraReservada;
+		int palabraReservada = paqueteRecibido->palabraReservada;
 		//si viene -1 es porque se desconecto la memoria
-		if (palabraReservada == -1){
+		if (palabraReservada == COMPONENTE_CAIDO){
 			eliminar_paquete(paqueteRecibido);
 			log_debug(logger_LFS, "Se desconecto la memoria %i", memoria_fd);
 			close(memoria_fd);
