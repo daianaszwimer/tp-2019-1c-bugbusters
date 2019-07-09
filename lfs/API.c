@@ -129,28 +129,33 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
 
+	if(strlen(value) > tamanioValue){
+		error = VALUE_INVALIDO;
+	}
 
 	/* Validamos si la tabla existe */
-	DIR *dir = opendir(pathTabla);
-	if (dir) {
-		closedir(dir);
-		t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
-		registro->key = key;
-		registro->value = strdup(value);
-		registro->timestamp = timestamp;
-		pthread_mutex_lock(&mutexMemtable);
-		t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
-		if (tabla == NULL) {
-			log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
-			tabla = (t_tabla*) malloc(sizeof(t_tabla));
-			tabla->nombreTabla = strdup(nombreTabla);
-			tabla->registros = list_create();
-			list_add(memtable->tablas, tabla);
+	if(error == SUCCESS){
+		DIR *dir = opendir(pathTabla);
+		if (dir) {
+			closedir(dir);
+			t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
+			registro->key = key;
+			registro->value = strdup(value);
+			registro->timestamp = timestamp;
+			pthread_mutex_lock(&mutexMemtable);
+			t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
+			if (tabla == NULL) {
+				log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
+				tabla = (t_tabla*) malloc(sizeof(t_tabla));
+				tabla->nombreTabla = strdup(nombreTabla);
+				tabla->registros = list_create();
+				list_add(memtable->tablas, tabla);
+			}
+			list_add(tabla->registros, registro);
+			pthread_mutex_unlock(&mutexMemtable);
+		} else {
+			error = TABLA_NO_EXISTE;
 		}
-		list_add(tabla->registros, registro);
-		pthread_mutex_unlock(&mutexMemtable);
-	} else {
-		error = TABLA_NO_EXISTE;
 	}
 
 	free(pathTabla);
