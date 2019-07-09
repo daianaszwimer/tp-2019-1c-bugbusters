@@ -275,7 +275,7 @@ void* conectarConMemoria(void* arg) {
 	int memoria_fd = (int)arg;
 	while (1) {
 		t_paquete* paqueteRecibido = recibir(memoria_fd);
-		cod_request palabraReservada = paqueteRecibido->palabraReservada;
+		int palabraReservada = paqueteRecibido->palabraReservada;
 		//si viene -1 es porque se desconecto la memoria
 		if (palabraReservada == COMPONENTE_CAIDO){
 			eliminar_paquete(paqueteRecibido);
