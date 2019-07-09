@@ -1221,6 +1221,7 @@ int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
 	if (rta == COMPONENTE_CAIDO) {
 		// eliminar memoria de lista de memorias y de criterios
 		eliminarMemoria(puerto, ip, numero);
+		liberar_conexion(conexionTemporanea);
 		return FAILURE;
 	}
 	return conexionTemporanea;
@@ -1611,7 +1612,10 @@ void procesarRun(t_queue* colaRun) {
 	} else if (queue_is_empty(colaRun) == TRUE){
 		pthread_mutex_unlock(&semMQuantum);
 		// si estoy aca es porque ya ejecuto toda la cola
+		log_info(logger_KERNEL, "...........................................................");
 		log_info(logger_KERNEL, "Finalizó la ejecución del script");
+		log_info(logger_KERNEL, "...........................................................");
+
 		queue_destroy(colaRun);
 	} else {
 		pthread_mutex_unlock(&semMQuantum);

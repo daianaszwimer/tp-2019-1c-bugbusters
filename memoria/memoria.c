@@ -6,7 +6,7 @@ int main(void) {
 
 	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
-	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
+	logger_MEMORIA = log_create("memoria.log", "Memoria", 0, LOG_LEVEL_DEBUG);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
 
@@ -1504,14 +1504,17 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	}
 
 	int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
+	t_paquete* resultadoJournal= (t_paquete*)malloc(sizeof(t_paquete));
+	resultadoJournal->palabraReservada=JOURNAL;
+	resultadoJournal->request=strdup("Se ha realizado el JOURNAL con exito");
+	resultadoJournal->tamanio=sizeof(resultadoJournal->request);
 	if(resultadoControl == 1){
-		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, indiceKernel);
-		eliminar_paquete(insertJournalLFS);
-		insertJournalLFS=NULL;
+		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
+
 	}else{
-		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,insertJournalLFS,caller, indiceKernel);
-		eliminar_paquete(insertJournalLFS);
-		insertJournalLFS=NULL;
+		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,resultadoJournal,caller, indiceKernel);
 	}
+	list_destroy(resultadosJournal);
+	eliminar_paquete(resultadoJournal);
 }
 
