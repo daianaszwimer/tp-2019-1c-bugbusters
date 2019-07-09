@@ -35,7 +35,7 @@ int main(void) {
  * Return:
  * 	-> :: void  */
 void inicializarVariables() {
-	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
+	logger_KERNEL = log_create("kernel.log", "Kernel", 0, LOG_LEVEL_DEBUG);
 	logger_METRICAS_KERNEL = log_create("metricas.log", "MetricasKernel", 0, LOG_LEVEL_DEBUG);
 
 	// Configs
@@ -168,43 +168,62 @@ void hacerGossiping(void) {
 	if (conexion == FAILURE) {
 		log_error(logger_KERNEL, "La mem ppal no está levantada");
 	} else {
-		enviarGossiping("", "", "", conexion);
-		gossiping = recibirGossiping(conexion, &resultado);
-		// solo procesar si resultado es success
-		procesarGossiping(gossiping);
-		liberar_conexion(conexion);
-		liberarHandshakeMemoria(gossiping);
-		// guardo numero de memoria para mandar como param
-		pthread_mutex_lock(&semMMemorias);
-		config_memoria* memPpal = list_find(memorias, (void*)encontrarMemPpal);
-		numeroPpal = strdup(memPpal->numero);
-		pthread_mutex_unlock(&semMMemorias);
-		// como la ppal esta levanta va a ser la mem actual
-		free(numeroActual);
-		numeroActual = NULL;
-		numeroActual = strdup(numeroPpal);
-	}
-	while(1) {
-		usleep(sleepGossiping * 1000);
-		conexion = conectarseAMemoria(GOSSIPING, puertoActual, ipActual, numeroActual);
-		if (conexion == FAILURE) {
-			log_error(logger_KERNEL, "La mem %s no está levantada, me voy a conectar con otra memoria", numeroActual);
+		resultado = enviarGossiping("", "", "", conexion);
+		if (resultado == COMPONENTE_CAIDO) {
+			log_error(logger_KERNEL, "La mem ppal no está levantada");
+			eliminarMemoria(puertoActual, ipActual, numeroActual);
 		} else {
-			enviarGossiping("", "", "", conexion);
 			gossiping = recibirGossiping(conexion, &resultado);
-			procesarGossiping(gossiping);
-			liberar_conexion(conexion);
-			liberarHandshakeMemoria(gossiping);
-			if (string_equals_ignore_case(numeroPpal, "")) {
-				free(numeroPpal);
-				numeroPpal = NULL;
-				// si no tengo el num de la mem ppal la tengo que conseguir en alguna vuelta de gossiping
+			if (resultado == COMPONENTE_CAIDO) {
+				log_error(logger_KERNEL, "La mem ppal no está levantada");
+				eliminarMemoria(puertoActual, ipActual, numeroActual);
+			} else {
+				// solo procesar si resultado es success
+				procesarGossiping(gossiping);
+				liberar_conexion(conexion);
+				liberarHandshakeMemoria(gossiping);
+				// guardo numero de memoria para mandar como param
 				pthread_mutex_lock(&semMMemorias);
 				config_memoria* memPpal = list_find(memorias, (void*)encontrarMemPpal);
 				numeroPpal = strdup(memPpal->numero);
 				pthread_mutex_unlock(&semMMemorias);
+				// como la ppal esta levanta va a ser la mem actual
+				free(numeroActual);
+				numeroActual = NULL;
 				numeroActual = strdup(numeroPpal);
 			}
+		}
+	}
+	while(1) {
+		usleep(sleepGossiping * 1000);
+		log_info(logger_KERNEL, "Gossiping");
+		conexion = conectarseAMemoria(GOSSIPING, puertoActual, ipActual, numeroActual);
+		if (conexion == FAILURE) {
+			log_error(logger_KERNEL, "La mem %s no está levantada, me voy a conectar con otra memoria", numeroActual);
+		} else {
+			resultado = enviarGossiping("", "", "", conexion);
+			if (resultado == COMPONENTE_CAIDO) {
+				eliminarMemoria(puertoActual, ipActual, numeroActual);
+			} else {
+				gossiping = recibirGossiping(conexion, &resultado);
+				if (resultado == COMPONENTE_CAIDO) {
+					eliminarMemoria(puertoActual, ipActual, numeroActual);
+				} else {
+					procesarGossiping(gossiping);
+					if (string_equals_ignore_case(numeroPpal, "")) {
+						free(numeroPpal);
+						numeroPpal = NULL;
+						// si no tengo el num de la mem ppal la tengo que conseguir en alguna vuelta de gossiping
+						pthread_mutex_lock(&semMMemorias);
+						config_memoria* memPpal = list_find(memorias, (void*)encontrarMemPpal);
+						numeroPpal = strdup(memPpal->numero);
+						pthread_mutex_unlock(&semMMemorias);
+						numeroActual = strdup(numeroPpal);
+					}
+				}
+				liberarHandshakeMemoria(gossiping);
+			}
+			liberar_conexion(conexion);
 		}
 		// obtengo data de otra memoria para pedirle el gossiping a otra
 		pthread_mutex_lock(&semMMemorias);
@@ -683,6 +702,7 @@ void planificarReadyAExec(void) {
 	while(1) {
 		sem_wait(&semRequestReady);
 		sem_wait(&semMultiprocesamiento);
+		log_debug(logger_KERNEL, "Nuevo request en exec");
 		request = (request_procesada*) malloc(sizeof(request_procesada));
 		pthread_mutex_lock(&semMColaReady);
 		request->codigo = ((request_procesada*) queue_peek(ready))->codigo;
@@ -1197,7 +1217,12 @@ int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
 		eliminarMemoria(puerto, ip, numero);
 		return FAILURE;
 	}
-	enviarHandshakeMemoria(tipoRol, KERNEL, conexionTemporanea);
+	int rta = enviarHandshakeMemoria(tipoRol, KERNEL, conexionTemporanea);
+	if (rta == COMPONENTE_CAIDO) {
+		// eliminar memoria de lista de memorias y de criterios
+		eliminarMemoria(puerto, ip, numero);
+		return FAILURE;
+	}
 	return conexionTemporanea;
 }
 
@@ -1404,6 +1429,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	respuesta = paqueteRecibido->palabraReservada;
 	if (respuesta == SUCCESS) {
 		if (codigo == DESCRIBE) {
+			log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
 			actualizarTablas(paqueteRecibido->request);
 		}
 		if(codigo == SELECT) {
@@ -1607,6 +1633,8 @@ int procesarAdd(char* mensaje) {
 	int estado = validarRequest(mensaje);
 	if (estado != TRUE) {
 		return estado;
+	} else {
+		estado = SUCCESS;
 	}
 	char** requestDividida = separarRequest(mensaje);
 	config_memoria* memoria;

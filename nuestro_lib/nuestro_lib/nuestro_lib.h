@@ -158,7 +158,7 @@ int esperar_cliente(int);
 t_paquete* recibir(int);
 t_gossiping* recibirGossiping(int, int*);
 t_handshake_lfs* recibirHandshakeLFS(int);
-t_handshake_memoria* recibirHandshakeMemoria(int);
+t_handshake_memoria* recibirHandshakeMemoria(int, int*);
 
 ////cliente
 
@@ -167,9 +167,9 @@ void* serializar_handshake_lfs(t_handshake_lfs*, int);
 void* serializar_paquete(t_paquete* , int);
 void* serializar_handshake_memoria(t_handshake_memoria*, int);
 int enviar(cod_request, char*, int);
-void enviarGossiping(char*, char*, char*, int);
+int enviarGossiping(char*, char*, char*, int);
 void enviarHandshakeLFS(int, int);
-void enviarHandshakeMemoria(rol, Componente, int);
+int enviarHandshakeMemoria(rol, Componente, int);
 void eliminar_paquete(t_paquete*);
 void liberarPaquete(t_paquete*);
 void liberar_conexion(int);

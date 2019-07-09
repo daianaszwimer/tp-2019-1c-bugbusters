@@ -1,5 +1,6 @@
 #include "memoria.h"
 #include <stdlib.h>
+#include <errno.h>
 
 int main(void) {
 
@@ -164,80 +165,91 @@ void escucharMultiplesClientes() {
 	int descriptorServidor = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
 	log_info(logger_MEMORIA, "Memoria lista para recibir al kernel");
 
-	/* fd = file descriptor (id de Socket)
-	 * fd_set es Set de fd's (una coleccion)*/
-	clientesGossiping = list_create();
-	clientesRequest = list_create();
-	descriptoresClientes = list_create();	// Lista de descriptores de todos los clientes conectados (podemos conectar infinitos clientes)
-	int numeroDeClientes = 0;				// Cantidad de clientes conectados
-	int valorMaximo = 0;					// Descriptor cuyo valor es el mas grande (para pasarselo como parametro al select)
+	fd_set descriptoresDeInteres;
+	fd_set setCopia;
+
 	t_paquete* paqueteRecibido;
 
+	FD_ZERO(&descriptoresDeInteres);
+	FD_SET(descriptorServidor, &descriptoresDeInteres);
+	int descriptorMayor = descriptorServidor;
 	while(1) {
-			eliminarClientesCerrados(descriptoresClientes, &numeroDeClientes);	// Se eliminan los clientes que tengan un -1 en su fd
-			FD_ZERO(&descriptoresDeInteres); 									// Inicializamos descriptoresDeInteres
-			FD_SET(descriptorServidor, &descriptoresDeInteres);					// Agregamos el descriptorServidor a la lista de interes
+		setCopia = descriptoresDeInteres;
+		int estadoSelect = select(descriptorMayor + 1, &setCopia, NULL, NULL, NULL);
 
-			for (int i=0; i< numeroDeClientes; i++) {
-				FD_SET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres); // Agregamos a la lista de interes, los descriptores de los clientes
-			}
+		if (estadoSelect == -1) {
+			log_info(logger_MEMORIA, "Select falló porque %s", strerror(errno));
+		}
 
-			valorMaximo = maximo(descriptoresClientes, descriptorServidor, numeroDeClientes); // Se el valor del descriptor mas grande. Si no hay ningun cliente, devuelve el fd del servidor
+		int numDescriptor = 0;
 
-			select(valorMaximo + 1, &descriptoresDeInteres, NULL, NULL, NULL); 				  // Espera hasta que algún cliente tenga algo que decir
-
-			for(int i=0; i<numeroDeClientes; i++) {
-				if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
-					int codigoOperacion;
-					int esElCliente(int clienteFd) {
-						return clienteFd == (int) list_get(descriptoresClientes,i);
+		while (numDescriptor <= descriptorMayor) {
+			if (FD_ISSET(numDescriptor, &setCopia)) {
+				if (numDescriptor == descriptorServidor) {
+					int descriptorCliente = esperar_cliente(descriptorServidor);
+					if (descriptorCliente == -1) {
+						numDescriptor++;
+						log_error(logger_MEMORIA, "Hubo un error conectandose");
+						continue;
 					}
-					if (list_any_satisfy(clientesGossiping, (void*)esElCliente)) {
-						t_gossiping* gossiping = recibirGossiping((int) list_get(descriptoresClientes,i), &codigoOperacion);
-						if (codigoOperacion != COMPONENTE_CAIDO) {
-							enviarGossiping("8001", "127.0.0.1", "1", (int) list_get(descriptoresClientes,i));
-						}
-						liberarHandshakeMemoria(gossiping);
-					} else {
-						// si no es gossiping, es de request
-						paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
-						codigoOperacion = paqueteRecibido->palabraReservada;
-						char* request = paqueteRecibido->request;
-						printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-						if (codigoOperacion != COMPONENTE_CAIDO) {
-							printf("El codigo que recibi es: %i \n", codigoOperacion);
-							interpretarRequest(codigoOperacion,request,ANOTHER_COMPONENT, i);
-						}
-						eliminar_paquete(paqueteRecibido);
-						paqueteRecibido=NULL;
-					}
-					if(codigoOperacion == COMPONENTE_CAIDO){
-						log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
-						list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
-						list_remove_by_condition(clientesGossiping, (void*)esElCliente);
-						list_remove_by_condition(clientesRequest, (void*)esElCliente);
-					}
-				}
-			}
-
-			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
-				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
-				t_handshake_memoria* handshake = recibirHandshakeMemoria(descriptorCliente);
-				if (handshake->tipoComponente == KERNEL || handshake->tipoComponente == MEMORIA) {
-					numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
-					numeroDeClientes++;
-					if (handshake->tipoRol == REQUEST) {
-						list_add(clientesRequest, (void*)descriptorCliente);
-					} else if (handshake->tipoRol == GOSSIPING) {
-						list_add(clientesGossiping,(void*) descriptorCliente);
+					log_info(logger_MEMORIA,"se conecto alguien");
+					FD_SET(descriptorCliente, &descriptoresDeInteres);
+					if (descriptorCliente > descriptorMayor) {
+						descriptorMayor	 = descriptorCliente;
 					}
 				} else {
-					log_error(logger_MEMORIA, "Solo se puede conectar un kernel o una memoria, rechazando conexión...");
+					log_info(logger_MEMORIA,"se llego request alguien");
+					int codigoOperacion = 0;
+					t_handshake_memoria* handshake = recibirHandshakeMemoria(numDescriptor, &codigoOperacion);
+					if (codigoOperacion == COMPONENTE_CAIDO ||
+							(handshake->tipoComponente != KERNEL && handshake->tipoComponente != MEMORIA)) {
+						// si fallo el recibir o no es una memoria o kernel
+						close(numDescriptor);
+						log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
+						FD_CLR(numDescriptor, &descriptoresDeInteres);
+						numDescriptor++;
+						free(handshake);
+						continue;
+					}
+					if (handshake->tipoRol == REQUEST) {
+						paqueteRecibido = recibir(numDescriptor); // Recibo de ese cliente en particular
+						codigoOperacion = paqueteRecibido->palabraReservada;
+						char* request = paqueteRecibido->request;
+						printf("Del fd %i \n", numDescriptor); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+						if (codigoOperacion == COMPONENTE_CAIDO) {
+							close(numDescriptor);
+							FD_CLR(numDescriptor, &descriptoresDeInteres);
+							log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
+							eliminar_paquete(paqueteRecibido);
+							paqueteRecibido=NULL;
+							free(handshake);
+							numDescriptor++;
+							continue;
+						}
+						printf("El codigo que recibi es: %i \n", codigoOperacion);
+						interpretarRequest(codigoOperacion,request, ANOTHER_COMPONENT, numDescriptor);
+						eliminar_paquete(paqueteRecibido);
+						paqueteRecibido=NULL;
+					} else if (handshake->tipoRol == GOSSIPING) {
+						t_gossiping* gossiping = recibirGossiping(numDescriptor, &codigoOperacion);
+						if (codigoOperacion == COMPONENTE_CAIDO) {
+							close(numDescriptor);
+							FD_CLR(numDescriptor, &descriptoresDeInteres);
+							log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
+							liberarHandshakeMemoria(gossiping);
+							free(handshake);
+							numDescriptor++;
+							continue;
+						}
+						enviarGossiping("8001", "127.0.0.1", "1", numDescriptor);
+						liberarHandshakeMemoria(gossiping);
+					}
+					free(handshake);
 				}
-				free(handshake);
 			}
+			numDescriptor++;
+		}
 	}
-
 }
 
 
@@ -252,7 +264,7 @@ void escucharMultiplesClientes() {
  * Return:
  * 	-> :: void
  * VALGRIND:: EN PROCESO */
-void interpretarRequest(int palabraReservada,char* request,t_caller caller, int i) {
+void interpretarRequest(int palabraReservada,char* request,t_caller caller, int socket) {
 
 	consistencia consistenciaMemoria;
 	if(caller== ANOTHER_COMPONENT){
@@ -268,35 +280,28 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 
 		case SELECT:
 			log_debug(logger_MEMORIA, "Me llego un SELECT");
-			procesarSelect(codRequest, request,consistenciaMemoria, caller, i);
+			procesarSelect(codRequest, request,consistenciaMemoria, caller, socket);
 			break;
 		case INSERT:
 			log_debug(logger_MEMORIA, "Me llego un INSERT");
-			procesarInsert(codRequest, request,consistenciaMemoria, caller, i);
+			procesarInsert(codRequest, request,consistenciaMemoria, caller, socket);
 			break;
 		case CREATE:
 			log_debug(logger_MEMORIA, "Me llego un CREATE");
-			procesarCreate(codRequest, request,consistenciaMemoria, caller, i);
+			procesarCreate(codRequest, request,consistenciaMemoria, caller, socket);
 			break;
 		case DESCRIBE:
 			log_debug(logger_MEMORIA, "Me llego un DESCRIBE");
-			procesarDescribe(codRequest, request,caller,i);
+			procesarDescribe(codRequest, request,caller,socket);
 			break;
 		case DROP:
 			log_debug(logger_MEMORIA, "Me llego un DROP");
-			procesarDrop(codRequest, request ,consistenciaMemoria, caller, i);
+			procesarDrop(codRequest, request ,consistenciaMemoria, caller, socket);
 			break;
 		case JOURNAL:
 			log_debug(logger_MEMORIA, "Me llego un JOURNAL");
-			procesarJournal(codRequest, request, caller, i);
+			procesarJournal(codRequest, request, caller, socket);
 			break;
-		case NUESTRO_ERROR:
-			 if(caller == ANOTHER_COMPONENT){
-				 log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
-				 int valorAnterior = (int) list_replace(descriptoresClientes, i, (int*) -1); // Si el cliente se desconecta le pongo un -1 en su fd}
-				 // TODO: Chequear si el -1 se puede castear como int*
-			  }
-			 break;
 		default:
 			log_warning(logger_MEMORIA, "No has ingresado una request valida");
 			break;
@@ -340,7 +345,7 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
  * Return:
  * 	-> :: void
  * VALGRIND:: NO */
-void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int indiceKernel) {
+void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int socket) {
 
 	t_paquete* valorDeLFS=NULL;
 	t_elemTablaDePaginas* elementoEncontrado;
@@ -353,14 +358,14 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 			actualizarTimestamp(elementoEncontrado->marco);
-			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, indiceKernel);
+			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, socket);
 			eliminar_paquete(valorEncontrado);
 			valorEncontrado=NULL;
 
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
+			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,socket);
 			guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
 			eliminar_paquete(valorDeLFS);
 			valorDeLFS=NULL;
@@ -368,7 +373,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
+		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,socket);
 		eliminar_paquete(valorDeLFS);
 		valorDeLFS=NULL;
 	}else{
@@ -484,13 +489,13 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  * Return:
  * 	-> :: void
  * VALGRIND:: NO*/
- void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller,int indiceKernel){
+ void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller, int socket){
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
 	 		log_info(logger_MEMORIA, valorAEnviar->request);
 			pthread_mutex_lock(&semMDescriptores);
-			enviar(codResultado, valorAEnviar->request, (int) list_get(descriptoresClientes,indiceKernel));
+			enviar(codResultado, valorAEnviar->request, socket);
 			pthread_mutex_unlock(&semMDescriptores);
 	 	 	break;
 	 	 case(CONSOLE):
@@ -782,22 +787,22 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
  * Return:
  * 	-> :: void
  * 	VALGRIND :: NO*/
-void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int indiceKernel) {
+void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int socket) {
 		t_elemTablaDePaginas* elementoEncontrado= NULL;
 		char** requestSeparada = separarRequest(request);
 
 		if(consistenciaMemoria == EC || caller == CONSOLE){
 			int resultadoCache= estaEnMemoria(palabraReservada, request,NULL,&elementoEncontrado);
-			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,indiceKernel);
+			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,socket);
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
 
 			t_paquete* insertALFS =  intercambiarConFileSystem(palabraReservada,request);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
-				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,indiceKernel);
+				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,socket);
 				eliminar_paquete(insertALFS);
 				insertALFS=NULL;
 			}else{
-				enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller,indiceKernel);
+				enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller,socket);
 				eliminar_paquete(insertALFS);
 				insertALFS=NULL;
 			}
@@ -824,7 +829,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
  * Return:
  * 	-> :: void
  * 	VALGRIND :: NO*/
-void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int indiceKernel){
+void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_elemTablaDePaginas* elementoEncontrado,t_caller caller, int socket){
 	t_paquete* paqueteAEnviar;
 
 	char** requestSeparada = separarRequest(request);
@@ -845,7 +850,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, indiceKernel);
+		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, socket);
 		eliminar_paquete(paqueteAEnviar);
 
 	}else{
@@ -861,7 +866,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 					t_segmento* tablaBuscada;
 					tablaBuscada = encontrarSegmento(nuevaTabla);
 					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
-					enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
+					enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,socket);
 					eliminar_paquete(paqueteAEnviar);
 					free(nuevaTabla);
 					nuevaTabla=NULL;
@@ -872,13 +877,13 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 					pthread_mutex_lock(&semMTablaSegmentos);
 					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
 					pthread_mutex_unlock(&semMTablaSegmentos);
-					enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
+					enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,socket);
 					eliminar_paquete(paqueteAEnviar);
 					free(nuevaTabla);
 					nuevaTabla=NULL;
 				}
 			} else {
-				enviarAlDestinatarioCorrecto(palabraReservada, MEMORIA_FULL,request, paqueteAEnviar,caller,indiceKernel);
+				enviarAlDestinatarioCorrecto(palabraReservada, MEMORIA_FULL,request, paqueteAEnviar,caller,socket);
 				eliminar_paquete(paqueteAEnviar);
 
 			}
@@ -887,7 +892,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				t_segmento* tablaDestino = encontrarSegmento(nuevaTabla);
 				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
+				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,socket);
 				eliminar_paquete(paqueteAEnviar);
 
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
@@ -900,7 +905,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				pthread_mutex_unlock(&semMTablaSegmentos);
 				list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
+				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,socket);
 				eliminar_paquete(paqueteAEnviar);
 
 			}
@@ -1045,12 +1050,12 @@ void crearSegmento(t_segmento* nuevoSegmento,char* pathNuevoSegmento){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel){
+void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socket){
 	t_paquete* valorDeLFS=intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
 	}
-	enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,indiceKernel);
+	enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,socket);
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS=NULL;
 }
@@ -1199,12 +1204,8 @@ void liberarMemoria(){
 	bitarrayString=NULL;
 	free(memoria);
 	liberar_conexion(conexionLfs);
-	FD_ZERO(&descriptoresDeInteres);
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
-	list_destroy(clientesGossiping);
-	list_destroy(descriptoresClientes);
-	list_destroy(clientesRequest);
 }
 
 
@@ -1236,9 +1237,9 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int indiceKernel){
+void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int socket){
 	t_paquete* describeLFS=intercambiarConFileSystem(codRequest,request);
-	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,indiceKernel);
+	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,socket);
 	eliminar_paquete(describeLFS);
 	describeLFS=NULL;
 }
@@ -1255,7 +1256,7 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel) {
+void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socket) {
 	t_paquete* valorDeLFS;
 	char** requestSeparada = separarRequest(request);
 	char* segmentoABuscar=strdup(requestSeparada[1]);
@@ -1274,7 +1275,7 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 			log_info(logger_MEMORIA,"La %s no existe en MEMORIA",segmentoABuscar);
 		}
 	}
-	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,indiceKernel);
+	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,socket);
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS= NULL;
 	liberarArrayDeChar(requestSeparada);
@@ -1388,7 +1389,7 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 
 
 
-void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int i) {
+void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int socket) {
 	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
 	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
 	 *  con el que está en el FS.
@@ -1405,11 +1406,11 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 				printf("Realizo JOURNAL a: %s%s%i%s%c%s%c\n",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
 
 				if(insertJournalLFS->palabraReservada== EXIT_SUCCESS){
-					enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+					enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, socket);
 					eliminar_paquete(insertJournalLFS);
 					insertJournalLFS=NULL;
 				}else{
-					enviarAlDestinatarioCorrecto(palabraReservada,insertJournalLFS->palabraReservada,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+					enviarAlDestinatarioCorrecto(palabraReservada,insertJournalLFS->palabraReservada,request,insertJournalLFS,caller, socket);
 					eliminar_paquete(insertJournalLFS);
 					insertJournalLFS=NULL;
 				}
