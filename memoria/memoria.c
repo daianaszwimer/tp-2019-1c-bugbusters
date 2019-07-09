@@ -253,7 +253,7 @@ void escucharMultiplesClientes() {
  * Return:
  * 	-> :: void
  * VALGRIND:: EN PROCESO */
-void interpretarRequest(int palabraReservada,char* request,t_caller caller, int socket) {
+void interpretarRequest(int palabraReservada,char* request,t_caller caller, int indiceKernel) {
 
 	consistencia consistenciaMemoria;
 	if(caller== ANOTHER_COMPONENT){
@@ -269,27 +269,27 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 
 		case SELECT:
 			log_debug(logger_MEMORIA, "Me llego un SELECT");
-			procesarSelect(codRequest, request,consistenciaMemoria, caller, socket);
+			procesarSelect(codRequest, request,consistenciaMemoria, caller, indiceKernel);
 			break;
 		case INSERT:
 			log_debug(logger_MEMORIA, "Me llego un INSERT");
-			procesarInsert(codRequest, request,consistenciaMemoria, caller, socket);
+			procesarInsert(codRequest, request,consistenciaMemoria, caller, indiceKernel);
 			break;
 		case CREATE:
 			log_debug(logger_MEMORIA, "Me llego un CREATE");
-			procesarCreate(codRequest, request,consistenciaMemoria, caller, socket);
+			procesarCreate(codRequest, request,consistenciaMemoria, caller, indiceKernel);
 			break;
 		case DESCRIBE:
 			log_debug(logger_MEMORIA, "Me llego un DESCRIBE");
-			procesarDescribe(codRequest, request,caller,socket);
+			procesarDescribe(codRequest, request,caller,indiceKernel);
 			break;
 		case DROP:
 			log_debug(logger_MEMORIA, "Me llego un DROP");
-			procesarDrop(codRequest, request ,consistenciaMemoria, caller, socket);
+			procesarDrop(codRequest, request ,consistenciaMemoria, caller, indiceKernel);
 			break;
 		case JOURNAL:
 			log_debug(logger_MEMORIA, "Me llego un JOURNAL");
-			procesarJournal(codRequest, request, caller, socket);
+			procesarJournal(codRequest, request, caller, indiceKernel);
 			break;
 		default:
 			log_warning(logger_MEMORIA, "No has ingresado una request valida");
@@ -334,7 +334,7 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
  * Return:
  * 	-> :: void
  * VALGRIND:: NO */
-void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int socket) {
+void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int indiceKernel) {
 
 	t_paquete* valorDeLFS=NULL;
 	t_elemTablaDePaginas* elementoEncontrado;
@@ -357,7 +357,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 			desbloquearSemSegmento(pathSegmento);
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,socket);
+			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
 			guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
 			eliminar_paquete(valorDeLFS);
 			valorDeLFS=NULL;
@@ -365,7 +365,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,socket);
+		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
 		eliminar_paquete(valorDeLFS);
 		valorDeLFS=NULL;
 	}else{
@@ -516,14 +516,12 @@ void desbloquearSemSegmento(char* pathSegmento){
  * Return:
  * 	-> :: void
  * VALGRIND:: NO*/
- void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller, int socket){
+ void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller, int indiceKernel){
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
 	 		log_info(logger_MEMORIA, valorAEnviar->request);
-			pthread_mutex_lock(&semMDescriptores);
-			enviar(codResultado, valorAEnviar->request, socket);
-			pthread_mutex_unlock(&semMDescriptores);
+			enviar(codResultado, valorAEnviar->request, indiceKernel);
 	 	 	break;
 	 	 case(CONSOLE):
 	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
@@ -813,7 +811,7 @@ void desbloquearSemSegmento(char* pathSegmento){
  * Return:
  * 	-> :: void
  * 	VALGRIND :: NO*/
-void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int socket) {
+void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int indiceKernel) {
 		t_elemTablaDePaginas* elementoEncontrado= NULL;
 		char** requestSeparada = separarRequest(request);
 		char* pathSegmento=strdup("");
@@ -825,11 +823,11 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 
 			t_paquete* insertALFS =  intercambiarConFileSystem(palabraReservada,request);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
-				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,socket);
+				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,indiceKernel);
 				eliminar_paquete(insertALFS);
 				insertALFS=NULL;
 			}else{
-				enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller,socket);
+				enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller,indiceKernel);
 				eliminar_paquete(insertALFS);
 				insertALFS=NULL;
 			}
@@ -879,7 +877,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
 		desbloquearSemSegmento(pathSegmento);
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, socket);
+		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, indiceKernel);
 		eliminar_paquete(paqueteAEnviar);
 
 	}else{
@@ -938,7 +936,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				t_segmento* tablaDestino = encontrarSegmento(nuevaTabla);
 				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,socket);
+				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
 				eliminar_paquete(paqueteAEnviar);
 
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
@@ -951,7 +949,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				pthread_mutex_unlock(&semMTablaSegmentos);
 				list_add(nuevoSegmento->tablaDePagina,nuevaElemTablaDePagina);
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
-				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,socket);
+				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
 				eliminar_paquete(paqueteAEnviar);
 
 			}
@@ -1107,12 +1105,12 @@ void crearSegmento(t_segmento* nuevoSegmento,char* pathNuevoSegmento){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socket){
+void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel){
 	t_paquete* valorDeLFS=intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
 	}
-	enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,socket);
+	enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,indiceKernel);
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS=NULL;
 }
@@ -1317,9 +1315,9 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int socket){
+void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int indiceKernel){
 	t_paquete* describeLFS=intercambiarConFileSystem(codRequest,request);
-	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,socket);
+	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,indiceKernel);
 	eliminar_paquete(describeLFS);
 	describeLFS=NULL;
 }
@@ -1336,7 +1334,7 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
  * Return:
  * 	-> void ::
  * 	VALGRIND :: NO*/
-void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int socket) {
+void procesarDrop(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel) {
 	t_paquete* valorDeLFS;
 	char** requestSeparada = separarRequest(request);
 	char* segmentoABuscar=strdup(requestSeparada[1]);
@@ -1355,7 +1353,7 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 			log_info(logger_MEMORIA,"La %s no existe en MEMORIA",segmentoABuscar);
 		}
 	}
-	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,socket);
+	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,indiceKernel);
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS= NULL;
 	liberarArrayDeChar(requestSeparada);
@@ -1469,7 +1467,7 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 
 
 
-void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int socket) {
+void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int indiceKernel) {
 	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
 	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
 	 *  con el que está en el FS.
@@ -1507,11 +1505,11 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 
 	int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
 	if(resultadoControl == 1){
-		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, socket);
+		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, indiceKernel);
 		eliminar_paquete(insertJournalLFS);
 		insertJournalLFS=NULL;
 	}else{
-		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,insertJournalLFS,caller, socket);
+		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,insertJournalLFS,caller, indiceKernel);
 		eliminar_paquete(insertJournalLFS);
 		insertJournalLFS=NULL;
 	}

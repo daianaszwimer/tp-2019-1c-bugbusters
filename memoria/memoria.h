@@ -87,7 +87,6 @@ sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
 pthread_mutex_t terminarHilo;
 pthread_mutex_t semMBitarray;
 pthread_mutex_t semMTablaSegmentos;
-pthread_mutex_t semMDescriptores;
 pthread_mutex_t semMListSemSegmentos;
 t_list* semMPorSegmento;
 
@@ -103,10 +102,6 @@ int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 int maxValue;
 
 t_list* listaSemSegmentos;
-t_list* descriptoresClientes ;
-fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
-t_list* clientesGossiping;
-t_list* clientesRequest;
 
 //------------------ --- FUNCIONES--------------------------------
 
