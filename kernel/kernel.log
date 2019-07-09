@@ -627,3 +627,117 @@
 [DEBUG] 15:29:30:154 Kernel/(6138:6159): Le mande a a mem 2
 [ERROR] 15:30:29:873 Kernel/(6138:6155): La mem 1 no está levantada, me voy a conectar con otra memoria
 [INFO] 15:31:56:975 Kernel/(6138:6155): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 04:58:54:126 Kernel/(19317:19317): ----------------INICIO DE KERNEL--------------
+[ERROR] 04:58:54:156 Kernel/(19317:19331): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[INFO] 04:58:54:169 Kernel/(19317:19327): Me llegó una nueva memoria en el gossiping, num: 1
+[INFO] 05:03:55:760 Kernel/(19638:19638): ----------------INICIO DE KERNEL--------------
+[INFO] 05:03:55:774 Kernel/(19638:19646): Me llegó una nueva memoria en el gossiping, num: 1
+[INFO] 05:03:56:437 Kernel/(19638:19650): El request DESCRIBE se realizó con éxito
+[DEBUG] 05:03:56:438 Kernel/(19638:19650): Le mande a a mem 1
+[INFO] 05:04:12:52 Kernel/(19638:19650): El request DESCRIBE se realizó con éxito
+[DEBUG] 05:04:12:52 Kernel/(19638:19650): Le mande a a mem 1
+[ERROR] 05:04:13:807 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:13:808 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:16:810 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:16:810 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:19:811 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:19:812 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:22:817 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:22:817 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:25:818 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:25:818 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:27:53 Kernel/(19638:19650): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 05:04:28:819 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:28:820 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:31:824 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:31:824 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:34:824 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:34:825 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:37:827 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:37:827 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:40:829 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:40:829 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:42:54 Kernel/(19638:19650): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 05:04:43:833 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:43:833 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:46:834 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:46:835 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:49:835 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:49:835 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:52:836 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:52:836 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:55:837 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:55:837 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:04:57:56 Kernel/(19638:19650): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 05:04:58:838 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:04:58:839 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:01:839 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:01:839 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:04:841 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:04:841 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:07:842 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:07:843 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:10:845 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:10:845 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:12:57 Kernel/(19638:19650): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 05:05:13:846 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:13:846 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:16:846 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:16:847 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:19:848 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:19:848 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:22:848 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:22:849 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:25:850 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:25:850 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:27:58 Kernel/(19638:19650): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 05:05:28:850 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:28:851 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:31:852 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:31:852 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:34:852 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:34:853 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:37:854 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:37:854 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:40:854 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:40:855 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:42:59 Kernel/(19638:19650): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 05:05:43:857 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:43:858 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:46:858 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:46:858 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:49:859 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:49:859 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:52:861 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:52:861 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:55:862 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:55:862 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:05:57:61 Kernel/(19638:19650): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 05:05:58:863 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:05:58:864 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:01:864 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:01:867 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:04:867 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:04:868 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:07:870 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:07:870 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:10:871 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:10:871 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:12:61 Kernel/(19638:19650): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 05:06:13:872 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:13:872 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:16:873 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:16:873 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:19:874 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:19:874 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:22:874 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:22:875 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:25:876 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:25:877 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:27:62 Kernel/(19638:19650): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 05:06:28:877 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:28:878 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:31:879 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:31:879 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[ERROR] 05:06:34:881 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 05:06:34:881 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
