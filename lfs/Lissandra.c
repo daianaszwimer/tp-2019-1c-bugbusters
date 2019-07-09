@@ -354,13 +354,14 @@ void encolarRequest(char* nombreTabla, cod_request palabraReservada, char* mensa
 	int encontrarTabla(t_hiloTabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
-	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla);
 
 	t_request* request = (t_request*) malloc(sizeof(t_request));
 	request->cod_request = palabraReservada;
 	request->parametros = strdup(mensaje);
 	request->memoria_fd = memoria_fd;
+
 	pthread_mutex_lock(&mutexDiegote);
+	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla);
 	queue_push(tabla->requests, request);
 	pthread_mutex_unlock(&mutexDiegote);
 }

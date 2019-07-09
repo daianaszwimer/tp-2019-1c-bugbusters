@@ -197,10 +197,13 @@ void* procesarRequests(void* args){
 	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla);
 	free(nombreTabla);
 	t_request* request;
+	pthread_mutex_lock(&mutexDiegote);
 	while((request = queue_pop(tabla->requests)) != NULL){
+		pthread_mutex_unlock(&mutexDiegote);
 		interpretarRequest(request->cod_request, request->parametros, request->memoria_fd);
 		free(request->parametros);
 		free(request);
+		pthread_mutex_lock(&mutexDiegote);
 	}
 	pthread_mutex_unlock(&mutexDiegote);
 	return NULL;

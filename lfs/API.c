@@ -170,14 +170,19 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 
 	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
 	DIR* dir = opendir(pathTabla);
-	free(pathTabla);
 	if(dir){
 		closedir(dir);
 		//TODO validar q onda la funcion convertirKey, retorna -1 si hay error
 		int _key = convertirKey(key);
+		char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
+		t_config* configMetadataTabla = config_create(pathMetadataTabla);
+		int numeroDeParticiones = config_get_int_value(configMetadataTabla, "PARTITIONS");
+		free(pathMetadataTabla);
+		config_destroy(configMetadataTabla);
+		int particionDeEstaKey = _key % numeroDeParticiones;
 		t_list* listaDeRegistrosDeMemtable = obtenerRegistrosDeMemtable(nombreTabla, _key);
 		t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);
-		t_list* listaDeRegistrosDeParticiones = obtenerRegistrosDeParticiones(nombreTabla, _key);
+		t_list* listaDeRegistrosDeParticiones = obtenerRegistrosDeParticiones(nombreTabla, particionDeEstaKey, _key);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeTmp);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeParticiones);
@@ -196,6 +201,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 	}else{
 		error = TABLA_NO_EXISTE;
 	}
+	free(pathTabla);
 	list_destroy(listaDeRegistros);
 	return error;
 }
@@ -218,7 +224,8 @@ t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
 				pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
 				t_config* file = config_create(pathFile);
 				char** bloques = config_get_array_value(file, "BLOCKS");
-				listaDeRegistrosEnBloques = buscarEnBloques(bloques, key);
+				int size = config_get_int_value(file, "SIZE");
+				listaDeRegistrosEnBloques = buscarEnBloques(bloques, size, key);
 				list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
 				list_destroy(listaDeRegistrosEnBloques);
 				liberarArrayDeChar(bloques);
@@ -232,31 +239,22 @@ t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
 	return listaDeRegistros;
 }
 
-t_list* obtenerRegistrosDeParticiones(char* nombreTabla, int key){
-	char* pathTabla;
-	struct dirent* file;
-	char* pathFile;
+t_list* obtenerRegistrosDeParticiones(char* nombreTabla, int particion, int key){
 	t_list* listaDeRegistros = list_create();
 	t_list* listaDeRegistrosEnBloques;
-	pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
+	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
-		while ((file = readdir (tabla)) != NULL) {
-			//ignora . y ..
-			if(strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0 || strcmp(file->d_name, "Metadata.bin") == 0) continue;
-
-			if(string_ends_with(file->d_name, ".bin")){
-				pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
-				t_config* file = config_create(pathFile);
-				char** bloques = config_get_array_value(file, "BLOCKS");
-				listaDeRegistrosEnBloques = buscarEnBloques(bloques, key);
-				list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
-				list_destroy(listaDeRegistrosEnBloques);
-				liberarArrayDeChar(bloques);
-				free(pathFile);
-				config_destroy(file);
-			}
-		}
+		char* pathParticion = string_from_format("%s/%i.bin", pathTabla, particion);
+		t_config* file = config_create(pathParticion);
+		char** bloques = config_get_array_value(file, "BLOCKS");
+		int size = config_get_int_value(file, "SIZE");
+		listaDeRegistrosEnBloques = buscarEnBloques(bloques, size, key);
+		list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
+		list_destroy(listaDeRegistrosEnBloques);
+		liberarArrayDeChar(bloques);
+		free(pathParticion);
+		config_destroy(file);
 		closedir(tabla);
 	}
 	free(pathTabla);
@@ -285,46 +283,70 @@ t_list* obtenerRegistrosDeMemtable(char* nombreTabla, int key){
 }
 
 
-t_list* buscarEnBloques(char** bloques, int key){
-	int i = 0, j = 0;
+t_list* buscarEnBloques(char** bloques, int size, int key){
 	t_registro* tRegistro;
-	char* registro = calloc(1, (size_t) config_get_int_value(config, "TAMAÑO_VALUE") + 25);
+	int particionDeEstaKey;
 	t_list* listaDeRegistros = list_create();
-	while (bloques[i] != NULL) {
-		char* pathBloque = string_from_format("%s/%s.bin", pathBloques, bloques[i]);
-		FILE* bloque = fopen(pathBloque, "r");
-		free(pathBloque);
-		if (bloque == NULL) {
-			perror("Error");
-		}
-		do {
-			char caracterLeido = fgetc(bloque);
-			if (feof(bloque)) {
-				break;
+
+	int existeParticion(t_int* particionAComparar) {
+		return particionAComparar->valor == particionDeEstaKey;
+	}
+
+	int tieneMismaKey(t_registro* registroBuscado) {
+		return tRegistro->key == registroBuscado->key;
+	}
+
+	char* fileMetadata = string_from_format("%s/Metadata.bin", pathMetadata);
+	t_config* configMetadata = config_create(fileMetadata);
+	int tamanioBloque = config_get_int_value(configMetadata, "BLOCK_SIZE");
+	free(fileMetadata);
+	config_destroy(configMetadata);
+
+	if(size != 0) {
+		// Leo de todos los bloques y guardo en un string (datosDelTmpC)
+		int cantidadDeBloques = longitudDeArrayDeStrings(bloques);
+		char* datos = strdup("");
+		char* datosALeer;
+		for (int i = 0; i < cantidadDeBloques; i++) {
+			char* pathBloque = string_from_format("%sBloques/%s.bin", pathRaiz, bloques[i]);
+			int fd = open(pathBloque, O_RDWR, S_IRWXU);
+			free(pathBloque);
+			if (fd == -1) {
+				perror("Error");
+			} else {
+				if (i == cantidadDeBloques - 1) {
+					datosALeer = mmap(NULL, size % tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
+					string_append_with_format(&datos, "%s", datosALeer);
+					munmap(datosALeer, size % tamanioBloque);
+				} else {
+					datosALeer = mmap(NULL, tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
+					string_append_with_format(&datos, "%s", datosALeer);
+					munmap(datosALeer, tamanioBloque);
+				}
+				close(fd);
 			}
-			if (caracterLeido == '\n') {
-				char** registroSeparado = string_n_split(registro, 3, ";");
+		}
+
+		char** registros = string_split(datos, "\n");
+		free(datos);
+
+		for (int j = 0; registros[j] != NULL; j++) {
+			char** registroSeparado = string_split(registros[j], ";");
+			if(key == convertirKey(registroSeparado[1])){
 				tRegistro = (t_registro*) malloc(sizeof(t_registro));
 				convertirTimestamp(registroSeparado[0], &(tRegistro->timestamp));
 				tRegistro->key = convertirKey(registroSeparado[1]);
 				tRegistro->value = strdup(registroSeparado[2]);
-				liberarArrayDeChar(registroSeparado);
-				if(key == tRegistro->key){
-					list_add(listaDeRegistros, tRegistro);
-				}else{
-					eliminarRegistro(tRegistro);
-				}
-				j = 0;
-				strcpy(registro, "");
-			} else {
-				registro[j] = caracterLeido;
-				j++;
+				list_add(listaDeRegistros, tRegistro);
 			}
-		} while (1);
-		fclose(bloque);
-		i++;
+
+			liberarArrayDeChar(registroSeparado);
+
+		}
+
+		liberarArrayDeChar(registros);
 	}
-	free(registro);
+
 	return listaDeRegistros;
 }
 
