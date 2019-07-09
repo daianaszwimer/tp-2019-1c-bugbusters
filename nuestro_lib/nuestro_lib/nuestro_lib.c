@@ -483,7 +483,7 @@ t_paquete* recibir(int socket)
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	int recibido = 0;
 	recibido = recv(socket, &paquete->palabraReservada, sizeof(int), MSG_WAITALL);
-	if(recibido == 0) {
+	if(recibido <= 0) {
 		paquete->palabraReservada = COMPONENTE_CAIDO;
 		void* requestRecibido = malloc(sizeof(int));
 		paquete->request = requestRecibido;
@@ -564,7 +564,7 @@ void* serializar_handshake_lfs(t_handshake_lfs* handshake, int tamanio)
  * Descripcion: recibe la data a enviar, la serializa y la manda
  * Return:
  * 	-> :: void  */
-void enviarGossiping(char* puertos, char* ips, char* numeros, int socket_cliente)
+int enviarGossiping(char* puertos, char* ips, char* numeros, int socket_cliente)
 {
 	t_gossiping* gossiping = malloc(sizeof(t_gossiping));
 	gossiping->tamanioIps = strlen(ips) + 1;
@@ -584,10 +584,16 @@ void enviarGossiping(char* puertos, char* ips, char* numeros, int socket_cliente
 
 	int tamanioPaquete = 3 * sizeof(int) + gossiping->tamanioIps + gossiping->tamanioPuertos + gossiping->tamanioNumeros;
 	void* gossipingAEnviar = serializar_gossiping(gossiping, tamanioPaquete);
-	send(socket_cliente, gossipingAEnviar, tamanioPaquete, 0);
+	if (send(socket_cliente, gossipingAEnviar, tamanioPaquete, 0) == -1) {
+		liberarHandshakeMemoria(gossiping);
+		free(gossipingAEnviar);
+		gossipingAEnviar=NULL;
+		return COMPONENTE_CAIDO;
+	}
 	liberarHandshakeMemoria(gossiping);
 	free(gossipingAEnviar);
 	gossipingAEnviar=NULL;
+	return SUCCESS;
 }
 
 /* recibirGossiping()
@@ -663,16 +669,19 @@ void* serializar_gossiping(t_gossiping* gossiping, int tamanio)
  * Descripcion: recibe la data a enviar, la serializa y la manda
  * Return:
  * 	-> :: void  */
-void enviarHandshakeMemoria(rol tipoRol, Componente tipoComponente, int socket_cliente)
+int enviarHandshakeMemoria(rol tipoRol, Componente tipoComponente, int socket_cliente)
 {
 	t_handshake_memoria* handshake = malloc(sizeof(t_handshake_memoria));
 	handshake->tipoComponente = tipoComponente;
 	handshake->tipoRol = tipoRol;
 	int tamanioPaquete = sizeof(int) * 2;
 	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanioPaquete);
-	send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0);
+	if (send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0) == -1) {
+		return COMPONENTE_CAIDO;
+	}
 	free(handshakeAEnviar);
 	free(handshake);
+	return SUCCESS;
 }
 
 /* recibirGossiping()
@@ -681,10 +690,16 @@ void enviarHandshakeMemoria(rol tipoRol, Componente tipoComponente, int socket_c
  * Descripcion: recibe el handshake y lo deserealiza
  * Return:
  * 	-> gossiping :: t_gossiping  */
-t_handshake_memoria* recibirHandshakeMemoria(int socket)
+t_handshake_memoria* recibirHandshakeMemoria(int socket, int* codigoOperacion)
 {
 	t_handshake_memoria* gossiping = malloc(sizeof(t_handshake_memoria));
-	recv(socket, &gossiping->tipoComponente, sizeof(int), MSG_WAITALL);
+	int rta = recv(socket, &gossiping->tipoComponente, sizeof(int), MSG_WAITALL);
+
+	if (rta <= 0) {
+		*codigoOperacion = COMPONENTE_CAIDO;
+		return gossiping;
+	}
+
 	recv(socket, &gossiping->tipoRol, sizeof(int), MSG_WAITALL);
 
 	return gossiping;

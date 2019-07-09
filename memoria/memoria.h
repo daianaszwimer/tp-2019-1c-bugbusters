@@ -17,6 +17,7 @@
 #include <sys/time.h>
 #include <commons/bitarray.h>
 #include<math.h>
+#include <errno.h>
 
 
 //----------------ENUMS--------------------
@@ -95,11 +96,6 @@ int marcosTotales;
 int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 int maxValue;
-
-t_list* descriptoresClientes ;
-fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
-t_list* clientesGossiping;
-t_list* clientesRequest;
 
 //------------------ --- FUNCIONES--------------------------------
 
