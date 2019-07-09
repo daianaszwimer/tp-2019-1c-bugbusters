@@ -70,6 +70,7 @@ void inicializacionLissandraFileSystem(){
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
 	retardo = config_get_int_value(config, "RETARDO");
 	tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
+	tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
 
 	pathRaiz = strdup(puntoDeMontaje);
 	pathTablas = string_from_format("%sTablas", pathRaiz);
@@ -298,7 +299,6 @@ void* leerDeConsola(void* arg) {
 void* recibirMemorias(void* arg) {
 	char* puerto = config_get_string_value(config, "PUERTO");
 	char* ip = config_get_string_value(config, "IP");
-	int tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
 	int lissandraFS_fd = iniciar_servidor(puerto, ip);
 	log_info(logger_LFS, "Lissandra lista para recibir Memorias");
 	pthread_t hiloRequest;

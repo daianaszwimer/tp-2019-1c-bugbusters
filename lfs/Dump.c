@@ -6,14 +6,13 @@
  * Return: void* */
 void* hiloDump(void* args) {
 	int tiempo_dump;
-	int tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
 	while(1) {
 		pthread_mutex_lock(&mutexTiempoDump);
 		tiempo_dump = tiempoDump;
 		pthread_mutex_unlock(&mutexTiempoDump);
 		usleep(tiempo_dump*1000);
 		log_info(logger_LFS, "Dump iniciado");
-		errorNo resultado = dumpear(tamanioValue);
+		errorNo resultado = dumpear();
 		switch(resultado) {
 			case ERROR_CREANDO_ARCHIVO:
 				log_info(logger_LFS, "Error creando archivo temporal");
@@ -35,7 +34,7 @@ void* hiloDump(void* args) {
  * Parametros: void
  * Descripcion: baja los datos de la memtable a disco
  * Return: codigo de error definido en el enum errorNo */
-errorNo dumpear(int tamanioValue) {
+errorNo dumpear() {
 	t_tabla* tabla;
 	errorNo error = SUCCESS;
 	char* pathTmp;

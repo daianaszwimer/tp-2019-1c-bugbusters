@@ -160,7 +160,7 @@ void compactar(char* pathTabla) {
 
 		// TODO: Bloquear tabla
 		setBlockTo(nombreTabla, 1);
-		sleep(20); //sirve para simular una compactacion larga
+		//sleep(20); //sirve para simular una compactacion larga
 
 		// Liberamos los bloques que contienen el archivo “.tmpc” y los que contienen el archivo “.bin”
 		liberarBloquesDeTmpCyParticiones(pathTabla, archivoDeLaTabla, tabla, particiones);
@@ -529,7 +529,7 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 
 		t_list* registrosPorParticion = list_filter(registrosAEscribir, (void*) keyCorrespondeAParticion);
 
-		char* datosACompactar = calloc(1, 27 + config_get_int_value(config, "TAMAÑO_VALUE"));
+		char* datosACompactar = calloc(1, 27 + tamanioValue);
 		// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes + 2 punto y coma
 		// 5 bytes son 5 char
 

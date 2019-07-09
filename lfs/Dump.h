@@ -1,4 +1,4 @@
 #include "Helper.h"
 
-errorNo dumpear(int);
+errorNo dumpear();
 void* hiloDump();

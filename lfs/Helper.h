@@ -93,5 +93,6 @@ pthread_mutex_t mutexBitmap;
 //VARIABLES CONFIG
 int retardo;
 int tiempoDump;
+int tamanioValue;
 
 #endif /* HELPER_H_ */
