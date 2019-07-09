@@ -1221,6 +1221,7 @@ int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
 	if (rta == COMPONENTE_CAIDO) {
 		// eliminar memoria de lista de memorias y de criterios
 		eliminarMemoria(puerto, ip, numero);
+		liberar_conexion(conexionTemporanea);
 		return FAILURE;
 	}
 	return conexionTemporanea;
