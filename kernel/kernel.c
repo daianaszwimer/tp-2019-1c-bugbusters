@@ -5,6 +5,7 @@ int main(void) {
 
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 
+
 	//Hilos
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)hacerGossiping, NULL);
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
@@ -34,7 +35,7 @@ int main(void) {
  * Return:
  * 	-> :: void  */
 void inicializarVariables() {
-	logger_KERNEL = log_create("kernel.log", "Kernel", 1, LOG_LEVEL_DEBUG);
+	logger_KERNEL = log_create("kernel.log", "Kernel", 0, LOG_LEVEL_DEBUG);
 	logger_METRICAS_KERNEL = log_create("metricas.log", "MetricasKernel", 0, LOG_LEVEL_DEBUG);
 
 	// Configs
@@ -147,37 +148,113 @@ void liberarMemoria(void) {
  * 	-> :: void  */
 void hacerGossiping(void) {
 	t_gossiping* gossiping;
+	// data de la mem ppal
 	pthread_mutex_lock(&semMConfig);
 	char* ipPpal = strdup(config_get_string_value(config, "IP_MEMORIA"));
 	char* puertoPpal = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
 	pthread_mutex_unlock(&semMConfig);
+	char* numeroPpal = strdup("");
+	// data de la memoria a la que estoy conectada
+	char* ipActual = strdup(ipPpal);
+	char* puertoActual = strdup(puertoPpal);
+	char* numeroActual = strdup("");
+	int indice = 0;
+	int maximo = 0;
+	int resultado;
 	int conexion = conectarseAMemoria(GOSSIPING, puertoPpal, ipPpal, "");
+	int encontrarMemPpal(config_memoria* unaMemoria) {
+		return string_equals_ignore_case(unaMemoria->ip, ipPpal) && string_equals_ignore_case(unaMemoria->puerto, puertoPpal);
+	}
 	if (conexion == FAILURE) {
-		log_error(logger_KERNEL, "La mem ppal no está levantada, conectando con otra memoria...");
+		log_error(logger_KERNEL, "La mem ppal no está levantada");
 	} else {
-		gossiping = recibirGossiping(conexion);
-		procesarGossiping(gossiping);
-		liberar_conexion(conexion);
-		liberarHandshakeMemoria(gossiping);
+		resultado = enviarGossiping("", "", "", conexion);
+		if (resultado == COMPONENTE_CAIDO) {
+			log_error(logger_KERNEL, "La mem ppal no está levantada");
+			eliminarMemoria(puertoActual, ipActual, numeroActual);
+		} else {
+			gossiping = recibirGossiping(conexion, &resultado);
+			if (resultado == COMPONENTE_CAIDO) {
+				log_error(logger_KERNEL, "La mem ppal no está levantada");
+				eliminarMemoria(puertoActual, ipActual, numeroActual);
+			} else {
+				// solo procesar si resultado es success
+				procesarGossiping(gossiping);
+				liberar_conexion(conexion);
+				liberarHandshakeMemoria(gossiping);
+				// guardo numero de memoria para mandar como param
+				pthread_mutex_lock(&semMMemorias);
+				config_memoria* memPpal = list_find(memorias, (void*)encontrarMemPpal);
+				numeroPpal = strdup(memPpal->numero);
+				pthread_mutex_unlock(&semMMemorias);
+				// como la ppal esta levanta va a ser la mem actual
+				free(numeroActual);
+				numeroActual = NULL;
+				numeroActual = strdup(numeroPpal);
+			}
+		}
 	}
 	while(1) {
-		// gaston nos dijo que siempre le pregunta a la ppal y si se cae le pregunta a otra
-		// si se cae le pregunto a otra memoria
-		// si me devuelve memorias de menos las borro
 		usleep(sleepGossiping * 1000);
-		// todo: mandar numero de memoria correspondiente
-		conexion = conectarseAMemoria(GOSSIPING, puertoPpal, ipPpal, "");
+		log_info(logger_KERNEL, "Gossiping");
+		conexion = conectarseAMemoria(GOSSIPING, puertoActual, ipActual, numeroActual);
 		if (conexion == FAILURE) {
-			log_error(logger_KERNEL, "La mem ppal no está levantada");
+			log_error(logger_KERNEL, "La mem %s no está levantada, me voy a conectar con otra memoria", numeroActual);
 		} else {
-			gossiping = recibirGossiping(conexion);
-			procesarGossiping(gossiping);
+			resultado = enviarGossiping("", "", "", conexion);
+			if (resultado == COMPONENTE_CAIDO) {
+				eliminarMemoria(puertoActual, ipActual, numeroActual);
+			} else {
+				gossiping = recibirGossiping(conexion, &resultado);
+				if (resultado == COMPONENTE_CAIDO) {
+					eliminarMemoria(puertoActual, ipActual, numeroActual);
+				} else {
+					procesarGossiping(gossiping);
+					if (string_equals_ignore_case(numeroPpal, "")) {
+						free(numeroPpal);
+						numeroPpal = NULL;
+						// si no tengo el num de la mem ppal la tengo que conseguir en alguna vuelta de gossiping
+						pthread_mutex_lock(&semMMemorias);
+						config_memoria* memPpal = list_find(memorias, (void*)encontrarMemPpal);
+						numeroPpal = strdup(memPpal->numero);
+						pthread_mutex_unlock(&semMMemorias);
+						numeroActual = strdup(numeroPpal);
+					}
+				}
+				liberarHandshakeMemoria(gossiping);
+			}
 			liberar_conexion(conexion);
-			liberarHandshakeMemoria(gossiping);
+		}
+		// obtengo data de otra memoria para pedirle el gossiping a otra
+		pthread_mutex_lock(&semMMemorias);
+		maximo = list_size(memorias);
+		pthread_mutex_unlock(&semMMemorias);
+		// me voy a conectar a otra memoria
+		free(ipActual);
+		free(puertoActual);
+		free(numeroActual);
+		ipActual = NULL;
+		puertoActual = NULL;
+		numeroActual = NULL;
+		if (maximo == 0) {
+			// no hay memorias levantadas
+			log_info(logger_KERNEL, "No hay ninguna memoria levantada, me voy a conectar con la mem ppal");
+			ipActual = strdup(ipPpal);
+			puertoActual = strdup(puertoPpal);
+			numeroActual = strdup(numeroPpal);
+		} else {
+			indice = obtenerIndiceRandom(maximo);
+			pthread_mutex_lock(&semMMemorias);
+			config_memoria* memoriaAConectar = list_get(memorias, indice);
+			ipActual = strdup(memoriaAConectar->ip);
+			puertoActual = strdup(memoriaAConectar->puerto);
+			numeroActual = strdup(memoriaAConectar->numero);
+			pthread_mutex_unlock(&semMMemorias);
 		}
 	}
 	free(ipPpal);
 	free(puertoPpal);
+	free(numeroPpal);
 }
 
 /* procesarGossiping()
@@ -206,7 +283,8 @@ void procesarGossiping(t_gossiping* gossipingRecibido) {
 
 		pthread_mutex_lock(&semMMemorias);
 		if (!list_any_satisfy(memorias, (void*)existeUnaIgual)) {
-			log_info(logger_KERNEL, "estoy agregando el ip: %s puerto: %s numero: %s", memoriaNueva->ip, memoriaNueva->puerto, memoriaNueva->numero);
+			// agrego memoria si no existe en mi lista de memorias
+			log_info(logger_KERNEL, "Me llegó una nueva memoria en el gossiping, num: %s", memoriaNueva->numero);
 			list_add(memorias, memoriaNueva);
 		}
 		pthread_mutex_unlock(&semMMemorias);
@@ -361,22 +439,22 @@ void loguearMetricas(void) {
 		informarMetricas(FALSE);
 		// limpio variables para empezar a contar de nuevo
 		pthread_mutex_lock(&semMMetricas);
-		tiempoSelectSC = 0;
-		tiempoInsertSC = 0;
+		tiempoSelectSC = 0.0;
+		tiempoInsertSC = 0.0;
 		cantidadSelectSC = 0;
 		cantidadInsertSC = 0;
 		if (list_size(cargaMemoriaSC) > 0) {
 			list_clean_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
 		}
-		tiempoSelectSHC = 0;
-		tiempoInsertSHC = 0;
+		tiempoSelectSHC = 0.0;
+		tiempoInsertSHC = 0.0;
 		cantidadSelectSHC = 0;
 		cantidadInsertSHC = 0;
 		if (list_size(cargaMemoriaSHC) > 0) {
 			list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
 		}
-		tiempoSelectEC = 0;
-		tiempoInsertEC = 0;
+		tiempoSelectEC = 0.0;
+		tiempoInsertEC = 0.0;
 		cantidadSelectEC = 0;
 		cantidadInsertEC = 0;
 		if (list_size(cargaMemoriaEC) > 0) {
@@ -398,62 +476,62 @@ void informarMetricas(int mostrarPorConsola) {
 	// si es vacio no mostrar basura
 	pthread_mutex_lock(&semMMetricas);
 	double readLatencySC = tiempoSelectSC/cantidadSelectSC;
-		double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
-		double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
-		double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
-		double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
-		double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
-		int cantidadTotalSelectInsert = cantidadSelectSC + cantidadSelectSHC + cantidadSelectEC + cantidadInsertSC + cantidadInsertSHC + cantidadInsertEC;
-		void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
-			// https://github.com/sisoputnfrba/foro/issues/1419
-			double estadistica = estadisticaAMostrar->cantidadSelectInsert / cantidadTotalSelectInsert;
-			if (mostrarPorConsola == TRUE) {
-				log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
-						estadisticaAMostrar->numeroMemoria, estadistica);
-			} else {
-				log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
-						estadisticaAMostrar->numeroMemoria, estadistica);
-			}
-		}
+	double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
+	double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
+	double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
+	double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
+	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
+	int cantidadTotalSelectInsert = cantidadSelectSC + cantidadSelectSHC + cantidadSelectEC + cantidadInsertSC + cantidadInsertSHC + cantidadInsertEC;
+	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
+		// https://github.com/sisoputnfrba/foro/issues/1419
+		double estadistica = (double)estadisticaAMostrar->cantidadSelectInsert / (double)cantidadTotalSelectInsert;
 		if (mostrarPorConsola == TRUE) {
-			log_info(logger_KERNEL, "Read Latency de SC: %f", readLatencySC);
-			log_info(logger_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
-			log_info(logger_KERNEL, "Read Latency de EC: %f", readLatencyEC);
-			log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatencySC);
-			log_info(logger_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
-			log_info(logger_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
-			log_info(logger_KERNEL, "El memory load de SC es:");
-			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
-			log_info(logger_KERNEL, "El memory load de SHC es:");
-			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
-			log_info(logger_KERNEL, "El memory load de EC es:");
-			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
-			log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
-			log_info(logger_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
-			log_info(logger_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
-			log_info(logger_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
-			log_info(logger_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
-			log_info(logger_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+			log_info(logger_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
+					estadisticaAMostrar->numeroMemoria, estadistica);
 		} else {
-			log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %f", readLatencySC);
-			log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
-			log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %f", readLatencyEC);
-			log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatencySC);
-			log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
-			log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
-			log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
-			list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
-			log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
-			list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
-			log_info(logger_METRICAS_KERNEL, "El memory load de EC es:");
-			list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
-			log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+			log_info(logger_METRICAS_KERNEL, "La cantidad de Select - Insert respecto del resto de las operaciones de la memoria %s es %f",
+					estadisticaAMostrar->numeroMemoria, estadistica);
 		}
+	}
+	if (mostrarPorConsola == TRUE) {
+		log_info(logger_KERNEL, "Read Latency de SC: %f", readLatencySC);
+		log_info(logger_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+		log_info(logger_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+		log_info(logger_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+		log_info(logger_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+		log_info(logger_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
+		log_info(logger_KERNEL, "El memory load de SC es:");
+		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+		log_info(logger_KERNEL, "El memory load de SHC es:");
+		list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+		log_info(logger_KERNEL, "El memory load de EC es:");
+		list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		log_info(logger_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+		log_info(logger_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+		log_info(logger_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+		log_info(logger_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+		log_info(logger_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+		log_info(logger_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+	} else {
+		log_info(logger_METRICAS_KERNEL, "Read Latency de SC: %f", readLatencySC);
+		log_info(logger_METRICAS_KERNEL, "Read Latency de SHC: %f", readLatencySHC);
+		log_info(logger_METRICAS_KERNEL, "Read Latency de EC: %f", readLatencyEC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de SC: %f", writeLatencySC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de SHC: %f", writeLatencySHC);
+		log_info(logger_METRICAS_KERNEL, "Write Latency de EC: %f", writeLatencyEC);
+		log_info(logger_METRICAS_KERNEL, "El memory load de SC es:");
+		list_iterate(cargaMemoriaSC, (void*) mostrarCargaMemoria);
+		log_info(logger_METRICAS_KERNEL, "El memory load de SHC es:");
+		list_iterate(cargaMemoriaSHC, (void*) mostrarCargaMemoria);
+		log_info(logger_METRICAS_KERNEL, "El memory load de EC es:");
+		list_iterate(cargaMemoriaEC, (void*) mostrarCargaMemoria);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SC: %d", cantidadSelectSC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de SHC: %d", cantidadSelectSHC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Reads de EC: %d", cantidadSelectEC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SC: %d", cantidadInsertSC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de SHC: %d", cantidadInsertSHC);
+		log_info(logger_METRICAS_KERNEL, "Cantidad de Writes de EC: %d", cantidadInsertEC);
+	}
 	pthread_mutex_unlock(&semMMetricas);
 }
 
@@ -621,13 +699,10 @@ void planificarReadyAExec(void) {
 	pthread_attr_t attr;
 	request_procesada* request;
 	int threadProcesar;
-	int d;
-	int a;
 	while(1) {
 		sem_wait(&semRequestReady);
-		sem_getvalue(&semMultiprocesamiento, &a);
 		sem_wait(&semMultiprocesamiento);
-		sem_getvalue(&semMultiprocesamiento, &d);
+		log_debug(logger_KERNEL, "Nuevo request en exec");
 		request = (request_procesada*) malloc(sizeof(request_procesada));
 		pthread_mutex_lock(&semMColaReady);
 		request->codigo = ((request_procesada*) queue_peek(ready))->codigo;
@@ -1064,6 +1139,9 @@ config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia,
 				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio EC");
 			}
 			break;
+		case CONSISTENCIA_INVALIDA:
+			log_error(logger_KERNEL, "No se puede resolver el request porque la consistencia es inválida");
+			break;
 		default:
 			log_error(logger_KERNEL, "No se puede resolver el request porque no tengo la metadata de la tabla");
 			break;
@@ -1134,13 +1212,124 @@ void eliminarMemoria(char* puerto, char* ip, char* numero) {
 
 int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
 	int conexionTemporanea = crearConexion(ip, puerto);
-	if (conexionTemporanea == -1) {
+	if (conexionTemporanea == COMPONENTE_CAIDO) {
 		// eliminar memoria de lista de memorias y de criterios
 		eliminarMemoria(puerto, ip, numero);
 		return FAILURE;
 	}
-	enviarHandshakeMemoria(tipoRol, KERNEL, conexionTemporanea);
+	int rta = enviarHandshakeMemoria(tipoRol, KERNEL, conexionTemporanea);
+	if (rta == COMPONENTE_CAIDO) {
+		// eliminar memoria de lista de memorias y de criterios
+		eliminarMemoria(puerto, ip, numero);
+		return FAILURE;
+	}
 	return conexionTemporanea;
+}
+
+t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key, int memoriaRandom, char** numMemoria) {
+	// manda request hasta que encuentra memoria que no este caida
+	char* ip;
+	char* puerto;
+	int conexionTemporanea;
+	int respuesta;
+	int respuestaEnviar;
+	char* numAux;
+	while(1) {
+		// si la respuesta es distinto de componente caido hago return
+		config_memoria* memoriaCorrespondiente;
+		if (memoriaRandom) {
+			pthread_mutex_lock(&semMMemorias);
+			unsigned int indice = obtenerIndiceRandom(list_size(memorias));
+			memoriaCorrespondiente = list_get(memorias, indice);
+			*numMemoria = strdup(memoriaCorrespondiente->numero);
+			ip = strdup(memoriaCorrespondiente->ip);
+			puerto = strdup(memoriaCorrespondiente->puerto);
+			numAux = strdup(memoriaCorrespondiente->numero);
+			pthread_mutex_unlock(&semMMemorias);
+		} else {
+			memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(tipoConsistencia, key);
+			if(memoriaCorrespondiente == NULL) {
+				t_paquete* paqueteError = (t_paquete*) malloc(sizeof(t_paquete));
+				paqueteError->request = strdup("No hay memorias asociadas al criterio");
+				paqueteError->palabraReservada = FAILURE;
+				return paqueteError;
+			} else {
+				*numMemoria = strdup(memoriaCorrespondiente->numero);
+				numAux = strdup(memoriaCorrespondiente->numero);
+				ip = strdup(memoriaCorrespondiente->ip);
+				puerto = strdup(memoriaCorrespondiente->puerto);
+				liberarConfigMemoria(memoriaCorrespondiente);
+			}
+		}
+		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numAux);
+		free(ip);
+		free(puerto);
+		ip = NULL;
+		puerto = NULL;
+		if(conexionTemporanea != FAILURE) {
+			respuestaEnviar = enviar(tipoConsistencia, mensaje, conexionTemporanea);
+			if (respuestaEnviar != COMPONENTE_CAIDO) {
+				t_paquete* paqueteRecibido = recibir(conexionTemporanea);
+				respuesta = paqueteRecibido->palabraReservada;
+				if (respuesta != COMPONENTE_CAIDO) {
+					return paqueteRecibido;
+				}
+			}
+		}
+		free(numMemoria);
+		numMemoria = NULL;
+
+	}
+}
+
+int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom, char** numMemoria) {
+	char* ip;
+	char* puerto;
+	char* numAux;
+	int conexionTemporanea;
+	while(1) {
+		// si la respuesta es distinto de componente caido hago return
+		config_memoria* memoriaCorrespondiente;
+		pthread_mutex_lock(&semMMemorias);
+		if (list_size(memorias) == 0) {
+			pthread_mutex_unlock(&semMMemorias);
+			log_error(logger_KERNEL, "No hay memorias levantadas y no puedo realizar el request");
+			return FAILURE;
+		}
+		pthread_mutex_unlock(&semMMemorias);
+		if (memoriaRandom) {
+			pthread_mutex_lock(&semMMemorias);
+			unsigned int indice = obtenerIndiceRandom(list_size(memorias));
+			memoriaCorrespondiente = list_get(memorias, indice);
+			*numMemoria = strdup(memoriaCorrespondiente->numero);
+			ip = strdup(memoriaCorrespondiente->ip);
+			puerto = strdup(memoriaCorrespondiente->puerto);
+			//tood: usar esto en las fcuniones de reconectar
+			numAux = strdup(memoriaCorrespondiente->numero);
+			pthread_mutex_unlock(&semMMemorias);
+			conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numAux);
+			free(numAux);
+			free(ip);
+			free(puerto);
+			ip = NULL;
+			puerto = NULL;
+			numAux = NULL;
+		} else {
+			memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(tipoConsistencia, key);
+			if(memoriaCorrespondiente == NULL) {
+				return FAILURE;
+			} else {
+				conexionTemporanea = conectarseAMemoria(REQUEST, memoriaCorrespondiente->puerto, memoriaCorrespondiente->ip, memoriaCorrespondiente->numero);
+				*numMemoria = strdup(memoriaCorrespondiente->numero);
+				liberarConfigMemoria(memoriaCorrespondiente);
+			}
+		}
+		if(conexionTemporanea != FAILURE) {
+			return conexionTemporanea;
+		}
+		free(numMemoria);
+		numMemoria = NULL;
+	}
 }
 
 /*
@@ -1174,26 +1363,29 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	char** parametros = separarRequest(mensaje);
 	config_memoria* memoriaCorrespondiente;
 	char* numMemoria;
+	char* puerto;
+	char* ip;
+	int key = 0;
 	if (codigo == DESCRIBE) {
 		// https://github.com/sisoputnfrba/foro/issues/1391 chequearlo
 		pthread_mutex_lock(&semMMemorias);
 		unsigned int indice = obtenerIndiceRandom(list_size(memorias));
 		memoriaCorrespondiente = list_get(memorias, indice);
 		numMemoria = strdup(memoriaCorrespondiente->numero);
-		char* ip = strdup(memoriaCorrespondiente->ip);
-		char* puerto = strdup(memoriaCorrespondiente->puerto);
+		ip = strdup(memoriaCorrespondiente->ip);
+		puerto = strdup(memoriaCorrespondiente->puerto);
 		pthread_mutex_unlock(&semMMemorias);
 		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
-		free(ip);
-		free(puerto);
 		if(conexionTemporanea == FAILURE) {
-			log_error(logger_KERNEL, "Se cayo la memoria %s, eliminandola de las memorias...", numMemoria);
 			free(numMemoria);
-			liberarArrayDeChar(parametros);
-			return FAILURE;
+			numMemoria = NULL;
+			conexionTemporanea = reintentarConexion(consistenciaTabla, 0, 1, &numMemoria);
+			if (conexionTemporanea == FAILURE) {
+				liberarArrayDeChar(parametros);
+				return FAILURE;
+			}
 		}
 	} else {
-		int key = 0;
 		if (codigo == CREATE) {
 			consistenciaTabla = obtenerEnumConsistencia(parametros[2]);
 		} else {
@@ -1209,23 +1401,35 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			return respuesta;
 		} else {
 			numMemoria = strdup(memoriaCorrespondiente->numero);
-			conexionTemporanea = conectarseAMemoria(REQUEST, memoriaCorrespondiente->puerto, memoriaCorrespondiente->ip, numMemoria);
+			ip = strdup(memoriaCorrespondiente->ip);
+			puerto = strdup(memoriaCorrespondiente->puerto);
+			conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
 			if(conexionTemporanea == FAILURE) {
-				log_error(logger_KERNEL, "Se cayo la memoria %s, eliminandola de las memorias...", numMemoria);
 				free(numMemoria);
-				liberarArrayDeChar(parametros);
-				return FAILURE;
+				conexionTemporanea = reintentarConexion(NINGUNA, 0, 1, &numMemoria);
+				free(ip);
+				free(puerto);
+				numMemoria = NULL;
+				ip = NULL;
+				puerto = NULL;
+				if (conexionTemporanea == FAILURE) {
+					liberarArrayDeChar(parametros);
+					return FAILURE;
+				}
 			}
 			liberarConfigMemoria(memoriaCorrespondiente);
 		}
 	}
-	// todo: chequear que memoria no se haya caido en enviar y recibir
-	enviar(consistenciaTabla, mensaje, conexionTemporanea);
-	paqueteRecibido = recibir(conexionTemporanea);
+	int respuestaEnviar = enviar(consistenciaTabla, mensaje, conexionTemporanea);
+	if (respuestaEnviar == COMPONENTE_CAIDO) {
+		paqueteRecibido = reenviarRequest(consistenciaTabla, mensaje, key, codigo == DESCRIBE, &numMemoria);
+	} else {
+		paqueteRecibido = recibir(conexionTemporanea);
+	}
 	respuesta = paqueteRecibido->palabraReservada;
 	if (respuesta == SUCCESS) {
 		if (codigo == DESCRIBE) {
-			log_info(logger_KERNEL, "llego %s", paqueteRecibido->request);
+			log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
 			actualizarTablas(paqueteRecibido->request);
 		}
 		if(codigo == SELECT) {
@@ -1234,7 +1438,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 		}
 	} else if (respuesta == MEMORIA_FULL) {
-		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		respuestaEnviar = enviar(NINGUNA, "JOURNAL", conexionTemporanea);
 		paqueteRecibido = recibir(conexionTemporanea);
 		respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
@@ -1247,14 +1451,22 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 				} else {
 					log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 				}
+			} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
+				respuesta = SUCCESS;
+				log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
 			} else {
 				log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 			}
 		} else {
 			log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 		}
-	}
-	else {
+	} else if (respuesta == COMPONENTE_CAIDO) {
+		// todo: vale la pena?
+		reenviarRequest(consistenciaTabla, mensaje, key, codigo == DESCRIBE, &numMemoria);
+	} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
+		respuesta = SUCCESS;
+		log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
+	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
 	liberar_conexion(conexionTemporanea);
@@ -1267,6 +1479,11 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	}
 	log_debug(logger_KERNEL, "Le mande a a mem %s", numMemoria);
 	free(numMemoria);
+	free(ip);
+	free(puerto);
+	numMemoria = NULL;
+	ip = NULL;
+	puerto = NULL;
 	return respuesta;
 }
 
@@ -1361,10 +1578,12 @@ void procesarRun(t_queue* colaRun) {
 
 		if (validarRequest((char*) request->request) == TRUE) {
 			if (manejarRequest(request, TRUE) != SUCCESS) {
+				pthread_mutex_lock(&semMQuantum);
 				break;
 				//libero recursos, mato hilo, lo saco de la cola, e informo error
 			}
 		} else {
+			pthread_mutex_lock(&semMQuantum);
 			break;
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
 		}
@@ -1411,8 +1630,12 @@ void procesarRun(t_queue* colaRun) {
  * Return:
  * 	-> void  */
 int procesarAdd(char* mensaje) {
-	// todo: validar que en add no manden cualquier fruta
-	int estado = SUCCESS;
+	int estado = validarRequest(mensaje);
+	if (estado != TRUE) {
+		return estado;
+	} else {
+		estado = SUCCESS;
+	}
 	char** requestDividida = separarRequest(mensaje);
 	config_memoria* memoria;
 	consistencia _consistencia;

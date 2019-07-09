@@ -70,7 +70,8 @@ typedef enum
 	CONSISTENCIA_NO_VALIDA,
 	KEY_MUY_GRANDE,
 	FAILURE = -1,
-	MEMORIA_FULL = 10102,
+	MEMORIA_FULL = -10102,
+	COMPONENTE_CAIDO = -2
 } errorNo;
 
 typedef enum
@@ -121,6 +122,10 @@ typedef enum
 	ANOTHER_COMPONENT
 } t_caller;
 
+typedef struct{
+	int valor;
+} t_int;
+
 int convertirKey(char*);
 void convertirTimestamp(char*, unsigned long long*);
 void iterator(char*);
@@ -152,9 +157,9 @@ void* recibir_buffer(int*, int);
 int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
-t_gossiping* recibirGossiping(int);
+t_gossiping* recibirGossiping(int, int*);
 t_handshake_lfs* recibirHandshakeLFS(int);
-t_handshake_memoria* recibirHandshakeMemoria(int);
+t_handshake_memoria* recibirHandshakeMemoria(int, int*);
 
 ////cliente
 
@@ -162,10 +167,10 @@ void* serializar_gossiping(t_gossiping*, int);
 void* serializar_handshake_lfs(t_handshake_lfs*, int);
 void* serializar_paquete(t_paquete* , int);
 void* serializar_handshake_memoria(t_handshake_memoria*, int);
-void enviar(cod_request, char*, int);
-void enviarGossiping(char*, char*, char*, int);
+int enviar(cod_request, char*, int);
+int enviarGossiping(char*, char*, char*, int);
 void enviarHandshakeLFS(int, int);
-void enviarHandshakeMemoria(rol, Componente, int);
+int enviarHandshakeMemoria(rol, Componente, int);
 void eliminar_paquete(t_paquete*);
 void liberarPaquete(t_paquete*);
 void liberar_conexion(int);
