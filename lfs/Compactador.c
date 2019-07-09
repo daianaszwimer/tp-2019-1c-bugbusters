@@ -125,8 +125,19 @@ void compactar(char* pathTabla) {
 		perror("opendir");
 	}
 
+	char* nombreTabla = string_reverse(pathTabla);
+	char** aux = string_split(nombreTabla, "/");
+	free(nombreTabla);
+	nombreTabla = string_reverse(aux[0]);
+	liberarArrayDeChar(aux);
+
+	setBlockTo(nombreTabla, 1);
 	// Renombramos los tmp a tmpc
 	renombrarTmp_a_TmpC(pathTabla, archivoDeLaTabla, tabla);
+
+	setBlockTo(nombreTabla, 0);
+
+	procesarRequestsEncoladas(strdup(nombreTabla));
 
 	// Leemos todos los registros de los temporales a compactar y los guardamos en una lista
 	t_list* registrosDeTmpC = leerDeTodosLosTmpC(pathTabla, archivoDeLaTabla, tabla, particiones, numeroDeParticiones, tamanioBloque);
@@ -149,7 +160,7 @@ void compactar(char* pathTabla) {
 
 		// TODO: Bloquear tabla
 		setBlockTo(nombreTabla, 1);
-		//sleep(20); sirve para simular una compactacion larga
+		sleep(20); //sirve para simular una compactacion larga
 
 		// Liberamos los bloques que contienen el archivo “.tmpc” y los que contienen el archivo “.bin”
 		liberarBloquesDeTmpCyParticiones(pathTabla, archivoDeLaTabla, tabla, particiones);
@@ -160,11 +171,12 @@ void compactar(char* pathTabla) {
 		setBlockTo(nombreTabla, 0);
 		// TODO: Desbloquear la tabla y dejar un registro de cuanto tiempo estuvo bloqueada la tabla para realizar esta operatoria
 
-		procesarRequestsEncoladas(nombreTabla);
+		procesarRequestsEncoladas(strdup(nombreTabla));
 
 		list_destroy_and_destroy_elements(registrosDeParticiones, (void*) eliminarRegistro);
 		list_destroy_and_destroy_elements(registrosAEscribir, (void*) eliminarRegistro);
 	}
+	free(nombreTabla);
 
 	// Cerramos el directorio
 	if (closedir(tabla) == -1) {
@@ -195,6 +207,7 @@ void* procesarRequests(void* args){
 
 	pthread_mutex_lock(&mutexDiegote);
 	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla);
+	pthread_mutex_unlock(&mutexDiegote);
 	free(nombreTabla);
 	t_request* request;
 	pthread_mutex_lock(&mutexDiegote);

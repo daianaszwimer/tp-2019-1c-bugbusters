@@ -64,6 +64,10 @@ t_config *configMetadata;
 t_bitarray* bitarray;
 t_memtable* memtable;
 t_list* diegote; // lista que tiene las tablas para las compactaciones
+
+pthread_t hiloLeerDeConsola;
+pthread_t hiloRecibirMemorias;
+pthread_t hiloDumpeo;
 pthread_t hiloDeCompactacion;
 pthread_t hiloDeInotify;
 

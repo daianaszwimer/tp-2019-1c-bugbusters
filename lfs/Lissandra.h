@@ -14,10 +14,6 @@
 int file_descriptor;
 int watch_descriptor;
 
-pthread_t hiloLeerDeConsola;
-pthread_t hiloRecibirMemorias;
-pthread_t hiloDumpeo;
-
 char* bitmap;
 int bitmapDescriptor;
 
