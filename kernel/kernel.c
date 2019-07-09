@@ -147,37 +147,90 @@ void liberarMemoria(void) {
  * 	-> :: void  */
 void hacerGossiping(void) {
 	t_gossiping* gossiping;
+	// data de la mem ppal
 	pthread_mutex_lock(&semMConfig);
 	char* ipPpal = strdup(config_get_string_value(config, "IP_MEMORIA"));
 	char* puertoPpal = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
 	pthread_mutex_unlock(&semMConfig);
+	char* numeroPpal = strdup("");
+	// data de la memoria a la que estoy conectada
+	char* ipActual = strdup(ipPpal);
+	char* puertoActual = strdup(puertoPpal);
+	char* numeroActual = strdup("");
+	int indice = 0;
+	int maximo = 0;
 	int conexion = conectarseAMemoria(GOSSIPING, puertoPpal, ipPpal, "");
+	int encontrarMemPpal(config_memoria* unaMemoria) {
+		return string_equals_ignore_case(unaMemoria->ip, ipPpal) && string_equals_ignore_case(unaMemoria->puerto, puertoPpal);
+	}
 	if (conexion == FAILURE) {
-		log_error(logger_KERNEL, "La mem ppal no está levantada, conectando con otra memoria...");
+		log_error(logger_KERNEL, "La mem ppal no está levantada");
 	} else {
 		gossiping = recibirGossiping(conexion);
 		procesarGossiping(gossiping);
 		liberar_conexion(conexion);
 		liberarHandshakeMemoria(gossiping);
+		// guardo numero de memoria para mandar como param
+		pthread_mutex_lock(&semMMemorias);
+		config_memoria* memPpal = list_find(memorias, (void*)encontrarMemPpal);
+		numeroPpal = strdup(memPpal->numero);
+		pthread_mutex_unlock(&semMMemorias);
+		// como la ppal esta levanta va a ser la mem actual
+		free(numeroActual);
+		numeroActual = NULL;
+		numeroActual = strdup(numeroPpal);
 	}
 	while(1) {
-		// gaston nos dijo que siempre le pregunta a la ppal y si se cae le pregunta a otra
-		// si se cae le pregunto a otra memoria
-		// si me devuelve memorias de menos las borro
 		usleep(sleepGossiping * 1000);
-		// todo: mandar numero de memoria correspondiente
-		conexion = conectarseAMemoria(GOSSIPING, puertoPpal, ipPpal, "");
+		conexion = conectarseAMemoria(GOSSIPING, puertoActual, ipActual, numeroActual);
 		if (conexion == FAILURE) {
-			log_error(logger_KERNEL, "La mem ppal no está levantada");
+			log_error(logger_KERNEL, "La mem %s no está levantada, me voy a conectar con otra memoria", numeroActual);
 		} else {
 			gossiping = recibirGossiping(conexion);
 			procesarGossiping(gossiping);
 			liberar_conexion(conexion);
 			liberarHandshakeMemoria(gossiping);
+			if (string_equals_ignore_case(numeroPpal, "")) {
+				free(numeroPpal);
+				numeroPpal = NULL;
+				// si no tengo el num de la mem ppal la tengo que conseguir en alguna vuelta de gossiping
+				pthread_mutex_lock(&semMMemorias);
+				config_memoria* memPpal = list_find(memorias, (void*)encontrarMemPpal);
+				numeroPpal = strdup(memPpal->numero);
+				pthread_mutex_unlock(&semMMemorias);
+				numeroActual = strdup(numeroPpal);
+			}
+		}
+		// obtengo data de otra memoria para pedirle el gossiping a otra
+		pthread_mutex_lock(&semMMemorias);
+		maximo = list_size(memorias);
+		pthread_mutex_unlock(&semMMemorias);
+		// me voy a conectar a otra memoria
+		free(ipActual);
+		free(puertoActual);
+		free(numeroActual);
+		ipActual = NULL;
+		puertoActual = NULL;
+		numeroActual = NULL;
+		if (maximo == 0) {
+			// no hay memorias levantadas
+			log_info(logger_KERNEL, "No hay ninguna memoria levantada, me voy a conectar con la mem ppal");
+			ipActual = strdup(ipPpal);
+			puertoActual = strdup(puertoPpal);
+			numeroActual = strdup(numeroPpal);
+		} else {
+			indice = obtenerIndiceRandom(maximo);
+			pthread_mutex_lock(&semMMemorias);
+			config_memoria* memoriaAConectar = list_get(memorias, indice);
+			ipActual = strdup(memoriaAConectar->ip);
+			puertoActual = strdup(memoriaAConectar->puerto);
+			numeroActual = strdup(memoriaAConectar->numero);
+			pthread_mutex_unlock(&semMMemorias);
 		}
 	}
 	free(ipPpal);
 	free(puertoPpal);
+	free(numeroPpal);
 }
 
 /* procesarGossiping()
@@ -206,7 +259,8 @@ void procesarGossiping(t_gossiping* gossipingRecibido) {
 
 		pthread_mutex_lock(&semMMemorias);
 		if (!list_any_satisfy(memorias, (void*)existeUnaIgual)) {
-			log_info(logger_KERNEL, "estoy agregando el ip: %s puerto: %s numero: %s", memoriaNueva->ip, memoriaNueva->puerto, memoriaNueva->numero);
+			// agrego memoria si no existe en mi lista de memorias
+			log_info(logger_KERNEL, "Me llegó una nueva memoria en el gossiping, num: %s", memoriaNueva->numero);
 			list_add(memorias, memoriaNueva);
 		}
 		pthread_mutex_unlock(&semMMemorias);

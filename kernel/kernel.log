@@ -619,3 +619,11 @@
 [INFO] 11:05:25:27 Kernel/(14976:14976): ----------------INICIO DE KERNEL--------------
 [ERROR] 11:05:25:37 Kernel/(14976:14989): La mem ppal no está levantada, conectando con otra memoria...
 [ERROR] 11:05:25:52 Kernel/(14976:14993): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[INFO] 15:29:29:466 Kernel/(6138:6138): ----------------INICIO DE KERNEL--------------
+[INFO] 15:29:29:486 Kernel/(6138:6155): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1
+[INFO] 15:29:29:486 Kernel/(6138:6155): estoy agregando el ip: 127.0.0.1 puerto: 8002 numero: 2
+[INFO] 15:29:30:150 Kernel/(6138:6159): llego COSAS SC 9 35000;MAQUILLAJES SHC 5 50000;ANIMALS SC 4 60000;BEBIDAS SC 6 10000;PELICULAS SC 2 35000;PLATOS_PRINCIPALES SC 2 60000;METALS SC 6 100000;POSTRES SC 3 60000;AVES SC 5 50000;COLORES SC 2 35000;ANIMALES SC 5 65000;MAMIFEROS SC 3 60000;NOVELAS_ARGENTINAS SC 6 10000;FRUTAS SC 2 50000;MARINOS SC 1 10000;SERIES SC 6 65000;LIBROS SC 2 35000
+[INFO] 15:29:30:150 Kernel/(6138:6159): El request DESCRIBE se realizó con éxito
+[DEBUG] 15:29:30:154 Kernel/(6138:6159): Le mande a a mem 2
+[ERROR] 15:30:29:873 Kernel/(6138:6155): La mem 1 no está levantada, me voy a conectar con otra memoria
+[INFO] 15:31:56:975 Kernel/(6138:6155): estoy agregando el ip: 127.0.0.1 puerto: 8001 numero: 1

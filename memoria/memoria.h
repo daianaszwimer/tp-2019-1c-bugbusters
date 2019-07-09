@@ -41,7 +41,6 @@ typedef enum
 	SEGMENTOEXISTENTE = 99,
 	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101,
-	MEMORIAFULL =-10102,
 	JOURNALTIME = -10103
 } t_erroresMemoria;
 
@@ -91,6 +90,9 @@ t_marco* frame0;
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
 pthread_mutex_t terminarHilo;
+pthread_mutex_t semMBitarray;
+pthread_mutex_t semMTablaSegmentos;
+pthread_mutex_t semMDescriptores;
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 //pthread_attr_t attr;
@@ -127,7 +129,7 @@ void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
-void guardarRespuestaDeLFSaCACHE(char*,t_paquete*,t_erroresMemoria);
+void guardarRespuestaDeLFSaCACHE(t_paquete* ,t_erroresMemoria);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
@@ -149,7 +151,7 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 
 int obtenerPaginaDisponible(t_marco**);
 
-void liberarTabla(t_segmento*);
+void eliminarSegmento(t_segmento*);
 void eliminarElemTablaPagina(t_elemTablaDePaginas* );
 void eliminarElemTablaSegmentos(t_segmento*);
 void liberarEstructurasMemoria();
@@ -158,9 +160,13 @@ void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
 void procesarDescribe(cod_request, char*,t_caller,int);
 void procesarDrop(cod_request, char* ,consistencia , t_caller , int);
 
-int LRU(t_elemTablaDePaginas**);
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas*);
 int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
 t_elemTablaDePaginas* correrAlgoritmoLRU(int*);
+
+void procesarJournal(cod_request, char*, t_caller, int);
+t_list* obtenerTablasModificadas(t_segmento*);
+int tablaDePaginaModificada(t_elemTablaDePaginas*);
+
 
 #endif /* MEMORIA_H_ */

@@ -24,9 +24,6 @@
 #include <pthread.h>
 #include <commons/collections/queue.h>
 
-typedef struct{
-	int valor;
-} t_int;
 
 typedef struct{
 	unsigned long long timestamp;
