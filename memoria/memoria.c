@@ -1490,9 +1490,9 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 				}
 
 			}
-			eliminarElemTablaPagina(elemPagina);
 		}
 		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
+		eliminarSegmento(segmento);
 	}
 	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
 
