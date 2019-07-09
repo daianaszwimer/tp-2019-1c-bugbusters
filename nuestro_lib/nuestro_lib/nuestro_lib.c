@@ -276,6 +276,9 @@ errorNo validarMensaje(char* mensaje, Componente componente, char** mensajeError
 		case KEY_NO_NUMERICA:
 			*mensajeError = "Key no numerica";
 			break;
+		case KEY_MUY_GRANDE:
+			*mensajeError = "La key es demasiado grande";
+			break;
 		case TIMESTAMP_NO_NUMERICO:
 			*mensajeError = "Timestamp no numerico";
 			break;
@@ -373,8 +376,11 @@ errorNo validarInsert(char** parametros, int cantidadDeParametros, Componente co
 
 	if(error == SUCCESS){
 		char* key = parametros[1];
+		uint16_t keyConvertida = convertirKey(key);
 		if(!esNumero(key)){
 			error = KEY_NO_NUMERICA;
+		} else if(keyConvertida == -1) {
+			error = KEY_MUY_GRANDE;
 		}
 		char* timestamp = parametros[3];
 		if(timestamp != NULL){
