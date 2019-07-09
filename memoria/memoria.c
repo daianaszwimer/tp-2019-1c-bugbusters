@@ -1426,11 +1426,11 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 
 	int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
 	if(resultadoControl == 1){
-		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, socket);
 		eliminar_paquete(insertJournalLFS);
 		insertJournalLFS=NULL;
 	}else{
-		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,insertJournalLFS,caller, socket);
 		eliminar_paquete(insertJournalLFS);
 		insertJournalLFS=NULL;
 	}
