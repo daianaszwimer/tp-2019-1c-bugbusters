@@ -145,12 +145,6 @@ void compactar(char* pathTabla) {
 	// Verificamos si hay datos que compactar
 	if (registrosDeTmpC->elements_count != 0) {
 
-		char* nombreTabla = string_reverse(pathTabla);
-		char** aux = string_split(nombreTabla, "/");
-		free(nombreTabla);
-		nombreTabla = string_reverse(aux[0]);
-		liberarArrayDeChar(aux);
-
 		// Leemos todos los registros de las particiones y los guardamos en una lista
 		registrosDeParticiones = leerDeTodasLasParticiones(pathTabla, particiones, tamanioBloque);
 
@@ -160,7 +154,7 @@ void compactar(char* pathTabla) {
 
 		// TODO: Bloquear tabla
 		setBlockTo(nombreTabla, 1);
-		sleep(20); //sirve para simular una compactacion larga
+		//sleep(20); //sirve para simular una compactacion larga
 
 		// Liberamos los bloques que contienen el archivo “.tmpc” y los que contienen el archivo “.bin”
 		liberarBloquesDeTmpCyParticiones(pathTabla, archivoDeLaTabla, tabla, particiones);

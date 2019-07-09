@@ -69,7 +69,7 @@ errorNo dumpear(int tamanioValue) {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				// Guardo lo de la tabla en el archivo temporal
-				char* datosADumpear = malloc(sizeof(unsigned long long) + sizeof(uint16_t) + (size_t) tamanioValue);
+				char* datosADumpear = calloc(1, 27 + tamanioValue);
 				strcpy(datosADumpear, "");
 				for(int j = 0; list_get(tabla->registros,j) != NULL; j++) {
 					t_registro* registro = list_get(tabla->registros,j);
