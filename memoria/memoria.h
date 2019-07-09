@@ -63,6 +63,10 @@ typedef struct{
 	suseconds_t tv_usec;   /* microseconds */
 }t_timeval;
 
+typedef struct{
+	char* path;
+	pthread_mutex_t* sem;
+}t_semSegmento;
 
 //-------------VARIABLES GLOBALES-------------------------
 
@@ -83,9 +87,10 @@ pthread_mutex_t terminarHilo;
 pthread_mutex_t semMBitarray;
 pthread_mutex_t semMTablaSegmentos;
 pthread_mutex_t semMDescriptores;
+pthread_mutex_t semMListSemSegmentos;
+t_list* semMPorSegmento;
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
-//pthread_attr_t attr;
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
 
 t_bitarray* bitarray;
@@ -96,6 +101,7 @@ int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 int maxValue;
 
+t_list* listaSemSegmentos;
 t_list* descriptoresClientes ;
 fd_set descriptoresDeInteres;					// Coleccion de descriptores de interes para select
 t_list* clientesGossiping;
@@ -116,13 +122,15 @@ t_paquete* intercambiarConFileSystem(cod_request, char*);
 
 void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 
-int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
+int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**,char**);
+void lockSemSegmento(char*);
+void desbloquearSemSegmento(char* );
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
 void guardarRespuestaDeLFSaCACHE(t_paquete* ,t_erroresMemoria);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
-void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
+void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int,char*);
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 
 void actualizarTimestamp(t_marco*);
@@ -144,6 +152,8 @@ int obtenerPaginaDisponible(t_marco**);
 void eliminarSegmento(t_segmento*);
 void eliminarElemTablaPagina(t_elemTablaDePaginas* );
 void eliminarElemTablaSegmentos(t_segmento*);
+void removerSem(char*);
+void liberarSemSegmento(t_semSegmento*);
 void liberarEstructurasMemoria();
 void liberarMemoria();
 void eliminarMarco(t_elemTablaDePaginas*,t_marco* );
