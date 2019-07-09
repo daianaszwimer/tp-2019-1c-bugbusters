@@ -64,6 +64,10 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			mensajeDeError = string_from_format("La KEY %s no existe", requestSeparada[2]);
 			log_info(logger_LFS, mensajeDeError);
 			break;
+		case VALUE_INVALIDO:
+			mensajeDeError = string_from_format("El VALUE %s supera el tamanio maximo establecido en LFS", requestSeparada[3]);
+			log_info(logger_LFS, mensajeDeError);
+			break;
 		default:
 			break;
 	}
