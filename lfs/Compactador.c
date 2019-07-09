@@ -440,7 +440,9 @@ void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeL
 			while (bloques[i] != NULL) {
 				char* pathBloque = string_from_format("%sBloques/%s.bin", pathRaiz, bloques[i]);
 				FILE* bloque = fopen(pathBloque, "w");
+				pthread_mutex_lock(&mutexBitmap);
 				bitarray_clean_bit(bitarray, (int) strtol(bloques[i], NULL, 10));
+				pthread_mutex_unlock(&mutexBitmap);
 				free(pathBloque);
 				fclose(bloque);
 				i++;
