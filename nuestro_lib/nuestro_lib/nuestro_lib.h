@@ -156,7 +156,7 @@ void* recibir_buffer(int*, int);
 int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
-t_gossiping* recibirGossiping(int);
+t_gossiping* recibirGossiping(int, int*);
 t_handshake_lfs* recibirHandshakeLFS(int);
 t_handshake_memoria* recibirHandshakeMemoria(int);
 

@@ -596,10 +596,17 @@ void enviarGossiping(char* puertos, char* ips, char* numeros, int socket_cliente
  * Descripcion: recibe el gossiping y lo deserealiza
  * Return:
  * 	-> gossiping :: t_gossiping  */
-t_gossiping* recibirGossiping(int socket)
+t_gossiping* recibirGossiping(int socket, int* resultado)
 {
 	t_gossiping* gossiping = malloc(sizeof(t_gossiping));
-	recv(socket, &gossiping->tamanioIps, sizeof(int), MSG_WAITALL);
+	int rta = recv(socket, &gossiping->tamanioIps, sizeof(int), MSG_WAITALL);
+	if (rta == 0) {
+		*resultado = COMPONENTE_CAIDO;
+		gossiping->ips = strdup("");
+		gossiping->puertos = strdup("");
+		gossiping->numeros = strdup("");
+		return gossiping;
+	}
 	char* ipsRecibidos = malloc(gossiping->tamanioIps);
 	recv(socket, ipsRecibidos, gossiping->tamanioIps, MSG_WAITALL);
 
@@ -614,6 +621,8 @@ t_gossiping* recibirGossiping(int socket)
 	gossiping->puertos = puertosRecibidos;
 	gossiping->ips = ipsRecibidos;
 	gossiping->numeros = numerosRecibidos;
+
+	*resultado = SUCCESS;
 
 	return gossiping;
 }

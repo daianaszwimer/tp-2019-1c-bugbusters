@@ -5,6 +5,7 @@ int main(void) {
 
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
 
+
 	//Hilos
 	pthread_create(&hiloConectarAMemoria, NULL, (void*)hacerGossiping, NULL);
 	pthread_create(&hiloPlanificarNew, NULL, (void*)planificarNewAReady, NULL);
@@ -159,6 +160,7 @@ void hacerGossiping(void) {
 	char* numeroActual = strdup("");
 	int indice = 0;
 	int maximo = 0;
+	int resultado;
 	int conexion = conectarseAMemoria(GOSSIPING, puertoPpal, ipPpal, "");
 	int encontrarMemPpal(config_memoria* unaMemoria) {
 		return string_equals_ignore_case(unaMemoria->ip, ipPpal) && string_equals_ignore_case(unaMemoria->puerto, puertoPpal);
@@ -166,7 +168,9 @@ void hacerGossiping(void) {
 	if (conexion == FAILURE) {
 		log_error(logger_KERNEL, "La mem ppal no está levantada");
 	} else {
-		gossiping = recibirGossiping(conexion);
+		enviarGossiping("", "", "", conexion);
+		gossiping = recibirGossiping(conexion, &resultado);
+		// solo procesar si resultado es success
 		procesarGossiping(gossiping);
 		liberar_conexion(conexion);
 		liberarHandshakeMemoria(gossiping);
@@ -186,7 +190,8 @@ void hacerGossiping(void) {
 		if (conexion == FAILURE) {
 			log_error(logger_KERNEL, "La mem %s no está levantada, me voy a conectar con otra memoria", numeroActual);
 		} else {
-			gossiping = recibirGossiping(conexion);
+			enviarGossiping("", "", "", conexion);
+			gossiping = recibirGossiping(conexion, &resultado);
 			procesarGossiping(gossiping);
 			liberar_conexion(conexion);
 			liberarHandshakeMemoria(gossiping);
