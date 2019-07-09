@@ -88,3 +88,8 @@
 [INFO] 17:43:46:341 Lfs/(19924:19924): ----------------Inicializacion de Lissandra File System--------------
 [INFO] 17:43:46:341 Lfs/(19924:19924): ----------------Lissandra File System inicializado correctamente--------------
 [INFO] 17:43:46:341 Lfs/(19924:19924): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 16:14:32:911 Lfs/(18002:18002): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 16:53:55:884 Lfs/(19918:19918): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 16:53:55:897 Lfs/(19918:19918): Hilo de compactacion de la tabla TABLA creado
+[INFO] 16:53:55:898 Lfs/(19918:19918): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 16:55:04:293 Lfs/(19918:19929): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
