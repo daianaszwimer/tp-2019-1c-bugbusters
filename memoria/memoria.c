@@ -21,6 +21,7 @@ int main(void) {
 	pthread_mutex_init(&semMBitarray, NULL);
 	pthread_mutex_init(&semMTablaSegmentos, NULL);
 
+
 	// 	HILOS
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
@@ -164,7 +165,6 @@ void escucharMultiplesClientes() {
 	t_paquete* paqueteRecibido;
 
 	while(1) {
-
 			eliminarClientesCerrados(descriptoresClientes, &numeroDeClientes);	// Se eliminan los clientes que tengan un -1 en su fd
 			FD_ZERO(&descriptoresDeInteres); 									// Inicializamos descriptoresDeInteres
 			FD_SET(descriptorServidor, &descriptoresDeInteres);					// Agregamos el descriptorServidor a la lista de interes
@@ -174,42 +174,45 @@ void escucharMultiplesClientes() {
 			}
 
 			valorMaximo = maximo(descriptoresClientes, descriptorServidor, numeroDeClientes); // Se el valor del descriptor mas grande. Si no hay ningun cliente, devuelve el fd del servidor
+
 			select(valorMaximo + 1, &descriptoresDeInteres, NULL, NULL, NULL); 				  // Espera hasta que algún cliente tenga algo que decir
 
 			for(int i=0; i<numeroDeClientes; i++) {
 				if (FD_ISSET((int) list_get(descriptoresClientes,i), &descriptoresDeInteres)) {   // Se comprueba si algún cliente ya conectado mando algo
-
+					int codigoOperacion;
 					int esElCliente(int clienteFd) {
 						return clienteFd == (int) list_get(descriptoresClientes,i);
 					}
 					if (list_any_satisfy(clientesGossiping, (void*)esElCliente)) {
-						// mandar lista de gossiping
+						t_gossiping* gossiping = recibirGossiping((int) list_get(descriptoresClientes,i), &codigoOperacion);
+						if (codigoOperacion != COMPONENTE_CAIDO) {
+							enviarGossiping("8001", "127.0.0.1", "1", (int) list_get(descriptoresClientes,i));
+						}
+						liberarHandshakeMemoria(gossiping);
 					} else {
 						// si no es gossiping, es de request
 						paqueteRecibido = recibir((int) list_get(descriptoresClientes,i)); // Recibo de ese cliente en particular
-						cod_request palabraReservada = paqueteRecibido->palabraReservada;
+						codigoOperacion = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
-						printf("El codigo que recibi es: %i \n", palabraReservada);
 						printf("Del fd %i \n", (int) list_get(descriptoresClientes,i)); // Muestro por pantalla el fd del cliente del que recibi el mensaje
-						if(palabraReservada != -1){
-							interpretarRequest(palabraReservada,request,ANOTHER_COMPONENT, i);
-						}else{
-							log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
-							list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
-							list_remove_by_condition(clientesGossiping, (void*)esElCliente);
-							list_remove_by_condition(clientesRequest, (void*)esElCliente);
+						if (codigoOperacion != COMPONENTE_CAIDO) {
+							printf("El codigo que recibi es: %i \n", codigoOperacion);
+							interpretarRequest(codigoOperacion,request,ANOTHER_COMPONENT, i);
 						}
 						eliminar_paquete(paqueteRecibido);
 						paqueteRecibido=NULL;
 					}
-
+					if(codigoOperacion == COMPONENTE_CAIDO){
+						log_info(logger_MEMORIA, "Se desconecto el kernel %i", (int) list_get(descriptoresClientes,i));
+						list_replace(descriptoresClientes, i, (void*)-1); // Si el cliente se desconecta le pongo un -1 en su fd}
+						list_remove_by_condition(clientesGossiping, (void*)esElCliente);
+						list_remove_by_condition(clientesRequest, (void*)esElCliente);
+					}
 				}
-//				log_error(logger_MEMORIA, "el cliente se desconecto. Terminando servidor");
 			}
 
 			if(FD_ISSET (descriptorServidor, &descriptoresDeInteres)) {
 				int descriptorCliente = esperar_cliente(descriptorServidor); 					  // Se comprueba si algun cliente nuevo se quiere conectar
-				//enviarGossiping("8001", "127.0.0.1", "1", descriptorCliente);
 				t_handshake_memoria* handshake = recibirHandshakeMemoria(descriptorCliente);
 				if (handshake->tipoComponente == KERNEL || handshake->tipoComponente == MEMORIA) {
 					numeroDeClientes = (int) list_add(descriptoresClientes, (int*) descriptorCliente); // Agrego el fd del cliente a la lista de fd's
@@ -218,17 +221,12 @@ void escucharMultiplesClientes() {
 						list_add(clientesRequest, (void*)descriptorCliente);
 					} else if (handshake->tipoRol == GOSSIPING) {
 						list_add(clientesGossiping,(void*) descriptorCliente);
-						if (handshake->tipoComponente == KERNEL) {
-							// por ahora queda asi porque kernel no manda mensaje
-							enviarGossiping("8001", "127.0.0.1", "1", descriptorCliente);
-						}
 					}
 				} else {
 					log_error(logger_MEMORIA, "Solo se puede conectar un kernel o una memoria, rechazando conexión...");
 				}
 				free(handshake);
 			}
-
 	}
 
 }
@@ -1477,25 +1475,21 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
 	 *  con el que está en el FS.
 	 **/
-
+	t_list* resultadosJournal= list_create();
 	t_paquete* insertJournalLFS;
 	void encontrarElemModificado(t_segmento* segmento){
 		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
 			if(elemPagina->modificado == MODIFICADO){
 				char* requestAEnviar= strdup("");
-				string_append_with_format(&requestAEnviar,"%s%s%s%s%i%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
+				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
 
 				insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar);
-				printf("Realizo JOURNAL a: %s%s%i%s%c%s%c\n",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
+				log_info(logger_MEMORIA,"Le enviamos a LFS: %s", requestAEnviar);
 
-				if(insertJournalLFS->palabraReservada== EXIT_SUCCESS){
-					enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
-					eliminar_paquete(insertJournalLFS);
-					insertJournalLFS=NULL;
+				if(insertJournalLFS->palabraReservada==SUCCESS ){
+					list_add(resultadosJournal,SUCCESS);
 				}else{
-					enviarAlDestinatarioCorrecto(palabraReservada,insertJournalLFS->palabraReservada,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
-					eliminar_paquete(insertJournalLFS);
-					insertJournalLFS=NULL;
+					list_add(resultadosJournal,FAILURE);
 				}
 
 			}
@@ -1503,5 +1497,24 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
 	}
 	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
+
+	int esJournalSUCCESS(errorNo valor){
+		if(valor == SUCCESS){
+			return TRUE;
+		}else{
+			return FALSE;
+		}
+	}
+
+	int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
+	if(resultadoControl == 1){
+		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+		eliminar_paquete(insertJournalLFS);
+		insertJournalLFS=NULL;
+	}else{
+		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+		eliminar_paquete(insertJournalLFS);
+		insertJournalLFS=NULL;
+	}
 }
 
