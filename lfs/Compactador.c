@@ -145,12 +145,6 @@ void compactar(char* pathTabla) {
 	// Verificamos si hay datos que compactar
 	if (registrosDeTmpC->elements_count != 0) {
 
-		char* nombreTabla = string_reverse(pathTabla);
-		char** aux = string_split(nombreTabla, "/");
-		free(nombreTabla);
-		nombreTabla = string_reverse(aux[0]);
-		liberarArrayDeChar(aux);
-
 		// Leemos todos los registros de las particiones y los guardamos en una lista
 		registrosDeParticiones = leerDeTodasLasParticiones(pathTabla, particiones, tamanioBloque);
 
