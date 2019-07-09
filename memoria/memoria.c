@@ -22,6 +22,7 @@ int main(void) {
 	pthread_mutex_init(&semMBitarray, NULL);
 	pthread_mutex_init(&semMTablaSegmentos, NULL);
 
+
 	// 	HILOS
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
@@ -42,7 +43,7 @@ void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
 
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	marcosTotales = floor(config_get_int_value(config, "TAM_MEM")/(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
+	marcosTotales = 110;//  floor(config_get_int_value(config, "TAM_MEM")/(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
 	bitarrayString = string_repeat('0', marcosTotales);
@@ -1393,25 +1394,21 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
 	 *  con el que está en el FS.
 	 **/
-
+	t_list* resultadosJournal= list_create();
 	t_paquete* insertJournalLFS;
 	void encontrarElemModificado(t_segmento* segmento){
 		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
 			if(elemPagina->modificado == MODIFICADO){
 				char* requestAEnviar= strdup("");
-				string_append_with_format(&requestAEnviar,"%s%s%s%s%i%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
+				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
 
 				insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar);
-				printf("Realizo JOURNAL a: %s%s%i%s%c%s%c\n",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
+				log_info(logger_MEMORIA,"Le enviamos a LFS: %s", requestAEnviar);
 
-				if(insertJournalLFS->palabraReservada== EXIT_SUCCESS){
-					enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
-					eliminar_paquete(insertJournalLFS);
-					insertJournalLFS=NULL;
+				if(insertJournalLFS->palabraReservada==SUCCESS ){
+					list_add(resultadosJournal,SUCCESS);
 				}else{
-					enviarAlDestinatarioCorrecto(palabraReservada,insertJournalLFS->palabraReservada,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
-					eliminar_paquete(insertJournalLFS);
-					insertJournalLFS=NULL;
+					list_add(resultadosJournal,FAILURE);
 				}
 
 			}
@@ -1419,5 +1416,24 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
 	}
 	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
+
+	int esJournalSUCCESS(errorNo valor){
+		if(valor == SUCCESS){
+			return TRUE;
+		}else{
+			return FALSE;
+		}
+	}
+
+	int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
+	if(resultadoControl == 1){
+		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+		eliminar_paquete(insertJournalLFS);
+		insertJournalLFS=NULL;
+	}else{
+		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,insertJournalLFS,caller, (int) list_get(descriptoresClientes,i));
+		eliminar_paquete(insertJournalLFS);
+		insertJournalLFS=NULL;
+	}
 }
 

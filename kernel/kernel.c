@@ -1479,13 +1479,13 @@ void procesarJournal(int soloASHC) {
 		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
 		log_info(logger_KERNEL, "Se envió el JOURNAL a la memoria con numero %s", memoriaAConectarse->numero);
 		//todo: descomentar cuando memoria tenga journal
-		/*t_paquete* paqueteRecibido = recibir(conexionTemporanea);
+		t_paquete* paqueteRecibido = recibir(conexionTemporanea);
 		int respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
 			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", "JOURNAL", paqueteRecibido->request);
 		} else {
 			log_error(logger_KERNEL, "El request %s no es válido", "JOURNAL");
-		}*/
+		}
 		liberar_conexion(conexionTemporanea);
 		// eliminar_paquete(paqueteRecibido);
 	}
