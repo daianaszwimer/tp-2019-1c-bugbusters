@@ -192,13 +192,11 @@ void escucharMultiplesClientes() {
 						log_error(logger_MEMORIA, "Hubo un error conectandose");
 						continue;
 					}
-					log_info(logger_MEMORIA,"se conecto alguien");
 					FD_SET(descriptorCliente, &descriptoresDeInteres);
 					if (descriptorCliente > descriptorMayor) {
 						descriptorMayor	 = descriptorCliente;
 					}
 				} else {
-					log_info(logger_MEMORIA,"se llego request alguien");
 					int codigoOperacion = 0;
 					t_handshake_memoria* handshake = recibirHandshakeMemoria(numDescriptor, &codigoOperacion);
 					if (codigoOperacion == COMPONENTE_CAIDO ||
