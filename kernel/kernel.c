@@ -896,8 +896,13 @@ int manejarRequest(request_procesada* request, int fromRun) {
 			respuesta = enviarMensajeAMemoria(request->codigo, (char*) request->request);
 			break;
 		case JOURNAL:
-			procesarJournal(FALSE);
-			// solo a memorias que tengan un criterio
+			if (fromRun) {
+				log_error(logger_KERNEL, "El JOURNAL no va adentro de un RUN");
+				respuesta = FAILURE;
+			} else {
+				procesarJournal(FALSE);
+				// solo a memorias que tengan un criterio
+			}
 			break;
 		case ADD:
 			if (fromRun) {

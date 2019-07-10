@@ -95,6 +95,7 @@ void formatearMemoriasLevantadas(char** puertos, char** ips, char** numeros) {
 }
 
 void eliminarMemoria(char* puerto, char* ip) {
+	log_warning(logger_MEMORIA, "Se cayo la mem %s", puerto);
 	int esMemoriaAEliminar(config_memoria* memoriaEnLista) {
 		return string_equals_ignore_case(memoriaEnLista->ip, ip) &&
 				string_equals_ignore_case(memoriaEnLista->puerto, puerto);
@@ -161,8 +162,7 @@ void hacerGossiping() {
 			formatearMemoriasLevantadas(&puertosQueTengo, &ipsQueTengo, &numerosQueTengo);
 
 			log_warning(logger_MEMORIA, "formatee en gossiping %s %s %s", puertosQueTengo, ipsQueTengo, numerosQueTengo);
-			estadoEnviar = //enviarGossiping("8001", "127.0.0.1", "1", conexionTemporaneaSeed);
-					enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, conexionTemporaneaSeed);
+			estadoEnviar = enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, conexionTemporaneaSeed);
 			if (estadoEnviar == COMPONENTE_CAIDO) {
 				liberar_conexion(conexionTemporaneaSeed);
 				eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
