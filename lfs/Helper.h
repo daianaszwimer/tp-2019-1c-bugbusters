@@ -22,6 +22,7 @@
 #include <sys/mman.h>
 #include <nuestro_lib/nuestro_lib.h>
 #include <pthread.h>
+#include <commons/collections/queue.h>
 
 
 typedef struct{
@@ -44,8 +45,16 @@ typedef struct
 typedef struct{
 	pthread_t* thread;
 	char* nombreTabla;
-	int flag;
+	int finalizarCompactacion;
+	int blocked;
+	t_queue* requests;
 } t_hiloTabla;
+
+typedef struct{
+	cod_request cod_request;
+	char* parametros;
+	int* memoria_fd;
+} t_request;
 
 #define PATH "/home/utnso/tp-2019-1c-bugbusters/lfs"
 
@@ -54,9 +63,15 @@ t_config* config;
 t_config *configMetadata;
 t_bitarray* bitarray;
 t_memtable* memtable;
-t_list* listaDeTablas;
-pthread_t hiloDeCompactacion;
+t_list* diegote; // lista que tiene las tablas para las compactaciones
 
+pthread_t hiloLeerDeConsola;
+pthread_t hiloRecibirMemorias;
+pthread_t hiloDumpeo;
+pthread_t hiloDeCompactacion;
+pthread_t hiloDeInotify;
+
+char* pathConfig;
 char* pathRaiz;
 char* pathTablas;
 char* pathMetadata;
@@ -65,5 +80,19 @@ int blocks;
 
 int obtenerBloqueDisponible();
 void vaciarTabla(t_tabla*);
+void interpretarRequest(cod_request, char*, int*);
+
+// SEMAFOROS
+pthread_mutex_t mutexMemtable;
+pthread_mutex_t mutexDiegote;
+pthread_mutex_t mutexConfig;
+pthread_mutex_t mutexRetardo;
+pthread_mutex_t mutexTiempoDump;
+pthread_mutex_t mutexBitmap;
+
+//VARIABLES CONFIG
+int retardo;
+int tiempoDump;
+int tamanioValue;
 
 #endif /* HELPER_H_ */

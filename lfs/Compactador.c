@@ -16,7 +16,6 @@ void* hiloCompactacion(void* arg) {
 	config_destroy(configMetadataTabla);
 
 	while(1) {
-		sleep(tiempoEntreCompactaciones/1000); //TODO: usleep
 		if(finalizarHilo(pathTabla)){
 			log_info(logger_LFS, "Hilo de compactacion de %s terminado", pathTabla);
 			break;
@@ -28,13 +27,14 @@ void* hiloCompactacion(void* arg) {
 		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
 		log_info(logger_LFS, infoTerminoCompactacion);
 		free(infoTerminoCompactacion);
+		usleep(tiempoEntreCompactaciones*1000);
 	}
 	free(pathTabla);
 	return NULL;
 }
 
 int finalizarHilo(char* pathTabla){
-	//TODO MUTEX
+	int finalizarHilo = 0;
 	char* nombreTabla = string_reverse(pathTabla);
 	char** aux = string_split(nombreTabla, "/");
 	free(nombreTabla);
@@ -45,20 +45,27 @@ int finalizarHilo(char* pathTabla){
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
 
+	void liberarRequest(t_request* request){
+		free(request->parametros);
+		free(request);
+	}
+
 	void liberarRecursos(t_hiloTabla* tabla){
+		queue_destroy_and_destroy_elements(tabla->requests, (void*)liberarRequest);
 		free(tabla->nombreTabla);
 		free(tabla);
 	}
 
-	t_hiloTabla* tablaEncontrada = list_find(listaDeTablas, (void*) encontrarTabla);
-
-	if(!tablaEncontrada->flag){
-		list_remove_and_destroy_by_condition(listaDeTablas, (void*)encontrarTabla, (void*)liberarRecursos);
-		free(nombreTabla);
-		return 1;
+	pthread_mutex_lock(&mutexDiegote);
+	t_hiloTabla* tablaEncontrada = list_find(diegote, (void*) encontrarTabla);
+	if(tablaEncontrada != NULL && tablaEncontrada->finalizarCompactacion){
+		list_remove_and_destroy_by_condition(diegote, (void*)encontrarTabla, (void*)liberarRecursos);
+		finalizarHilo = 1;
 	}
+	pthread_mutex_unlock(&mutexDiegote);
+
 	free(nombreTabla);
-	return 0;
+	return finalizarHilo;
 }
 
 /* compactar()
@@ -74,10 +81,9 @@ void compactar(char* pathTabla) {
 	struct dirent *archivoDeLaTabla;
 	t_list* registrosDeParticiones;
 	t_list* particiones = list_create();
-	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
 
 	// Leemos el tamanio del bloque
-	char* pathMetadata = string_from_format("%sMetadata/Metadata.bin", puntoDeMontaje);
+	char* pathMetadata = string_from_format("%sMetadata/Metadata.bin", pathRaiz);
 	t_config* configMetadata = config_create(pathMetadata);
 	int tamanioBloque = config_get_int_value(configMetadata, "BLOCK_SIZE");
 	free(pathMetadata);
@@ -119,35 +125,52 @@ void compactar(char* pathTabla) {
 		perror("opendir");
 	}
 
+	char* nombreTabla = string_reverse(pathTabla);
+	char** aux = string_split(nombreTabla, "/");
+	free(nombreTabla);
+	nombreTabla = string_reverse(aux[0]);
+	liberarArrayDeChar(aux);
+
+	setBlockTo(nombreTabla, 1);
 	// Renombramos los tmp a tmpc
 	renombrarTmp_a_TmpC(pathTabla, archivoDeLaTabla, tabla);
 
+	setBlockTo(nombreTabla, 0);
+
+	procesarRequestsEncoladas(strdup(nombreTabla));
+
 	// Leemos todos los registros de los temporales a compactar y los guardamos en una lista
-	t_list* registrosDeTmpC = leerDeTodosLosTmpC(pathTabla, archivoDeLaTabla, tabla, particiones, numeroDeParticiones, puntoDeMontaje, tamanioBloque);
+	t_list* registrosDeTmpC = leerDeTodosLosTmpC(pathTabla, archivoDeLaTabla, tabla, particiones, numeroDeParticiones, tamanioBloque);
 
 	// Verificamos si hay datos que compactar
 	if (registrosDeTmpC->elements_count != 0) {
 
 		// Leemos todos los registros de las particiones y los guardamos en una lista
-		registrosDeParticiones = leerDeTodasLasParticiones(pathTabla, particiones, puntoDeMontaje, tamanioBloque);
+		registrosDeParticiones = leerDeTodasLasParticiones(pathTabla, particiones, tamanioBloque);
 
 		// Mergeamos la lista de registros de tmpC con la lista de registros de las particiones y obtenemos una nueva lista
 		// (filtrando por timestamp mas alto en caso de que hayan keys repetidas)
 		t_list* registrosAEscribir = list_map(registrosDeTmpC, (void*) obtenerTimestampMasAltoSiExiste);
 
 		// TODO: Bloquear tabla
+		setBlockTo(nombreTabla, 1);
+		//sleep(20); //sirve para simular una compactacion larga
 
 		// Liberamos los bloques que contienen el archivo “.tmpc” y los que contienen el archivo “.bin”
-		liberarBloquesDeTmpCyParticiones(pathTabla, archivoDeLaTabla, tabla, particiones, puntoDeMontaje);
+		liberarBloquesDeTmpCyParticiones(pathTabla, archivoDeLaTabla, tabla, particiones);
 
 		// Grabamos los datos en el nuevo archivo “.bin”
-		guardarDatosNuevos(pathTabla, registrosAEscribir, particiones, tamanioBloque, puntoDeMontaje, numeroDeParticiones);
+		guardarDatosNuevos(pathTabla, registrosAEscribir, particiones, tamanioBloque, numeroDeParticiones);
 
+		setBlockTo(nombreTabla, 0);
 		// TODO: Desbloquear la tabla y dejar un registro de cuanto tiempo estuvo bloqueada la tabla para realizar esta operatoria
+
+		procesarRequestsEncoladas(strdup(nombreTabla));
 
 		list_destroy_and_destroy_elements(registrosDeParticiones, (void*) eliminarRegistro);
 		list_destroy_and_destroy_elements(registrosAEscribir, (void*) eliminarRegistro);
 	}
+	free(nombreTabla);
 
 	// Cerramos el directorio
 	if (closedir(tabla) == -1) {
@@ -156,6 +179,53 @@ void compactar(char* pathTabla) {
 
 	list_destroy_and_destroy_elements(registrosDeTmpC, (void*) eliminarRegistro);
 	list_destroy_and_destroy_elements(particiones, (void*) eliminarParticion);
+}
+
+void procesarRequestsEncoladas(char* nombreTabla){
+	pthread_t hiloProcesarRequests;
+	if(!pthread_create(&hiloProcesarRequests, NULL, (void*)procesarRequests, (void*)strdup(nombreTabla))){
+		log_info(logger_LFS, "Hilo de procesar requests de %s", nombreTabla);
+	}else{
+		log_error(logger_LFS, "Error al crear hilo procesar requests de %s", nombreTabla);
+	}
+	free(nombreTabla);
+	pthread_detach(hiloProcesarRequests);
+}
+
+void* procesarRequests(void* args){
+	char* nombreTabla = (char*)args;
+
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	pthread_mutex_lock(&mutexDiegote);
+	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla);
+	pthread_mutex_unlock(&mutexDiegote);
+	free(nombreTabla);
+	t_request* request;
+	pthread_mutex_lock(&mutexDiegote);
+	while((request = queue_pop(tabla->requests)) != NULL){
+		pthread_mutex_unlock(&mutexDiegote);
+		interpretarRequest(request->cod_request, request->parametros, request->memoria_fd);
+		free(request->parametros);
+		free(request);
+		pthread_mutex_lock(&mutexDiegote);
+	}
+	pthread_mutex_unlock(&mutexDiegote);
+	return NULL;
+}
+
+void setBlockTo(char* nombreTabla, int value){
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	pthread_mutex_lock(&mutexDiegote);
+	t_hiloTabla* tabla = list_find(diegote, (void*) encontrarTabla);
+
+	tabla->blocked = value;
+	pthread_mutex_unlock(&mutexDiegote);
 }
 
 /* renombrarTmp_a_TmpC()
@@ -193,7 +263,7 @@ void renombrarTmp_a_TmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* 
  * Descripcion: leo todos los registros de todos los tmpC y devuelvo una lista con todos los registros
  * Return:
  * 	-> :: t_list* */
-t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* tabla, t_list* particiones, int numeroDeParticiones, char* puntoDeMontaje, int tamanioBloque) {
+t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* tabla, t_list* particiones, int numeroDeParticiones, int tamanioBloque) {
 
 	t_registro* tRegistro;
 	t_int* particion;
@@ -214,7 +284,10 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 
 			char* pathTmpC = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 			t_config* configTmpC = config_create(pathTmpC);
-			char** bloques = config_get_array_value(configTmpC, "BLOCKS");
+			char* bloquesString = config_get_string_value(configTmpC, "BLOCKS");
+			bloquesString++;
+			bloquesString[strlen(bloquesString) -1] = 0;
+			char** bloques = string_split(bloquesString, ",");
 			int size = config_get_int_value(configTmpC, "SIZE");
 			free(pathTmpC);
 			config_destroy(configTmpC);
@@ -225,8 +298,7 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 				char* datosDelTmpC = strdup("");
 				char* datosALeer;
 				for (int i = 0; i < cantidadDeBloques; i++) {
-					char* pathBloque = string_from_format("%sBloques/%s.bin",
-							puntoDeMontaje, bloques[i]);
+					char* pathBloque = string_from_format("%sBloques/%s.bin", pathRaiz, bloques[i]);
 					int fd = open(pathBloque, O_RDWR, S_IRWXU);
 					free(pathBloque);
 					if (fd == -1) {
@@ -245,6 +317,7 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 									datosALeer);
 							munmap(datosALeer, tamanioBloque);
 						}
+						close(fd);
 					}
 				}
 				liberarArrayDeChar(bloques);
@@ -301,7 +374,7 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
  * Descripcion: leo todos los registros de todas las particiones (que esten en el tmpC) y devuelvo una lista con todos los registros
  * Return:
  * 	-> :: t_list* */
-t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* puntoDeMontaje, int tamanioBloque) {
+t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, int tamanioBloque) {
 
 	t_int* particion;
 	t_registro* tRegistro;
@@ -311,7 +384,10 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
 		particion = list_get(particiones, i);
 		char* pathParticion = string_from_format("%s/%d.bin", pathTabla, particion->valor);
 		t_config* particionConfig = config_create(pathParticion);
-		char** bloques = config_get_array_value(particionConfig, "BLOCKS");
+		char* bloquesString = config_get_string_value(particionConfig, "BLOCKS");
+		bloquesString++;
+		bloquesString[strlen(bloquesString) -1] = 0;
+		char** bloques = string_split(bloquesString, ",");
 		int size = config_get_int_value(particionConfig, "SIZE");
 		free(pathParticion);
 		config_destroy(particionConfig);
@@ -321,7 +397,7 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
 			char* datosDeLasParticiones = strdup("");
 			char* datosALeer;
 			for (int i = 0; i < cantidadDeBloques; i++) {
-				char* pathBloque = string_from_format("%sBloques/%s.bin", puntoDeMontaje, bloques[i]);
+				char* pathBloque = string_from_format("%sBloques/%s.bin", pathRaiz, bloques[i]);
 				int fd = open(pathBloque, O_RDWR, S_IRWXU);
 				free(pathBloque);
 				if (fd == -1) {
@@ -368,19 +444,24 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, char* pu
  * Descripcion: libero todos los bloques de los tmpC y de las particiones (que esten en el tmpC)
  * Return:
  * 	-> :: void */
-void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* tabla, t_list* particiones, char* puntoDeMontaje) {
+void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* tabla, t_list* particiones) {
 
 	while ((archivoDeLaTabla = readdir(tabla)) != NULL) {
 		if (string_ends_with(archivoDeLaTabla->d_name, ".tmpc")) {
 			char* pathTmpC = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 			t_config* configTmpC = config_create(pathTmpC);
-			char** bloques = config_get_array_value(configTmpC, "BLOCKS");
+			char* bloquesString = config_get_string_value(configTmpC, "BLOCKS");
+			bloquesString++;
+			bloquesString[strlen(bloquesString) -1] = 0;
+			char** bloques = string_split(bloquesString, ",");
 			config_destroy(configTmpC);
 			int i = 0;
 			while (bloques[i] != NULL) {
-				char* pathBloque = string_from_format("%sBloques/%s.bin", puntoDeMontaje, bloques[i]);
+				char* pathBloque = string_from_format("%sBloques/%s.bin", pathRaiz, bloques[i]);
 				FILE* bloque = fopen(pathBloque, "w");
+				pthread_mutex_lock(&mutexBitmap);
 				bitarray_clean_bit(bitarray, (int) strtol(bloques[i], NULL, 10));
+				pthread_mutex_unlock(&mutexBitmap);
 				free(pathBloque);
 				fclose(bloque);
 				i++;
@@ -404,13 +485,18 @@ void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeL
 				char* particionPath = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 				t_config* configParticion = config_create(particionPath);
 				free(particionPath);
-				char** bloques = config_get_array_value(configParticion, "BLOCKS");
+				char* bloquesString = config_get_string_value(configParticion, "BLOCKS");
+				bloquesString++;
+				bloquesString[strlen(bloquesString) -1] = 0;
+				char** bloques = string_split(bloquesString, ",");
 				config_destroy(configParticion);
 				int i = 0;
 				while (bloques[i] != NULL) {
-					char* pathBloque = string_from_format("%sBloques/%s.bin", puntoDeMontaje, bloques[i]);
+					char* pathBloque = string_from_format("%sBloques/%s.bin", pathRaiz, bloques[i]);
 					FILE* bloque = fopen(pathBloque, "w");
+					pthread_mutex_lock(&mutexBitmap);
 					bitarray_clean_bit(bitarray, (int) strtol(bloques[i], NULL, 10));
+					pthread_mutex_unlock(&mutexBitmap);
 					free(pathBloque);
 					fclose(bloque);
 					i++;
@@ -432,7 +518,7 @@ void liberarBloquesDeTmpCyParticiones(char* pathTabla, struct dirent* archivoDeL
  * Descripcion: pido bloques nuevos para cada particion y guardo los datos nuevos
  * Return:
  * 	-> :: void */
-void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* particiones, int tamanioBloque, char* puntoDeMontaje, int numeroDeParticiones) {
+void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* particiones, int tamanioBloque, int numeroDeParticiones) {
 
 	errorNo error;
 	t_int* particion;
@@ -449,7 +535,7 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 
 		t_list* registrosPorParticion = list_filter(registrosAEscribir, (void*) keyCorrespondeAParticion);
 
-		char* datosACompactar = calloc(1, 27 + config_get_int_value(config, "TAMAÑO_VALUE"));
+		char* datosACompactar = calloc(1, 27 + tamanioValue);
 		// 65635 como maximo para el key van a ser 5 bytes y 18.446.744.073.709.551.616 para el timestamp son 20 bytes + 2 punto y coma
 		// 5 bytes son 5 char
 
@@ -479,7 +565,7 @@ void guardarDatosNuevos(char* pathTabla, t_list* registrosAEscribir, t_list* par
 				} else {
 					string_append_with_format(&bloques, "%d,", bloqueDeParticion);
 				}
-				char* pathBloque = string_from_format("%sBloques/%d.bin", puntoDeMontaje, bloqueDeParticion);
+				char* pathBloque = string_from_format("%sBloques/%d.bin", pathRaiz, bloqueDeParticion);
 				FILE* bloque = fopen(pathBloque, "a+");
 				free(pathBloque);
 				if (cantidadDeBloquesAPedir != 1 && i < cantidadDeBloquesAPedir - 1) {

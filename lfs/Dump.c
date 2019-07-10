@@ -5,9 +5,12 @@
  * Descripcion: ejecuta la funcion dumpear() cada cierta cantidad de tiempo (tiempoDump) definido en el config
  * Return: void* */
 void* hiloDump(void* args) {
-	int tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
+	int tiempo_dump;
 	while(1) {
-		sleep(tiempoDump/1000); //TODO: usleep
+		pthread_mutex_lock(&mutexTiempoDump);
+		tiempo_dump = tiempoDump;
+		pthread_mutex_unlock(&mutexTiempoDump);
+		usleep(tiempo_dump*1000);
 		log_info(logger_LFS, "Dump iniciado");
 		errorNo resultado = dumpear();
 		switch(resultado) {
@@ -36,13 +39,13 @@ errorNo dumpear() {
 	errorNo error = SUCCESS;
 	char* pathTmp;
 	FILE* fileTmp;
-	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
-	char* pathMetadata = string_from_format("%sMetadata/Metadata.bin", puntoDeMontaje);
+	char* pathMetadata = string_from_format("%sMetadata/Metadata.bin", pathRaiz);
 	t_config* configMetadata = config_create(pathMetadata);
 	free(pathMetadata);
 	int tamanioBloque = config_get_int_value(configMetadata, "BLOCK_SIZE");
 	config_destroy(configMetadata);
 	// Refactor list_iterate
+	pthread_mutex_lock(&mutexMemtable);
 	for(int i = 0; list_get(memtable->tablas,i) != NULL; i++) { // Recorro las tablas de la memtable
 		tabla = list_get(memtable->tablas,i);
 		char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, tabla->nombreTabla);
@@ -65,7 +68,7 @@ errorNo dumpear() {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
 				// Guardo lo de la tabla en el archivo temporal
-				char* datosADumpear = malloc(sizeof(unsigned long long) + sizeof(uint16_t) + (size_t) config_get_int_value(config, "TAMAÑO_VALUE"));
+				char* datosADumpear = calloc(1, 27 + tamanioValue);
 				strcpy(datosADumpear, "");
 				for(int j = 0; list_get(tabla->registros,j) != NULL; j++) {
 					t_registro* registro = list_get(tabla->registros,j);
@@ -87,7 +90,7 @@ errorNo dumpear() {
 						} else {
 							string_append_with_format(&bloques, "%d,", bloqueDeParticion);
 						}
-						char* pathBloque = string_from_format("%sBloques/%d.bin", puntoDeMontaje, bloqueDeParticion);
+						char* pathBloque = string_from_format("%sBloques/%d.bin", pathRaiz, bloqueDeParticion);
 						FILE* bloque = fopen(pathBloque, "a+");
 						if(cantidadDeBloquesAPedir != 1 && i < cantidadDeBloquesAPedir - 1) {
 							char* registrosAEscribir = string_substring_until(datosADumpear, tamanioBloque);
@@ -116,5 +119,6 @@ errorNo dumpear() {
 	}
 	// Vacio la memtable
 	list_clean_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
+	pthread_mutex_unlock(&mutexMemtable);
 	return error;
 }

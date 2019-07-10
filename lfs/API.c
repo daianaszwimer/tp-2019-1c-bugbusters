@@ -11,15 +11,15 @@
 
 errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numeroDeParticiones, char* tiempoDeCompactacion) {
 
+	string_to_upper(nombreTabla);
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
-	//TODO PASAR NOMBRE DE TABLA A MAYUSCULA
 
 	/* Validamos si la tabla existe */
 	DIR *dir = opendir(pathTabla);
 	if (dir) {
 		error = TABLA_EXISTE;
-		free(dir);
+		closedir(dir);
 	} else {
 		/* Creamos la carpeta de la tabla */
 		int resultadoCreacionDirectorio = mkdir(pathTabla, S_IRWXU);
@@ -34,6 +34,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			if (metadataFile == NULL) {
 				error = ERROR_CREANDO_ARCHIVO;
 			} else {
+				fclose(metadataFile);
 				t_config *metadataConfig = config_create(metadataPath);
 				config_set_value(metadataConfig, "CONSISTENCY",	tipoDeConsistencia);
 				config_set_value(metadataConfig, "PARTITIONS", numeroDeParticiones);
@@ -44,25 +45,28 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			}
 
 			free(metadataPath);
-			fclose(metadataFile);
 		}
 	}
 
 	if(error == SUCCESS){
-		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
+		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) strdup(pathTabla))){
 			pthread_detach(hiloDeCompactacion);
 			//TODO mutex
 			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
 			hiloTabla->thread = &hiloDeCompactacion;
 			hiloTabla->nombreTabla = strdup(nombreTabla);
-			hiloTabla->flag = 1;
-			list_add(listaDeTablas, hiloTabla);
+			hiloTabla->finalizarCompactacion = 0;
+			hiloTabla->blocked = 0;
+			hiloTabla->requests = queue_create();
+			pthread_mutex_lock(&mutexDiegote);
+			list_add(diegote, hiloTabla);
+			pthread_mutex_unlock(&mutexDiegote);
 			log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", nombreTabla);
 		}else{
 			log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", nombreTabla);
 		}
 	}
-
+	free(pathTabla);
 
 	return error;
 }
@@ -121,32 +125,40 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 	int encontrarTabla(t_tabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
+	string_to_upper(nombreTabla);
 	char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, nombreTabla);
 	errorNo error = SUCCESS;
 
+	if(strlen(value) > tamanioValue){
+		error = VALUE_INVALIDO;
+	}
 
 	/* Validamos si la tabla existe */
-	DIR *dir = opendir(pathTabla);
-	if (dir) {
-		t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
-		registro->key = key;
-		registro->value = strdup(value);
-		registro->timestamp = timestamp;
-		t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
-		if (tabla == NULL) {
-			log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
-			tabla = (t_tabla*) malloc(sizeof(t_tabla));
-			tabla->nombreTabla = strdup(nombreTabla);
-			tabla->registros = list_create();
-			list_add(memtable->tablas, tabla);
+	if(error == SUCCESS){
+		DIR *dir = opendir(pathTabla);
+		if (dir) {
+			closedir(dir);
+			t_registro* registro = (t_registro*) malloc(sizeof(t_registro));
+			registro->key = key;
+			registro->value = strdup(value);
+			registro->timestamp = timestamp;
+			pthread_mutex_lock(&mutexMemtable);
+			t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
+			if (tabla == NULL) {
+				log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
+				tabla = (t_tabla*) malloc(sizeof(t_tabla));
+				tabla->nombreTabla = strdup(nombreTabla);
+				tabla->registros = list_create();
+				list_add(memtable->tablas, tabla);
+			}
+			list_add(tabla->registros, registro);
+			pthread_mutex_unlock(&mutexMemtable);
+		} else {
+			error = TABLA_NO_EXISTE;
 		}
-		list_add(tabla->registros, registro);
-	} else {
-		error = TABLA_NO_EXISTE;
 	}
 
 	free(pathTabla);
-	free(dir);
 	return error;
 }
 
@@ -157,18 +169,25 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 		return registro1->timestamp > registro2->timestamp;
 	}
 
+	string_to_upper(nombreTabla);
 	errorNo error = SUCCESS;
 	t_list* listaDeRegistros = list_create();
 
 	char* pathTabla = string_from_format("%s/Tablas/%s", pathRaiz, nombreTabla);
 	DIR* dir = opendir(pathTabla);
-	free(pathTabla);
 	if(dir){
+		closedir(dir);
 		//TODO validar q onda la funcion convertirKey, retorna -1 si hay error
 		int _key = convertirKey(key);
+		char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
+		t_config* configMetadataTabla = config_create(pathMetadataTabla);
+		int numeroDeParticiones = config_get_int_value(configMetadataTabla, "PARTITIONS");
+		free(pathMetadataTabla);
+		config_destroy(configMetadataTabla);
+		int particionDeEstaKey = _key % numeroDeParticiones;
 		t_list* listaDeRegistrosDeMemtable = obtenerRegistrosDeMemtable(nombreTabla, _key);
 		t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);
-		t_list* listaDeRegistrosDeParticiones = obtenerRegistrosDeParticiones(nombreTabla, _key);
+		t_list* listaDeRegistrosDeParticiones = obtenerRegistrosDeParticiones(nombreTabla, particionDeEstaKey, _key);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeTmp);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeParticiones);
@@ -187,8 +206,8 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 	}else{
 		error = TABLA_NO_EXISTE;
 	}
+	free(pathTabla);
 	list_destroy(listaDeRegistros);
-	free(dir);
 	return error;
 }
 
@@ -198,6 +217,7 @@ t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
 	char* pathFile;
 	t_list* listaDeRegistros = list_create();
 	t_list* listaDeRegistrosEnBloques;
+	string_to_upper(nombreTabla);
 	pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
@@ -209,7 +229,8 @@ t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
 				pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
 				t_config* file = config_create(pathFile);
 				char** bloques = config_get_array_value(file, "BLOCKS");
-				listaDeRegistrosEnBloques = buscarEnBloques(bloques, key);
+				int size = config_get_int_value(file, "SIZE");
+				listaDeRegistrosEnBloques = buscarEnBloques(bloques, size, key);
 				list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
 				list_destroy(listaDeRegistrosEnBloques);
 				liberarArrayDeChar(bloques);
@@ -223,31 +244,22 @@ t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
 	return listaDeRegistros;
 }
 
-t_list* obtenerRegistrosDeParticiones(char* nombreTabla, int key){
-	char* pathTabla;
-	struct dirent* file;
-	char* pathFile;
+t_list* obtenerRegistrosDeParticiones(char* nombreTabla, int particion, int key){
 	t_list* listaDeRegistros = list_create();
 	t_list* listaDeRegistrosEnBloques;
-	pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
+	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
-		while ((file = readdir (tabla)) != NULL) {
-			//ignora . y ..
-			if(strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0 || strcmp(file->d_name, "Metadata.bin") == 0) continue;
-
-			if(string_ends_with(file->d_name, ".bin")){
-				pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
-				t_config* file = config_create(pathFile);
-				char** bloques = config_get_array_value(file, "BLOCKS");
-				listaDeRegistrosEnBloques = buscarEnBloques(bloques, key);
-				list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
-				list_destroy(listaDeRegistrosEnBloques);
-				liberarArrayDeChar(bloques);
-				free(pathFile);
-				config_destroy(file);
-			}
-		}
+		char* pathParticion = string_from_format("%s/%i.bin", pathTabla, particion);
+		t_config* file = config_create(pathParticion);
+		char** bloques = config_get_array_value(file, "BLOCKS");
+		int size = config_get_int_value(file, "SIZE");
+		listaDeRegistrosEnBloques = buscarEnBloques(bloques, size, key);
+		list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
+		list_destroy(listaDeRegistrosEnBloques);
+		liberarArrayDeChar(bloques);
+		free(pathParticion);
+		config_destroy(file);
 		closedir(tabla);
 	}
 	free(pathTabla);
@@ -264,56 +276,82 @@ t_list* obtenerRegistrosDeMemtable(char* nombreTabla, int key){
 	}
 
 	t_list* listaDeRegistros;
+	pthread_mutex_lock(&mutexMemtable);
 	t_tabla* table = list_find(memtable->tablas, (void*) encontrarTabla);
 	if(table == NULL){
 		listaDeRegistros = list_create();
 	}else{
 		listaDeRegistros = list_filter(table->registros, (void*) encontrarRegistro);
 	}
+	pthread_mutex_unlock(&mutexMemtable);
 	return listaDeRegistros;
 }
 
 
-t_list* buscarEnBloques(char** bloques, int key){
-	int i = 0, j = 0;
+t_list* buscarEnBloques(char** bloques, int size, int key){
 	t_registro* tRegistro;
-	char* registro = calloc(1, (size_t) config_get_int_value(config, "TAMAÑO_VALUE") + 25);
+	int particionDeEstaKey;
 	t_list* listaDeRegistros = list_create();
-	while (bloques[i] != NULL) {
-		char* pathBloque = string_from_format("%s/%s.bin", pathBloques, bloques[i]);
-		FILE* bloque = fopen(pathBloque, "r");
-		free(pathBloque);
-		if (bloque == NULL) {
-			perror("Error");
-		}
-		do {
-			char caracterLeido = fgetc(bloque);
-			if (feof(bloque)) {
-				break;
+
+	int existeParticion(t_int* particionAComparar) {
+		return particionAComparar->valor == particionDeEstaKey;
+	}
+
+	int tieneMismaKey(t_registro* registroBuscado) {
+		return tRegistro->key == registroBuscado->key;
+	}
+
+	char* fileMetadata = string_from_format("%s/Metadata.bin", pathMetadata);
+	t_config* configMetadata = config_create(fileMetadata);
+	int tamanioBloque = config_get_int_value(configMetadata, "BLOCK_SIZE");
+	free(fileMetadata);
+	config_destroy(configMetadata);
+
+	if(size != 0) {
+		// Leo de todos los bloques y guardo en un string (datosDelTmpC)
+		int cantidadDeBloques = longitudDeArrayDeStrings(bloques);
+		char* datos = strdup("");
+		char* datosALeer;
+		for (int i = 0; i < cantidadDeBloques; i++) {
+			char* pathBloque = string_from_format("%sBloques/%s.bin", pathRaiz, bloques[i]);
+			int fd = open(pathBloque, O_RDWR, S_IRWXU);
+			free(pathBloque);
+			if (fd == -1) {
+				perror("Error");
+			} else {
+				if (i == cantidadDeBloques - 1) {
+					datosALeer = mmap(NULL, size % tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
+					string_append_with_format(&datos, "%s", datosALeer);
+					munmap(datosALeer, size % tamanioBloque);
+				} else {
+					datosALeer = mmap(NULL, tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
+					string_append_with_format(&datos, "%s", datosALeer);
+					munmap(datosALeer, tamanioBloque);
+				}
+				close(fd);
 			}
-			if (caracterLeido == '\n') {
-				char** registroSeparado = string_n_split(registro, 3, ";");
+		}
+
+		char** registros = string_split(datos, "\n");
+		free(datos);
+
+		for (int j = 0; registros[j] != NULL; j++) {
+			char** registroSeparado = string_split(registros[j], ";");
+			if(key == convertirKey(registroSeparado[1])){
 				tRegistro = (t_registro*) malloc(sizeof(t_registro));
 				convertirTimestamp(registroSeparado[0], &(tRegistro->timestamp));
 				tRegistro->key = convertirKey(registroSeparado[1]);
 				tRegistro->value = strdup(registroSeparado[2]);
-				liberarArrayDeChar(registroSeparado);
-				if(key == tRegistro->key){
-					list_add(listaDeRegistros, tRegistro);
-				}else{
-					eliminarRegistro(tRegistro);
-				}
-				j = 0;
-				strcpy(registro, "");
-			} else {
-				registro[j] = caracterLeido;
-				j++;
+				list_add(listaDeRegistros, tRegistro);
 			}
-		} while (1);
-		fclose(bloque);
-		i++;
+
+			liberarArrayDeChar(registroSeparado);
+
+		}
+
+		liberarArrayDeChar(registros);
 	}
-	free(registro);
+
 	return listaDeRegistros;
 }
 
@@ -322,6 +360,7 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 	char* pathTablas = string_from_format("%sTablas", pathRaiz);
 	char* pathTabla;
 	if(nombreTabla != NULL){
+		string_to_upper(nombreTabla);
 		pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 		char* metadata = obtenerMetadata(pathTabla);
 		string_append_with_format(&*mensaje, "%s %s", nombreTabla, metadata);
@@ -353,8 +392,7 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 			closedir (dir);
 			(*mensaje)[strlen(*mensaje) - 1] = 0;
 		} else {
-			// todo error desconocido, no pudo abrir Tablas
-
+			perror("Error al abrir directorio de tablas");
 		}
 	}
 	free(pathTablas);
@@ -362,7 +400,7 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 }
 
 char* obtenerMetadata(char* pathTabla){
-	char* mensaje;
+	char* mensaje = strdup("");
 	DIR* dir = opendir(pathTabla);
 	if(dir != NULL){
 		closedir(dir);
@@ -371,37 +409,38 @@ char* obtenerMetadata(char* pathTabla){
 		free(pathMetadata);
 		if(metadata != NULL){
 			if(config_has_property(metadata, "CONSISTENCY") && config_has_property(metadata, "PARTITIONS") && config_has_property(metadata, "COMPACTION_TIME")){
-				mensaje = string_from_format("%s %i %i", config_get_string_value(metadata, "CONSISTENCY"), config_get_int_value(metadata, "PARTITIONS"), config_get_int_value(metadata, "COMPACTION_TIME"));
+				string_append_with_format(&mensaje,"%s %i %i", config_get_string_value(metadata, "CONSISTENCY"), config_get_int_value(metadata, "PARTITIONS"), config_get_int_value(metadata, "COMPACTION_TIME"));
 			}else{
-				//todo no posee alguna de las keys
+				log_error(logger_LFS,"El metadata de la tabla %s no tiene alguna de las config", pathTabla);
 			}
 			config_destroy(metadata);
 		}else{
-			//todo no se pudo levantar la metadata XD
+			log_error(logger_LFS, "No se pudo levantar como config el metadata de la tabla %s", pathTabla);
 		}
 	}else{
-		//TODO tabla no existe o error
+		log_error(logger_LFS, "No se pudo abrir el metadata de la tabla %s", pathTabla);
+		perror("Error");
 	}
 	return mensaje;
 }
 
 errorNo procesarDrop(char* nombreTabla){
-
+	string_to_upper(nombreTabla);
 	int encontrarTabla(t_hiloTabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
-
 
 	errorNo error = SUCCESS;
 	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
-		t_hiloTabla* tablaEncontrada = list_find(listaDeTablas, (void*)encontrarTabla);
-		tablaEncontrada->flag = 0;
+		pthread_mutex_lock(&mutexDiegote);
+		t_hiloTabla* tablaEncontrada = list_find(diegote, (void*)encontrarTabla);
+		tablaEncontrada->finalizarCompactacion = 1;
+		pthread_mutex_unlock(&mutexDiegote);
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
 		rmdir(pathTabla);
-
 	}else{
 		error = TABLA_NO_EXISTE;
 	}
@@ -430,7 +469,9 @@ void borrarArchivosYLiberarBloques(DIR* tabla, char* pathTabla){
 				FILE* bloque = fopen(pathBloque, "w");
 				free(pathBloque);
 				fclose(bloque);
+				pthread_mutex_lock(&mutexBitmap);
 				bitarray_clean_bit(bitarray, strtol(bloques[i], NULL, 10));
+				pthread_mutex_unlock(&mutexBitmap);
 				i++;
 			}
 			liberarArrayDeChar(bloques);
