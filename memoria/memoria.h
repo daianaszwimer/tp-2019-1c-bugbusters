@@ -32,6 +32,7 @@ typedef enum
 	SEGMENTOEXISTENTE = 99,
 	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101,
+	LRU = -10102,
 	JOURNALTIME = -10103
 } t_erroresMemoria;
 
@@ -110,7 +111,7 @@ int marcosTotales;
 int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 int maxValue;
-int retardoGossiping;
+int retardoGossiping, retardoFS, retardoMemPrincipal;
 
 t_list* listaSemSegmentos;
 
@@ -140,7 +141,7 @@ void lockSemSegmento(char*);
 void desbloquearSemSegmento(char* );
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
-void guardarRespuestaDeLFSaCACHE(t_paquete* ,t_erroresMemoria);
+void guardarRespuestaDeLFSaMemoria(t_paquete* ,t_erroresMemoria);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int,char*);

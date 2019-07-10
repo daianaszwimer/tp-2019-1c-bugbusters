@@ -8,8 +8,9 @@ int main(void) {
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 	retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
+	retardoFS = config_get_int_value(config, "RETARDO_FS");
+	retardoMemPrincipal =config_get_int_value(config, "RETARDO_MEM");
 	memoriasLevantadas = list_create();
-	pthread_mutex_init(&semMMemoriasLevantadas, NULL);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
 
@@ -24,6 +25,7 @@ int main(void) {
 	sem_init(&semEnviarMensajeAFileSystem, 0, 0);
 	pthread_mutex_init(&semMBitarray, NULL);
 	pthread_mutex_init(&semMTablaSegmentos, NULL);
+	pthread_mutex_init(&semMMemoriasLevantadas, NULL);
 
 
 	// 	HILOS
@@ -111,7 +113,7 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
 void hacerGossiping() {
 	char** puertosSeeds;
 	char** ipsSeeds;
-	int retardo;
+	int retardoG;
 	puertosSeeds = config_get_array_value(config, "PUERTO_SEEDS");
 	ipsSeeds = config_get_array_value(config, "IP_SEEDS");
 	int i;
@@ -193,9 +195,9 @@ void hacerGossiping() {
 			free(numerosQueTengo);
 		}
 		i = 0;
-		retardo = retardoGossiping;
+		retardoG = retardoGossiping;
 		// todo: mutex
-		usleep(retardo*1000);
+		usleep(retardoG*1000);
 	}
 	liberarArrayDeChar(ipsSeeds);
 	liberarArrayDeChar(puertosSeeds);
@@ -261,7 +263,7 @@ int obtenerIndiceMarcoDisponible() {
 	while(index < marcosTotales && bitarray_test_bit(bitarray, index)) index++;
 	pthread_mutex_unlock(&semMBitarray);
 	if(index >= marcosTotales) {
-		index = NUESTRO_ERROR;
+		index = LRU;
 	}
 	return index;
 }
@@ -517,7 +519,8 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 	t_paquete* paqueteRecibido;
 
 	enviar(palabraReservada, request, conexionLfs);
-	usleep(config_get_int_value(config, "RETARDO_FS")*1000);
+	int retardoFileSystem=retardoFS;
+	usleep(retardoFileSystem*1000);
 	paqueteRecibido = recibir(conexionLfs);
 
 	return paqueteRecibido;
@@ -564,7 +567,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
-			guardarRespuestaDeLFSaCACHE(valorDeLFS, resultadoCache);
+			guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
 			eliminar_paquete(valorDeLFS);
 			valorDeLFS=NULL;
 		}
@@ -598,13 +601,15 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado,char** pathSegmento){
 	t_elemTablaDePaginas* elementoDePagEnCache;
 	t_paquete* paqueteAuxiliar;
-
+	int retardoMem=retardoMemPrincipal;
 	char** parametros = separarRequest(request);
 	char* segmentoABuscar=strdup(parametros[1]);
 	uint16_t keyABuscar= convertirKey(parametros[2]);
+
 	int encontrarTabla(t_segmento* segmento){
 		return string_equals_ignore_case(segmento->path, segmentoABuscar);
 	}
+
 	pthread_mutex_lock(&semMTablaSegmentos);
 	t_segmento* segmentoEnCache = list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
 	if(segmentoEnCache!=NULL){
@@ -613,6 +618,8 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 	}else{
 		pthread_mutex_unlock(&semMTablaSegmentos);
 	}
+	usleep(retardoMem*1000);
+
 	if(segmentoEnCache!= NULL){
 		lockSemSegmento(segmentoEnCache->path);
 
@@ -678,6 +685,10 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	pthread_mutex_lock(&semMTablaSegmentos);
 	t_segmento* segmentoEncontrado= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
 	pthread_mutex_unlock(&semMTablaSegmentos);
+
+	int retardoMem=retardoMemPrincipal;
+	 usleep(retardoMem*1000);
+
 	return segmentoEncontrado;
 }
 
@@ -926,9 +937,10 @@ void desbloquearSemSegmento(char* pathSegmento){
    * Return:
    * 	-> :: void
    * VALGRIND:: NO*/
- void guardarRespuestaDeLFSaCACHE(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
+ void guardarRespuestaDeLFSaMemoria(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
 
  	if(nuevoPaquete->palabraReservada == SUCCESS){
+ 		int retardoMem=retardoMemPrincipal;
  		char** requestSeparada= separarRequest(nuevoPaquete->request);
  		char* nuevaTabla= strdup(requestSeparada[0]);
  		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
@@ -937,7 +949,7 @@ void desbloquearSemSegmento(char* pathSegmento){
  		convertirTimestamp(requestSeparada[3],&nuevoTimestamp);//no chequeo, viene de LFS
  		t_marco* pagLibre = NULL;
  		int index= obtenerPaginaDisponible(&pagLibre);
- 		if(index == MEMORIA_FULL){
+ 		if(index == LRU){
  			t_elemTablaDePaginas* elementoAInsertar= (t_elemTablaDePaginas*)malloc(sizeof(t_elemTablaDePaginas));
  			elementoAInsertar->marco=NULL;
  			int rtaLRU;
@@ -947,6 +959,9 @@ void desbloquearSemSegmento(char* pathSegmento){
  					t_segmento* tablaBuscada = malloc(sizeof(t_segmento));
  					tablaBuscada->tablaDePagina=NULL;
  					tablaBuscada = encontrarSegmento(nuevaTabla);
+
+ 					usleep(retardoMem*1000);
+
  					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
  					free(nuevaTabla);
  					nuevaTabla=NULL;
@@ -954,29 +969,40 @@ void desbloquearSemSegmento(char* pathSegmento){
  					tablaBuscada=NULL;
  				} else if (tipoError == SEGMENTOINEXISTENTE) {
  					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
+
+ 					usleep(retardoMem*1000);
+
  					crearSegmento(nuevoSegmento, nuevaTabla);
-					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+ 					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
  					pthread_mutex_lock(&semMTablaSegmentos);
  					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
  					pthread_mutex_unlock(&semMTablaSegmentos);
 
  					free(nuevaTabla);
  					nuevaTabla=NULL;
+
  				}
  			} else {
+
  				log_info(logger_MEMORIA,"NO hay paginas para reemplazar, hay q hacer journaling");
  			}
  		}else{
  			if(tipoError== KEYINEXISTENTE){
  				t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
  				tablaBuscada= encontrarSegmento(nuevaTabla);
- 				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
+
+ 				usleep(retardoMem*1000);
+
+				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
 
  				free(tablaBuscada);
  				tablaBuscada=NULL;
  			}else if(tipoError == SEGMENTOINEXISTENTE){
  				t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
  				crearSegmento(nuevoSegmento,nuevaTabla);
+
+				usleep(retardoMem*1000);
+
  				list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
  				pthread_mutex_lock(&semMTablaSegmentos);
  				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
@@ -984,6 +1010,7 @@ void desbloquearSemSegmento(char* pathSegmento){
 
  				free(nuevaTabla);
  				nuevaTabla=NULL;
+
  			}
  		}
  	liberarArrayDeChar(requestSeparada);
@@ -1071,6 +1098,8 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 	char* nuevoValor = strdup(requestSeparada[3]);
 	unsigned long long nuevoTimestamp;
 
+	int retardoMem=retardoMemPrincipal;
+
 	if(requestSeparada[4]!=NULL){
 		convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
 	}else{
@@ -1090,8 +1119,8 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 		desbloquearSemSegmento(pathSegmento);
 		t_marco* pagLibre =NULL;
 		int index =obtenerPaginaDisponible(&pagLibre);
-		if(index == MEMORIA_FULL){
-			log_info(logger_MEMORIA,"la memoria se encuentra full, debe ejecutars eel algoritmo de reemplazo");
+		if(index == LRU){
+			log_info(logger_MEMORIA,"Debe ejecutars eel algoritmo de reemplazo");
 			t_elemTablaDePaginas* elementoAInsertar;
 			int rtaLRU;
 			elementoAInsertar=correrAlgoritmoLRU(&rtaLRU);
@@ -1099,6 +1128,9 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				if (resultadoCache == KEYINEXISTENTE) {
 					t_segmento* segmentoBuscado;
 					segmentoBuscado = encontrarSegmento(nuevaTabla);
+
+					usleep(retardoMem*1000);
+
 					list_add(segmentoBuscado->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
 					paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 					enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
@@ -1106,6 +1138,9 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 					free(nuevaTabla);
 					nuevaTabla=NULL;
 				} else if (resultadoCache == SEGMENTOINEXISTENTE) {
+
+					usleep(retardoMem*1000);
+
 					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 					crearSegmento(nuevoSegmento, nuevaTabla);
 
@@ -1139,13 +1174,18 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			}
 		}else{
 			if(resultadoCache == KEYINEXISTENTE){
-				t_segmento* tablaDestino = encontrarSegmento(nuevaTabla);
-				list_add(tablaDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
+				t_segmento* segmentoDestino = encontrarSegmento(nuevaTabla);
+
+				usleep(retardoMem*1000);
+
+				list_add(segmentoDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp));
 				paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 				enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller,indiceKernel);
 				eliminar_paquete(paqueteAEnviar);
 
 			}else if(resultadoCache == SEGMENTOINEXISTENTE){
+
+				usleep(retardoMem*1000);
 
 				t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 				crearSegmento(nuevoSegmento,nuevaTabla);
@@ -1229,6 +1269,8 @@ void actualizarPagina (t_marco* marco, char* nuevoValue){
  * 	-> void ::
  * 	VALGRIND :: SI*/
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* nuevoValor){
+	int retardoMem=retardoMemPrincipal;
+	usleep(retardoMem*1000);
 	actualizarPagina(elemento->marco,nuevoValor);
 	elemento->modificado = MODIFICADO;
 }
@@ -1333,8 +1375,12 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
  * 	VALGRIND :: EN PROCESO */
 void create(cod_request codRequest,char* request){
 	t_erroresMemoria rtaCache = existeSegmentoEnMemoria(codRequest,request);
+	int retardoMem=retardoMemPrincipal;
 
 	if(rtaCache == SEGMENTOINEXISTENTE){
+
+		usleep(retardoMem*1000);
+
 		char** requestSeparada = separarRequest(request);
 		t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 		crearSegmento(nuevoSegmento,requestSeparada[1]);
@@ -1393,8 +1439,8 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request palabraReservada, char* req
  * 	VALGRIND :: SI*/
 int obtenerPaginaDisponible(t_marco** pagLibre){
 	int index= obtenerIndiceMarcoDisponible();
-	if(index == NUESTRO_ERROR){
-		return MEMORIA_FULL;
+	if(index == LRU){
+		return LRU;
 	}else{
 		*pagLibre = memoria + (sizeof(unsigned long long)+sizeof(uint16_t)+maxValue)*index;
 		return index;
