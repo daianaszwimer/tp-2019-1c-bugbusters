@@ -1597,6 +1597,7 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	t_paquete* valorDeLFS;
 	char** requestSeparada = separarRequest(request);
 	char* segmentoABuscar=strdup(requestSeparada[1]);
+	int retardoMem=retardoMemPrincipal;
 	valorDeLFS = intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		int encontrarTabla(t_segmento* segmento){
@@ -1606,10 +1607,11 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 		t_segmento* segmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
 		pthread_mutex_unlock(&semMTablaSegmentos);
 
+		usleep(retardoMem*1000);
 		if(segmentosEnCache!= NULL){
 			eliminarUnSegmento(segmentosEnCache);
 		}else{
-			log_info(logger_MEMORIA,"La %s no existe en MEMORIA",segmentoABuscar);
+			log_info(logger_MEMORIA,"La %s ya no existia en MEMORIA",segmentoABuscar);
 		}
 	}
 	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,indiceKernel);
