@@ -6,7 +6,10 @@ int main(void) {
 
 	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
-	logger_MEMORIA = log_create("memoria.log", "Memoria", 0, LOG_LEVEL_DEBUG);
+	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
+	retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
+	memoriasLevantadas = list_create();
+	pthread_mutex_init(&semMMemoriasLevantadas, NULL);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
 
@@ -25,6 +28,7 @@ int main(void) {
 
 	// 	HILOS
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
+	pthread_create(&hiloHacerGossiping, NULL, (void*)hacerGossiping, NULL);
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 
 	pthread_join(hiloLeerDeConsola, NULL);
@@ -52,6 +56,194 @@ void inicializacionDeMemoria(){
 	tablaDeSegmentos = (t_tablaDeSegmentos*)malloc(sizeof(t_tablaDeSegmentos));
 	tablaDeSegmentos->segmentos =list_create();
 	listaSemSegmentos=list_create();
+}
+
+void formatearMemoriasLevantadas(char** puertos, char** ips, char** numeros) {
+	// mando la data de mi config
+	char* puertoMio = config_get_string_value(config, "PUERTO");
+	char* ipMia = config_get_string_value(config, "IP");
+	char* numerosMio = config_get_string_value(config, "MEMORY_NUMBER");
+	string_append_with_format(puertos, "%s", puertoMio);
+	string_append_with_format(ips, "%s", ipMia);
+	string_append_with_format(numeros, "%s", numerosMio);
+	int i = 0;
+	pthread_mutex_lock(&semMMemoriasLevantadas);
+	config_memoria* memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
+	while(memoriaAFormatear != NULL) {
+		string_append_with_format(puertos, ",%s", memoriaAFormatear->puerto);
+		string_append_with_format(ips, ",%s", memoriaAFormatear->ip);
+		if (memoriaAFormatear->numero != NULL) {
+
+			string_append_with_format(numeros, ",%s", memoriaAFormatear->numero);
+		} else {
+			string_append_with_format(numeros, ",%s", "");
+
+		}
+		i++;
+		memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
+	}
+	pthread_mutex_unlock(&semMMemoriasLevantadas);
+}
+
+void eliminarMemoria(char* puerto, char* ip) {
+	int esMemoriaAEliminar(config_memoria* memoriaEnLista) {
+		return string_equals_ignore_case(memoriaEnLista->ip, ip) &&
+				string_equals_ignore_case(memoriaEnLista->puerto, puerto);
+	}
+	pthread_mutex_lock(&semMMemoriasLevantadas);
+	list_remove_and_destroy_by_condition(memoriasLevantadas,(void*)esMemoriaAEliminar, (void*)liberarConfigMemoria);
+	pthread_mutex_unlock(&semMMemoriasLevantadas);
+}
+
+void liberarConfigMemoria(config_memoria* configALiberar) {
+	if (configALiberar != NULL) {
+		free(configALiberar->ip);
+		free(configALiberar->numero);
+		free(configALiberar->puerto);
+		configALiberar->ip = NULL;
+		configALiberar->puerto = NULL;
+		configALiberar->numero = NULL;
+	}
+	free(configALiberar);
+	configALiberar = NULL;
+}
+
+void hacerGossiping() {
+	char** puertosSeeds;
+	char** ipsSeeds;
+	int retardo;
+	puertosSeeds = config_get_array_value(config, "PUERTO_SEEDS");
+	ipsSeeds = config_get_array_value(config, "IP_SEEDS");
+	int i;
+	int estadoHandshake;
+	int estadoRecibir;
+	int estadoEnviar;
+	t_gossiping* gossipingRecibido;
+	char* puertosQueTengo;
+	char* ipsQueTengo;
+	char* numerosQueTengo;
+	while(1) {
+		// hacer for que vaya del primer seed al ultimo
+		// cuando pido gossiping mando lista actaul
+		for(i = 0; ipsSeeds[i] != NULL; i++) {
+
+			puertosQueTengo = strdup("");
+			ipsQueTengo = strdup("");
+			numerosQueTengo = strdup("");
+
+			config_memoria* memoriaSeed = (config_memoria*) malloc(sizeof(config_memoria));
+			memoriaSeed->ip = strdup(ipsSeeds[i]);
+			memoriaSeed->puerto = strdup(puertosSeeds[i]);
+			memoriaSeed->numero = strdup(""); // no tenemos los numeros de las seeds
+
+			// si no me puedo conectar, la borro de mi lista de memorias
+			int conexionTemporaneaSeed = crearConexion(memoriaSeed->ip, memoriaSeed->puerto);
+			if (conexionTemporaneaSeed == COMPONENTE_CAIDO) {
+				eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
+				continue;
+			}
+			estadoHandshake = enviarHandshakeMemoria(GOSSIPING, MEMORIA, conexionTemporaneaSeed);
+			if (estadoHandshake == COMPONENTE_CAIDO) {
+				liberar_conexion(conexionTemporaneaSeed);
+				eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
+				continue;
+			}
+
+			formatearMemoriasLevantadas(&puertosQueTengo, &ipsQueTengo, &numerosQueTengo);
+
+			log_warning(logger_MEMORIA, "formatee en gossiping %s %s %s", puertosQueTengo, ipsQueTengo, numerosQueTengo);
+			estadoEnviar = //enviarGossiping("8001", "127.0.0.1", "1", conexionTemporaneaSeed);
+					enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, conexionTemporaneaSeed);
+			if (estadoEnviar == COMPONENTE_CAIDO) {
+				liberar_conexion(conexionTemporaneaSeed);
+				eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
+				continue;
+			}
+
+//			gossipingRecibido = recibirGossiping(conexionTemporaneaSeed, &estadoRecibir);
+//			if (estadoRecibir == COMPONENTE_CAIDO) {
+//				liberar_conexion(conexionTemporaneaSeed);
+//				eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
+//				continue;
+//			}
+//
+//			int existeUnaIgual(config_memoria* memoriaAgregada) {
+//				return string_equals_ignore_case(memoriaAgregada->ip, memoriaSeed->ip) &&
+//						string_equals_ignore_case(memoriaAgregada->puerto, memoriaSeed->puerto);
+//			}
+//
+//			// me intento conectar y si puedo sigo y la agrego a mi lista de memorias
+//			pthread_mutex_lock(&semMMemoriasLevantadas);
+//			if (!list_any_satisfy(memoriasLevantadas, (void*)existeUnaIgual)) {
+//				// agrego memoria si no existe en mi lista de memorias
+//				log_info(logger_MEMORIA, "Una de mis seeds se levantó", memoriaSeed->numero);
+//				list_add(memoriasLevantadas, memoriaSeed);
+//			}
+//			pthread_mutex_unlock(&semMMemoriasLevantadas);
+//
+//			memoriaSeed = NULL;
+//
+//			// cuando recibo gossiping lo recorro y voy agregando las memorias a la lista
+//
+//			agregarMemorias(gossipingRecibido);
+			liberar_conexion(conexionTemporaneaSeed);
+//			liberarHandshakeMemoria(gossipingRecibido);
+			free(puertosQueTengo);
+			free(ipsQueTengo);
+			free(numerosQueTengo);
+		}
+		i = 0;
+		retardo = retardoGossiping;
+		// todo: mutex
+		usleep(retardo*1000);
+	}
+	liberarArrayDeChar(ipsSeeds);
+	liberarArrayDeChar(puertosSeeds);
+}
+
+void agregarMemorias(t_gossiping* gossipingRecibido) {
+	if (string_equals_ignore_case(gossipingRecibido->ips, "")) {
+		return;
+	}
+	int i;
+	char** ips = string_split(gossipingRecibido->ips, ",");
+	char** puertos = string_split(gossipingRecibido->puertos, ",");
+	char** numeros = string_split(gossipingRecibido->numeros, ",");
+	char* puertoMio = config_get_string_value(config, "PUERTO");
+	char* ipMia = config_get_string_value(config, "IP");
+	for(i = 0; ips[i] != NULL; i++) {
+		config_memoria* memoriaNueva = (config_memoria*) malloc(sizeof(config_memoria));
+		memoriaNueva->ip = strdup(ips[i]);
+		memoriaNueva->puerto = strdup(puertos[i]);
+		if (numeros[i] == NULL) {
+			memoriaNueva->numero = strdup("");
+		} else {
+			memoriaNueva->numero = strdup(numeros[i]);
+		}
+
+
+		int existeUnaIgual(config_memoria* memoriaAgregada) {
+			return string_equals_ignore_case(memoriaAgregada->ip, memoriaNueva->ip) &&
+					string_equals_ignore_case(memoriaAgregada->puerto, memoriaNueva->puerto);
+		}
+
+		// no me autoguardo en la lista de memorias
+		if (string_equals_ignore_case(memoriaNueva->ip, ipMia) && string_equals_ignore_case(memoriaNueva->puerto, puertoMio)) {
+			liberarConfigMemoria(memoriaNueva);
+		} else {
+			pthread_mutex_lock(&semMMemoriasLevantadas);
+			if (!list_any_satisfy(memoriasLevantadas, (void*)existeUnaIgual)) {
+				// agrego memoria si no existe en mi lista de memorias
+				log_info(logger_MEMORIA, "Me llegó una nueva memoria en el gossiping, num: %s %s", memoriaNueva->ip, memoriaNueva->puerto);
+				list_add(memoriasLevantadas, memoriaNueva);
+			}
+			pthread_mutex_unlock(&semMMemoriasLevantadas);
+		}
+		memoriaNueva = NULL;
+	}
+	liberarArrayDeChar(ips);
+	liberarArrayDeChar(puertos);
+	liberarArrayDeChar(numeros);
 }
 
 
@@ -171,6 +363,7 @@ void escucharMultiplesClientes() {
 		if (estadoSelect == -1) {
 			log_info(logger_MEMORIA, "Select falló porque %s", strerror(errno));
 		}
+		log_debug(logger_MEMORIA, "Paso por select");
 
 		int numDescriptor = 0;
 
@@ -220,18 +413,31 @@ void escucharMultiplesClientes() {
 						eliminar_paquete(paqueteRecibido);
 						paqueteRecibido=NULL;
 					} else if (handshake->tipoRol == GOSSIPING) {
-						t_gossiping* gossiping = recibirGossiping(numDescriptor, &codigoOperacion);
+						t_gossiping* gossipingRecibido = recibirGossiping(numDescriptor, &codigoOperacion);
+						agregarMemorias(gossipingRecibido);
 						if (codigoOperacion == COMPONENTE_CAIDO) {
 							close(numDescriptor);
 							FD_CLR(numDescriptor, &descriptoresDeInteres);
 							log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
-							liberarHandshakeMemoria(gossiping);
+							liberarHandshakeMemoria(gossipingRecibido);
 							free(handshake);
 							numDescriptor++;
 							continue;
 						}
-						enviarGossiping("8001", "127.0.0.1", "1", numDescriptor);
-						liberarHandshakeMemoria(gossiping);
+						if (handshake->tipoComponente == KERNEL) {
+							char* puertosQueTengo = strdup("");
+							char* ipsQueTengo = strdup("");
+							char* numerosQueTengo = strdup("");
+							formatearMemoriasLevantadas(&puertosQueTengo, &ipsQueTengo, &numerosQueTengo);
+							log_warning(logger_MEMORIA, "formatee %s %s %s", puertosQueTengo, ipsQueTengo, numerosQueTengo);
+							enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, numDescriptor);
+
+							free(puertosQueTengo);
+							free(ipsQueTengo);
+							free(numerosQueTengo);
+						}
+						//enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, numDescriptor);
+						liberarHandshakeMemoria(gossipingRecibido);
 					}
 					free(handshake);
 				}
@@ -1253,6 +1459,7 @@ void liberarEstructurasMemoria(){
 	free(tablaDeSegmentos);
 	pthread_mutex_unlock(&semMTablaSegmentos);
 	list_destroy_and_destroy_elements(listaSemSegmentos,(void*)liberarSemSegmento);
+	list_destroy(memoriasLevantadas); //todo: destroy elements
 
 }
 
@@ -1278,6 +1485,7 @@ void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
 void liberarMemoria(){
 	pthread_mutex_destroy(&semMBitarray);
 	pthread_mutex_destroy(&semMTablaSegmentos);
+	pthread_mutex_destroy(&semMMemoriasLevantadas);
 	log_info(logger_MEMORIA, "Finaliza MEMORIA");
 	bitarray_destroy(bitarray);
 	free(bitarrayString);
