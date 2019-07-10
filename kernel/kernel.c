@@ -900,7 +900,12 @@ int manejarRequest(request_procesada* request, int fromRun) {
 			// solo a memorias que tengan un criterio
 			break;
 		case ADD:
-			respuesta = procesarAdd((char*) request->request);
+			if (fromRun) {
+				log_error(logger_KERNEL, "El ADD no va adentro de un RUN");
+				respuesta = FAILURE;
+			} else {
+				respuesta = procesarAdd((char*) request->request);
+			}
 			break;
 		case RUN:
 			if (fromRun) {
@@ -911,7 +916,12 @@ int manejarRequest(request_procesada* request, int fromRun) {
 			}
 			break;
 		case METRICS:
-			informarMetricas(TRUE);
+			if (fromRun) {
+				log_error(logger_KERNEL, "El METRICS no va adentro de un RUN");
+				respuesta = FAILURE;
+			} else {
+				informarMetricas(TRUE);
+			}
 			break;
 		default:
 			// aca puede entrar solo si viene de run, porque sino antes siempre fue validada
@@ -1221,6 +1231,7 @@ int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
 	if (rta == COMPONENTE_CAIDO) {
 		// eliminar memoria de lista de memorias y de criterios
 		eliminarMemoria(puerto, ip, numero);
+		liberar_conexion(conexionTemporanea);
 		return FAILURE;
 	}
 	return conexionTemporanea;

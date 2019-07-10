@@ -74,6 +74,12 @@ typedef struct{
 	suseconds_t tv_usec;   /* microseconds */
 }t_timeval;
 
+typedef struct
+{
+	char* ip;
+	char* puerto;
+	char* numero;
+} config_memoria;
 
 //-------------VARIABLES GLOBALES-------------------------
 
@@ -87,6 +93,7 @@ t_segmento* tablaA;
 t_elemTablaDePaginas* elementoA1;
 t_marco* frame0;
 
+t_list* memoriasLevantadas;
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
@@ -94,10 +101,12 @@ pthread_mutex_t terminarHilo;
 pthread_mutex_t semMBitarray;
 pthread_mutex_t semMTablaSegmentos;
 pthread_mutex_t semMDescriptores;
+pthread_mutex_t semMMemoriasLevantadas;// semaforo mutex para evitar concurrencia en la variable
+
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
-//pthread_attr_t attr;
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
+pthread_t hiloHacerGossiping			;// hilo para hacer gossiping
 
 t_bitarray* bitarray;
 char* bitarrayString;
@@ -106,12 +115,19 @@ int marcosTotales;
 int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 int maxValue;
+int retardoGossiping;
 
 //------------------ --- FUNCIONES--------------------------------
 
 void conectarAFileSystem(void);
 void inicializacionDeMemoria(void);
 int obtenerIndiceMarcoDisponible();
+
+void hacerGossiping(void);
+void formatearMemoriasLevantadas(char**,char**,char**);
+void eliminarMemoria(char*,char*);
+void liberarConfigMemoria(config_memoria*);
+void agregarMemorias(t_gossiping*);
 
 void leerDeConsola(void);
 void validarRequest(char*);
