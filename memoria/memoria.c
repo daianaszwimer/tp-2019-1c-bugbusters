@@ -566,8 +566,12 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 			desbloquearSemSegmento(pathSegmento);
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
-			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
-			guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
+			int rta=guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
+			if(rta == SUCCESS){
+				enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
+			}else{
+				enviarAlDestinatarioCorrecto(palabraReservada,MEMORIA_FULL,request, valorDeLFS,caller,indiceKernel);
+			}
 			eliminar_paquete(valorDeLFS);
 			valorDeLFS=NULL;
 		}
@@ -937,8 +941,8 @@ void desbloquearSemSegmento(char* pathSegmento){
    * Return:
    * 	-> :: void
    * VALGRIND:: NO*/
- void guardarRespuestaDeLFSaMemoria(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
-
+ int guardarRespuestaDeLFSaMemoria(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
+	 int rta;
  	if(nuevoPaquete->palabraReservada == SUCCESS){
  		int retardoMem=retardoMemPrincipal;
  		char** requestSeparada= separarRequest(nuevoPaquete->request);
@@ -967,6 +971,7 @@ void desbloquearSemSegmento(char* pathSegmento){
  					nuevaTabla=NULL;
  					free(tablaBuscada);
  					tablaBuscada=NULL;
+ 					rta= SUCCESS;
  				} else if (tipoError == SEGMENTOINEXISTENTE) {
  					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 
@@ -980,11 +985,12 @@ void desbloquearSemSegmento(char* pathSegmento){
 
  					free(nuevaTabla);
  					nuevaTabla=NULL;
+ 					rta= SUCCESS;
 
  				}
  			} else {
 
- 				log_info(logger_MEMORIA,"NO hay paginas para reemplazar, hay q hacer journaling");
+					rta= MEMORIA_FULL;
  			}
  		}else{
  			if(tipoError== KEYINEXISTENTE){
@@ -997,6 +1003,8 @@ void desbloquearSemSegmento(char* pathSegmento){
 
  				free(tablaBuscada);
  				tablaBuscada=NULL;
+				rta = SUCCESS;
+
  			}else if(tipoError == SEGMENTOINEXISTENTE){
  				t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
  				crearSegmento(nuevoSegmento,nuevaTabla);
@@ -1010,6 +1018,7 @@ void desbloquearSemSegmento(char* pathSegmento){
 
  				free(nuevaTabla);
  				nuevaTabla=NULL;
+				rta=  SUCCESS;
 
  			}
  		}
@@ -1020,6 +1029,8 @@ void desbloquearSemSegmento(char* pathSegmento){
  	free(nuevoValor);
  	nuevoValor=NULL;
  	}
+
+ 	return rta;
  }
 
 /* procesarInsert()
