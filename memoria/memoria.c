@@ -49,7 +49,7 @@ void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
 
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	marcosTotales = (int) floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
+	marcosTotales = 16;//(int) floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
 
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
@@ -567,10 +567,11 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 			int rta=guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
-			if(rta == SUCCESS){
-				enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
-			}else{
+			if(rta == JOURNAL){
+				valorDeLFS->request=strdup("realizar JOURNAL");
 				enviarAlDestinatarioCorrecto(palabraReservada,MEMORIA_FULL,request, valorDeLFS,caller,indiceKernel);
+			}else{
+				enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
 			}
 			eliminar_paquete(valorDeLFS);
 			valorDeLFS=NULL;
@@ -1059,12 +1060,16 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 		t_elemTablaDePaginas* elementoEncontrado= NULL;
 		char** requestSeparada = separarRequest(request);
 		char* pathSegmento=strdup("");
+		pathSegmento=NULL;
 
 		if(consistenciaMemoria == EC || caller == CONSOLE){
 			int resultadoCache= estaEnMemoria(palabraReservada, request,NULL,&elementoEncontrado,&pathSegmento);
 			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,indiceKernel,pathSegmento);
+			free(pathSegmento);
+			pathSegmento=NULL;
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
-
+			free(pathSegmento);
+			pathSegmento=NULL;
 			t_paquete* insertALFS =  intercambiarConFileSystem(palabraReservada,request);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
 				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,indiceKernel);
@@ -1076,10 +1081,11 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 				insertALFS=NULL;
 			}
 		}else{
+			free(pathSegmento);
+			pathSegmento=NULL;
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 		}
-		free(request);
-		request=NULL;
+
 		liberarArrayDeChar(requestSeparada);
 		requestSeparada=NULL;
 }
