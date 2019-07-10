@@ -1403,25 +1403,6 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
 }
 
 
-/* eliminarSegmento()
- * Parametros:
- *	-> t_segmento* :: segmento
- * Descripcion: Libera a el marco de la pagina, libera cada pagina de una tabla
- * Return:
- * 	-> :: void
- * 	VALGRIND :: NO */
-void eliminarSegmento(t_segmento* segmento){
-	int listaIgual(t_segmento* segmentoComparar){
-		if(string_equals_ignore_case(segmentoComparar->path, segmento->path)){
-			return TRUE;
-		}else{
-			return FALSE;
-		}
-	}
-	pthread_mutex_lock(&semMTablaSegmentos);
-	list_remove_and_destroy_by_condition(tablaDeSegmentos->segmentos,(void*) listaIgual, (void*) eliminarElemTablaSegmentos);
-	pthread_mutex_unlock(&semMTablaSegmentos);
-}
 
 void removerSem(char* pathARemover){
 	int segmentoEsIgual(t_semSegmento* semSegmento){
@@ -1440,6 +1421,8 @@ void liberarSemSegmento(t_semSegmento* semSegmento){
 	pthread_mutex_destroy(semSegmento->sem);
 	free(semSegmento->path);
 	semSegmento->path=NULL;
+	free(semSegmento->sem);
+	semSegmento->sem=NULL;
 	free(semSegmento);
 	semSegmento=NULL;
 }
@@ -1455,26 +1438,36 @@ void liberarSemSegmento(t_semSegmento* semSegmento){
  * 	VALGRIND :: NO */
 void liberarEstructurasMemoria(){
 	pthread_mutex_lock(&semMTablaSegmentos);
-	list_destroy_and_destroy_elements(tablaDeSegmentos->segmentos, (void*) eliminarElemTablaSegmentos);
+	list_destroy_and_destroy_elements(tablaDeSegmentos->segmentos, (void*) eliminarUnSegmento);
 	free(tablaDeSegmentos);
 	pthread_mutex_unlock(&semMTablaSegmentos);
 	list_destroy_and_destroy_elements(listaSemSegmentos,(void*)liberarSemSegmento);
 	list_destroy(memoriasLevantadas); //todo: destroy elements
 
 }
-
-void eliminarElemTablaSegmentos(t_segmento* segmento){
+/* eliminarSegmento()
+ * Parametros:
+ *	-> t_segmento* :: segmento
+ * Descripcion: Libera a el marco de la pagina, libera cada pagina de una tabla
+ * Return:
+ * 	-> :: void
+ * 	VALGRIND :: NO */
+void eliminarUnSegmento(t_segmento* segmento){
 	removerSem(segmento->path);
 	free(segmento->path);
 	segmento->path=NULL;
+	pthread_mutex_lock(&semMTablaSegmentos);
 	list_destroy_and_destroy_elements(segmento->tablaDePagina, (void*) eliminarElemTablaPagina);
+	pthread_mutex_unlock(&semMTablaSegmentos);
 	free(segmento);
 }
+
 void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
 	eliminarMarco(pagina,pagina->marco);
 	free(pagina);
 	pagina=NULL;
 }
+
 /* liberarMemoria()
  * Parametros:
  *	-> :: void
@@ -1556,7 +1549,7 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 		pthread_mutex_unlock(&semMTablaSegmentos);
 
 		if(segmentosEnCache!= NULL){
-			eliminarSegmento(segmentosEnCache);
+			eliminarUnSegmento(segmentosEnCache);
 		}else{
 			log_info(logger_MEMORIA,"La %s no existe en MEMORIA",segmentoABuscar);
 		}
@@ -1709,7 +1702,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	}
 	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
 
-	list_clean_and_destroy_elements(tablaDeSegmentos->segmentos,(void*)eliminarSegmento);
+	list_clean_and_destroy_elements(tablaDeSegmentos->segmentos,(void*)eliminarUnSegmento);
 
 	int esJournalSUCCESS(errorNo valor){
 		if(valor == SUCCESS){

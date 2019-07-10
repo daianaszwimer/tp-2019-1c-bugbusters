@@ -162,9 +162,9 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 
 int obtenerPaginaDisponible(t_marco**);
 
-void eliminarSegmento(t_segmento*);
+void eliminarUnSegmento(t_segmento*);
 void eliminarElemTablaPagina(t_elemTablaDePaginas* );
-void eliminarElemTablaSegmentos(t_segmento*);
+void eliminarUnSegmento(t_segmento*);
 void removerSem(char*);
 void liberarSemSegmento(t_semSegmento*);
 void liberarEstructurasMemoria();
