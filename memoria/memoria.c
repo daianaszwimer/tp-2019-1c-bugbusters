@@ -1206,7 +1206,7 @@ int obtenerPaginaDisponible(t_marco** pagLibre){
  * 	VALGRIND :: NO */
 void eliminarSegmento(t_segmento* segmento){
 	int listaIgual(t_segmento* segmentoComparar){
-		if(strcmp(segmentoComparar->path, segmento->path)){
+		if(string_equals_ignore_case(segmentoComparar->path, segmento->path)){
 			return TRUE;
 		}else{
 			return FALSE;
@@ -1219,7 +1219,7 @@ void eliminarSegmento(t_segmento* segmento){
 
 void removerSem(char* pathARemover){
 	int segmentoEsIgual(t_semSegmento* semSegmento){
-		if(strcmp(semSegmento->path, pathARemover)){
+		if(string_equals_ignore_case(semSegmento->path, pathARemover)){
 				return TRUE;
 			}else{
 				return FALSE;
@@ -1492,9 +1492,10 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 			}
 		}
 		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
-		eliminarSegmento(segmento);
 	}
 	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
+
+	list_clean_and_destroy_elements(tablaDeSegmentos->segmentos,(void*)eliminarSegmento);
 
 	int esJournalSUCCESS(errorNo valor){
 		if(valor == SUCCESS){
