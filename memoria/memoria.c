@@ -43,7 +43,7 @@ void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
 
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	marcosTotales =16;//(int)floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
+	marcosTotales = (int) floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
 
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
@@ -1468,25 +1468,31 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 
 
 void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int indiceKernel) {
-	/** Todas aquellas páginas con el flag activado son las que contienen las Key que deben ser actualizadas en el FS.
-	 *  Las páginas cuyo flag esté desactivado implican que el dato en memoria es consistente (o eventualmente consistente)
-	 *  con el que está en el FS.
-	 **/
+
+//		El Journal automático realizado cada X unidades de tiempo (configurado por archivo de configuración).
+//	OK	El Journal manual por medio de la API que dispone la Memoria (JOURNAL).
+//		El Journal forzoso debido a que la Memoria entró en un estado FULL y requiere nuevas páginas para asignar (realizado por pedido del Kernel)
+//	OK 	El Journal manual por medio de la API que dispone el Kernel.
+//		Bloquear: Salvo CREATE/DESCRIBE
+
 	t_list* resultadosJournal= list_create();
 	t_paquete* insertJournalLFS;
 	void encontrarElemModificado(t_segmento* segmento){
 		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
 			if(elemPagina->modificado == MODIFICADO){
 				char* requestAEnviar= strdup("");
+				t_int* resultadoAux = malloc(sizeof(t_int*));
 				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
 
 				insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar);
 				log_info(logger_MEMORIA,"Le enviamos a LFS: %s", requestAEnviar);
 
 				if(insertJournalLFS->palabraReservada==SUCCESS ){
-					list_add(resultadosJournal,SUCCESS);
+					resultadoAux->valor=SUCCESS;
+					list_add(resultadosJournal,resultadoAux);
 				}else{
-					list_add(resultadosJournal,FAILURE);
+					resultadoAux->valor=CONSISTENCIA_NO_VALIDA;
+					list_add(resultadosJournal,resultadoAux);
 				}
 
 			}
