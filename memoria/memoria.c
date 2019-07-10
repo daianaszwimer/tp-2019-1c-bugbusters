@@ -1040,8 +1040,8 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 		}else{
 			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
 		}
-		free(pathSegmento);
-		pathSegmento=NULL;
+		free(request);
+		request=NULL;
 		liberarArrayDeChar(requestSeparada);
 		requestSeparada=NULL;
 }
@@ -1461,6 +1461,7 @@ void eliminarUnSegmento(t_segmento* segmento){
 	pthread_mutex_unlock(&semMTablaSegmentos);
 	free(segmento);
 }
+
 
 void eliminarElemTablaPagina(t_elemTablaDePaginas* pagina){
 	eliminarMarco(pagina,pagina->marco);
