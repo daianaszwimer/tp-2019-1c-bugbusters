@@ -780,7 +780,7 @@ void unlockSemSegmento(char* pathSegmento){
 	 switch(palabraReservada){
 	 	 case(SELECT):
 		{	char** valorAEnviarSeparado=separarRequest(valorAEnviar->request);
-	 	 	 valorEncontrado = valorAEnviarSeparado[2];
+	 	 	 valorEncontrado = valorAEnviarSeparado[3];
 
 	 		if(codResultado == SUCCESS){
 				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
@@ -1339,7 +1339,7 @@ t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* pagLibre, uin
 	pthread_mutex_unlock(&semMBitarray);
 	nuevoElemento->numeroDePag = id;
 	nuevoElemento->marco = crearMarcoDePagina(pagLibre,nuevaKey,nuevoValue,timesTamp);
-	nuevoElemento->modificado = SINMODIFICAR;
+	nuevoElemento->modificado = MODIFICADO;
 
 	return nuevoElemento;
 }
@@ -1751,16 +1751,21 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 //	OK 	El Journal manual por medio de la API que dispone el Kernel.
 //		Bloquear: Salvo CREATE/DESCRIBE
 
+
 	t_list* resultadosJournal= list_create();
-	t_paquete* insertJournalLFS;
-	void encontrarElemModificado(t_segmento* segmento){
-		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
+	t_int* resultadoAux = malloc(sizeof(t_int*));
+	int i=0,j=0;
+	pthread_mutex_lock(&semMTablaSegmentos);
+	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
+		t_segmento* segmento=list_get(tablaDeSegmentos->segmentos,i);
+		pthread_mutex_unlock(&semMTablaSegmentos);
+		while(list_get(segmento->tablaDePagina,j)!=NULL){
+			t_elemTablaDePaginas* elemPagina = list_get(segmento->tablaDePagina,j);
 			if(elemPagina->modificado == MODIFICADO){
 				char* requestAEnviar= strdup("");
-				t_int* resultadoAux = malloc(sizeof(t_int*));
 				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
 
-				insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar);
+				t_paquete* insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar);
 				log_info(logger_MEMORIA,"Le enviamos a LFS: %s", requestAEnviar);
 
 				if(insertJournalLFS->palabraReservada==SUCCESS ){
@@ -1771,11 +1776,15 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 					list_add(resultadosJournal,resultadoAux);
 				}
 
-			}
+				}
+			j++;
 		}
-		list_iterate(segmento->tablaDePagina, (void*) encontrarPagModificada);
+		i++;
+		j=0;
+		pthread_mutex_lock(&semMTablaSegmentos);
+
 	}
-	list_iterate(tablaDeSegmentos->segmentos,(void*) encontrarElemModificado);
+	pthread_mutex_unlock(&semMTablaSegmentos);
 
 	list_clean_and_destroy_elements(tablaDeSegmentos->segmentos,(void*)eliminarUnSegmento);
 
@@ -1789,13 +1798,17 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 
 	int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
 	t_paquete* resultadoJournal= (t_paquete*)malloc(sizeof(t_paquete));
-	resultadoJournal->palabraReservada=JOURNAL;
-	resultadoJournal->request=strdup("Se ha realizado el JOURNAL con exito");
-	resultadoJournal->tamanio=sizeof(resultadoJournal->request);
-	if(resultadoControl == 1){
+
+	if(resultadoControl == SUCCESS){
+		resultadoJournal->palabraReservada=JOURNAL;
+		resultadoJournal->request=strdup("Se ha realizado el JOURNAL con exito");
+		resultadoJournal->tamanio=sizeof(resultadoJournal->request);
 		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
 
 	}else{
+		resultadoJournal->palabraReservada=JOURNAL;
+		resultadoJournal->request=strdup("NO se ha realizado el JOURNAL con exito");
+		resultadoJournal->tamanio=sizeof(resultadoJournal->request);
 		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,resultadoJournal,caller, indiceKernel);
 	}
 	list_destroy(resultadosJournal);
