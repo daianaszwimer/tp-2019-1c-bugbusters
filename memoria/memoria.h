@@ -138,7 +138,7 @@ void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**,char**);
 void lockSemSegmento(char*);
-void desbloquearSemSegmento(char* );
+void unlockSemSegmento(char* );
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
 int guardarRespuestaDeLFSaMemoria(t_paquete* ,t_erroresMemoria);

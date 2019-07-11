@@ -558,18 +558,18 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		if(resultadoCache == EXIT_SUCCESS ) {
 			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 			actualizarTimestamp(elementoEncontrado->marco);
-			desbloquearSemSegmento(pathSegmento);
+			unlockSemSegmento(pathSegmento);
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, indiceKernel);
 			eliminar_paquete(valorEncontrado);
 			valorEncontrado=NULL;
 
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-			desbloquearSemSegmento(pathSegmento);
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
 			rtaGuardarEnMemoria =guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
 			if(rtaGuardarEnMemoria == MEMORIA_FULL){
-				valorDeLFS->request=strdup("realizar JOURNAL");
+				valorDeLFS->request=strdup("MEMORIA FULL.Debe realizarse JOURNAL");
+				valorDeLFS->tamanio=(sizeof(valorDeLFS->request));
 				enviarAlDestinatarioCorrecto(palabraReservada,MEMORIA_FULL,request, valorDeLFS,caller,indiceKernel);
 			}else{
 				enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
@@ -651,7 +651,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			liberarArrayDeChar(parametros);
 			parametros=NULL;
 			return EXIT_SUCCESS;
-		}else if (elementoDePagEnCache != NULL){
+		}else if (elementoDePagEnCache != NULL){ // es el mismo caso que el anterior, solo q para el insert (ya q no necesita armar ese paquete
 			*elementoEncontrado=elementoDePagEnCache;
 			free(segmentoABuscar);
 			segmentoABuscar=NULL;
@@ -659,6 +659,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			parametros=NULL;
 			return EXIT_SUCCESS;
 		}else{
+			unlockSemSegmento(pathSegmento);
 			free(segmentoABuscar);
 			segmentoABuscar=NULL;
 			liberarArrayDeChar(parametros);
@@ -666,6 +667,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			return KEYINEXISTENTE;
 		}
 	}else{
+		unlockSemSegmento(pathSegmento);
 		free(segmentoABuscar);
 		segmentoABuscar=NULL;
 		liberarArrayDeChar(parametros);
@@ -712,7 +714,7 @@ void lockSemSegmento(char* pathSegmento){
 	}
 }
 
-void desbloquearSemSegmento(char* pathSegmento){
+void unlockSemSegmento(char* pathSegmento){
 	int semCoincideCon(t_semSegmento* semSegmento){
 		return string_equals_ignore_case(pathSegmento,semSegmento->path);
 	}
@@ -948,7 +950,7 @@ void desbloquearSemSegmento(char* pathSegmento){
  	if(nuevoPaquete->palabraReservada == SUCCESS){
  		int retardoMem=retardoMemPrincipal;
  		char** requestSeparada= separarRequest(nuevoPaquete->request);
- 		char* nuevaTabla= strdup(requestSeparada[0]);
+ 		char* tabla= strdup(requestSeparada[0]);
  		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
  		char* nuevoValor= strdup(requestSeparada[2]);
  		unsigned long long nuevoTimestamp;
@@ -964,13 +966,14 @@ void desbloquearSemSegmento(char* pathSegmento){
  				if (tipoError == KEYINEXISTENTE) {
  					t_segmento* tablaBuscada = malloc(sizeof(t_segmento));
  					tablaBuscada->tablaDePagina=NULL;
- 					tablaBuscada = encontrarSegmento(nuevaTabla);
-
  					usleep(retardoMem*1000);
 
+ 					tablaBuscada = encontrarSegmento(tabla);
+ 					lockSemSegmento(tabla);
  					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
- 					free(nuevaTabla);
- 					nuevaTabla=NULL;
+ 					unlockSemSegmento(tabla);
+ 					free(tabla);
+ 					tabla=NULL;
  					free(tablaBuscada);
  					tablaBuscada=NULL;
  					memoriaSuficiente= SUCCESS;
@@ -979,14 +982,16 @@ void desbloquearSemSegmento(char* pathSegmento){
 
  					usleep(retardoMem*1000);
 
- 					crearSegmento(nuevoSegmento, nuevaTabla);
+ 					crearSegmento(nuevoSegmento, tabla);
+ 					lockSemSegmento(tabla);
  					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp));
+ 					unlockSemSegmento(tabla);
  					pthread_mutex_lock(&semMTablaSegmentos);
  					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
  					pthread_mutex_unlock(&semMTablaSegmentos);
 
- 					free(nuevaTabla);
- 					nuevaTabla=NULL;
+ 					free(tabla);
+ 					tabla=NULL;
  					memoriaSuficiente= SUCCESS;
 
  				}
@@ -997,11 +1002,13 @@ void desbloquearSemSegmento(char* pathSegmento){
  		}else{
  			if(tipoError== KEYINEXISTENTE){
  				t_segmento* tablaBuscada= malloc(sizeof(t_segmento));
- 				tablaBuscada= encontrarSegmento(nuevaTabla);
+ 				tablaBuscada= encontrarSegmento(tabla);
 
  				usleep(retardoMem*1000);
 
+ 				lockSemSegmento(tabla);
 				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp));
+				lockSemSegmento(tabla);
 
  				free(tablaBuscada);
  				tablaBuscada=NULL;
@@ -1009,25 +1016,27 @@ void desbloquearSemSegmento(char* pathSegmento){
 
  			}else if(tipoError == SEGMENTOINEXISTENTE){
  				t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
- 				crearSegmento(nuevoSegmento,nuevaTabla);
+ 				crearSegmento(nuevoSegmento,tabla);
 
 				usleep(retardoMem*1000);
 
+				lockSemSegmento(tabla);
  				list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor,nuevoTimestamp));
+				unlockSemSegmento(tabla);
  				pthread_mutex_lock(&semMTablaSegmentos);
  				list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
  				pthread_mutex_unlock(&semMTablaSegmentos);
 
- 				free(nuevaTabla);
- 				nuevaTabla=NULL;
+ 				free(tabla);
+ 				tabla=NULL;
 				memoriaSuficiente=  SUCCESS;
 
  			}
  		}
  	liberarArrayDeChar(requestSeparada);
  	requestSeparada=NULL;
- 	free(nuevaTabla);
- 	nuevaTabla=NULL;
+ 	free(tabla);
+ 	tabla=NULL;
  	free(nuevoValor);
  	nuevoValor=NULL;
  	}
@@ -1128,13 +1137,13 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 	if(resultadoCache == EXIT_SUCCESS){ // es decir que EXISTE SEGMENTO y EXISTE KEY
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
 		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
-		desbloquearSemSegmento(pathSegmento);
+		unlockSemSegmento(pathSegmento);
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, indiceKernel);
 		eliminar_paquete(paqueteAEnviar);
 
 	}else{
-		desbloquearSemSegmento(pathSegmento);
+		unlockSemSegmento(pathSegmento);
 		t_marco* pagLibre =NULL;
 		int index =obtenerPaginaDisponible(&pagLibre);
 		if(index == LRU){
