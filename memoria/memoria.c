@@ -659,7 +659,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			parametros=NULL;
 			return EXIT_SUCCESS;
 		}else{
-			unlockSemSegmento(pathSegmento);
+			unlockSemSegmento(segmentoEnCache->path);
 			free(segmentoABuscar);
 			segmentoABuscar=NULL;
 			liberarArrayDeChar(parametros);
@@ -667,7 +667,6 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 			return KEYINEXISTENTE;
 		}
 	}else{
-		unlockSemSegmento(pathSegmento);
 		free(segmentoABuscar);
 		segmentoABuscar=NULL;
 		liberarArrayDeChar(parametros);
