@@ -1384,7 +1384,7 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
 	}
-	enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,indiceKernel);
+	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,indiceKernel);
 	eliminar_paquete(valorDeLFS);
 	valorDeLFS=NULL;
 }
