@@ -1734,7 +1734,7 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 		}
 
 	} else {
-		*rta=JOURNALTIME;
+		*rta=MEMORIA_FULL;
 	}
 	return elementoVictima;
 }
