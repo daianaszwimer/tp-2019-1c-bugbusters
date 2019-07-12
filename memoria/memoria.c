@@ -79,7 +79,7 @@ void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
 
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	marcosTotales = 2;//(int) floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
+	marcosTotales = floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
 
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
@@ -417,7 +417,7 @@ void validarRequest(char* mensaje){
 	mensaje=NULL;
 	liberarArrayDeChar(request);
 	request =NULL;
-	liberarArrayDeChar(requestSeparada); //(1)
+	liberarArrayDeChar(requestSeparada);
 	requestSeparada=NULL;
 }
 
@@ -614,16 +614,26 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
  * Return:
  * 	-> paqueteRecibido:: char*
  * VALGRIND:: NO */
-t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request){
+t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request,t_caller caller, int indiceKernel){
 	t_paquete* paqueteRecibido;
 
-	enviar(palabraReservada, request, conexionLfs);
-	pthread_mutex_lock(&semMFS);
-	int retardoFileSystem=retardoFS;
-	pthread_mutex_unlock(&semMFS);
-	usleep(retardoFileSystem*1000);
-	paqueteRecibido = recibir(conexionLfs);
-
+	if(enviar(palabraReservada, request, conexionLfs)==-2){
+		paqueteRecibido->request=strdup("COMPONENTE CAIDO. Request no procesada");
+		paqueteRecibido->tamanio=(sizeof(paqueteRecibido->request));
+		enviarAlDestinatarioCorrecto(COMPONENTE_CAIDO,COMPONENTE_CAIDO,request, paqueteRecibido,caller,indiceKernel);
+	}else{
+		pthread_mutex_lock(&semMFS);
+		int retardoFileSystem=retardoFS;
+		pthread_mutex_unlock(&semMFS);
+		usleep(retardoFileSystem*1000);
+		if(recibir(conexionLfs)==-2){
+			paqueteRecibido->palabraReservada=COMPONENTE_CAIDO;
+			paqueteRecibido->request=strdup("COMPONENTE CAIDO. Request no procesada");
+			paqueteRecibido->tamanio=(sizeof(paqueteRecibido->request));
+		}else{
+			paqueteRecibido = recibir(conexionLfs);
+		}
+	}
 	return paqueteRecibido;
 }
 
@@ -665,7 +675,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-			valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+			valorDeLFS = intercambiarConFileSystem(palabraReservada,request,caller, indiceKernel);
 			rtaGuardarEnMemoria =guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
 			if(rtaGuardarEnMemoria == MEMORIA_FULL){
 				valorDeLFS->request=strdup("MEMORIA FULL.Debe realizarse JOURNAL");
@@ -678,7 +688,7 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		}
 	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-		valorDeLFS = intercambiarConFileSystem(palabraReservada,request);
+		valorDeLFS = intercambiarConFileSystem(palabraReservada,request, caller, indiceKernel);
 		enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
 
 	}else{
@@ -842,7 +852,7 @@ void unlockSemSegmento(char* pathSegmento){
  * Return:
  * 	-> :: void
  * VALGRIND:: NO*/
- void enviarAlDestinatarioCorrecto(cod_request palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller, int indiceKernel){
+ void enviarAlDestinatarioCorrecto(int palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller, int indiceKernel){
 	 char *errorDefault= strdup("");
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
@@ -851,9 +861,9 @@ void unlockSemSegmento(char* pathSegmento){
 	 	 	break;
 	 	 case(CONSOLE):
 	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
-	 	 	 eliminar_paquete(valorAEnviar);
-	 	 	 valorAEnviar=NULL;
-	 	 	 break;
+	 	 	eliminar_paquete(valorAEnviar);
+	 	 	valorAEnviar=NULL;
+	 	 	break;
 	 	 default:
 	 		string_append_with_format(&errorDefault, " No se ha encontrado a quien devolver la request realizada %s",request);
 	 		log_info(logger_MEMORIA,errorDefault);
@@ -882,14 +892,14 @@ void unlockSemSegmento(char* pathSegmento){
 	 char* valorEncontrado;
 
 	 switch(palabraReservada){
-	 	 case(SELECT):
-		{	char** valorAEnviarSeparado=separarRequest(valorAEnviar->request);
-	 	 	 valorEncontrado = valorAEnviarSeparado[2];
+
+	 	 case(SELECT):	{
+	 		char** valorAEnviarSeparado=separarRequest(valorAEnviar->request);
+	 		valorEncontrado = valorAEnviarSeparado[2];
 
 	 		if(codResultado == SUCCESS){
 				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
 				log_info(logger_MEMORIA,respuesta);
-
 	 		}else{
 	 			switch(codResultado){
 					case(KEY_NO_EXISTE):
@@ -904,19 +914,18 @@ void unlockSemSegmento(char* pathSegmento){
 						log_info(logger_MEMORIA,"No se ha podido encontrar respuesta a la request",request);
 						break;
 	 			}
-
 			}
-		free(respuesta);
-		respuesta = NULL;
-		free(error);
-		error = NULL;
-		liberarArrayDeChar(valorAEnviarSeparado); //(3)
-		valorAEnviarSeparado = NULL;
-		liberarArrayDeChar(requestSeparada); //(4)
-		requestSeparada = NULL;
-	 	 break;
-		}
-		case(INSERT): {
+			free(respuesta);
+			respuesta = NULL;
+			free(error);
+			error = NULL;
+			liberarArrayDeChar(valorAEnviarSeparado);
+			valorAEnviarSeparado = NULL;
+			liberarArrayDeChar(requestSeparada);
+			requestSeparada = NULL;
+			break;
+	 	 }
+		case(INSERT):	{
 			char** valorAEnviarSeparado = separarRequest(valorAEnviar->request);
 
 			if(codResultado == SUCCESS){
@@ -926,9 +935,9 @@ void unlockSemSegmento(char* pathSegmento){
 	 			respuesta=NULL;
 	 			free(error);
 	 			error=NULL;
-	 			liberarArrayDeChar(valorAEnviarSeparado); //(3)
+	 			liberarArrayDeChar(valorAEnviarSeparado);
 	 			valorAEnviarSeparado=NULL;
-	 			liberarArrayDeChar(requestSeparada); //(4)
+	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
 			}else if(codResultado == MEMORIA_FULL){
 				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," NO ha podido realizarse.La memoria se encuentra FULL");
@@ -937,9 +946,9 @@ void unlockSemSegmento(char* pathSegmento){
 				respuesta=NULL;
 				free(error);
 				error=NULL;
-				liberarArrayDeChar(valorAEnviarSeparado); //(3)
+				liberarArrayDeChar(valorAEnviarSeparado);
 				valorAEnviarSeparado=NULL;
-				liberarArrayDeChar(requestSeparada); //(4)
+				liberarArrayDeChar(requestSeparada);
 				requestSeparada=NULL;
 			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
@@ -948,13 +957,13 @@ void unlockSemSegmento(char* pathSegmento){
 				respuesta=NULL;
 				free(error);
 				error=NULL;
-				liberarArrayDeChar(valorAEnviarSeparado); //(3)
+				liberarArrayDeChar(valorAEnviarSeparado);
 				valorAEnviarSeparado=NULL;
-				liberarArrayDeChar(requestSeparada); //(4)
+				liberarArrayDeChar(requestSeparada);
 				requestSeparada=NULL;
 			}
 			break;
-			}
+		}
 		case(CREATE):
 			if(codResultado == SUCCESS || codResultado == TABLA_EXISTE){
 				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," se ha realizado con exito");
@@ -976,7 +985,8 @@ void unlockSemSegmento(char* pathSegmento){
 	 			requestSeparada=NULL;
 			}
 			break;
-	 	 case(DESCRIBE):
+
+	 	case(DESCRIBE):
 	 		if(codResultado == SUCCESS){
 				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,error);
@@ -991,6 +1001,7 @@ void unlockSemSegmento(char* pathSegmento){
 			liberarArrayDeChar(requestSeparada);
 			requestSeparada=NULL;
 			break;
+
 	 	 case(DROP):
 			if(codResultado == SUCCESS){
 				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
@@ -1006,6 +1017,7 @@ void unlockSemSegmento(char* pathSegmento){
 			liberarArrayDeChar(requestSeparada);
 			requestSeparada=NULL;
 	 	 	break;
+
 	 	 case(JOURNAL):
 			if(codResultado == SUCCESS){
 				string_append_with_format(&error, "%s%s%s","La request: ",request,valorAEnviar->request);
@@ -1021,6 +1033,13 @@ void unlockSemSegmento(char* pathSegmento){
 			liberarArrayDeChar(requestSeparada);
 			requestSeparada=NULL;
 	 	 	break;
+
+	 	 case(COMPONENTE_CAIDO):
+			log_error(logger_MEMORIA,"ERROR: El LFS se encuentra desconectado");
+			string_append_with_format(&error, "%s%s%s","La request ",request," no a podido realizarse");
+			log_info(logger_MEMORIA,error);
+			break;
+
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
  			free(respuesta);
@@ -1190,7 +1209,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
 			free(pathSegmento);
 			pathSegmento=NULL;
-			t_paquete* insertALFS =  intercambiarConFileSystem(palabraReservada,request);
+			t_paquete* insertALFS =  intercambiarConFileSystem(palabraReservada,request, caller, indiceKernel);
 			if(insertALFS->palabraReservada== EXIT_SUCCESS){
 				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,indiceKernel);
 
@@ -1506,7 +1525,7 @@ void crearSegmento(t_segmento* nuevoSegmento,char* pathNuevoSegmento){
  * 	-> void ::
  * 	VALGRIND :: NO*/
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel){
-	t_paquete* valorDeLFS=intercambiarConFileSystem(codRequest,request);
+	t_paquete* valorDeLFS=intercambiarConFileSystem(codRequest,request, caller, indiceKernel);
 	if(consistencia == EC || caller == CONSOLE){
 		create(codRequest, request);
 	}
@@ -1728,7 +1747,7 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
  * 	-> void ::
  * 	VALGRIND :: NO*/
 void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int indiceKernel){
-	t_paquete* describeLFS=intercambiarConFileSystem(codRequest,request);
+	t_paquete* describeLFS=intercambiarConFileSystem(codRequest,request, caller, indiceKernel);
 	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,indiceKernel);
 
 }
@@ -1752,7 +1771,7 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	pthread_mutex_lock(&semMMem);
 	int retardoMem=retardoMemPrincipal;
 	pthread_mutex_unlock(&semMMem);
-	valorDeLFS = intercambiarConFileSystem(codRequest,request);
+	valorDeLFS = intercambiarConFileSystem(codRequest,request,caller, indiceKernel);
 	if(consistencia == EC || caller == CONSOLE){
 		int encontrarTabla(t_segmento* segmento){
 			return string_equals_ignore_case(segmento->path, segmentoABuscar);
@@ -1923,7 +1942,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 				char* requestAEnviar= strdup("");
 				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
 
-				t_paquete* insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar);
+				t_paquete* insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar, caller, indiceKernel);
 				log_info(logger_MEMORIA,"Le enviamos a LFS: %s", requestAEnviar);
 
 				if(insertJournalLFS->palabraReservada==SUCCESS ){
