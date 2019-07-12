@@ -173,7 +173,6 @@ int enviarGossiping(char*, char*, char*, int);
 void enviarHandshakeLFS(int, int);
 int enviarHandshakeMemoria(rol, Componente, int);
 void eliminar_paquete(t_paquete*);
-void liberarPaquete(t_paquete*);
 void liberar_conexion(int);
 void liberarArrayDeChar(char**);
 void liberarHandshakeMemoria(t_gossiping*);
