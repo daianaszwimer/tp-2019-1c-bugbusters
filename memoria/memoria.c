@@ -11,6 +11,22 @@ int main(void) {
 	retardoFS = config_get_int_value(config, "RETARDO_FS");
 	retardoMemPrincipal =config_get_int_value(config, "RETARDO_MEM");
 	memoriasLevantadas = list_create();
+	memoriasSeeds = list_create();
+	pthread_mutex_init(&semMMemoriasLevantadas, NULL);
+	char** puertosSeeds = config_get_array_value(config, "PUERTO_SEEDS");
+	char** ipsSeeds = config_get_array_value(config, "IP_SEEDS");
+	int i;
+	for(i = 0; ipsSeeds[i] != NULL; i++) {
+		config_memoria* memoriaSeed = (config_memoria*) malloc(sizeof(config_memoria));
+		memoriaSeed->ip = strdup(ipsSeeds[i]);
+		memoriaSeed->puerto = strdup(puertosSeeds[i]);
+		memoriaSeed->numero = strdup(""); // no tenemos los numeros de las seeds
+		// no hace falta semaforo para la lista de las seeds porque solo le escribe aca
+		// y se en gossiping
+		list_add(memoriasSeeds, memoriaSeed);
+	}
+	liberarArrayDeChar(puertosSeeds);
+	liberarArrayDeChar(ipsSeeds);
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
 
@@ -88,13 +104,12 @@ void formatearMemoriasLevantadas(char** puertos, char** ips, char** numeros) {
 }
 
 void eliminarMemoria(char* puerto, char* ip) {
+	log_warning(logger_MEMORIA, "La memoria %s no está levantada", puerto);
 	int esMemoriaAEliminar(config_memoria* memoriaEnLista) {
 		return string_equals_ignore_case(memoriaEnLista->ip, ip) &&
 				string_equals_ignore_case(memoriaEnLista->puerto, puerto);
 	}
-	pthread_mutex_lock(&semMMemoriasLevantadas);
 	list_remove_and_destroy_by_condition(memoriasLevantadas,(void*)esMemoriaAEliminar, (void*)liberarConfigMemoria);
-	pthread_mutex_unlock(&semMMemoriasLevantadas);
 }
 
 void liberarConfigMemoria(config_memoria* configALiberar) {
@@ -111,96 +126,104 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
 }
 
 void hacerGossiping() {
-	char** puertosSeeds;
-	char** ipsSeeds;
-	int retardoG;
-	puertosSeeds = config_get_array_value(config, "PUERTO_SEEDS");
-	ipsSeeds = config_get_array_value(config, "IP_SEEDS");
-	int i;
-	int estadoHandshake;
-	int estadoRecibir;
-	int estadoEnviar;
-	t_gossiping* gossipingRecibido;
-	char* puertosQueTengo;
-	char* ipsQueTengo;
-	char* numerosQueTengo;
+	int retardo;
+	int esSeed;
+
+
+	char* puertoMio = config_get_string_value(config, "PUERTO");
+	char* ipMia = config_get_string_value(config, "IP");
+	char* numerosMio = config_get_string_value(config, "MEMORY_NUMBER");
+	char* puertosQueTengo = strdup("");
+	char* ipsQueTengo = strdup("");
+	char* numerosQueTengo = strdup("");
+	void gossip(config_memoria* mem) {
+		mandarGossiping(mem, esSeed, puertosQueTengo, ipsQueTengo, numerosQueTengo);
+	}
 	while(1) {
+		puertosQueTengo = strdup("");
+		ipsQueTengo = strdup("");
+		numerosQueTengo = strdup("");
+		// primero le pido a mis seeds
 		// hacer for que vaya del primer seed al ultimo
 		// cuando pido gossiping mando lista actaul
-		for(i = 0; ipsSeeds[i] != NULL; i++) {
-
-			puertosQueTengo = strdup("");
-			ipsQueTengo = strdup("");
-			numerosQueTengo = strdup("");
-
-			config_memoria* memoriaSeed = (config_memoria*) malloc(sizeof(config_memoria));
-			memoriaSeed->ip = strdup(ipsSeeds[i]);
-			memoriaSeed->puerto = strdup(puertosSeeds[i]);
-			memoriaSeed->numero = strdup(""); // no tenemos los numeros de las seeds
-
-			// si no me puedo conectar, la borro de mi lista de memorias
-			int conexionTemporaneaSeed = crearConexion(memoriaSeed->ip, memoriaSeed->puerto);
-			if (conexionTemporaneaSeed == COMPONENTE_CAIDO) {
-				eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
-				continue;
+		// copie el codigo de la funcion formatearMemoriasLevantadas para evitar deadlock
+		// antes de mandar memorias me fijo si estan levantadas
+		string_append_with_format(&puertosQueTengo, "%s", puertoMio);
+		string_append_with_format(&ipsQueTengo, "%s", ipMia);
+		string_append_with_format(&numerosQueTengo, "%s", numerosMio);
+		int i = 0;
+		pthread_mutex_lock(&semMMemoriasLevantadas);
+		config_memoria* memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
+		while(memoriaAFormatear != NULL) {
+			int conexionChequeo = crearConexion(memoriaAFormatear->ip, memoriaAFormatear->puerto);
+			if (conexionChequeo != COMPONENTE_CAIDO) {
+				string_append_with_format(&puertosQueTengo, ",%s", memoriaAFormatear->puerto);
+				string_append_with_format(&ipsQueTengo, ",%s", memoriaAFormatear->ip);
+				if (memoriaAFormatear->numero != NULL) {
+					string_append_with_format(&numerosQueTengo, ",%s", memoriaAFormatear->numero);
+				} else {
+					string_append_with_format(&numerosQueTengo, ",%s", "");
+				}
+				liberar_conexion(conexionChequeo);
+			} else {
+				eliminarMemoria(memoriaAFormatear->puerto, memoriaAFormatear->ip);
 			}
-			estadoHandshake = enviarHandshakeMemoria(GOSSIPING, MEMORIA, conexionTemporaneaSeed);
-			if (estadoHandshake == COMPONENTE_CAIDO) {
-				liberar_conexion(conexionTemporaneaSeed);
-				eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
-				continue;
-			}
-
-			formatearMemoriasLevantadas(&puertosQueTengo, &ipsQueTengo, &numerosQueTengo);
-
-			log_warning(logger_MEMORIA, "formatee en gossiping %s %s %s", puertosQueTengo, ipsQueTengo, numerosQueTengo);
-			estadoEnviar = //enviarGossiping("8001", "127.0.0.1", "1", conexionTemporaneaSeed);
-					enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, conexionTemporaneaSeed);
-			if (estadoEnviar == COMPONENTE_CAIDO) {
-				liberar_conexion(conexionTemporaneaSeed);
-				eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
-				continue;
-			}
-
-//			gossipingRecibido = recibirGossiping(conexionTemporaneaSeed, &estadoRecibir);
-//			if (estadoRecibir == COMPONENTE_CAIDO) {
-//				liberar_conexion(conexionTemporaneaSeed);
-//				eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
-//				continue;
-//			}
-//
-//			int existeUnaIgual(config_memoria* memoriaAgregada) {
-//				return string_equals_ignore_case(memoriaAgregada->ip, memoriaSeed->ip) &&
-//						string_equals_ignore_case(memoriaAgregada->puerto, memoriaSeed->puerto);
-//			}
-//
-//			// me intento conectar y si puedo sigo y la agrego a mi lista de memorias
-//			pthread_mutex_lock(&semMMemoriasLevantadas);
-//			if (!list_any_satisfy(memoriasLevantadas, (void*)existeUnaIgual)) {
-//				// agrego memoria si no existe en mi lista de memorias
-//				log_info(logger_MEMORIA, "Una de mis seeds se levantó", memoriaSeed->numero);
-//				list_add(memoriasLevantadas, memoriaSeed);
-//			}
-//			pthread_mutex_unlock(&semMMemoriasLevantadas);
-//
-//			memoriaSeed = NULL;
-//
-//			// cuando recibo gossiping lo recorro y voy agregando las memorias a la lista
-//
-//			agregarMemorias(gossipingRecibido);
-			liberar_conexion(conexionTemporaneaSeed);
-//			liberarHandshakeMemoria(gossipingRecibido);
-			free(puertosQueTengo);
-			free(ipsQueTengo);
-			free(numerosQueTengo);
+			i++;
+			memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
 		}
-		i = 0;
-		retardoG = retardoGossiping;
+		pthread_mutex_unlock(&semMMemoriasLevantadas);
+		esSeed = 1;
+		list_iterate(memoriasSeeds, (void*)gossip);
+		esSeed = 0;
+		pthread_mutex_lock(&semMMemoriasLevantadas);
+		// todo: no volver a mandarle a las semillas
+		list_iterate(memoriasLevantadas, (void*)gossip);
+		pthread_mutex_unlock(&semMMemoriasLevantadas);
+		free(puertosQueTengo);
+		free(ipsQueTengo);
+		free(numerosQueTengo);
+		retardo = retardoGossiping;
 		// todo: mutex
-		usleep(retardoG*1000);
+		usleep(retardo*1000);
 	}
-	liberarArrayDeChar(ipsSeeds);
-	liberarArrayDeChar(puertosSeeds);
+}
+
+void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed, char* puertosQueTengo, char* ipsQueTengo, char* numerosQueTengo) {
+
+	if (!vaASerSeed) {
+		// solo le mando si no es mi semilla porque en tal caso ya le mande
+		int esSeed(config_memoria* seed) {
+			return string_equals_ignore_case(memoriaSeed->ip, seed->ip) &&
+					string_equals_ignore_case(memoriaSeed->puerto, seed->puerto);
+		}
+		if (list_any_satisfy(memoriasSeeds, (void*)esSeed)) {
+			// OJO, solo hacerlo cuando yo pido, no cuando respondo, no llamar a la misma funcion, ADEMAS faltan mutex
+			return;
+		}
+	}
+
+	// si no me puedo conectar, la borro de mi lista de memorias
+	int conexionTemporaneaSeed = crearConexion(memoriaSeed->ip, memoriaSeed->puerto);
+	if (conexionTemporaneaSeed == COMPONENTE_CAIDO) {
+		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
+		return;
+	}
+	int estadoHandshake = enviarHandshakeMemoria(GOSSIPING, MEMORIA, conexionTemporaneaSeed);
+	if (estadoHandshake == COMPONENTE_CAIDO) {
+		liberar_conexion(conexionTemporaneaSeed);
+		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
+		return;
+	}
+
+	int estadoEnviar = enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, conexionTemporaneaSeed);
+	if (estadoEnviar == COMPONENTE_CAIDO) {
+		liberar_conexion(conexionTemporaneaSeed);
+		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
+		return;
+	}
+	log_warning(logger_MEMORIA, "Tengo %s %s %s", puertosQueTengo, ipsQueTengo, numerosQueTengo);
+	log_warning(logger_MEMORIA, "Le voy a mandar a la memoria %s %s", memoriaSeed->ip, memoriaSeed->puerto);
+	liberar_conexion(conexionTemporaneaSeed);
 }
 
 void agregarMemorias(t_gossiping* gossipingRecibido) {
@@ -217,29 +240,33 @@ void agregarMemorias(t_gossiping* gossipingRecibido) {
 		config_memoria* memoriaNueva = (config_memoria*) malloc(sizeof(config_memoria));
 		memoriaNueva->ip = strdup(ips[i]);
 		memoriaNueva->puerto = strdup(puertos[i]);
-		if (numeros[i] == NULL) {
+		// si no tengo el numero de memoria no me sirve porque el kernel lo necesita
+		if (numeros[i] == NULL || string_equals_ignore_case(numeros[i], "")) {
 			memoriaNueva->numero = strdup("");
-		} else {
-			memoriaNueva->numero = strdup(numeros[i]);
-		}
-
-
-		int existeUnaIgual(config_memoria* memoriaAgregada) {
-			return string_equals_ignore_case(memoriaAgregada->ip, memoriaNueva->ip) &&
-					string_equals_ignore_case(memoriaAgregada->puerto, memoriaNueva->puerto);
-		}
-
-		// no me autoguardo en la lista de memorias
-		if (string_equals_ignore_case(memoriaNueva->ip, ipMia) && string_equals_ignore_case(memoriaNueva->puerto, puertoMio)) {
 			liberarConfigMemoria(memoriaNueva);
 		} else {
-			pthread_mutex_lock(&semMMemoriasLevantadas);
-			if (!list_any_satisfy(memoriasLevantadas, (void*)existeUnaIgual)) {
-				// agrego memoria si no existe en mi lista de memorias
-				log_info(logger_MEMORIA, "Me llegó una nueva memoria en el gossiping, num: %s %s", memoriaNueva->ip, memoriaNueva->puerto);
-				list_add(memoriasLevantadas, memoriaNueva);
+			memoriaNueva->numero = strdup(numeros[i]);
+
+			int existeUnaIgual(config_memoria* memoriaAgregada) {
+				return string_equals_ignore_case(memoriaAgregada->ip, memoriaNueva->ip) &&
+						string_equals_ignore_case(memoriaAgregada->puerto, memoriaNueva->puerto);
 			}
-			pthread_mutex_unlock(&semMMemoriasLevantadas);
+
+			// no me autoguardo en la lista de memorias
+			if (string_equals_ignore_case(memoriaNueva->ip, ipMia) && string_equals_ignore_case(memoriaNueva->puerto, puertoMio)) {
+				liberarConfigMemoria(memoriaNueva);
+			} else {
+				pthread_mutex_lock(&semMMemoriasLevantadas);
+				if (!list_any_satisfy(memoriasLevantadas, (void*)existeUnaIgual)) {
+					// agrego memoria si no existe en mi lista de memorias
+					log_info(logger_MEMORIA, "Me llegó una nueva memoria en el gossiping, num: %s %s", memoriaNueva->ip, memoriaNueva->puerto);
+					list_add(memoriasLevantadas, memoriaNueva);
+					pthread_mutex_unlock(&semMMemoriasLevantadas);
+				} else {
+					pthread_mutex_unlock(&semMMemoriasLevantadas);
+					liberarConfigMemoria(memoriaNueva);
+				}
+			}
 		}
 		memoriaNueva = NULL;
 	}
@@ -418,6 +445,7 @@ void escucharMultiplesClientes() {
 						t_gossiping* gossipingRecibido = recibirGossiping(numDescriptor, &codigoOperacion);
 						agregarMemorias(gossipingRecibido);
 						if (codigoOperacion == COMPONENTE_CAIDO) {
+							// llamo a eliminar memoria
 							close(numDescriptor);
 							FD_CLR(numDescriptor, &descriptoresDeInteres);
 							log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
@@ -750,7 +778,7 @@ void unlockSemSegmento(char* pathSegmento){
 	 	 	 valorAEnviar=NULL;
 	 	 	 break;
 	 	 default:
-	 		string_append_with_format(&errorDefault, "%s%s","No se ha encontrado a quien devolver la reques realizada",request);
+	 		string_append_with_format(&errorDefault, "No se ha encontrado a quien devolver la request realizada %s",request);
 	 		log_info(logger_MEMORIA,errorDefault);
 	 		break;
 
@@ -758,7 +786,7 @@ void unlockSemSegmento(char* pathSegmento){
 
 	free(errorDefault);
 	errorDefault=NULL;
- }
+}
 
 /* mostrarResultadoPorConsola()
   * Parametros:
@@ -1527,8 +1555,9 @@ void liberarEstructurasMemoria(){
 	list_destroy_and_destroy_elements(tablaDeSegmentos->segmentos, (void*) eliminarUnSegmento);
 	free(tablaDeSegmentos);
 	pthread_mutex_unlock(&semMTablaSegmentos);
+	list_destroy_and_destroy_elements(memoriasLevantadas, (void*)liberarConfigMemoria);
+	list_destroy_and_destroy_elements(memoriasSeeds, (void*)liberarConfigMemoria);
 	list_destroy_and_destroy_elements(listaSemSegmentos,(void*)liberarSemSegmento);
-	list_destroy(memoriasLevantadas); //todo: destroy elements
 
 }
 /* eliminarSegmento()
@@ -1811,21 +1840,28 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 			return FALSE;
 		}
 	}
-
-	int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
 	t_paquete* resultadoJournal= (t_paquete*)malloc(sizeof(t_paquete));
+	if(list_is_empty(resultadosJournal)!=NULL){
+		int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
 
-	if(resultadoControl == SUCCESS){
+		if(resultadoControl == SUCCESS){
+			resultadoJournal->palabraReservada=JOURNAL;
+			resultadoJournal->request=strdup("Se ha realizado el JOURNAL con exito");
+			resultadoJournal->tamanio=sizeof(resultadoJournal->request);
+			enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
+
+		}else{
+			resultadoJournal->palabraReservada=JOURNAL;
+			resultadoJournal->request=strdup("NO se ha realizado el JOURNAL con exito");
+			resultadoJournal->tamanio=sizeof(resultadoJournal->request);
+			enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,resultadoJournal,caller, indiceKernel);
+		}
+	}else{
 		resultadoJournal->palabraReservada=JOURNAL;
-		resultadoJournal->request=strdup("Se ha realizado el JOURNAL con exito");
+		resultadoJournal->request=strdup("NO habia nada que impactar e LFS.JOURNAL se realizo con exito");
 		resultadoJournal->tamanio=sizeof(resultadoJournal->request);
 		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
 
-	}else{
-		resultadoJournal->palabraReservada=JOURNAL;
-		resultadoJournal->request=strdup("NO se ha realizado el JOURNAL con exito");
-		resultadoJournal->tamanio=sizeof(resultadoJournal->request);
-		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,resultadoJournal,caller, indiceKernel);
 	}
 	list_destroy(resultadosJournal);
 }
