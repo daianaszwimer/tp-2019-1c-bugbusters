@@ -998,8 +998,7 @@ void unlockSemSegmento(char* pathSegmento){
  					unlockSemSegmento(tabla);
  					free(tabla);
  					tabla=NULL;
-// 					free(tablaBuscada);
-// 					tablaBuscada=NULL;
+
  					memoriaSuficiente= SUCCESS;
  				} else if (tipoError == SEGMENTOINEXISTENTE) {
  					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
@@ -1014,8 +1013,6 @@ void unlockSemSegmento(char* pathSegmento){
  					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
  					pthread_mutex_unlock(&semMTablaSegmentos);
 
-// 					free(tabla);
-// 					tabla=NULL;
  					memoriaSuficiente= SUCCESS;
 
  				}
@@ -1033,8 +1030,6 @@ void unlockSemSegmento(char* pathSegmento){
 				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp,SINMODIFICAR));
 				unlockSemSegmento(tabla);
 
-//				free(tablaBuscada);
-// 				tablaBuscada=NULL;
 				memoriaSuficiente = SUCCESS;
 
  			}else if(tipoError == SEGMENTOINEXISTENTE){
@@ -1056,8 +1051,8 @@ void unlockSemSegmento(char* pathSegmento){
  		}
  	liberarArrayDeChar(requestSeparada);
  	requestSeparada=NULL;
-// 	free(tabla);
-// 	tabla=NULL;
+ 	free(tabla);
+ 	tabla=NULL;
  	free(nuevoValor);
  	nuevoValor=NULL;
  	}
@@ -1068,7 +1063,7 @@ void unlockSemSegmento(char* pathSegmento){
  void modificarElem(t_elemTablaDePaginas** elementoAInsertar,unsigned long long nuevoTimestamp, uint16_t nuevaKey,char* nuevoValor,t_flagModificado flag){
 	 (*elementoAInsertar)->modificado=flag;
 	 (*elementoAInsertar)->marco->key=nuevaKey;
-	 (*elementoAInsertar)->marco->timestamp=nuevoTimestamp;
+	 (*elementoAInsertar)->marco->timestamp=obtenerHoraActual();
 	 strcpy((*elementoAInsertar)->marco->value,nuevoValor);
 	 pthread_mutex_lock(&semMBitarray);
 	 bitarray_set_bit(bitarray,(*elementoAInsertar)->numeroDePag);
@@ -1686,36 +1681,34 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
  * 	-> void ::
  * 	VALGRIND :: NO*/
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
-	int i =0;
-	int retorno=NUESTRO_ERROR;
-	t_segmento* segmento;
-	segmento=NULL;
-		int contieneElElementoVictima(t_elemTablaDePaginas* elem){
-			if(elem->numeroDePag == elemVictima->numeroDePag){
-				retorno = SUCCESS;
-				puts(elem->marco->value);
-				return TRUE;
-			}else{
-				return FALSE;
-			}
-		}
-
+	int desvinculacion=NUESTRO_ERROR;
+	int i=0,j=0;
 	pthread_mutex_lock(&semMTablaSegmentos);
-	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
-		segmento = list_get(tablaDeSegmentos->segmentos,i);
-		pthread_mutex_unlock(&semMTablaSegmentos);
-		int indice= encontrarIndice(elemVictima,segmento);
-		list_remove(segmento->tablaDePagina,indice);//(void*)contieneElElementoVictima,(void*)eliminarElemTablaPagina);
-		i++;
-		pthread_mutex_lock(&semMTablaSegmentos);
 
+	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
+		t_segmento* seg=list_get(tablaDeSegmentos->segmentos,i);
+
+		pthread_mutex_unlock(&semMTablaSegmentos);
+
+		while(list_get(seg->tablaDePagina,j)!=NULL){
+			t_elemTablaDePaginas* elem =list_get(seg->tablaDePagina,j);
+			if(elem->numeroDePag == elemVictima->numeroDePag){
+				int indice= encontrarIndice(elemVictima,seg);
+				list_remove(seg->tablaDePagina,indice);
+				desvinculacion=SUCCESS;
+			}
+			j++;
+		}
+		pthread_mutex_lock(&semMTablaSegmentos);
+		i++;
+		j=0;
 	}
 	pthread_mutex_unlock(&semMTablaSegmentos);
 
-
-
-	return retorno;
+	return desvinculacion;
 }
+
+
 int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 	int indice=-1,i=0;
 	while(list_get(segmento->tablaDePagina,i)!=NULL){
