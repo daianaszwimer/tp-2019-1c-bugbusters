@@ -888,6 +888,16 @@ void unlockSemSegmento(char* pathSegmento){
 	 			error=NULL;
 	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
+
+			}else if (codResultado== -2){
+				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," NO ha podido realizarse porq S");
+				log_info(logger_MEMORIA,respuesta);
+				free(respuesta);
+				respuesta=NULL;
+				free(error);
+				error=NULL;
+				liberarArrayDeChar(requestSeparada);
+				requestSeparada=NULL;
 			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
 				log_info(logger_MEMORIA,error);
@@ -1005,9 +1015,11 @@ void unlockSemSegmento(char* pathSegmento){
 
  					usleep(retardoMem*1000);
 
+ 					modificarElem(&elementoAInsertar,nuevoTimestamp,nuevaKey,nuevoValor,SINMODIFICAR);
+
  					crearSegmento(nuevoSegmento, tabla);
  					lockSemSegmento(tabla);
- 					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp,SINMODIFICAR));
+ 					list_add(nuevoSegmento->tablaDePagina,elementoAInsertar);
  					unlockSemSegmento(tabla);
  					pthread_mutex_lock(&semMTablaSegmentos);
  					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
@@ -1710,14 +1722,14 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 
 
 int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
-	int indice=-1,i=0;
-	while(list_get(segmento->tablaDePagina,i)!=NULL){
-		t_elemTablaDePaginas* elem=list_get(segmento->tablaDePagina,i);
+	int indice=0;
+	while(list_get(segmento->tablaDePagina,indice)!=NULL){
+		t_elemTablaDePaginas* elem=list_get(segmento->tablaDePagina,indice);
 		if(elem->numeroDePag == elemVictima->numeroDePag){
-			indice = elem->numeroDePag;
+			//indice = elem->numeroDePag;
 			return indice;
 		}
-		i++;
+		indice++;
 	}
 	return indice;
 }
@@ -1774,6 +1786,7 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 	} else {
 		elemVictimaLRU=NULL;
 	}
+	list_destroy(elemSinModificar);
 	return elemVictimaLRU;
 }
 
