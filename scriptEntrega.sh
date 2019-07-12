@@ -15,6 +15,8 @@ cd
 cd tp-2019-1c-bugbusters/nuestro_lib/Debug
 make clean
 make all
+cd
+cp /home/utnso/tp-2019-1c-bugbusters/nuestro_lib/Debug/libnuestro_lib.so /usr/lib
 echo Compilando kernel...
 cd
 cd tp-2019-1c-bugbusters/kernel/Debug
@@ -35,5 +37,5 @@ echo Seteando library path...
 # ldd {ejecutable}
 # hay que instalar todas las dependenciassS????
 # seteo library path
-echo  'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/tp-2019-1c-bugbusters/nuestro_lib/Debug' >> ~/.bashrc 
+# echo  'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/tp-2019-1c-bugbusters/nuestro_lib/Debug' >> ~/.bashrc 
 echo Setup finalizado!
