@@ -16,19 +16,9 @@
 #include <semaphore.h>
 #include <sys/time.h>
 #include <commons/bitarray.h>
+#include <math.h>
 #include <errno.h>
 
-//---DESCRIPCION FUNCIONALIDADES ACTUALES---
-/*funcionalidades actuales de MEMORIA:
-(obseracion1: la memoria oseee un atributo en el .h con su consistencia
- observacion2: posee una tablaA 1 "hola")
-	1. SELECT
-		-SC:SHC: reconoce que debe realizarle la consulta a LFS(pero como aun lisandra no puede hacer un insert, no nos permite hacer nuestro select)
-		asi que simplemente loggea que se le consultara a LFS.
-		-EV:
-			* si se le consulta sobre la tabla y key que posee(observacion2), devuelve correctamente el valor a quien se lo haya consultado(kernel o desde la consola)
-			* si se le consulta sobre algo inexistente, al igual que en SC, loggea que se le consulta a LFS
-*/
 
 //----------------ENUMS--------------------
 typedef enum
@@ -42,6 +32,7 @@ typedef enum
 	SEGMENTOEXISTENTE = 99,
 	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101,
+	LRU = -10102,
 	JOURNALTIME = -10103
 } t_erroresMemoria;
 
@@ -74,6 +65,10 @@ typedef struct{
 	suseconds_t tv_usec;   /* microseconds */
 }t_timeval;
 
+typedef struct{
+	char* path;
+	pthread_mutex_t* sem;
+}t_semSegmento;
 typedef struct
 {
 	char* ip;
@@ -101,8 +96,9 @@ sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
 pthread_mutex_t terminarHilo;
 pthread_mutex_t semMBitarray;
 pthread_mutex_t semMTablaSegmentos;
+pthread_mutex_t semMListSemSegmentos;
+t_list* semMPorSegmento;
 pthread_mutex_t semMMemoriasLevantadas;// semaforo mutex para evitar concurrencia en la variable
-
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
@@ -115,7 +111,9 @@ int marcosTotales;
 int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 int maxValue;
-int retardoGossiping;
+int retardoGossiping, retardoFS, retardoMemPrincipal;
+
+t_list* listaSemSegmentos;
 
 //------------------ --- FUNCIONES--------------------------------
 
@@ -139,13 +137,15 @@ t_paquete* intercambiarConFileSystem(cod_request, char*);
 
 void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 
-int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**);
+int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**,char**);
+void lockSemSegmento(char*);
+void unlockSemSegmento(char* );
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
-void guardarRespuestaDeLFSaCACHE(t_paquete* ,t_erroresMemoria);
+int guardarRespuestaDeLFSaMemoria(t_paquete* ,t_erroresMemoria);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
-void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int);
+void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int,char*);
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 
 void actualizarTimestamp(t_marco*);
@@ -164,9 +164,11 @@ t_erroresMemoria existeSegmentoEnMemoria(cod_request,char*);
 
 int obtenerPaginaDisponible(t_marco**);
 
-void eliminarSegmento(t_segmento*);
+void eliminarUnSegmento(t_segmento*);
 void eliminarElemTablaPagina(t_elemTablaDePaginas* );
-void eliminarElemTablaSegmentos(t_segmento*);
+void eliminarUnSegmento(t_segmento*);
+void removerSem(char*);
+void liberarSemSegmento(t_semSegmento*);
 void liberarEstructurasMemoria();
 void liberarMemoria();
 void eliminarMarco(t_elemTablaDePaginas*,t_marco* );

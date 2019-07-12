@@ -1493,13 +1493,13 @@ void procesarJournal(int soloASHC) {
 		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
 		log_info(logger_KERNEL, "Se envió el JOURNAL a la memoria con numero %s", memoriaAConectarse->numero);
 		//todo: descomentar cuando memoria tenga journal
-		/*t_paquete* paqueteRecibido = recibir(conexionTemporanea);
+		t_paquete* paqueteRecibido = recibir(conexionTemporanea);
 		int respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
 			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", "JOURNAL", paqueteRecibido->request);
 		} else {
 			log_error(logger_KERNEL, "El request %s no es válido", "JOURNAL");
-		}*/
+		}
 		liberar_conexion(conexionTemporanea);
 		// eliminar_paquete(paqueteRecibido);
 	}
@@ -1599,7 +1599,10 @@ void procesarRun(t_queue* colaRun) {
 	} else if (queue_is_empty(colaRun) == TRUE){
 		pthread_mutex_unlock(&semMQuantum);
 		// si estoy aca es porque ya ejecuto toda la cola
+		log_info(logger_KERNEL, "...........................................................");
 		log_info(logger_KERNEL, "Finalizó la ejecución del script");
+		log_info(logger_KERNEL, "...........................................................");
+
 		queue_destroy(colaRun);
 	} else {
 		pthread_mutex_unlock(&semMQuantum);
