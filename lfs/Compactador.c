@@ -51,18 +51,18 @@ int finalizarHilo(char* pathTabla){
 	}
 
 	void liberarRecursos(t_hiloTabla* tabla){
-		queue_destroy_and_destroy_elements(tabla->requests, (void*)liberarRequest);
+		list_destroy_and_destroy_elements(tabla->cosasABloquear, (void*)liberarMutexTabla);
 		free(tabla->nombreTabla);
 		free(tabla);
 	}
 
-	pthread_mutex_lock(&mutexDiegote);
-	t_hiloTabla* tablaEncontrada = list_find(diegote, (void*) encontrarTabla);
+	pthread_mutex_lock(&mutexTablasParaCompactaciones);
+	t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*) encontrarTabla);
 	if(tablaEncontrada != NULL && tablaEncontrada->finalizarCompactacion){
-		list_remove_and_destroy_by_condition(diegote, (void*)encontrarTabla, (void*)liberarRecursos);
+		list_remove_and_destroy_by_condition(tablasParaCompactaciones, (void*)encontrarTabla, (void*)liberarRecursos);
 		finalizarHilo = 1;
 	}
-	pthread_mutex_unlock(&mutexDiegote);
+	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 
 	free(nombreTabla);
 	return finalizarHilo;
@@ -137,8 +137,6 @@ void compactar(char* pathTabla) {
 
 	setBlockTo(nombreTabla, 0);
 
-	procesarRequestsEncoladas(strdup(nombreTabla));
-
 	// Leemos todos los registros de los temporales a compactar y los guardamos en una lista
 	t_list* registrosDeTmpC = leerDeTodosLosTmpC(pathTabla, archivoDeLaTabla, tabla, particiones, numeroDeParticiones, tamanioBloque);
 
@@ -165,8 +163,6 @@ void compactar(char* pathTabla) {
 		setBlockTo(nombreTabla, 0);
 		// TODO: Desbloquear la tabla y dejar un registro de cuanto tiempo estuvo bloqueada la tabla para realizar esta operatoria
 
-		procesarRequestsEncoladas(strdup(nombreTabla));
-
 		list_destroy_and_destroy_elements(registrosDeParticiones, (void*) eliminarRegistro);
 		list_destroy_and_destroy_elements(registrosAEscribir, (void*) eliminarRegistro);
 	}
@@ -181,51 +177,46 @@ void compactar(char* pathTabla) {
 	list_destroy_and_destroy_elements(particiones, (void*) eliminarParticion);
 }
 
-void procesarRequestsEncoladas(char* nombreTabla){
-	pthread_t hiloProcesarRequests;
-	if(!pthread_create(&hiloProcesarRequests, NULL, (void*)procesarRequests, (void*)strdup(nombreTabla))){
-		log_info(logger_LFS, "Hilo de procesar requests de %s", nombreTabla);
-	}else{
-		log_error(logger_LFS, "Error al crear hilo procesar requests de %s", nombreTabla);
-	}
-	free(nombreTabla);
-	pthread_detach(hiloProcesarRequests);
-}
-
-void* procesarRequests(void* args){
-	char* nombreTabla = (char*)args;
-
-	int encontrarTabla(t_hiloTabla* tabla) {
-		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
-	}
-
-	pthread_mutex_lock(&mutexDiegote);
-	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla);
-	pthread_mutex_unlock(&mutexDiegote);
-	free(nombreTabla);
-	t_request* request;
-	pthread_mutex_lock(&mutexDiegote);
-	while((request = queue_pop(tabla->requests)) != NULL){
-		pthread_mutex_unlock(&mutexDiegote);
-		interpretarRequest(request->cod_request, request->parametros, request->memoria_fd);
-		free(request->parametros);
-		free(request);
-		pthread_mutex_lock(&mutexDiegote);
-	}
-	pthread_mutex_unlock(&mutexDiegote);
-	return NULL;
-}
-
 void setBlockTo(char* nombreTabla, int value){
 	int encontrarTabla(t_hiloTabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
 
-	pthread_mutex_lock(&mutexDiegote);
-	t_hiloTabla* tabla = list_find(diegote, (void*) encontrarTabla);
+	void bloquearODesbloquearTodosLosMutex(t_bloqueo* idYMutex) {
+		if(value) {
+			pthread_mutex_lock(&(idYMutex->mutex));
+		} else {
+			pthread_mutex_unlock(&(idYMutex->mutex));
+		}
+	}
 
-	tabla->blocked = value;
-	pthread_mutex_unlock(&mutexDiegote);
+	sleep(60);
+
+	pthread_mutex_lock(&mutexTablasParaCompactaciones);
+	t_hiloTabla* tabla = list_find(tablasParaCompactaciones, (void*) encontrarTabla);
+	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
+	pthread_mutex_lock(&mutexTablasParaCompactaciones);
+	for(int i = 0; list_get(tabla->cosasABloquear,i) != NULL; i++) {
+		t_bloqueo* idYMutex = list_get(tabla->cosasABloquear,i);
+		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+		if(value==1) {
+			pthread_mutex_lock(&(idYMutex->mutex));
+		} else if(value == 0) {
+			pthread_mutex_unlock(&(idYMutex->mutex));
+		}
+		pthread_mutex_lock(&mutexTablasParaCompactaciones);
+	}
+	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
+
+	/*pthread_mutex_lock(&mutexTablasParaCompactaciones);
+	t_hiloTabla* tabla = list_find(tablasParaCompactaciones, (void*) encontrarTabla);
+	if (tabla != NULL) {
+		list_iterate(tabla->cosasABloquear, (void*) bloquearODesbloquearTodosLosMutex);
+	}
+	pthread_mutex_unlock(&mutexTablasParaCompactaciones);*/
+
 }
 
 /* renombrarTmp_a_TmpC()

@@ -51,16 +51,25 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 	if(error == SUCCESS){
 		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) strdup(pathTabla))){
 			pthread_detach(hiloDeCompactacion);
-			//TODO mutex
+
+			//TODO sacar afuera lo de abajo
+			//TODO agregar los mutex de fds de memoria
+
+			t_bloqueo* idYMutexPropio = malloc(sizeof(t_bloqueo));
+			idYMutexPropio->id = 0; // 0 seria consola propia, sino son fds de memorias
+			pthread_mutex_init(&(idYMutexPropio->mutex), NULL);
+
 			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
 			hiloTabla->thread = &hiloDeCompactacion;
 			hiloTabla->nombreTabla = strdup(nombreTabla);
 			hiloTabla->finalizarCompactacion = 0;
-			hiloTabla->blocked = 0;
-			hiloTabla->requests = queue_create();
-			pthread_mutex_lock(&mutexDiegote);
-			list_add(diegote, hiloTabla);
-			pthread_mutex_unlock(&mutexDiegote);
+			hiloTabla->cosasABloquear = list_create();
+
+			pthread_mutex_lock(&mutexTablasParaCompactaciones);
+			list_add(hiloTabla->cosasABloquear, idYMutexPropio);
+			list_add(tablasParaCompactaciones, hiloTabla);
+			pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
 			log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", nombreTabla);
 		}else{
 			log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", nombreTabla);
@@ -163,10 +172,18 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 }
 
 
-errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
+errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje, int fd){
 
 	int ordenarRegistrosPorTimestamp(t_registro* registro1, t_registro* registro2){
 		return registro1->timestamp > registro2->timestamp;
+	}
+
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	int encontrarMutexCorrespondiente(t_bloqueo* idYMutex) {
+		return idYMutex->id == fd;
 	}
 
 	string_to_upper(nombreTabla);
@@ -177,7 +194,6 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 	DIR* dir = opendir(pathTabla);
 	if(dir){
 		closedir(dir);
-		//TODO validar q onda la funcion convertirKey, retorna -1 si hay error
 		int _key = convertirKey(key);
 		char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
 		t_config* configMetadataTabla = config_create(pathMetadataTabla);
@@ -186,11 +202,20 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 		config_destroy(configMetadataTabla);
 		int particionDeEstaKey = _key % numeroDeParticiones;
 		t_list* listaDeRegistrosDeMemtable = obtenerRegistrosDeMemtable(nombreTabla, _key);
+
+		pthread_mutex_lock(&mutexTablasParaCompactaciones);
+		t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*)encontrarTabla);
+		t_bloqueo* idYMutexEncontrado = list_find(tablaEncontrada->cosasABloquear, (void*)encontrarMutexCorrespondiente);
+		pthread_mutex_lock(&(idYMutexEncontrado->mutex));
 		t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);
 		t_list* listaDeRegistrosDeParticiones = obtenerRegistrosDeParticiones(nombreTabla, particionDeEstaKey, _key);
-		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeTmp);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeParticiones);
+		pthread_mutex_unlock(&(idYMutexEncontrado->mutex));
+		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
+		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
+
 		if(!list_is_empty(listaDeRegistros)){
 			list_sort(listaDeRegistros, (void*) ordenarRegistrosPorTimestamp);
 			t_registro* registro = (t_registro*)listaDeRegistros->head->data;
@@ -434,10 +459,10 @@ errorNo procesarDrop(char* nombreTabla){
 	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
-		pthread_mutex_lock(&mutexDiegote);
-		t_hiloTabla* tablaEncontrada = list_find(diegote, (void*)encontrarTabla);
+		pthread_mutex_lock(&mutexTablasParaCompactaciones);
+		t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*)encontrarTabla);
 		tablaEncontrada->finalizarCompactacion = 1;
-		pthread_mutex_unlock(&mutexDiegote);
+		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
 		rmdir(pathTabla);

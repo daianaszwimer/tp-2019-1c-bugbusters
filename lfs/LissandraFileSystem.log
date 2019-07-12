@@ -156,3 +156,87 @@
 [INFO] 20:04:54:242 Lfs/(26623:26623): Se agrego la tabla a la memtable y se agrego el registro
 [INFO] 20:06:29:408 Lfs/(26623:26623): Finalizando LFS
 >>>>>>> origin/master
+[INFO] 16:12:49:885 Lfs/(2685:2685): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 16:12:49:889 Lfs/(2685:2685): Hilo de compactacion de la tabla TABLA1 creado
+[INFO] 16:12:49:889 Lfs/(2685:2685): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 16:12:49:890 Lfs/(2685:2697): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1
+[INFO] 16:12:49:892 Lfs/(2685:2685): Hilo de inotify creado
+[INFO] 16:12:49:893 Lfs/(2685:2697): Hilo de procesar requests de TABLA1
+[INFO] 16:12:49:893 Lfs/(2685:2697): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1 terminada
+[INFO] 16:12:49:900 Lfs/(2685:2685): Hilo de recibir memorias creado
+[INFO] 16:12:49:901 Lfs/(2685:2700): Lissandra lista para recibir Memorias
+[INFO] 16:12:49:902 Lfs/(2685:2685): Hilo de Dump iniciado
+[INFO] 16:12:49:908 Lfs/(2685:2685): Hilo de consola creado
+[INFO] 16:14:02:461 Lfs/(2685:2697): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1
+[INFO] 16:14:02:462 Lfs/(2685:2701): Dump iniciado
+[INFO] 16:14:02:462 Lfs/(2685:2701): Dump exitoso
+[INFO] 16:14:04:365 Lfs/(2685:2697): Hilo de procesar requests de TABLA1
+[INFO] 16:14:04:366 Lfs/(2685:2697): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1 terminada
+[INFO] 16:14:45:458 Lfs/(2685:2697): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1
+[INFO] 16:14:45:463 Lfs/(2685:2697): Hilo de procesar requests de TABLA1
+[INFO] 16:14:45:464 Lfs/(2685:2697): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1 terminada
+[INFO] 16:15:50:999 Lfs/(2781:2781): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 16:15:50:3 Lfs/(2781:2781): Hilo de compactacion de la tabla TABLA1 creado
+[INFO] 16:15:50:4 Lfs/(2781:2781): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 16:15:50:4 Lfs/(2781:2791): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1
+[INFO] 16:15:51:9 Lfs/(2781:2781): Hilo de inotify creado
+[INFO] 16:15:51:9 Lfs/(2781:2791): Hilo de procesar requests de TABLA1
+[INFO] 16:15:51:9 Lfs/(2781:2791): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1 terminada
+[INFO] 16:15:51:11 Lfs/(2781:2781): Hilo de recibir memorias creado
+[INFO] 16:15:51:12 Lfs/(2781:2794): Lissandra lista para recibir Memorias
+[INFO] 16:15:51:14 Lfs/(2781:2781): Hilo de Dump iniciado
+[INFO] 16:15:51:24 Lfs/(2781:2781): Hilo de consola creado
+[INFO] 16:16:32:616 Lfs/(2781:2791): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1
+[INFO] 16:16:32:619 Lfs/(2781:2791): Hilo de procesar requests de TABLA1
+[INFO] 16:16:32:622 Lfs/(2781:2791): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1 terminada
+[INFO] 16:16:52:803 Lfs/(2781:2795): Dump iniciado
+[INFO] 16:16:52:803 Lfs/(2781:2795): Dump exitoso
+[ERROR] 16:17:05:972 Lfs/(2781:2796): La key es demasiado grande
+[INFO] 01:32:51:356 Lfs/(8282:8282): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:33:51:564 Lfs/(8397:8397): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:34:16:46 Lfs/(8397:8569): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1
+[INFO] 01:36:47:205 Lfs/(8618:8618): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:36:57:306 Lfs/(8618:8776): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1
+[INFO] 01:49:55:699 Lfs/(9609:9609): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:51:15:344 Lfs/(9674:9674): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:51:15:345 Lfs/(9674:9674): Hilo de compactacion de la tabla TABLA1 creado
+[INFO] 01:51:15:345 Lfs/(9674:9674): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:51:15:345 Lfs/(9674:9674): Hilo de inotify creado
+[INFO] 01:51:15:345 Lfs/(9674:9674): Hilo de recibir memorias creado
+[INFO] 01:51:15:345 Lfs/(9674:9674): Hilo de Dump iniciado
+[INFO] 01:51:15:345 Lfs/(9674:9674): Hilo de consola creado
+[INFO] 01:51:15:346 Lfs/(9674:9682): Lissandra lista para recibir Memorias
+[INFO] 01:51:15:347 Lfs/(9674:9680): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1
+[INFO] 01:51:15:347 Lfs/(9674:9680): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA1 terminada
+[INFO] 22:40:32:186 Lfs/(19204:19204): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 22:40:32:192 Lfs/(19204:19204): Hilo de compactacion de la tabla TABLA2 creado
+[INFO] 22:40:32:193 Lfs/(19204:19214): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA2
+[INFO] 22:40:32:196 Lfs/(19204:19204): Hilo de compactacion de la tabla TABLAA creado
+[INFO] 22:40:32:196 Lfs/(19204:19204): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 22:40:32:198 Lfs/(19204:19215): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLAA
+[INFO] 22:40:32:204 Lfs/(19204:19204): Hilo de inotify creado
+[INFO] 22:40:32:209 Lfs/(19204:19204): Hilo de recibir memorias creado
+[INFO] 22:40:32:210 Lfs/(19204:19217): Lissandra lista para recibir Memorias
+[INFO] 22:40:32:212 Lfs/(19204:19204): Hilo de Dump iniciado
+[INFO] 22:40:32:217 Lfs/(19204:19204): Hilo de consola creado
+[INFO] 22:41:34:156 Lfs/(19204:19218): Dump iniciado
+[INFO] 22:41:34:156 Lfs/(19204:19218): Dump exitoso
+[INFO] 22:41:38:313 Lfs/(19204:19219): Request de la memoria 0
+[INFO] 22:42:32:176 Lfs/(19204:19219): Me llego un SELECT
+[INFO] 22:43:07:179 Lfs/(19204:19214): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA2 terminada
+[INFO] 22:43:07:180 Lfs/(19204:19218): Dump iniciado
+[INFO] 22:43:07:180 Lfs/(19204:19218): Dump exitoso
+[INFO] 22:43:27:272 Lfs/(19204:19214): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA2
+[INFO] 22:50:00:463 Lfs/(19449:19449): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 22:50:00:472 Lfs/(19449:19449): Hilo de compactacion de la tabla TABLA2 creado
+[INFO] 22:50:00:473 Lfs/(19449:19459): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA2
+[INFO] 22:50:00:476 Lfs/(19449:19449): Hilo de compactacion de la tabla TABLAA creado
+[INFO] 22:50:00:476 Lfs/(19449:19449): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 22:50:00:476 Lfs/(19449:19460): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLAA
+[INFO] 22:50:00:485 Lfs/(19449:19449): Hilo de inotify creado
+[INFO] 22:50:00:489 Lfs/(19449:19449): Hilo de recibir memorias creado
+[INFO] 22:50:00:492 Lfs/(19449:19462): Lissandra lista para recibir Memorias
+[INFO] 22:50:00:493 Lfs/(19449:19449): Hilo de Dump iniciado
+[INFO] 22:50:00:496 Lfs/(19449:19449): Hilo de consola creado
+[INFO] 22:50:23:587 Lfs/(19449:19464): Request de la memoria 0
+[INFO] 22:50:23:588 Lfs/(19449:19464): Me llego un SELECT

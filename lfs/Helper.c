@@ -10,7 +10,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	switch (palabraReservada){
 		case SELECT:
 			log_info(logger_LFS, "Me llego un SELECT");
-			errorNo = procesarSelect(requestSeparada[1], requestSeparada[2], &mensaje);
+			errorNo = procesarSelect(requestSeparada[1], requestSeparada[2], &mensaje, *memoria_fd);
 			break;
 		case INSERT:
 			log_info(logger_LFS, "Me llego un INSERT");
@@ -113,4 +113,9 @@ void vaciarTabla(t_tabla *tabla) {
     list_clean_and_destroy_elements(tabla->registros, (void*) eliminarRegistros);
     free(tabla->registros);
     free(tabla);
+}
+
+void liberarMutexTabla(t_bloqueo* idYMutex) {
+	pthread_mutex_destroy(&(idYMutex->mutex));
+	free(idYMutex);
 }

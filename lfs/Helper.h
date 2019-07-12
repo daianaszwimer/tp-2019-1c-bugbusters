@@ -46,9 +46,13 @@ typedef struct{
 	pthread_t* thread;
 	char* nombreTabla;
 	int finalizarCompactacion;
-	int blocked;
-	t_queue* requests;
+	t_list* cosasABloquear;
 } t_hiloTabla;
+
+typedef struct {
+	int id;
+	pthread_mutex_t mutex;
+} t_bloqueo;
 
 typedef struct{
 	cod_request cod_request;
@@ -63,7 +67,7 @@ t_config* config;
 t_config *configMetadata;
 t_bitarray* bitarray;
 t_memtable* memtable;
-t_list* diegote; // lista que tiene las tablas para las compactaciones
+t_list* tablasParaCompactaciones; // lista que tiene las tablas para las compactaciones
 
 pthread_t hiloLeerDeConsola;
 pthread_t hiloRecibirMemorias;
@@ -80,11 +84,12 @@ int blocks;
 
 int obtenerBloqueDisponible();
 void vaciarTabla(t_tabla*);
+void liberarMutexTabla(t_bloqueo*);
 void interpretarRequest(cod_request, char*, int*);
 
 // SEMAFOROS
 pthread_mutex_t mutexMemtable;
-pthread_mutex_t mutexDiegote;
+pthread_mutex_t mutexTablasParaCompactaciones;
 pthread_mutex_t mutexConfig;
 pthread_mutex_t mutexRetardo;
 pthread_mutex_t mutexTiempoDump;
