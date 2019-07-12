@@ -68,6 +68,7 @@ void inicializarVariables() {
 	pthread_mutex_init(&semMMemoriasEC, NULL);
 	pthread_mutex_init(&semMMemorias, NULL);
 	pthread_mutex_init(&semMConfig, NULL);
+	pthread_mutex_init(&semMSleepGossiping, NULL);
 
 	// Colas de planificacion
 	new = queue_create();
@@ -113,6 +114,7 @@ void liberarMemoria(void) {
 	pthread_mutex_destroy(&semMMemoriasEC);
 	pthread_mutex_destroy(&semMMemorias);
 	pthread_mutex_destroy(&semMConfig);
+	pthread_mutex_destroy(&semMSleepGossiping);
 
 	sem_destroy(&semRequestNew);
 	sem_destroy(&semRequestReady);
@@ -148,6 +150,7 @@ void liberarMemoria(void) {
  * 	-> :: void  */
 void hacerGossiping(void) {
 	t_gossiping* gossiping;
+	int sleep;
 	// data de la mem ppal
 	pthread_mutex_lock(&semMConfig);
 	char* ipPpal = strdup(config_get_string_value(config, "IP_MEMORIA"));
@@ -195,8 +198,10 @@ void hacerGossiping(void) {
 		}
 	}
 	while(1) {
-		// todo: sleep tiene que poder ser modificado
-		usleep(sleepGossiping * 1000);
+		pthread_mutex_lock(&semMSleepGossiping);
+		sleep = sleepGossiping;
+		pthread_mutex_unlock(&semMSleepGossiping);
+		usleep(sleep * 1000);
 		log_info(logger_KERNEL, "Haciendo gossiping");
 		conexion = conectarseAMemoria(GOSSIPING, puertoActual, ipActual, numeroActual);
 		if (conexion == FAILURE) {
@@ -339,7 +344,9 @@ void planificarRequest(char* request) {
 		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 		// todo: hacer strdup de request?!
-		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, request);
+		char* reqParam = strdup(request);
+		free(request);
+		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, reqParam);
 		if(threadProcesar == 0){
 			pthread_attr_destroy(&attr);
 		} else {
@@ -379,7 +386,7 @@ void escucharCambiosEnConfig(void) {
 	if (file_descriptor < 0) {
 		log_error(logger_KERNEL, "Inotify no se pudo inicializar correctamente");
 	}
-
+	int hayError = 0;
 	watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config", IN_MODIFY);
 	while(1) {
 		log_info(logger_KERNEL, "Watch vale %d", watch_descriptor);
@@ -393,14 +400,41 @@ void escucharCambiosEnConfig(void) {
 			log_error(logger_KERNEL, "Error en inotify");
 		} else {
 			pthread_mutex_lock(&semMQuantum);
-			quantum = config_get_int_value(config, "QUANTUM");
-			pthread_mutex_unlock(&semMQuantum);
+			if(config_has_property(config, "QUANTUM")){
+				quantum = config_get_int_value(config, "QUANTUM");
+				pthread_mutex_unlock(&semMQuantum);
+			}else{
+				pthread_mutex_unlock(&semMQuantum);
+				hayError = 1;
+			}
 			pthread_mutex_lock(&semMSleepEjecucion);
-			sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
-			pthread_mutex_unlock(&semMSleepEjecucion);
+			if(config_has_property(config, "SLEEP_EJECUCION")){
+				sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
+				pthread_mutex_unlock(&semMSleepEjecucion);
+			}else{
+				pthread_mutex_unlock(&semMSleepEjecucion);
+				hayError = 1;
+			}
 			pthread_mutex_lock(&semMMetadataRefresh);
-			metadataRefresh = config_get_int_value(config, "METADATA_REFRESH");
-			pthread_mutex_unlock(&semMMetadataRefresh);
+			if(config_has_property(config, "METADATA_REFRESH")){
+				metadataRefresh = config_get_int_value(config, "METADATA_REFRESH");
+				pthread_mutex_unlock(&semMMetadataRefresh);
+			}else{
+				pthread_mutex_unlock(&semMMetadataRefresh);
+				hayError = 1;
+			}
+			pthread_mutex_lock(&semMSleepGossiping);
+			if(config_has_property(config, "SLEEP_GOSSIPING")){
+				sleepGossiping = config_get_int_value(config, "SLEEP_GOSSIPING");
+				pthread_mutex_unlock(&semMSleepGossiping);
+			}else{
+				pthread_mutex_unlock(&semMSleepGossiping);
+				hayError = 1;
+			}
+			if (hayError) {
+				log_error(logger_KERNEL, "Error en inotify, sus cambios no han sido tomados, por vuelva a cambiar el archivo");
+			}
+			hayError = 0;
 		}
 
 		inotify_rm_watch(file_descriptor, watch_descriptor);
@@ -876,7 +910,9 @@ void procesarRequest(request_procesada* request) {
  * 	-> requestEsValida :: bool  */
 int validarRequest(char* mensaje) {
 	char* mensajeError;
+	char* req = strdup(mensaje);
 	if(validarMensaje(mensaje, KERNEL, &mensajeError) == SUCCESS){
+		free(req);
 		return TRUE;
 	}else{
 		log_error(logger_KERNEL, "%s. Request que generó error: %s", mensajeError, mensaje);
@@ -1084,6 +1120,7 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
 	int esTabla(char* tablaActual) {
 		return string_equals_ignore_case(tabla, tablaActual);
 	}
+	// todo: ojo con el orden de los semaforos
 	pthread_mutex_lock(&semMTablasSC);
 	pthread_mutex_lock(&semMTablasSHC);
 	pthread_mutex_lock(&semMTablasEC);
@@ -1164,9 +1201,6 @@ config_memoria* encontrarMemoriaSegunConsistencia(consistencia tipoConsistencia,
 				pthread_mutex_unlock(&semMMemoriasEC);
 				log_error(logger_KERNEL, "No se puede resolver el request porque no hay memorias asociadas al criterio EC");
 			}
-			break;
-		case CONSISTENCIA_INVALIDA:
-			log_error(logger_KERNEL, "No se puede resolver el request porque la consistencia es inválida");
 			break;
 		default:
 			log_error(logger_KERNEL, "No se puede resolver el request porque no tengo la metadata de la tabla");
@@ -1360,14 +1394,16 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		pthread_mutex_unlock(&semMMemorias);
 		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
 		if(conexionTemporanea == FAILURE) {
-			free(numMemoria);
-			numMemoria = NULL;
 			conexionTemporanea = reintentarConexion(consistenciaTabla, 0, 1, &numMemoria);
+			free(ip);
+			free(puerto);
 			if (conexionTemporanea == FAILURE) {
-				free(ip);
-				free(puerto);
+				// todo: probar reintento de conexiones
+				log_info(logger_KERNEL, "La request %s no se pudo ejecutar porque no hay memorias para esa request", mensaje);
+				free(numMemoria);
+				numMemoria = NULL;
 				liberarArrayDeChar(parametros);
-				return FAILURE;
+				return SUCCESS;
 			}
 		}
 	} else {
@@ -1390,15 +1426,15 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			puerto = strdup(memoriaCorrespondiente->puerto);
 			conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
 			if(conexionTemporanea == FAILURE) {
-				conexionTemporanea = reintentarConexion(NINGUNA, 0, 1, &numMemoria);
+				conexionTemporanea = reintentarConexion(consistenciaTabla, 0, 1, &numMemoria);
 				free(ip);
 				free(puerto);
 				ip = NULL;
 				puerto = NULL;
 				if (conexionTemporanea == FAILURE) {
-					liberarArrayDeChar(parametros);
 					log_info(logger_KERNEL, "La request %s no se pudo ejecutar porque no hay memorias para esa request", mensaje);
 					free(numMemoria);
+					liberarArrayDeChar(parametros);
 					numMemoria = NULL;
 					return SUCCESS;
 				}
@@ -1414,6 +1450,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		liberarArrayDeChar(parametros);
 		free(ip);
 		free(puerto);
+		free(numMemoria);
 		ip = NULL;
 		puerto = NULL;
 		return SUCCESS;

@@ -127,8 +127,6 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
 void hacerGossiping() {
 	int retardo;
 	int esSeed;
-
-
 	char* puertoMio = config_get_string_value(config, "PUERTO");
 	char* ipMia = config_get_string_value(config, "IP");
 	char* numerosMio = config_get_string_value(config, "MEMORY_NUMBER");
@@ -156,18 +154,25 @@ void hacerGossiping() {
 		while(memoriaAFormatear != NULL) {
 			int conexionChequeo = crearConexion(memoriaAFormatear->ip, memoriaAFormatear->puerto);
 			if (conexionChequeo != COMPONENTE_CAIDO) {
-				string_append_with_format(&puertosQueTengo, ",%s", memoriaAFormatear->puerto);
-				string_append_with_format(&ipsQueTengo, ",%s", memoriaAFormatear->ip);
+				char* ip = strdup(memoriaAFormatear->ip);
+				char* puerto = strdup(memoriaAFormatear->puerto);
+				char* num;
 				if (memoriaAFormatear->numero != NULL) {
-					string_append_with_format(&numerosQueTengo, ",%s", memoriaAFormatear->numero);
+					num = strdup(memoriaAFormatear->numero);
 				} else {
-					string_append_with_format(&numerosQueTengo, ",%s", "");
+					num = strdup("");
 				}
+				pthread_mutex_unlock(&semMMemoriasLevantadas);
+				string_append_with_format(&puertosQueTengo, ",%s", puerto);
+				string_append_with_format(&ipsQueTengo, ",%s", ip);
+				string_append_with_format(&numerosQueTengo, ",%s", num);
 				liberar_conexion(conexionChequeo);
 			} else {
 				eliminarMemoria(memoriaAFormatear->puerto, memoriaAFormatear->ip);
+				pthread_mutex_unlock(&semMMemoriasLevantadas);
 			}
 			i++;
+			pthread_mutex_lock(&semMMemoriasLevantadas);
 			memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
 		}
 		pthread_mutex_unlock(&semMMemoriasLevantadas);
@@ -188,7 +193,6 @@ void hacerGossiping() {
 }
 
 void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed, char* puertosQueTengo, char* ipsQueTengo, char* numerosQueTengo) {
-
 	if (!vaASerSeed) {
 		// solo le mando si no es mi semilla porque en tal caso ya le mande
 		int esSeed(config_memoria* seed) {
@@ -200,7 +204,6 @@ void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed, char* puertosQ
 			return;
 		}
 	}
-
 	// si no me puedo conectar, la borro de mi lista de memorias
 	int conexionTemporaneaSeed = crearConexion(memoriaSeed->ip, memoriaSeed->puerto);
 	if (conexionTemporaneaSeed == COMPONENTE_CAIDO) {

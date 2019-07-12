@@ -8,7 +8,7 @@ cd so-commons-library
 make clean
 make
 cd
-cp so-commons-library/src/build/libcommons.so /usr/lib
+sudo cp so-commons-library/src/build/libcommons.so /usr/lib
 cd
 cd tp-2019-1c-bugbusters/nuestro_lib/Debug
 make clean
