@@ -196,8 +196,6 @@ void escucharCambiosEnConfig(void) {
 void hacerGossiping() {
 	int retardo;
 	int esSeed;
-
-
 	char* puertoMio = config_get_string_value(config, "PUERTO");
 	char* ipMia = config_get_string_value(config, "IP");
 	char* numerosMio = config_get_string_value(config, "MEMORY_NUMBER");
@@ -225,18 +223,25 @@ void hacerGossiping() {
 		while(memoriaAFormatear != NULL) {
 			int conexionChequeo = crearConexion(memoriaAFormatear->ip, memoriaAFormatear->puerto);
 			if (conexionChequeo != COMPONENTE_CAIDO) {
-				string_append_with_format(&puertosQueTengo, ",%s", memoriaAFormatear->puerto);
-				string_append_with_format(&ipsQueTengo, ",%s", memoriaAFormatear->ip);
+				char* ip = strdup(memoriaAFormatear->ip);
+				char* puerto = strdup(memoriaAFormatear->puerto);
+				char* num;
 				if (memoriaAFormatear->numero != NULL) {
-					string_append_with_format(&numerosQueTengo, ",%s", memoriaAFormatear->numero);
+					num = strdup(memoriaAFormatear->numero);
 				} else {
-					string_append_with_format(&numerosQueTengo, ",%s", "");
+					num = strdup("");
 				}
+				pthread_mutex_unlock(&semMMemoriasLevantadas);
+				string_append_with_format(&puertosQueTengo, ",%s", puerto);
+				string_append_with_format(&ipsQueTengo, ",%s", ip);
+				string_append_with_format(&numerosQueTengo, ",%s", num);
 				liberar_conexion(conexionChequeo);
 			} else {
 				eliminarMemoria(memoriaAFormatear->puerto, memoriaAFormatear->ip);
+				pthread_mutex_unlock(&semMMemoriasLevantadas);
 			}
 			i++;
+			pthread_mutex_lock(&semMMemoriasLevantadas);
 			memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
 		}
 		pthread_mutex_unlock(&semMMemoriasLevantadas);
@@ -257,7 +262,6 @@ void hacerGossiping() {
 }
 
 void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed, char* puertosQueTengo, char* ipsQueTengo, char* numerosQueTengo) {
-
 	if (!vaASerSeed) {
 		// solo le mando si no es mi semilla porque en tal caso ya le mande
 		int esSeed(config_memoria* seed) {
@@ -269,7 +273,6 @@ void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed, char* puertosQ
 			return;
 		}
 	}
-
 	// si no me puedo conectar, la borro de mi lista de memorias
 	int conexionTemporaneaSeed = crearConexion(memoriaSeed->ip, memoriaSeed->puerto);
 	if (conexionTemporaneaSeed == COMPONENTE_CAIDO) {
@@ -974,6 +977,16 @@ void unlockSemSegmento(char* pathSegmento){
 	 			error=NULL;
 	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
+
+			}else if (codResultado== -2){
+				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," NO ha podido realizarse porq S");
+				log_info(logger_MEMORIA,respuesta);
+				free(respuesta);
+				respuesta=NULL;
+				free(error);
+				error=NULL;
+				liberarArrayDeChar(requestSeparada);
+				requestSeparada=NULL;
 			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
 				log_info(logger_MEMORIA,error);
@@ -1096,24 +1109,23 @@ void unlockSemSegmento(char* pathSegmento){
  					unlockSemSegmento(tabla);
  					free(tabla);
  					tabla=NULL;
-// 					free(tablaBuscada);
-// 					tablaBuscada=NULL;
+
  					memoriaSuficiente= SUCCESS;
  				} else if (tipoError == SEGMENTOINEXISTENTE) {
  					t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
 
  					usleep(retardoMem*1000);
 
+ 					modificarElem(&elementoAInsertar,nuevoTimestamp,nuevaKey,nuevoValor,SINMODIFICAR);
+
  					crearSegmento(nuevoSegmento, tabla);
  					lockSemSegmento(tabla);
- 					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp,SINMODIFICAR));
+ 					list_add(nuevoSegmento->tablaDePagina,elementoAInsertar);
  					unlockSemSegmento(tabla);
  					pthread_mutex_lock(&semMTablaSegmentos);
  					list_add(tablaDeSegmentos->segmentos, nuevoSegmento);
  					pthread_mutex_unlock(&semMTablaSegmentos);
 
-// 					free(tabla);
-// 					tabla=NULL;
  					memoriaSuficiente= SUCCESS;
 
  				}
@@ -1131,8 +1143,6 @@ void unlockSemSegmento(char* pathSegmento){
 				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp,SINMODIFICAR));
 				unlockSemSegmento(tabla);
 
-//				free(tablaBuscada);
-// 				tablaBuscada=NULL;
 				memoriaSuficiente = SUCCESS;
 
  			}else if(tipoError == SEGMENTOINEXISTENTE){
@@ -1154,8 +1164,8 @@ void unlockSemSegmento(char* pathSegmento){
  		}
  	liberarArrayDeChar(requestSeparada);
  	requestSeparada=NULL;
-// 	free(tabla);
-// 	tabla=NULL;
+ 	free(tabla);
+ 	tabla=NULL;
  	free(nuevoValor);
  	nuevoValor=NULL;
  	}
@@ -1166,7 +1176,7 @@ void unlockSemSegmento(char* pathSegmento){
  void modificarElem(t_elemTablaDePaginas** elementoAInsertar,unsigned long long nuevoTimestamp, uint16_t nuevaKey,char* nuevoValor,t_flagModificado flag){
 	 (*elementoAInsertar)->modificado=flag;
 	 (*elementoAInsertar)->marco->key=nuevaKey;
-	 (*elementoAInsertar)->marco->timestamp=nuevoTimestamp;
+	 (*elementoAInsertar)->marco->timestamp=obtenerHoraActual();
 	 strcpy((*elementoAInsertar)->marco->value,nuevoValor);
 	 pthread_mutex_lock(&semMBitarray);
 	 bitarray_set_bit(bitarray,(*elementoAInsertar)->numeroDePag);
@@ -1802,45 +1812,43 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
  * 	-> void ::
  * 	VALGRIND :: NO*/
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
-	int i =0;
-	int retorno=NUESTRO_ERROR;
-	t_segmento* segmento;
-	segmento=NULL;
-		int contieneElElementoVictima(t_elemTablaDePaginas* elem){
-			if(elem->numeroDePag == elemVictima->numeroDePag){
-				retorno = SUCCESS;
-				puts(elem->marco->value);
-				return TRUE;
-			}else{
-				return FALSE;
-			}
-		}
-
+	int desvinculacion=NUESTRO_ERROR;
+	int i=0,j=0;
 	pthread_mutex_lock(&semMTablaSegmentos);
-	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
-		segmento = list_get(tablaDeSegmentos->segmentos,i);
-		pthread_mutex_unlock(&semMTablaSegmentos);
-		int indice= encontrarIndice(elemVictima,segmento);
-		list_remove(segmento->tablaDePagina,indice);//(void*)contieneElElementoVictima,(void*)eliminarElemTablaPagina);
-		i++;
-		pthread_mutex_lock(&semMTablaSegmentos);
 
+	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
+		t_segmento* seg=list_get(tablaDeSegmentos->segmentos,i);
+
+		pthread_mutex_unlock(&semMTablaSegmentos);
+
+		while(list_get(seg->tablaDePagina,j)!=NULL){
+			t_elemTablaDePaginas* elem =list_get(seg->tablaDePagina,j);
+			if(elem->numeroDePag == elemVictima->numeroDePag){
+				int indice= encontrarIndice(elemVictima,seg);
+				list_remove(seg->tablaDePagina,indice);
+				desvinculacion=SUCCESS;
+			}
+			j++;
+		}
+		pthread_mutex_lock(&semMTablaSegmentos);
+		i++;
+		j=0;
 	}
 	pthread_mutex_unlock(&semMTablaSegmentos);
 
-
-
-	return retorno;
+	return desvinculacion;
 }
+
+
 int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
-	int indice=-1,i=0;
-	while(list_get(segmento->tablaDePagina,i)!=NULL){
-		t_elemTablaDePaginas* elem=list_get(segmento->tablaDePagina,i);
+	int indice=0;
+	while(list_get(segmento->tablaDePagina,indice)!=NULL){
+		t_elemTablaDePaginas* elem=list_get(segmento->tablaDePagina,indice);
 		if(elem->numeroDePag == elemVictima->numeroDePag){
-			indice = elem->numeroDePag;
+			//indice = elem->numeroDePag;
 			return indice;
 		}
-		i++;
+		indice++;
 	}
 	return indice;
 }
@@ -1901,6 +1909,7 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 	} else {
 		elemVictimaLRU=NULL;
 	}
+	list_destroy(elemSinModificar);
 	return elemVictimaLRU;
 }
 
