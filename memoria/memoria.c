@@ -778,7 +778,7 @@ void unlockSemSegmento(char* pathSegmento){
 	 	 	 valorAEnviar=NULL;
 	 	 	 break;
 	 	 default:
-	 		string_append_with_format(&errorDefault, "No se ha encontrado a quien devolver la request realizada %s",request);
+	 		string_append_with_format(&errorDefault, " No se ha encontrado a quien devolver la request realizada %s",request);
 	 		log_info(logger_MEMORIA,errorDefault);
 	 		break;
 
@@ -931,10 +931,10 @@ void unlockSemSegmento(char* pathSegmento){
 	 	 	break;
 	 	 case(JOURNAL):
 			if(codResultado == SUCCESS){
-				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
+				string_append_with_format(&error, "%s%s%s","La request: ",request,valorAEnviar->request);
 				log_info(logger_MEMORIA,error);
 			}else{
-				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				string_append_with_format(&error, "%s%s%s","La request: ",request,valorAEnviar->request);
 				log_info(logger_MEMORIA,error);
 			}
 			free(respuesta);
@@ -1841,29 +1841,28 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 		}
 	}
 	t_paquete* resultadoJournal= (t_paquete*)malloc(sizeof(t_paquete));
-	if(list_is_empty(resultadosJournal)!=NULL){
+	if(!list_is_empty(resultadosJournal)){
 		int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
 
 		if(resultadoControl == SUCCESS){
 			resultadoJournal->palabraReservada=JOURNAL;
-			resultadoJournal->request=strdup("Se ha realizado el JOURNAL con exito");
+			resultadoJournal->request=strdup("  Se ha realizado el JOURNAL con exito");
 			resultadoJournal->tamanio=sizeof(resultadoJournal->request);
 			enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
 
 		}else{
 			resultadoJournal->palabraReservada=JOURNAL;
-			resultadoJournal->request=strdup("NO se ha realizado el JOURNAL con exito");
+			resultadoJournal->request=strdup(" NO se ha realizado el JOURNAL con exito");
 			resultadoJournal->tamanio=sizeof(resultadoJournal->request);
 			enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,resultadoJournal,caller, indiceKernel);
 		}
 	}else{
 		resultadoJournal->palabraReservada=JOURNAL;
-		resultadoJournal->request=strdup("NO habia nada que impactar e LFS.JOURNAL se realizo con exito");
+		resultadoJournal->request=strdup("  NO habia nada que impactar e LFS.JOURNAL se realizo con exito");
 		resultadoJournal->tamanio=sizeof(resultadoJournal->request);
 		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
 
 	}
 	list_destroy(resultadosJournal);
-	eliminar_paquete(resultadoJournal);
 }
 
