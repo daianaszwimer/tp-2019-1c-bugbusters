@@ -1828,6 +1828,5 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,resultadoJournal,caller, indiceKernel);
 	}
 	list_destroy(resultadosJournal);
-	eliminar_paquete(resultadoJournal);
 }
 
