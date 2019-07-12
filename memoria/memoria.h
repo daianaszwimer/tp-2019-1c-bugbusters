@@ -94,13 +94,13 @@ t_elemTablaDePaginas* elementoA1;
 t_marco* frame0;
 
 t_list* memoriasLevantadas;
+t_list* memoriasSeeds;
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
 pthread_mutex_t terminarHilo;
 pthread_mutex_t semMBitarray;
 pthread_mutex_t semMTablaSegmentos;
-pthread_mutex_t semMDescriptores;
 pthread_mutex_t semMMemoriasLevantadas;// semaforo mutex para evitar concurrencia en la variable
 
 
@@ -128,6 +128,7 @@ void formatearMemoriasLevantadas(char**,char**,char**);
 void eliminarMemoria(char*,char*);
 void liberarConfigMemoria(config_memoria*);
 void agregarMemorias(t_gossiping*);
+void mandarGossiping(config_memoria*, int);
 
 void leerDeConsola(void);
 void validarRequest(char*);

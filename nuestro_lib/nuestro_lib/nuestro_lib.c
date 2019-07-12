@@ -517,6 +517,7 @@ int crearConexion(char* ip, char* puerto)
 
 	if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1) {
 		// printf("error");
+		freeaddrinfo(server_info);
 		return COMPONENTE_CAIDO;
 	}
 
@@ -677,6 +678,8 @@ int enviarHandshakeMemoria(rol tipoRol, Componente tipoComponente, int socket_cl
 	int tamanioPaquete = sizeof(int) * 2;
 	void* handshakeAEnviar = serializar_handshake_memoria(handshake, tamanioPaquete);
 	if (send(socket_cliente, handshakeAEnviar, tamanioPaquete, 0) == -1) {
+		free(handshakeAEnviar);
+		free(handshake);
 		return COMPONENTE_CAIDO;
 	}
 	free(handshakeAEnviar);
@@ -747,11 +750,14 @@ int enviar(int cod, char* mensaje, int socket_cliente)
 	//enviamos
 
 	if (send(socket_cliente, paqueteAEnviar, tamanioPaquete, 0) == -1) {
+		free(paqueteAEnviar);
+		eliminar_paquete(paquete);
 		return COMPONENTE_CAIDO;
 	}
 
 	free(paqueteAEnviar);
 	eliminar_paquete(paquete);
+
 	return SUCCESS;
 }
 
