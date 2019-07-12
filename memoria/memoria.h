@@ -89,6 +89,7 @@ t_elemTablaDePaginas* elementoA1;
 t_marco* frame0;
 
 t_list* memoriasLevantadas;
+t_list* memoriasSeeds;
 
 sem_t semLeerDeConsola;				// semaforo para el leer consola
 sem_t semEnviarMensajeAFileSystem;		// semaforo para enviar mensaje
@@ -141,6 +142,7 @@ void formatearMemoriasLevantadas(char**,char**,char**);
 void eliminarMemoria(char*,char*);
 void liberarConfigMemoria(config_memoria*);
 void agregarMemorias(t_gossiping*);
+void mandarGossiping(config_memoria*, int, char*, char*, char*);
 
 void leerDeConsola(void);
 void validarRequest(char*);
@@ -157,6 +159,7 @@ void unlockSemSegmento(char* );
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
 int guardarRespuestaDeLFSaMemoria(t_paquete* ,t_erroresMemoria);
+void modificarElem(t_elemTablaDePaginas**,unsigned long long , uint16_t,char*,t_flagModificado);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int,char*);
@@ -167,7 +170,7 @@ void actualizarPagina (t_marco*, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
 t_marco* crearMarcoDePagina(t_marco*,uint16_t, char*, unsigned long long);
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long);
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long,t_flagModificado);
 void crearSegmento(t_segmento*,char*);
 
 
@@ -191,7 +194,8 @@ void procesarDrop(cod_request, char* ,consistencia , t_caller , int);
 
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas*);
 int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
-t_elemTablaDePaginas* correrAlgoritmoLRU(int*);
+t_elemTablaDePaginas* correrAlgoritmoLRU();
+int encontrarIndice(t_elemTablaDePaginas*,t_segmento* );
 
 void procesarJournal(cod_request, char*, t_caller, int);
 void hacerJournal(void);
