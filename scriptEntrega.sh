@@ -1,5 +1,6 @@
 # Se ejecuta haciendo: sudo sh ./scriptEntrega.sh
 # copio las shared lib en /usr/lib van los .so
+# git clone https://github.com/sisoputnfrba/tp-2019-1c-bugbusters.git
 echo Copiando shared libraries...
 cd
 git clone https://github.com/sisoputnfrba/so-commons-library.git
@@ -8,7 +9,8 @@ cd so-commons-library
 make clean
 make
 cd
-sudo cp so-commons-library/src/build/libcommons.so /usr/lib
+#su "$SUDO_USER" -c cp so-commons-library/src/build/libcommons.so /usr/lib
+cp so-commons-library/src/build/libcommons.so /usr/lib
 cd
 cd tp-2019-1c-bugbusters/nuestro_lib/Debug
 make clean
