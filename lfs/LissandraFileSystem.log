@@ -240,3 +240,53 @@
 [INFO] 22:50:00:496 Lfs/(19449:19449): Hilo de consola creado
 [INFO] 22:50:23:587 Lfs/(19449:19464): Request de la memoria 0
 [INFO] 22:50:23:588 Lfs/(19449:19464): Me llego un SELECT
+[INFO] 00:44:43:280 Lfs/(20089:20089): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 00:44:43:285 Lfs/(20089:20089): Hilo de compactacion de la tabla TABLA55 creado
+[INFO] 00:44:43:291 Lfs/(20089:20100): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA55
+[INFO] 00:44:43:292 Lfs/(20089:20089): Hilo de compactacion de la tabla TABLA2 creado
+[INFO] 00:44:43:292 Lfs/(20089:20101): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA2
+[INFO] 00:44:43:295 Lfs/(20089:20089): Hilo de compactacion de la tabla TABLAA creado
+[INFO] 00:44:43:296 Lfs/(20089:20089): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 00:44:43:297 Lfs/(20089:20102): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLAA
+[INFO] 00:44:43:302 Lfs/(20089:20089): Hilo de inotify creado
+[INFO] 00:44:43:308 Lfs/(20089:20089): Hilo de recibir memorias creado
+[INFO] 00:44:43:308 Lfs/(20089:20104): Lissandra lista para recibir Memorias
+[INFO] 00:44:43:311 Lfs/(20089:20089): Hilo de Dump iniciado
+[INFO] 00:44:43:313 Lfs/(20089:20089): Hilo de consola creado
+[INFO] 00:45:11:300 Lfs/(20089:20106): Request de la memoria 0
+[INFO] 00:45:11:300 Lfs/(20089:20106): Me llego un INSERT
+[INFO] 00:45:11:300 Lfs/(20089:20106): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 00:45:11:301 Lfs/(20089:20106): ---------------------------------------
+[INFO] 00:45:45:944 Lfs/(20089:20105): Dump iniciado
+[INFO] 00:45:45:944 Lfs/(20089:20105): Dump exitoso
+[INFO] 00:45:47:37 Lfs/(20089:20106): Request de la memoria 0
+[INFO] 00:45:48:24 Lfs/(20089:20106): Me llego un SELECT
+[INFO] 00:46:46:949 Lfs/(20089:20100): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA55 terminada
+[INFO] 00:46:46:950 Lfs/(20089:20105): Dump iniciado
+[INFO] 00:46:46:950 Lfs/(20089:20101): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA2 terminada
+[INFO] 00:46:46:950 Lfs/(20089:20105): Dump exitoso
+[INFO] 00:47:13:966 Lfs/(20203:20203): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 00:47:13:971 Lfs/(20203:20203): Hilo de compactacion de la tabla TABLA55 creado
+[INFO] 00:47:13:972 Lfs/(20203:20213): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA55
+[INFO] 00:47:13:976 Lfs/(20203:20203): Hilo de compactacion de la tabla TABLA2 creado
+[INFO] 00:47:13:977 Lfs/(20203:20214): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA2
+[INFO] 00:47:13:979 Lfs/(20203:20203): Hilo de compactacion de la tabla TABLAA creado
+[INFO] 00:47:13:979 Lfs/(20203:20203): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 00:47:13:980 Lfs/(20203:20215): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLAA
+[INFO] 00:47:13:981 Lfs/(20203:20203): Hilo de inotify creado
+[INFO] 00:47:13:984 Lfs/(20203:20203): Hilo de recibir memorias creado
+[INFO] 00:47:13:985 Lfs/(20203:20217): Lissandra lista para recibir Memorias
+[INFO] 00:47:13:987 Lfs/(20203:20203): Hilo de Dump iniciado
+[INFO] 00:47:13:989 Lfs/(20203:20203): Hilo de consola creado
+[INFO] 00:47:26:979 Lfs/(20203:20219): Request de la memoria 0
+[INFO] 00:47:26:979 Lfs/(20203:20219): Me llego un INSERT
+[INFO] 00:47:26:979 Lfs/(20203:20219): Se agrego la tabla a la memtable y se agrego el registro
+[INFO] 00:47:26:980 Lfs/(20203:20219): ---------------------------------------
+[INFO] 00:47:40:38 Lfs/(20203:20219): Request de la memoria 0
+[INFO] 00:47:41:785 Lfs/(20203:20219): Me llego un SELECT
+[INFO] 00:48:19:722 Lfs/(20203:20218): Dump iniciado
+[INFO] 00:48:19:723 Lfs/(20203:20218): Dump exitoso
+[INFO] 00:49:35:245 Lfs/(20203:20213): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA55 terminada
+[INFO] 00:49:35:245 Lfs/(20203:20214): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA2 terminada
+[INFO] 00:49:35:246 Lfs/(20203:20218): Dump iniciado
+[INFO] 00:49:35:246 Lfs/(20203:20218): Dump exitoso

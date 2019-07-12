@@ -190,8 +190,6 @@ void setBlockTo(char* nombreTabla, int value){
 		}
 	}
 
-	sleep(60);
-
 	pthread_mutex_lock(&mutexTablasParaCompactaciones);
 	t_hiloTabla* tabla = list_find(tablasParaCompactaciones, (void*) encontrarTabla);
 	pthread_mutex_unlock(&mutexTablasParaCompactaciones);

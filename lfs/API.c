@@ -206,13 +206,14 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje, int fd){
 		pthread_mutex_lock(&mutexTablasParaCompactaciones);
 		t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*)encontrarTabla);
 		t_bloqueo* idYMutexEncontrado = list_find(tablaEncontrada->cosasABloquear, (void*)encontrarMutexCorrespondiente);
+		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
 		pthread_mutex_lock(&(idYMutexEncontrado->mutex));
 		t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);
 		t_list* listaDeRegistrosDeParticiones = obtenerRegistrosDeParticiones(nombreTabla, particionDeEstaKey, _key);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeTmp);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeParticiones);
 		pthread_mutex_unlock(&(idYMutexEncontrado->mutex));
-		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 
 		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
 
