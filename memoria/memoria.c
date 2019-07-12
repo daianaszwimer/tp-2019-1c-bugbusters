@@ -1840,21 +1840,28 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 			return FALSE;
 		}
 	}
-
-	int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
 	t_paquete* resultadoJournal= (t_paquete*)malloc(sizeof(t_paquete));
+	if(list_is_empty(resultadosJournal)!=NULL){
+		int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
 
-	if(resultadoControl == SUCCESS){
+		if(resultadoControl == SUCCESS){
+			resultadoJournal->palabraReservada=JOURNAL;
+			resultadoJournal->request=strdup("Se ha realizado el JOURNAL con exito");
+			resultadoJournal->tamanio=sizeof(resultadoJournal->request);
+			enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
+
+		}else{
+			resultadoJournal->palabraReservada=JOURNAL;
+			resultadoJournal->request=strdup("NO se ha realizado el JOURNAL con exito");
+			resultadoJournal->tamanio=sizeof(resultadoJournal->request);
+			enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,resultadoJournal,caller, indiceKernel);
+		}
+	}else{
 		resultadoJournal->palabraReservada=JOURNAL;
-		resultadoJournal->request=strdup("Se ha realizado el JOURNAL con exito");
+		resultadoJournal->request=strdup("NO habia nada que impactar e LFS.JOURNAL se realizo con exito");
 		resultadoJournal->tamanio=sizeof(resultadoJournal->request);
 		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
 
-	}else{
-		resultadoJournal->palabraReservada=JOURNAL;
-		resultadoJournal->request=strdup("NO se ha realizado el JOURNAL con exito");
-		resultadoJournal->tamanio=sizeof(resultadoJournal->request);
-		enviarAlDestinatarioCorrecto(palabraReservada,FAILURE,request,resultadoJournal,caller, indiceKernel);
 	}
 	list_destroy(resultadosJournal);
 	eliminar_paquete(resultadoJournal);
