@@ -126,7 +126,7 @@ void formatearMemoriasLevantadas(char**,char**,char**);
 void eliminarMemoria(char*,char*);
 void liberarConfigMemoria(config_memoria*);
 void agregarMemorias(t_gossiping*);
-void mandarGossiping(config_memoria*, int);
+void mandarGossiping(config_memoria*, int, char*, char*, char*);
 
 void leerDeConsola(void);
 void validarRequest(char*);

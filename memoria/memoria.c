@@ -65,7 +65,7 @@ void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
 
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	marcosTotales = (int) floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
+	marcosTotales = 10000;//(int) floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
 	bitarrayString = string_repeat('0', marcosTotales);
@@ -127,13 +127,50 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
 void hacerGossiping() {
 	int retardo;
 	int esSeed;
+
+
+	char* puertoMio = config_get_string_value(config, "PUERTO");
+	char* ipMia = config_get_string_value(config, "IP");
+	char* numerosMio = config_get_string_value(config, "MEMORY_NUMBER");
+	char* puertosQueTengo = strdup("");
+	char* ipsQueTengo = strdup("");
+	char* numerosQueTengo = strdup("");
 	void gossip(config_memoria* mem) {
-		mandarGossiping(mem, esSeed);
+		mandarGossiping(mem, esSeed, puertosQueTengo, ipsQueTengo, numerosQueTengo);
 	}
 	while(1) {
+		puertosQueTengo = strdup("");
+		ipsQueTengo = strdup("");
+		numerosQueTengo = strdup("");
 		// primero le pido a mis seeds
 		// hacer for que vaya del primer seed al ultimo
 		// cuando pido gossiping mando lista actaul
+		// copie el codigo de la funcion formatearMemoriasLevantadas para evitar deadlock
+		// antes de mandar memorias me fijo si estan levantadas
+		string_append_with_format(&puertosQueTengo, "%s", puertoMio);
+		string_append_with_format(&ipsQueTengo, "%s", ipMia);
+		string_append_with_format(&numerosQueTengo, "%s", numerosMio);
+		int i = 0;
+		pthread_mutex_lock(&semMMemoriasLevantadas);
+		config_memoria* memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
+		while(memoriaAFormatear != NULL) {
+			int conexionChequeo = crearConexion(memoriaAFormatear->ip, memoriaAFormatear->puerto);
+			if (conexionChequeo != COMPONENTE_CAIDO) {
+				string_append_with_format(&puertosQueTengo, ",%s", memoriaAFormatear->puerto);
+				string_append_with_format(&ipsQueTengo, ",%s", memoriaAFormatear->ip);
+				if (memoriaAFormatear->numero != NULL) {
+					string_append_with_format(&numerosQueTengo, ",%s", memoriaAFormatear->numero);
+				} else {
+					string_append_with_format(&numerosQueTengo, ",%s", "");
+				}
+				liberar_conexion(conexionChequeo);
+			} else {
+				eliminarMemoria(memoriaAFormatear->puerto, memoriaAFormatear->ip);
+			}
+			i++;
+			memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
+		}
+		pthread_mutex_unlock(&semMMemoriasLevantadas);
 		esSeed = 1;
 		list_iterate(memoriasSeeds, (void*)gossip);
 		esSeed = 0;
@@ -141,13 +178,16 @@ void hacerGossiping() {
 		// todo: no volver a mandarle a las semillas
 		list_iterate(memoriasLevantadas, (void*)gossip);
 		pthread_mutex_unlock(&semMMemoriasLevantadas);
+		free(puertosQueTengo);
+		free(ipsQueTengo);
+		free(numerosQueTengo);
 		retardo = retardoGossiping;
 		// todo: mutex
 		usleep(retardo*1000);
 	}
 }
 
-void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed) {
+void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed, char* puertosQueTengo, char* ipsQueTengo, char* numerosQueTengo) {
 
 	if (!vaASerSeed) {
 		// solo le mando si no es mi semilla porque en tal caso ya le mande
@@ -161,64 +201,28 @@ void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed) {
 		}
 	}
 
-	char* puertosQueTengo = strdup("");
-	char* ipsQueTengo = strdup("");
-	char* numerosQueTengo = strdup("");
-
 	// si no me puedo conectar, la borro de mi lista de memorias
 	int conexionTemporaneaSeed = crearConexion(memoriaSeed->ip, memoriaSeed->puerto);
 	if (conexionTemporaneaSeed == COMPONENTE_CAIDO) {
 		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
-		free(puertosQueTengo);
-		free(ipsQueTengo);
-		free(numerosQueTengo);
 		return;
 	}
 	int estadoHandshake = enviarHandshakeMemoria(GOSSIPING, MEMORIA, conexionTemporaneaSeed);
 	if (estadoHandshake == COMPONENTE_CAIDO) {
 		liberar_conexion(conexionTemporaneaSeed);
-		// DEADLOCK
 		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
-		free(puertosQueTengo);
-		free(ipsQueTengo);
-		free(numerosQueTengo);
 		return;
 	}
-	// copie el codigo de la funcion formatearMemoriasLevantadas para evitar deadlock
-	char* puertoMio = config_get_string_value(config, "PUERTO");
-	char* ipMia = config_get_string_value(config, "IP");
-	char* numerosMio = config_get_string_value(config, "MEMORY_NUMBER");
-	string_append_with_format(&puertosQueTengo, "%s", puertoMio);
-	string_append_with_format(&ipsQueTengo, "%s", ipMia);
-	string_append_with_format(&numerosQueTengo, "%s", numerosMio);
-	int i = 0;
-	config_memoria* memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
-	while(memoriaAFormatear != NULL) {
-		string_append_with_format(&puertosQueTengo, ",%s", memoriaAFormatear->puerto);
-		string_append_with_format(&ipsQueTengo, ",%s", memoriaAFormatear->ip);
-		if (memoriaAFormatear->numero != NULL) {
-			string_append_with_format(&numerosQueTengo, ",%s", memoriaAFormatear->numero);
-		} else {
-			string_append_with_format(&numerosQueTengo, ",%s", "");
-		}
-		i++;
-		memoriaAFormatear = (config_memoria*) list_get(memoriasLevantadas, i);
-	}
+
 	int estadoEnviar = enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, conexionTemporaneaSeed);
 	if (estadoEnviar == COMPONENTE_CAIDO) {
 		liberar_conexion(conexionTemporaneaSeed);
 		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
-		free(puertosQueTengo);
-		free(ipsQueTengo);
-		free(numerosQueTengo);
 		return;
 	}
 	log_warning(logger_MEMORIA, "Tengo %s %s %s", puertosQueTengo, ipsQueTengo, numerosQueTengo);
 	log_warning(logger_MEMORIA, "Le voy a mandar a la memoria %s %s", memoriaSeed->ip, memoriaSeed->puerto);
 	liberar_conexion(conexionTemporaneaSeed);
-	free(puertosQueTengo);
-	free(ipsQueTengo);
-	free(numerosQueTengo);
 }
 
 void agregarMemorias(t_gossiping* gossipingRecibido) {
