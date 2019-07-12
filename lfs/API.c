@@ -194,7 +194,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 		if(!list_is_empty(listaDeRegistros)){
 			list_sort(listaDeRegistros, (void*) ordenarRegistrosPorTimestamp);
 			t_registro* registro = (t_registro*)listaDeRegistros->head->data;
-			string_append_with_format(&*mensaje, "%s %llu %u \"%s\"", nombreTabla, registro->timestamp, registro->key, registro->value);
+			string_append_with_format(&*mensaje, "%s %u %c %s %c %llu", nombreTabla, registro->key,'"',registro->value,'"', registro->timestamp);
 		}else{
 			//https://github.com/sisoputnfrba/foro/issues/1406
 			error = KEY_NO_EXISTE;

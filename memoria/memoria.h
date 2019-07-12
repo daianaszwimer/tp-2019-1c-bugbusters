@@ -142,6 +142,7 @@ void unlockSemSegmento(char* );
 void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
 void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
 int guardarRespuestaDeLFSaMemoria(t_paquete* ,t_erroresMemoria);
+void modificarElem(t_elemTablaDePaginas**,unsigned long long , uint16_t,char*,t_flagModificado);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int,char*);
