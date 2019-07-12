@@ -1864,5 +1864,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 
 	}
 	list_destroy(resultadosJournal);
+	free(resultadoAux);
+	resultadoAux=NULL;
 }
 
