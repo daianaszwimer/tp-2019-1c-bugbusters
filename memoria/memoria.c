@@ -617,26 +617,14 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
  * Return:
  * 	-> paqueteRecibido:: char*
  * VALGRIND:: NO */
-t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request,t_caller caller, int indiceKernel){
+t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request, t_caller caller, int indiceKernel){
 	t_paquete* paqueteRecibido;
 
-	if(enviar(palabraReservada, request, conexionLfs)==-2){
-		paqueteRecibido->request=strdup("COMPONENTE CAIDO. Request no procesada");
-		paqueteRecibido->tamanio=(sizeof(paqueteRecibido->request));
-		enviarAlDestinatarioCorrecto(COMPONENTE_CAIDO,COMPONENTE_CAIDO,request, paqueteRecibido,caller,indiceKernel);
-	}else{
-		pthread_mutex_lock(&semMFS);
-		int retardoFileSystem=retardoFS;
-		pthread_mutex_unlock(&semMFS);
-		usleep(retardoFileSystem*1000);
-		if(recibir(conexionLfs)==-2){
-			paqueteRecibido->palabraReservada=COMPONENTE_CAIDO;
-			paqueteRecibido->request=strdup("COMPONENTE CAIDO. Request no procesada");
-			paqueteRecibido->tamanio=(sizeof(paqueteRecibido->request));
-		}else{
-			paqueteRecibido = recibir(conexionLfs);
-		}
-	}
+	enviar(palabraReservada, request, conexionLfs);
+	int retardoFileSystem=retardoFS;
+	usleep(retardoFileSystem*1000);
+	paqueteRecibido = recibir(conexionLfs);
+
 	return paqueteRecibido;
 }
 
@@ -978,15 +966,6 @@ void unlockSemSegmento(char* pathSegmento){
 	 			liberarArrayDeChar(requestSeparada);
 	 			requestSeparada=NULL;
 
-			}else if (codResultado== -2){
-				string_append_with_format(&respuesta, "%s%s%s","La request: ",request," NO ha podido realizarse porq S");
-				log_info(logger_MEMORIA,respuesta);
-				free(respuesta);
-				respuesta=NULL;
-				free(error);
-				error=NULL;
-				liberarArrayDeChar(requestSeparada);
-				requestSeparada=NULL;
 			}else{
 				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
 				log_info(logger_MEMORIA,error);
@@ -1046,12 +1025,6 @@ void unlockSemSegmento(char* pathSegmento){
 			liberarArrayDeChar(requestSeparada);
 			requestSeparada=NULL;
 	 	 	break;
-
-	 	 case(COMPONENTE_CAIDO):
-			log_error(logger_MEMORIA,"ERROR: El LFS se encuentra desconectado");
-			string_append_with_format(&error, "%s%s%s","La request ",request," no a podido realizarse");
-			log_info(logger_MEMORIA,error);
-			break;
 
 		default:
 			log_info(logger_MEMORIA,"MEMORIA NO LO SABE RESOLVER AUN, PERO TE INVITO A QUE LO HAGAS VOS :)");
