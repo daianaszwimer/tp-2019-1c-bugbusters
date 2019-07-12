@@ -1361,10 +1361,9 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		return FAILURE;
 	}
 	pthread_mutex_unlock(&semMMemorias);
-	clock_t tiempo;
-	double tiempoQueTardo = 0.0;
+	time_t tiempo;
 	if (codigo == SELECT || codigo == INSERT) {
-		tiempo = clock();
+		tiempo = time(NULL);
 	}
 	t_paquete* paqueteRecibido;
 	int respuesta;
@@ -1417,7 +1416,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		}
 		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla, key);
 		if(memoriaCorrespondiente == NULL) {
-			respuesta = FAILURE;
+			respuesta = SUCCESS;
 			liberarArrayDeChar(parametros);
 			return respuesta;
 		} else {
@@ -1517,9 +1516,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	eliminar_paquete(paqueteRecibido);
 	liberarArrayDeChar(parametros);
 	if (codigo == SELECT || codigo == INSERT) {
-		tiempo = clock() - tiempo;
-		tiempoQueTardo = ((double)tiempo)/CLOCKS_PER_SEC;
-		aumentarContadores(numMemoria, codigo, tiempoQueTardo, consistenciaTabla);
+		tiempo = time(NULL) - tiempo;
+		aumentarContadores(numMemoria, codigo, tiempo, consistenciaTabla);
 	}
 	log_debug(logger_KERNEL, "Le mande a la mem %s el request %s", numMemoria, mensaje);
 	free(numMemoria);
