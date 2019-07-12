@@ -148,18 +148,22 @@ void escucharCambiosEnConfig(void) {
 		if (length < 0) {
 			log_error(logger_MEMORIA, "ERROR en iNotify");
 		} else {
-			pthread_mutex_lock(&semMGossiping);
-			retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
-			pthread_mutex_unlock(&semMGossiping);
-			pthread_mutex_lock(&semMJournal);
-			retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
-			pthread_mutex_unlock(&semMJournal);
-			pthread_mutex_lock(&semMFS);
-			retardoFS = config_get_int_value(config, "RETARDO_FS");
-			pthread_mutex_unlock(&semMFS);
-			pthread_mutex_lock(&semMMem);
-			retardoMemPrincipal = config_get_int_value(config, "RETARDO_MEM");
-			pthread_mutex_unlock(&semMMem);
+			if(config_has_property(config,"RETARDO_GOSSIPING") || config_has_property(config,"RETARDO_JOURNAL") || config_has_property(config,"RETARDO_FS") || config_has_property(config,"RETARDO_MEM")){
+				pthread_mutex_lock(&semMGossiping);
+				retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
+				pthread_mutex_unlock(&semMGossiping);
+				pthread_mutex_lock(&semMJournal);
+				retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
+				pthread_mutex_unlock(&semMJournal);
+				pthread_mutex_lock(&semMFS);
+				retardoFS = config_get_int_value(config, "RETARDO_FS");
+				pthread_mutex_unlock(&semMFS);
+				pthread_mutex_lock(&semMMem);
+				retardoMemPrincipal = config_get_int_value(config, "RETARDO_MEM");
+				pthread_mutex_unlock(&semMMem);
+			}else{
+				log_error(logger_MEMORIA, "Error en iNotify: sus cambios no han sido tomados, vuelva a cambiar el archivo");
+			}
 		}
 
 		inotify_rm_watch(file_descriptor, watch_descriptor);
@@ -1802,6 +1806,10 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 		while (list_get(segmento->tablaDePagina, i) != NULL) {
 			t_elemTablaDePaginas* elemenetoTablaDePag =list_get(segmento->tablaDePagina, i);
 			if (elemenetoTablaDePag->modificado == SINMODIFICAR) {
+				pthread_mutex_lock(&semMMem);
+				int retardoMem=retardoMemPrincipal;
+				pthread_mutex_unlock(&semMMem);
+				usleep(retardoMem*1000);
 				list_add(elemSinModificar, elemenetoTablaDePag);
 			}
 			i++;
@@ -1859,6 +1867,10 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	void encontrarElemModificado(t_segmento* segmento){
 		void encontrarPagModificada(t_elemTablaDePaginas* elemPagina){
 			if(elemPagina->modificado == MODIFICADO){
+				pthread_mutex_lock(&semMMem);
+				int retardoMem = retardoMemPrincipal;
+				pthread_mutex_unlock(&semMMem);
+				usleep(retardoMem*1000);
 				char* requestAEnviar= strdup("");
 				t_int* resultadoAux = malloc(sizeof(t_int*));
 				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
