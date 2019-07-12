@@ -152,7 +152,7 @@ void actualizarPagina (t_marco*, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
 t_marco* crearMarcoDePagina(t_marco*,uint16_t, char*, unsigned long long);
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long);
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long,t_flagModificado);
 void crearSegmento(t_segmento*,char*);
 
 
@@ -176,7 +176,8 @@ void procesarDrop(cod_request, char* ,consistencia , t_caller , int);
 
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas*);
 int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
-t_elemTablaDePaginas* correrAlgoritmoLRU(int*);
+t_elemTablaDePaginas* correrAlgoritmoLRU();
+int encontrarIndice(t_elemTablaDePaginas*,t_segmento* );
 
 void procesarJournal(cod_request, char*, t_caller, int);
 t_list* obtenerTablasModificadas(t_segmento*);
