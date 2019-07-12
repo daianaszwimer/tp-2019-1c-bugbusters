@@ -8,6 +8,7 @@ int main(void) {
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
 	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 	retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
+	retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
 	retardoFS = config_get_int_value(config, "RETARDO_FS");
 	retardoMemPrincipal =config_get_int_value(config, "RETARDO_MEM");
 	memoriasLevantadas = list_create();
@@ -26,17 +27,30 @@ int main(void) {
 	pthread_mutex_init(&semMBitarray, NULL);
 	pthread_mutex_init(&semMTablaSegmentos, NULL);
 	pthread_mutex_init(&semMMemoriasLevantadas, NULL);
+	pthread_mutex_init(&semMConfig, NULL);
+	pthread_mutex_init(&semMGossiping, NULL);
+	pthread_mutex_init(&semMJournal, NULL);
+	pthread_mutex_init(&semMMem, NULL);
+	pthread_mutex_init(&semMFS, NULL);
 
 
 	// 	HILOS
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
 	pthread_create(&hiloHacerGossiping, NULL, (void*)hacerGossiping, NULL);
+	pthread_create(&hiloHacerJournal, NULL, (void*) hacerJournal, NULL);
+	pthread_create(&hiloCambioEnConfig, NULL, (void*)escucharCambiosEnConfig, NULL);
 	pthread_create(&hiloLeerDeConsola, NULL, (void*)leerDeConsola, NULL);
 
+
+	pthread_join(hiloCambioEnConfig, NULL);
+	pthread_join(hiloHacerGossiping, NULL);
+	pthread_join(hiloHacerJournal, NULL);
 	pthread_join(hiloLeerDeConsola, NULL);
 	log_info(logger_MEMORIA, "Hilo de consola finalizado");
 	pthread_join(hiloEscucharMultiplesClientes, NULL);
 	log_info(logger_MEMORIA, "Hilo recibir kernels finalizado");
+
+
 
 	//-------------------------------- -PARTE FINAL DE MEMORIA---------------------------------------------------------
 	liberarEstructurasMemoria();
@@ -108,6 +122,56 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
 	}
 	free(configALiberar);
 	configALiberar = NULL;
+}
+
+/* escucharCambiosEnConfig()
+ * Parametros:
+ * 	-> void
+ * Descripcion: es un hilo que escucha cambios en el config y actualiza las variables correspodientes.
+ * Return:
+ * 	-> :: void  */
+void escucharCambiosEnConfig(void) {
+	char buffer[BUF_LEN];
+	file_descriptor = inotify_init();
+	if (file_descriptor < 0) {
+		log_error(logger_MEMORIA, "iNotify no se pudo inicializar correctamente");
+	}
+
+	watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config", IN_MODIFY);
+	while(1) {
+		int length = read(file_descriptor, buffer, BUF_LEN);
+		log_warning(logger_MEMORIA, "Cambió el archivo de config");
+		pthread_mutex_lock(&semMConfig);
+		config_destroy(config);
+		config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
+		pthread_mutex_unlock(&semMConfig);
+		if (length < 0) {
+			log_error(logger_MEMORIA, "ERROR en iNotify");
+		} else {
+			pthread_mutex_lock(&semMGossiping);
+			retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
+			pthread_mutex_unlock(&semMGossiping);
+			pthread_mutex_lock(&semMJournal);
+			retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
+			pthread_mutex_unlock(&semMJournal);
+			pthread_mutex_lock(&semMFS);
+			retardoFS = config_get_int_value(config, "RETARDO_FS");
+			pthread_mutex_unlock(&semMFS);
+			pthread_mutex_lock(&semMMem);
+			retardoMemPrincipal = config_get_int_value(config, "RETARDO_MEM");
+			pthread_mutex_unlock(&semMMem);
+		}
+
+		inotify_rm_watch(file_descriptor, watch_descriptor);
+		close(file_descriptor);
+
+		file_descriptor = inotify_init();
+		if (file_descriptor < 0) {
+			log_error(logger_MEMORIA, "iNotify no se pudo inicializar correctamente");
+		}
+
+		watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config", IN_MODIFY);
+	}
 }
 
 void hacerGossiping() {
@@ -195,8 +259,9 @@ void hacerGossiping() {
 			free(numerosQueTengo);
 		}
 		i = 0;
+		pthread_mutex_lock(&semMGossiping);
 		retardoG = retardoGossiping;
-		// todo: mutex
+		pthread_mutex_unlock(&semMGossiping);
 		usleep(retardoG*1000);
 	}
 	liberarArrayDeChar(ipsSeeds);
@@ -283,6 +348,9 @@ void leerDeConsola(void){
 		mensaje = readline(">");
 		if (!strcmp(mensaje, "\0")) {
 			pthread_cancel(hiloEscucharMultiplesClientes);
+			pthread_cancel(hiloCambioEnConfig);
+			pthread_cancel(hiloHacerGossiping);
+			pthread_cancel(hiloHacerJournal);
 			free(mensaje);
 			break;
 		}
@@ -519,7 +587,9 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 	t_paquete* paqueteRecibido;
 
 	enviar(palabraReservada, request, conexionLfs);
+	pthread_mutex_lock(&semMFS);
 	int retardoFileSystem=retardoFS;
+	pthread_mutex_unlock(&semMFS);
 	usleep(retardoFileSystem*1000);
 	paqueteRecibido = recibir(conexionLfs);
 
@@ -607,7 +677,9 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorEncontrado,t_elemTablaDePaginas** elementoEncontrado,char** pathSegmento){
 	t_elemTablaDePaginas* elementoDePagEnCache;
 	t_paquete* paqueteAuxiliar;
+	pthread_mutex_lock(&semMMem);
 	int retardoMem=retardoMemPrincipal;
+	pthread_mutex_unlock(&semMMem);
 	char** parametros = separarRequest(request);
 	char* segmentoABuscar=strdup(parametros[1]);
 	uint16_t keyABuscar= convertirKey(parametros[2]);
@@ -692,9 +764,11 @@ t_segmento* encontrarSegmento(char* segmentoABuscar){
 	pthread_mutex_lock(&semMTablaSegmentos);
 	t_segmento* segmentoEncontrado= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
 	pthread_mutex_unlock(&semMTablaSegmentos);
-
+	pthread_mutex_lock(&semMMem);
 	int retardoMem=retardoMemPrincipal;
-	 usleep(retardoMem*1000);
+	pthread_mutex_unlock(&semMMem);
+
+	usleep(retardoMem*1000);
 
 	return segmentoEncontrado;
 }
@@ -947,7 +1021,9 @@ void unlockSemSegmento(char* pathSegmento){
  int guardarRespuestaDeLFSaMemoria(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
 	 int memoriaSuficiente;
  	if(nuevoPaquete->palabraReservada == SUCCESS){
+		pthread_mutex_lock(&semMMem);
  		int retardoMem=retardoMemPrincipal;
+		pthread_mutex_unlock(&semMMem);
  		char** requestSeparada= separarRequest(nuevoPaquete->request);
  		char* tabla= strdup(requestSeparada[0]);
  		uint16_t nuevaKey= convertirKey(requestSeparada[1]);
@@ -1124,7 +1200,9 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 	char* nuevoValor = strdup(requestSeparada[3]);
 	unsigned long long nuevoTimestamp;
 
+	pthread_mutex_lock(&semMMem);
 	int retardoMem=retardoMemPrincipal;
+	pthread_mutex_unlock(&semMMem);
 
 	if(requestSeparada[4]!=NULL){
 		convertirTimestamp(requestSeparada[4],&nuevoTimestamp);
@@ -1295,7 +1373,9 @@ void actualizarPagina (t_marco* marco, char* nuevoValue){
  * 	-> void ::
  * 	VALGRIND :: SI*/
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* nuevoValor){
+	pthread_mutex_lock(&semMMem);
 	int retardoMem=retardoMemPrincipal;
+	pthread_mutex_unlock(&semMMem);
 	usleep(retardoMem*1000);
 	actualizarPagina(elemento->marco,nuevoValor);
 	elemento->modificado = MODIFICADO;
@@ -1401,7 +1481,10 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
  * 	VALGRIND :: EN PROCESO */
 void create(cod_request codRequest,char* request){
 	t_erroresMemoria rtaCache = existeSegmentoEnMemoria(codRequest,request);
+	pthread_mutex_lock(&semMMem);
 	int retardoMem=retardoMemPrincipal;
+	pthread_mutex_unlock(&semMMem);
+
 
 	if(rtaCache == SEGMENTOINEXISTENTE){
 
@@ -1552,6 +1635,15 @@ void liberarMemoria(){
 	pthread_mutex_destroy(&semMBitarray);
 	pthread_mutex_destroy(&semMTablaSegmentos);
 	pthread_mutex_destroy(&semMMemoriasLevantadas);
+	pthread_mutex_destroy(&semMConfig);
+	pthread_mutex_destroy(&semMGossiping);
+	pthread_mutex_destroy(&semMJournal);
+	pthread_mutex_destroy(&semMFS);
+	pthread_mutex_destroy(&semMMem);
+
+	inotify_rm_watch(file_descriptor, watch_descriptor);	//iNotify
+	close(file_descriptor);
+
 	log_info(logger_MEMORIA, "Finaliza MEMORIA");
 	bitarray_destroy(bitarray);
 	free(bitarrayString);
@@ -1612,7 +1704,9 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	t_paquete* valorDeLFS;
 	char** requestSeparada = separarRequest(request);
 	char* segmentoABuscar=strdup(requestSeparada[1]);
+	pthread_mutex_lock(&semMMem);
 	int retardoMem=retardoMemPrincipal;
+	pthread_mutex_unlock(&semMMem);
 	valorDeLFS = intercambiarConFileSystem(codRequest,request);
 	if(consistencia == EC || caller == CONSOLE){
 		int encontrarTabla(t_segmento* segmento){
@@ -1741,15 +1835,24 @@ int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 
 
 
+ /* procesarJournal()
+  * Parametros:
+  *		-> cod_request :: codRequest
+  *		-> char* :: request
+  *		-> consistencia :: consistencias
+  *		-> t_caller :: caller
+  *		-> int :: i (socket kernel)
+  * Descripcion: Inserta todos los datos de Memoria en FS
+  * Return:
+  * 	-> void */
 
+ //	OK	El Journal automático realizado cada X unidades de tiempo (configurado por archivo de configuración).
+ //	OK	El Journal manual por medio de la API que dispone la Memoria (JOURNAL).
+ //		El Journal forzoso debido a que la Memoria entró en un estado FULL y requiere nuevas páginas para asignar (realizado por pedido del Kernel)
+ //	OK 	El Journal manual por medio de la API que dispone el Kernel.
+ //		Bloquear: Salvo CREATE/DESCRIBE
 
 void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int indiceKernel) {
-
-//		El Journal automático realizado cada X unidades de tiempo (configurado por archivo de configuración).
-//	OK	El Journal manual por medio de la API que dispone la Memoria (JOURNAL).
-//		El Journal forzoso debido a que la Memoria entró en un estado FULL y requiere nuevas páginas para asignar (realizado por pedido del Kernel)
-//	OK 	El Journal manual por medio de la API que dispone el Kernel.
-//		Bloquear: Salvo CREATE/DESCRIBE
 
 	t_list* resultadosJournal= list_create();
 	t_paquete* insertJournalLFS;
@@ -1800,5 +1903,25 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	}
 	list_destroy(resultadosJournal);
 	eliminar_paquete(resultadoJournal);
+}
+
+/* hacerJournal()
+ * Parametros:
+ * 	-> void
+ * Descripcion: Realiza un journal cada x cantidad de tiempo.
+ * Return:
+ * 	-> :: void  */
+
+void hacerJournal(void){
+	int tiempoJournal;
+	while(1){
+		pthread_mutex_lock(&semMJournal);
+		tiempoJournal = retardoJournal;
+		pthread_mutex_unlock(&semMJournal);
+		usleep(tiempoJournal*1000);
+		log_info(logger_MEMORIA, "--- JOURNAL AUTOMATICO ---");
+		procesarJournal(JOURNAL, "JOURNAL",CONSOLE,-1);
+
+	}
 }
 
