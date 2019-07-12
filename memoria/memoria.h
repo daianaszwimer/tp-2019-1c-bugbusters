@@ -110,6 +110,7 @@ int maxValue;
 //------------------ --- FUNCIONES--------------------------------
 
 void conectarAFileSystem(void);
+errorNo enviarHandshakeALFS(int);
 void inicializacionDeMemoria(void);
 int obtenerIndiceMarcoDisponible();
 

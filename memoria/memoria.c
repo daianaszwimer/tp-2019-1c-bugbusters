@@ -151,6 +151,10 @@ void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_FS"),
 			config_get_string_value(config, "PUERTO_FS"));
+	errorNo errorNo = enviarHandshakeALFS(conexionLfs);
+	if(errorNo == COMPONENTE_CAIDO){
+		//TODO catchear error
+	}
 	handshakeLFS = recibirHandshakeLFS(conexionLfs);
 	maxValue= handshakeLFS->tamanioValue;
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
@@ -158,6 +162,18 @@ void conectarAFileSystem() {
 	free(handshakeLFS);
 }
 
+errorNo enviarHandshakeALFS(int socket)
+{
+	Componente componente = MEMORIA;
+	void* buffer = malloc(sizeof(Componente));
+	memcpy(buffer, &componente, sizeof(Componente));
+	if (send(socket, buffer, sizeof(Componente), 0) == -1) {
+		free(buffer);
+		return COMPONENTE_CAIDO;
+	}
+	free(buffer);
+	return SUCCESS;
+}
 
 /* escucharMultiplesClientes()
  * VALGRIND:: SI */

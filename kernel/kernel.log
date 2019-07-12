@@ -741,3 +741,8 @@
 [INFO] 05:06:31:879 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
 [ERROR] 05:06:34:881 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
 [INFO] 05:06:34:881 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[INFO] 23:29:00:328 Kernel/(27248:27248): ----------------INICIO DE KERNEL--------------
+[ERROR] 23:29:01:581 Kernel/(27248:27273): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[ERROR] 23:29:24:976 Kernel/(27248:27267): La mem ppal no está levantada
+[INFO] 23:29:31:725 Kernel/(27248:27267): Gossiping
+[INFO] 23:29:36:44 Kernel/(27248:27267): No hay ninguna memoria levantada, me voy a conectar con la mem ppal

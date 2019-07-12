@@ -305,21 +305,32 @@ void* recibirMemorias(void* arg) {
 
 	while (1) {
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
-		if(memoria_fd > 0) {
-			if(!pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria, (void*) memoria_fd)) {
-				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
-				enviarHandshakeLFS(tamanioValue, memoria_fd);
-				log_debug(logger_LFS, mensaje);
-				pthread_detach(hiloRequest);
-				free(mensaje);
-			} else {
-				char* error = string_from_format("Error al iniciar el hilo de la memoria %d", memoria_fd);
-				log_error(logger_LFS, error);
-				free(error);
+		if(esMemoria(memoria_fd)){
+			if(memoria_fd > 0) {
+				if(!pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria, (void*) memoria_fd)) {
+					char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
+					enviarHandshakeLFS(tamanioValue, memoria_fd);
+					log_debug(logger_LFS, mensaje);
+					pthread_detach(hiloRequest);
+					free(mensaje);
+				} else {
+					char* error = string_from_format("Error al iniciar el hilo de la memoria %d", memoria_fd);
+					log_error(logger_LFS, error);
+					free(error);
+				}
 			}
+		} else {
+			log_warning(logger_LFS, "El cliente conectado no era una memoria, conexion rechazada");
+			close(memoria_fd);
 		}
 	}
 	return NULL;
+}
+
+int esMemoria(int socket){
+	Componente componente;
+	recv(socket, &componente, sizeof(int), MSG_WAITALL);
+	return componente == MEMORIA;
 }
 
 void* conectarConMemoria(void* arg) {
