@@ -195,8 +195,9 @@ void hacerGossiping(void) {
 		}
 	}
 	while(1) {
+		// todo: sleep tiene que poder ser modificado
 		usleep(sleepGossiping * 1000);
-		log_info(logger_KERNEL, "Gossiping");
+		log_info(logger_KERNEL, "Haciendo gossiping");
 		conexion = conectarseAMemoria(GOSSIPING, puertoActual, ipActual, numeroActual);
 		if (conexion == FAILURE) {
 			log_error(logger_KERNEL, "La mem %s no está levantada, me voy a conectar con otra memoria", numeroActual);
@@ -286,8 +287,11 @@ void procesarGossiping(t_gossiping* gossipingRecibido) {
 			// agrego memoria si no existe en mi lista de memorias
 			log_info(logger_KERNEL, "Me llegó una nueva memoria en el gossiping, num: %s", memoriaNueva->numero);
 			list_add(memorias, memoriaNueva);
+			pthread_mutex_unlock(&semMMemorias);
+		} else {
+			pthread_mutex_unlock(&semMMemorias);
+			liberarConfigMemoria(memoriaNueva);
 		}
-		pthread_mutex_unlock(&semMMemorias);
 		memoriaNueva = NULL;
 	}
 	liberarArrayDeChar(ips);
@@ -334,6 +338,7 @@ void planificarRequest(char* request) {
 		pthread_attr_t attr;
 		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		// todo: hacer strdup de request?!
 		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, request);
 		if(threadProcesar == 0){
 			pthread_attr_destroy(&attr);
@@ -377,6 +382,7 @@ void escucharCambiosEnConfig(void) {
 
 	watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config", IN_MODIFY);
 	while(1) {
+		log_info(logger_KERNEL, "Watch vale %d", watch_descriptor);
 		int length = read(file_descriptor, buffer, BUF_LEN);
 		log_info(logger_KERNEL, "Cambió el archivo de config");
 		pthread_mutex_lock(&semMConfig);
@@ -419,6 +425,7 @@ void escucharCambiosEnConfig(void) {
 void hacerDescribe(void) {
 	int tiempoSleep = 0;
 	while(1) {
+		log_info(logger_KERNEL, "Haciendo DESCRIBE automático");
 		char* request = strdup("DESCRIBE");
 		procesarRequestSinPlanificar(request);
 		pthread_mutex_lock(&semMMetadataRefresh);
@@ -453,6 +460,8 @@ void loguearMetricas(void) {
 		if (list_size(cargaMemoriaSHC) > 0) {
 			list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
 		}
+		// https://github.com/sisoputnfrba/foro/issues/1434#issuecomment-510291991
+		// todo: memory load es en total o 30secs? https://github.com/sisoputnfrba/foro/issues/1434#issuecomment-510291991
 		tiempoSelectEC = 0.0;
 		tiempoInsertEC = 0.0;
 		cantidadSelectEC = 0;
@@ -577,6 +586,8 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
 void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidadTiempo, consistencia consistenciaRequest) {
 	estadisticaMemoria* memoriaCorrespondiente;
 		int encontrarTabla(estadisticaMemoria* memoria) {
+			//todo: ver si sigue rompiendo en la memoria
+			// AHHH cuando una memoria se cae no se borra de aca ? es eso? o ya lo habia arreglado porque era un free de mas mio?
 			return string_equals_ignore_case(memoria->numeroMemoria, numeroMemoria);
 		}
 		pthread_mutex_lock(&semMMetricas);
@@ -896,8 +907,13 @@ int manejarRequest(request_procesada* request, int fromRun) {
 			respuesta = enviarMensajeAMemoria(request->codigo, (char*) request->request);
 			break;
 		case JOURNAL:
-			procesarJournal(FALSE);
-			// solo a memorias que tengan un criterio
+			if (fromRun) {
+				log_error(logger_KERNEL, "El JOURNAL no va adentro de un RUN");
+				respuesta = FAILURE;
+			} else {
+				procesarJournal(FALSE);
+				// solo a memorias que tengan un criterio
+			}
 			break;
 		case ADD:
 			if (fromRun) {
@@ -1024,19 +1040,19 @@ void agregarTablaACriterio(char* tabla) {
 				pthread_mutex_lock(&semMTablasSC);
 				list_add(tablasSC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasSC);
-				//log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
+				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SC", nombreTabla);
 				break;
 			case SHC:
 				pthread_mutex_lock(&semMTablasSHC);
 				list_add(tablasSHC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasSHC);
-				//log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
+				log_info(logger_KERNEL, "Agregue la tabla %s al criterio SHC", nombreTabla);
 				break;
 			case EC:
 				pthread_mutex_lock(&semMTablasEC);
 				list_add(tablasEC, nombreTabla);
 				pthread_mutex_unlock(&semMTablasEC);
-				//log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
+				log_info(logger_KERNEL, "Agregue la tabla %s al criterio EC", nombreTabla);
 				break;
 			default:
 				log_error(logger_KERNEL, "La tabla %s no tiene asociada un criterio válido y no se actualizó en la estructura de datos",
@@ -1237,62 +1253,6 @@ int conectarseAMemoria(rol tipoRol, char* puerto, char* ip, char* numero) {
 	return conexionTemporanea;
 }
 
-t_paquete* reenviarRequest(consistencia tipoConsistencia, char* mensaje, int key, int memoriaRandom, char** numMemoria) {
-	// manda request hasta que encuentra memoria que no este caida
-	char* ip;
-	char* puerto;
-	int conexionTemporanea;
-	int respuesta;
-	int respuestaEnviar;
-	char* numAux;
-	while(1) {
-		// si la respuesta es distinto de componente caido hago return
-		config_memoria* memoriaCorrespondiente;
-		if (memoriaRandom) {
-			pthread_mutex_lock(&semMMemorias);
-			unsigned int indice = obtenerIndiceRandom(list_size(memorias));
-			memoriaCorrespondiente = list_get(memorias, indice);
-			*numMemoria = strdup(memoriaCorrespondiente->numero);
-			ip = strdup(memoriaCorrespondiente->ip);
-			puerto = strdup(memoriaCorrespondiente->puerto);
-			numAux = strdup(memoriaCorrespondiente->numero);
-			pthread_mutex_unlock(&semMMemorias);
-		} else {
-			memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(tipoConsistencia, key);
-			if(memoriaCorrespondiente == NULL) {
-				t_paquete* paqueteError = (t_paquete*) malloc(sizeof(t_paquete));
-				paqueteError->request = strdup("No hay memorias asociadas al criterio");
-				paqueteError->palabraReservada = FAILURE;
-				return paqueteError;
-			} else {
-				*numMemoria = strdup(memoriaCorrespondiente->numero);
-				numAux = strdup(memoriaCorrespondiente->numero);
-				ip = strdup(memoriaCorrespondiente->ip);
-				puerto = strdup(memoriaCorrespondiente->puerto);
-				liberarConfigMemoria(memoriaCorrespondiente);
-			}
-		}
-		conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numAux);
-		free(ip);
-		free(puerto);
-		ip = NULL;
-		puerto = NULL;
-		if(conexionTemporanea != FAILURE) {
-			respuestaEnviar = enviar(tipoConsistencia, mensaje, conexionTemporanea);
-			if (respuestaEnviar != COMPONENTE_CAIDO) {
-				t_paquete* paqueteRecibido = recibir(conexionTemporanea);
-				respuesta = paqueteRecibido->palabraReservada;
-				if (respuesta != COMPONENTE_CAIDO) {
-					return paqueteRecibido;
-				}
-			}
-		}
-		free(numMemoria);
-		numMemoria = NULL;
-
-	}
-}
-
 int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom, char** numMemoria) {
 	char* ip;
 	char* puerto;
@@ -1310,12 +1270,16 @@ int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom
 		pthread_mutex_unlock(&semMMemorias);
 		if (memoriaRandom) {
 			pthread_mutex_lock(&semMMemorias);
+			if (list_size(memorias) == 0) {
+				pthread_mutex_unlock(&semMMemorias);
+				log_error(logger_KERNEL, "No hay memorias levantadas y no puedo realizar el request");
+				return FAILURE;
+			}
 			unsigned int indice = obtenerIndiceRandom(list_size(memorias));
 			memoriaCorrespondiente = list_get(memorias, indice);
 			*numMemoria = strdup(memoriaCorrespondiente->numero);
 			ip = strdup(memoriaCorrespondiente->ip);
 			puerto = strdup(memoriaCorrespondiente->puerto);
-			//tood: usar esto en las fcuniones de reconectar
 			numAux = strdup(memoriaCorrespondiente->numero);
 			pthread_mutex_unlock(&semMMemorias);
 			conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numAux);
@@ -1325,6 +1289,7 @@ int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom
 			ip = NULL;
 			puerto = NULL;
 			numAux = NULL;
+
 		} else {
 			memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(tipoConsistencia, key);
 			if(memoriaCorrespondiente == NULL) {
@@ -1380,7 +1345,14 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	if (codigo == DESCRIBE) {
 		// https://github.com/sisoputnfrba/foro/issues/1391 chequearlo
 		pthread_mutex_lock(&semMMemorias);
-		unsigned int indice = obtenerIndiceRandom(list_size(memorias));
+		int tamanioMem = list_size(memorias);
+		if (list_size(memorias) == 0) {
+			pthread_mutex_unlock(&semMMemorias);
+			liberarArrayDeChar(parametros);
+			log_error(logger_KERNEL, "No puedo hacer %s porque no hay memorias levantadas", mensaje);
+			return FAILURE;
+		}
+		unsigned int indice = obtenerIndiceRandom(tamanioMem);
 		memoriaCorrespondiente = list_get(memorias, indice);
 		numMemoria = strdup(memoriaCorrespondiente->numero);
 		ip = strdup(memoriaCorrespondiente->ip);
@@ -1392,6 +1364,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			numMemoria = NULL;
 			conexionTemporanea = reintentarConexion(consistenciaTabla, 0, 1, &numMemoria);
 			if (conexionTemporanea == FAILURE) {
+				free(ip);
+				free(puerto);
 				liberarArrayDeChar(parametros);
 				return FAILURE;
 			}
@@ -1416,16 +1390,17 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			puerto = strdup(memoriaCorrespondiente->puerto);
 			conexionTemporanea = conectarseAMemoria(REQUEST, puerto, ip, numMemoria);
 			if(conexionTemporanea == FAILURE) {
-				free(numMemoria);
 				conexionTemporanea = reintentarConexion(NINGUNA, 0, 1, &numMemoria);
 				free(ip);
 				free(puerto);
-				numMemoria = NULL;
 				ip = NULL;
 				puerto = NULL;
 				if (conexionTemporanea == FAILURE) {
 					liberarArrayDeChar(parametros);
-					return FAILURE;
+					log_info(logger_KERNEL, "La request %s no se pudo ejecutar porque no hay memorias para esa request", mensaje);
+					free(numMemoria);
+					numMemoria = NULL;
+					return SUCCESS;
 				}
 			}
 			liberarConfigMemoria(memoriaCorrespondiente);
@@ -1433,20 +1408,33 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	}
 	int respuestaEnviar = enviar(consistenciaTabla, mensaje, conexionTemporanea);
 	if (respuestaEnviar == COMPONENTE_CAIDO) {
-		paqueteRecibido = reenviarRequest(consistenciaTabla, mensaje, key, codigo == DESCRIBE, &numMemoria);
+		// https://github.com/sisoputnfrba/foro/issues/1433#issuecomment-510293161
+		// no se puede hacer request no mandar error
+		log_info(logger_KERNEL, "La request %s no se pudo ejecutar porque se cayó la memoria", mensaje);
+		liberarArrayDeChar(parametros);
+		free(ip);
+		free(puerto);
+		ip = NULL;
+		puerto = NULL;
+		return SUCCESS;
 	} else {
 		paqueteRecibido = recibir(conexionTemporanea);
 	}
 	respuesta = paqueteRecibido->palabraReservada;
 	if (respuesta == SUCCESS) {
 		if (codigo == DESCRIBE) {
-			log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
 			actualizarTablas(paqueteRecibido->request);
 		}
-		if(codigo == SELECT) {
-			log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
+		if(codigo == SELECT || codigo == DESCRIBE) {
+			log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 		} else {
 			log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
+		}
+		if (codigo == CREATE) {
+			char* consistenciaTablaString = strdup("");
+			string_append_with_format(&consistenciaTablaString, "%s %s;", parametros[1], parametros[2]);
+			actualizarTablas(consistenciaTablaString);
+			free(consistenciaTablaString);
 		}
 	} else if (respuesta == MEMORIA_FULL) {
 		respuestaEnviar = enviar(NINGUNA, "JOURNAL", conexionTemporanea);
@@ -1458,13 +1446,16 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			respuesta = paqueteRecibido->palabraReservada;
 			if (respuesta == SUCCESS) {
 				if(codigo == SELECT) {
-					log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
+					log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 				} else {
 					log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 				}
-			} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
-				respuesta = SUCCESS;
-				log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
+				if (codigo == CREATE) {
+					char* consistenciaTablaString = strdup("");
+					string_append_with_format(&consistenciaTablaString, "%s %s;", parametros[1], parametros[2]);
+					actualizarTablas(consistenciaTablaString);
+					free(consistenciaTablaString);
+				}
 			} else {
 				log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 			}
@@ -1472,11 +1463,16 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 		}
 	} else if (respuesta == COMPONENTE_CAIDO) {
-		// todo: vale la pena?
-		reenviarRequest(consistenciaTabla, mensaje, key, codigo == DESCRIBE, &numMemoria);
+		// https://github.com/sisoputnfrba/foro/issues/1433#issuecomment-510293161
+		// no mandar error
+		log_info(logger_KERNEL, "La request %s no se pudo ejecutar porque se cayó la memoria", mensaje);
+		respuesta = SUCCESS;
 	} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
 		respuesta = SUCCESS;
-		log_info(logger_KERNEL, "La respuesta del request %s es %s", mensaje, paqueteRecibido->request);
+		log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+	} else if (respuesta == TABLA_EXISTE && codigo == CREATE){
+		respuesta = SUCCESS;
+		log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
@@ -1488,7 +1484,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		tiempoQueTardo = ((double)tiempo)/CLOCKS_PER_SEC;
 		aumentarContadores(numMemoria, codigo, tiempoQueTardo, consistenciaTabla);
 	}
-	log_debug(logger_KERNEL, "Le mande a a mem %s", numMemoria);
+	log_debug(logger_KERNEL, "Le mande a la mem %s el request %s", numMemoria, mensaje);
 	free(numMemoria);
 	free(ip);
 	free(puerto);
@@ -1519,12 +1515,12 @@ void procesarJournal(int soloASHC) {
 		t_paquete* paqueteRecibido = recibir(conexionTemporanea);
 		int respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
-			log_info(logger_KERNEL, "La respuesta del request %s es %s \n", "JOURNAL", paqueteRecibido->request);
+			log_info(logger_KERNEL, "La respuesta del request JOURNAL es %s", paqueteRecibido->request);
 		} else {
-			log_error(logger_KERNEL, "El request %s no es válido", "JOURNAL");
+			log_error(logger_KERNEL, "El request JOURNAL falló");
 		}
 		liberar_conexion(conexionTemporanea);
-		// eliminar_paquete(paqueteRecibido);
+		eliminar_paquete(paqueteRecibido);
 	}
 	if(soloASHC == TRUE) {
 		pthread_mutex_lock(&semMMemoriasSHC);
