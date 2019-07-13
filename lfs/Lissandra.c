@@ -410,10 +410,18 @@ void* escucharCambiosEnConfig(void* arg) {
 			return NULL;
 		} else {
 			pthread_mutex_lock(&mutexRetardo);
-			retardo = config_get_int_value(config, "RETARDO");
+			if(config_has_property(config, "RETARDO")){
+				retardo = config_get_int_value(config, "RETARDO");
+			}else{
+				log_error(logger_LFS, "Error en inotify, sus cambios no han sido actualizados");
+			}
 			pthread_mutex_unlock(&mutexRetardo);
 			pthread_mutex_lock(&mutexTiempoDump);
-			tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
+			if(config_has_property(config, "TIEMPO_DUMP")){
+				tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
+			}else{
+				log_error(logger_LFS, "Error en inotify, sus cambios no han sido actualizados");
+			}
 			pthread_mutex_unlock(&mutexTiempoDump);
 		}
 
