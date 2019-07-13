@@ -254,8 +254,9 @@ void hacerGossiping() {
 		free(puertosQueTengo);
 		free(ipsQueTengo);
 		free(numerosQueTengo);
+		pthread_mutex_lock(&semMGossiping);
 		retardo = retardoGossiping;
-		// todo: mutex
+		pthread_mutex_unlock(&semMGossiping);
 		usleep(retardo*1000);
 	}
 }
@@ -456,7 +457,7 @@ void conectarAFileSystem() {
 /* escucharMultiplesClientes()
  * VALGRIND:: SI */
 void escucharMultiplesClientes() {
-	int descriptorServidor = iniciar_servidor(config_get_string_value(config, "PUERTO"), config_get_string_value(config, "IP"));
+	int descriptorServidor = iniciar_servidor(puertoMio, ipMia);
 	log_info(logger_MEMORIA, "Memoria lista para recibir al kernel");
 
 	fd_set descriptoresDeInteres;
@@ -640,7 +641,9 @@ t_paquete* intercambiarConFileSystem(cod_request palabraReservada, char* request
 	t_paquete* paqueteRecibido;
 
 	enviar(palabraReservada, request, conexionLfs);
+	pthread_mutex_lock(&semMFS);
 	int retardoFileSystem=retardoFS;
+	pthread_mutex_unlock(&semMFS);
 	usleep(retardoFileSystem*1000);
 	paqueteRecibido = recibir(conexionLfs);
 
