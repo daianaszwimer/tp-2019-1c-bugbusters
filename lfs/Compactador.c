@@ -133,7 +133,7 @@ void compactar(char* pathTabla) {
 
 	setBlockTo(nombreTabla, 1);
 	// Renombramos los tmp a tmpc
-	sleep(1);
+	//sleep(1); para ver como funca la tabla bloqueada
 	renombrarTmp_a_TmpC(pathTabla, archivoDeLaTabla, tabla);
 
 	setBlockTo(nombreTabla, 0);
@@ -154,7 +154,7 @@ void compactar(char* pathTabla) {
 		// TODO: Bloquear tabla
 		setBlockTo(nombreTabla, 1);
 		//sleep(20); //sirve para simular una compactacion larga
-		sleep(3);
+		//sleep(3); para ver como funca la tabla bloqueada
 		// Liberamos los bloques que contienen el archivo “.tmpc” y los que contienen el archivo “.bin”
 		liberarBloquesDeTmpCyParticiones(pathTabla, archivoDeLaTabla, tabla, particiones);
 
