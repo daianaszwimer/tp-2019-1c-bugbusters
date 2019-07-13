@@ -72,7 +72,8 @@ typedef enum
 	VALUE_INVALIDO,
 	FAILURE = -1,
 	MEMORIA_FULL = 10102,
-	COMPONENTE_CAIDO = -2
+	COMPONENTE_CAIDO = -2,
+	JOURNALTIME = -10103
 } errorNo;
 
 typedef enum

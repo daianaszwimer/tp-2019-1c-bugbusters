@@ -49,6 +49,8 @@ void inicializarVariables() {
 	ipMemoria = strdup(config_get_string_value(config, "IP_MEMORIA"));
 	srand(numeroSeedRandom);
 	sleepGossiping = config_get_int_value(config, "SLEEP_GOSSIPING");
+	ipPpal = strdup(config_get_string_value(config, "IP_MEMORIA"));
+	puertoPpal = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
 
 	// Semáforos
 	sem_init(&semRequestNew, 0, 0);
@@ -99,6 +101,8 @@ void liberarMemoria(void) {
 	config_destroy(config);
 	free(ipMemoria);
 	free(puertoMemoria);
+	free(ipPpal);
+	free(puertoPpal);
 
 	pthread_mutex_destroy(&semMColaNew);
 	pthread_mutex_destroy(&semMColaReady);
@@ -152,10 +156,6 @@ void hacerGossiping(void) {
 	t_gossiping* gossiping;
 	int sleep;
 	// data de la mem ppal
-	pthread_mutex_lock(&semMConfig);
-	char* ipPpal = strdup(config_get_string_value(config, "IP_MEMORIA"));
-	char* puertoPpal = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
-	pthread_mutex_unlock(&semMConfig);
 	char* numeroPpal = strdup("");
 	// data de la memoria a la que estoy conectada
 	char* ipActual = strdup(ipPpal);
@@ -254,10 +254,17 @@ void hacerGossiping(void) {
 			indice = obtenerIndiceRandom(maximo);
 			pthread_mutex_lock(&semMMemorias);
 			config_memoria* memoriaAConectar = list_get(memorias, indice);
-			ipActual = strdup(memoriaAConectar->ip);
-			puertoActual = strdup(memoriaAConectar->puerto);
-			numeroActual = strdup(memoriaAConectar->numero);
-			pthread_mutex_unlock(&semMMemorias);
+			if (memoriaAConectar != NULL) {
+				ipActual = strdup(memoriaAConectar->ip);
+				puertoActual = strdup(memoriaAConectar->puerto);
+				numeroActual = strdup(memoriaAConectar->numero);
+				pthread_mutex_unlock(&semMMemorias);
+			} else {
+				pthread_mutex_unlock(&semMMemorias);
+				ipActual = strdup(ipPpal);
+				puertoActual = strdup(puertoPpal);
+				numeroActual = strdup(numeroPpal);
+			}
 		}
 	}
 	free(ipPpal);
@@ -293,9 +300,9 @@ void procesarGossiping(t_gossiping* gossipingRecibido) {
 		pthread_mutex_lock(&semMMemorias);
 		if (!list_any_satisfy(memorias, (void*)existeUnaIgual)) {
 			// agrego memoria si no existe en mi lista de memorias
-			log_info(logger_KERNEL, "Me llegó una nueva memoria en el gossiping, num: %s", memoriaNueva->numero);
 			list_add(memorias, memoriaNueva);
 			pthread_mutex_unlock(&semMMemorias);
+			log_info(logger_KERNEL, "Me llegó una nueva memoria en el gossiping, num: %s", memoriaNueva->numero);
 		} else {
 			pthread_mutex_unlock(&semMMemorias);
 			liberarConfigMemoria(memoriaNueva);
@@ -1032,44 +1039,46 @@ void agregarTablaACriterio(char* tabla) {
 		return string_equals_ignore_case(nombreTabla, tablaActual);
 	}
 	pthread_mutex_lock(&semMTablasSC);
-	pthread_mutex_lock(&semMTablasSHC);
-	pthread_mutex_lock(&semMTablasEC);
 	if (list_find(tablasSC, (void*)esTabla) != NULL) {
 		if (tipoConsistencia != SC) {
-			hayQueAgregar = TRUE;
 			list_remove_and_destroy_by_condition(tablasSC, (void*)esTabla, (void*)liberarTabla);
-		} else {
-			free(nombreTabla);
-		}
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-	} else if (list_find(tablasSHC, (void*)esTabla) != NULL) {
-		if (tipoConsistencia != SHC) {
+			pthread_mutex_unlock(&semMTablasSC);
 			hayQueAgregar = TRUE;
-			list_remove_and_destroy_by_condition(tablasSHC, (void*)esTabla, (void*)liberarTabla);
 		} else {
+			pthread_mutex_unlock(&semMTablasSC);
 			free(nombreTabla);
 		}
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-	} else if (list_find(tablasEC, (void*)esTabla) != NULL) {
-		if (tipoConsistencia != EC) {
-			hayQueAgregar = TRUE;
-			list_remove_and_destroy_by_condition(tablasEC, (void*)esTabla, (void*)liberarTabla);
-		} else {
-			free(nombreTabla);
-		}
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
 	} else {
 		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-		hayQueAgregar = TRUE;
+		pthread_mutex_lock(&semMTablasSHC);
+		if (list_find(tablasSHC, (void*)esTabla) != NULL) {
+			if (tipoConsistencia != SHC) {
+				list_remove_and_destroy_by_condition(tablasSHC, (void*)esTabla, (void*)liberarTabla);
+				pthread_mutex_unlock(&semMTablasSHC);
+				hayQueAgregar = TRUE;
+			} else {
+				pthread_mutex_unlock(&semMTablasSHC);
+				free(nombreTabla);
+			}
+		} else {
+			pthread_mutex_unlock(&semMTablasSHC);
+			pthread_mutex_lock(&semMTablasEC);
+			if (list_find(tablasEC, (void*)esTabla) != NULL) {
+				if (tipoConsistencia != EC) {
+					list_remove_and_destroy_by_condition(tablasEC, (void*)esTabla, (void*)liberarTabla);
+					pthread_mutex_unlock(&semMTablasEC);
+					hayQueAgregar = TRUE;
+				} else {
+					pthread_mutex_unlock(&semMTablasEC);
+					free(nombreTabla);
+				}
+			} else {
+				pthread_mutex_unlock(&semMTablasEC);
+				hayQueAgregar = TRUE;
+			}
+		}
 	}
+
 	if (hayQueAgregar == TRUE) {
 		// tabla no existe en estructura o hay que agregarla en otra
 		switch(tipoConsistencia) {
@@ -1121,32 +1130,30 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
 	int esTabla(char* tablaActual) {
 		return string_equals_ignore_case(tabla, tablaActual);
 	}
-	// todo: ojo con el orden de los semaforos
 	pthread_mutex_lock(&semMTablasSC);
-	pthread_mutex_lock(&semMTablasSHC);
-	pthread_mutex_lock(&semMTablasEC);
 	if (list_find(tablasSC, (void*) esTabla) != NULL) {
 		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
 		return SC;
-	} else if (list_find(tablasSHC, (void*) esTabla) != NULL) {
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-		return SHC;
-	} else if(list_find(tablasEC, (void*) esTabla) != NULL) {
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-		return EC;
 	} else {
 		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-		log_error(logger_KERNEL, "No sé que consistencia tiene la tabla %s", tabla);
-		return CONSISTENCIA_INVALIDA;
+		pthread_mutex_lock(&semMTablasSHC);
+		if (list_find(tablasSHC, (void*) esTabla) != NULL) {
+			pthread_mutex_unlock(&semMTablasSHC);
+			return SHC;
+		} else {
+			pthread_mutex_unlock(&semMTablasSHC);
+			pthread_mutex_lock(&semMTablasEC);
+			if(list_find(tablasEC, (void*) esTabla) != NULL) {
+				pthread_mutex_unlock(&semMTablasEC);
+				return EC;
+			} else {
+				pthread_mutex_unlock(&semMTablasEC);
+				log_error(logger_KERNEL, "No sé que consistencia tiene la tabla %s", tabla);
+				return CONSISTENCIA_INVALIDA;
+			}
+		}
 	}
+
 }
 
 /* encontrarMemoriaSegunConsistencia()
@@ -1338,8 +1345,8 @@ int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom
 		if(conexionTemporanea != FAILURE) {
 			return conexionTemporanea;
 		}
-		free(numMemoria);
-		numMemoria = NULL;
+		free(*numMemoria);
+		*numMemoria = NULL;
 	}
 }
 
@@ -1517,9 +1524,11 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
 		respuesta = SUCCESS;
 		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
-	} else if (respuesta == TABLA_EXISTE && codigo == CREATE){
+	} else if(respuesta == TABLA_EXISTE && codigo == CREATE) {
 		respuesta = SUCCESS;
-		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta la tabla ya existía", mensaje);
+	} else if(respuesta == JOURNALTIME) {
+		log_info(logger_KERNEL, "La memoria %s dice: %s", numMemoria, paqueteRecibido->request);
 	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}

@@ -33,7 +33,6 @@ typedef enum
 	SEGMENTOINEXISTENTE = 100,
 	KEYINEXISTENTE =101,
 	LRU = -10102,
-	JOURNALTIME = -10103
 } t_erroresMemoria;
 
 //-----------------STRUCTS------------------
@@ -100,13 +99,13 @@ pthread_mutex_t semMListSemSegmentos;
 t_list* semMPorSegmento;
 pthread_mutex_t semMDescriptores;
 pthread_mutex_t semMMemoriasLevantadas;	// semaforo mutex para evitar concurrencia en la variable
+pthread_mutex_t semMJOURNAL;
 
 pthread_mutex_t semMConfig;				// semaforo mutex iNotify
-pthread_mutex_t semMJournal;			// semaforo mutex iNotify
+pthread_mutex_t semMSleepJournal;			// semaforo mutex iNotify
 pthread_mutex_t semMGossiping;			// semaforo mutex iNotify
 pthread_mutex_t semMFS;					// semaforo mutex iNotify
 pthread_mutex_t semMMem;				// semaforo mutex iNotify
-
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
@@ -122,6 +121,8 @@ int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 int maxValue;
 int retardoGossiping, retardoJournal, retardoFS, retardoMemPrincipal;
+int flagJOURNAL=0;
+
 
 char* puertoMio;
 char* ipMia;
