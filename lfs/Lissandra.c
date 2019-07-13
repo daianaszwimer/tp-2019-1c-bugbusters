@@ -95,36 +95,6 @@ void inicializacionLissandraFileSystem(){
 	levantarFS(pathBitmap);
 	free(pathBitmap);
 
-	diegote = list_create();
-
-	DIR* tablas;
-	if((tablas = opendir(pathTablas)) == NULL){
-		perror("Open Tables");
-	}else{
-		struct dirent* tabla;
-		while((tabla = readdir(tablas)) != NULL){
-			if(strcmp(tabla->d_name, ".") == 0 || strcmp(tabla->d_name, "..") == 0) continue;
-			char* pathTabla = string_from_format("%s/%s", pathTablas, (char*) tabla->d_name);
-			if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
-				pthread_detach(hiloDeCompactacion);
-				t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
-				hiloTabla->thread = &hiloDeCompactacion;
-				hiloTabla->nombreTabla = strdup(tabla->d_name);
-				hiloTabla->finalizarCompactacion = 0;
-				hiloTabla->blocked = 0;
-				hiloTabla->requests = queue_create();
-				pthread_mutex_lock(&mutexDiegote);
-				list_add(diegote, hiloTabla);
-				pthread_mutex_unlock(&mutexDiegote);
-				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
-				pthread_detach(hiloDeCompactacion);
-			}else{
-				log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", tabla->d_name);
-			}
-		}
-		closedir(tablas);
-	}
-
 	log_info(logger_LFS, "----------------Lissandra File System inicializado correctamente--------------");
 }
 
@@ -161,9 +131,6 @@ void crearFSMetadata(char* pathBitmap, char* pathFileMetadata){
 	char* numeroDeBloques = readline("Ingrese numero de bloques: ");
 	char* magicNumber = readline("Ingrese magic number: ");
 
-	if(!string_equals_ignore_case(magicNumber, "xd")){
-		for(int i = 0; i < 15 ; i++)free(magicNumber);
-	}
 	config_set_value(configMetadata, "BLOCK_SIZE", tamanioDeBloque);
 	config_set_value(configMetadata, "BLOCKS", numeroDeBloques);
 	config_set_value(configMetadata, "MAGIC_NUMBER", magicNumber);
@@ -209,17 +176,58 @@ void crearBloques(){
 void levantarFS(char* pathBitmap){
 	memtable = (t_memtable*) malloc(sizeof(t_memtable));
 	memtable->tablas = list_create();
+	memorias = list_create();
 
 	bitmapDescriptor = open(pathBitmap, O_RDWR);
 	bitmap = mmap(NULL, blocks/8, PROT_READ | PROT_WRITE, MAP_SHARED, bitmapDescriptor, 0);
 	bitarray = bitarray_create_with_mode(bitmap, blocks/8, LSB_FIRST);
 
+
 	pthread_mutex_init(&mutexMemtable, NULL);
-	pthread_mutex_init(&mutexDiegote, NULL);
+	pthread_mutex_init(&mutexTablasParaCompactaciones, NULL);
 	pthread_mutex_init(&mutexConfig, NULL);
 	pthread_mutex_init(&mutexRetardo, NULL);
 	pthread_mutex_init(&mutexTiempoDump, NULL);
 	pthread_mutex_init(&mutexBitmap, NULL);
+	pthread_mutex_init(&mutexMemorias, NULL);
+
+	tablasParaCompactaciones = list_create();
+
+	DIR* tablas;
+	if((tablas = opendir(pathTablas)) == NULL){
+		perror("Open Tables");
+	}else{
+		struct dirent* tabla;
+
+		while((tabla = readdir(tablas)) != NULL){
+			if(strcmp(tabla->d_name, ".") == 0 || strcmp(tabla->d_name, "..") == 0) continue;
+			char* pathTabla = string_from_format("%s/%s", pathTablas, (char*) tabla->d_name);
+			if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
+				pthread_detach(hiloDeCompactacion);
+
+				t_bloqueo* idYMutexPropio = malloc(sizeof(t_bloqueo));
+				idYMutexPropio->id = 0; // 0 seria consola propia, sino son fds de memorias
+				pthread_mutex_init(&(idYMutexPropio->mutex), NULL);
+
+				t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
+				hiloTabla->thread = &hiloDeCompactacion;
+				hiloTabla->nombreTabla = strdup(tabla->d_name);
+				hiloTabla->finalizarCompactacion = 0;
+				hiloTabla->cosasABloquear = list_create();
+				list_add(hiloTabla->cosasABloquear, idYMutexPropio);
+
+				pthread_mutex_lock(&mutexTablasParaCompactaciones);
+				list_add(tablasParaCompactaciones, hiloTabla);
+				pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
+				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
+				pthread_detach(hiloDeCompactacion);
+			}else{
+				log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", tabla->d_name);
+			}
+		}
+		closedir(tablas);
+	}
 }
 
 void crearCopiaDeSeguridad() {
@@ -240,16 +248,25 @@ void liberarMemoriaLFS(){
 			free(request->parametros);
 			free(request);
 		}
-		queue_destroy_and_destroy_elements(tabla->requests, (void*)liberarRequest);
+		list_destroy_and_destroy_elements(tabla->cosasABloquear, (void*)liberarMutexTabla);
 		free(tabla->nombreTabla);
 		free(tabla);
 	}
 
+	void eliminarMemoria(t_int* memoria_fd) {
+		free(memoria_fd);
+	}
+
 	log_info(logger_LFS, "Finalizando LFS");
 
-	pthread_mutex_lock(&mutexDiegote);
-	list_destroy_and_destroy_elements(diegote, (void*) liberarRecursos);
-	pthread_mutex_unlock(&mutexDiegote);
+	pthread_mutex_lock(&mutexTablasParaCompactaciones);
+	list_destroy_and_destroy_elements(tablasParaCompactaciones, (void*) liberarRecursos);
+	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
+
+	pthread_mutex_lock(&mutexMemorias);
+	list_destroy_and_destroy_elements(memorias, (void*)eliminarMemoria);
+	pthread_mutex_unlock(&mutexMemorias);
 
 	free(pathTablas);
 	free(pathMetadata);
@@ -266,11 +283,12 @@ void liberarMemoriaLFS(){
 	log_destroy(logger_LFS);
 
 	pthread_mutex_destroy(&mutexMemtable);
-	pthread_mutex_destroy(&mutexDiegote);
+	pthread_mutex_destroy(&mutexTablasParaCompactaciones);
 	pthread_mutex_destroy(&mutexConfig);
 	pthread_mutex_destroy(&mutexRetardo);
 	pthread_mutex_destroy(&mutexTiempoDump);
 	pthread_mutex_destroy(&mutexBitmap);
+	pthread_mutex_destroy(&mutexMemorias);
 
 	config_destroy(configMetadata);
 	config_destroy(config);
@@ -294,12 +312,8 @@ void* leerDeConsola(void* arg) {
 			cod_request palabraReservada = obtenerCodigoPalabraReservada(request[0], LFS);
 			liberarArrayDeChar(request);
 			char** requestSeparada = separarRequest(mensaje);
-			char* tabla = requestSeparada[1];
-			if(tabla == NULL || !estaBloqueada(tabla)){ //SI LA TABLA ES NULL, VINO UN DESCRIBE, SI NO, HAY Q VALIDAR SI LA TABLA ESTA BLOQUEADA
-				interpretarRequest(palabraReservada, mensaje, NULL);
-			}else{
-				encolarRequest(tabla, palabraReservada, mensaje, NULL);
-			}
+			int numero = 0;
+			interpretarRequest(palabraReservada, mensaje, &numero);
 			liberarArrayDeChar(requestSeparada);
 		}else{
 			log_error(logger_LFS, mensajeDeError);
@@ -320,11 +334,31 @@ void* recibirMemorias(void* arg) {
 		int memoria_fd = esperar_cliente(lissandraFS_fd);
 		if(memoria_fd > 0) {
 			if(!pthread_create(&hiloRequest, NULL, (void*) conectarConMemoria, (void*) memoria_fd)) {
+
+				t_int* fd = malloc(sizeof(t_int));
+				fd->valor = memoria_fd;
+
+				pthread_mutex_lock(&mutexMemorias);
+				list_add(memorias, fd);
+				pthread_mutex_unlock(&mutexMemorias);
+
+				void agregarMemoria(t_hiloTabla* hiloTabla) {
+					t_bloqueo* idYMutex = malloc(sizeof(t_bloqueo));
+					idYMutex->id = memoria_fd;
+					pthread_mutex_init(&(idYMutex->mutex), NULL);
+					list_add(hiloTabla->cosasABloquear, idYMutex);
+				}
+
 				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
 				enviarHandshakeLFS(tamanioValue, memoria_fd);
+				pthread_mutex_lock(&mutexTablasParaCompactaciones);
+				list_iterate(tablasParaCompactaciones, (void*)agregarMemoria);
+				pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
 				log_debug(logger_LFS, mensaje);
 				pthread_detach(hiloRequest);
 				free(mensaje);
+
 			} else {
 				char* error = string_from_format("Error al iniciar el hilo de la memoria %d", memoria_fd);
 				log_error(logger_LFS, error);
@@ -342,6 +376,17 @@ void* conectarConMemoria(void* arg) {
 		int palabraReservada = paqueteRecibido->palabraReservada;
 		//si viene -1 es porque se desconecto la memoria
 		if (palabraReservada == COMPONENTE_CAIDO){
+			void eliminarMemoria(t_hiloTabla* hiloTabla){
+				int encontrarMemoria(t_bloqueo* idYMutex){
+					return idYMutex->id == memoria_fd;
+				}
+				list_remove_and_destroy_by_condition(hiloTabla->cosasABloquear, (void*)encontrarMemoria ,(void*)liberarMutexTabla);
+			}
+
+			pthread_mutex_lock(&mutexTablasParaCompactaciones);
+			list_iterate(tablasParaCompactaciones, (void*)eliminarMemoria);
+			pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
 			eliminar_paquete(paqueteRecibido);
 			log_debug(logger_LFS, "Se desconecto la memoria %i", memoria_fd);
 			close(memoria_fd);
@@ -349,50 +394,14 @@ void* conectarConMemoria(void* arg) {
 		}
 		log_info(logger_LFS, "Request: %s de la memoria %i",paqueteRecibido->request, memoria_fd);
 		char** requestSeparada = separarRequest(paqueteRecibido->request);
-		char* tabla = requestSeparada[1];
-		if(tabla == NULL || !estaBloqueada(tabla)){
-			interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
-		}else{
-			encolarRequest(tabla, palabraReservada, paqueteRecibido->request, &memoria_fd);
-			log_info(logger_LFS, "Tabla bloqueada. Request encola3");
-		}
+
+		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
+
 		liberarArrayDeChar(requestSeparada);
 
 		eliminar_paquete(paqueteRecibido);
 	}
 	return NULL;
-}
-
-void encolarRequest(char* nombreTabla, cod_request palabraReservada, char* mensaje, int* memoria_fd){
-	int encontrarTabla(t_hiloTabla* tabla) {
-		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
-	}
-
-	t_request* request = (t_request*) malloc(sizeof(t_request));
-	request->cod_request = palabraReservada;
-	request->parametros = strdup(mensaje);
-	request->memoria_fd = memoria_fd;
-
-	pthread_mutex_lock(&mutexDiegote);
-	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla);
-	queue_push(tabla->requests, request);
-	pthread_mutex_unlock(&mutexDiegote);
-}
-
-int estaBloqueada(char* nombreTabla){
-	int estaBloqueada = 0;
-	int encontrarTabla(t_hiloTabla* tabla) {
-		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
-	}
-
-	pthread_mutex_lock(&mutexDiegote);
-	t_hiloTabla* tabla = list_find(diegote, (void*)encontrarTabla); // si no esta cargada la tabla, tabla es = null, con lo cual no esta bloqueada
-
-	if(tabla != NULL){
-		estaBloqueada = tabla->blocked;
-	}
-	pthread_mutex_unlock(&mutexDiegote);
-	return estaBloqueada;
 }
 
 void* escucharCambiosEnConfig(void* arg) {
@@ -423,10 +432,18 @@ void* escucharCambiosEnConfig(void* arg) {
 			return NULL;
 		} else {
 			pthread_mutex_lock(&mutexRetardo);
-			retardo = config_get_int_value(config, "RETARDO");
+			if(config_has_property(config, "RETARDO")){
+				retardo = config_get_int_value(config, "RETARDO");
+			}else{
+				log_error(logger_LFS, "Error en inotify, sus cambios no han sido actualizados");
+			}
 			pthread_mutex_unlock(&mutexRetardo);
 			pthread_mutex_lock(&mutexTiempoDump);
-			tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
+			if(config_has_property(config, "TIEMPO_DUMP")){
+				tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
+			}else{
+				log_error(logger_LFS, "Error en inotify, sus cambios no han sido actualizados");
+			}
 			pthread_mutex_unlock(&mutexTiempoDump);
 		}
 

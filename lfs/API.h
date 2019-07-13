@@ -4,7 +4,7 @@
 errorNo procesarCreate(char*, char*, char*, char*);
 errorNo crearParticiones(char*, int);
 errorNo procesarInsert(char*, uint16_t, char*, unsigned long long);
-errorNo procesarSelect(char*, char*, char**);
+errorNo procesarSelect(char*, char*, char**, int);
 errorNo procesarDescribe(char*, char**);
 errorNo procesarDrop(char*);
 void borrarParticiones(DIR*, char*);

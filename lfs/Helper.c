@@ -5,12 +5,16 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	errorNo errorNo = SUCCESS;
 	char* mensaje = strdup("");
 	if(memoria_fd != NULL){
-		log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
+		if(!(*memoria_fd)) {
+			log_info(logger_LFS, "Request de la consola de lfs");
+		} else {
+			log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
+		}
 	}
 	switch (palabraReservada){
 		case SELECT:
 			log_info(logger_LFS, "Me llego un SELECT");
-			errorNo = procesarSelect(requestSeparada[1], requestSeparada[2], &mensaje);
+			errorNo = procesarSelect(requestSeparada[1], requestSeparada[2], &mensaje, *memoria_fd);
 			break;
 		case INSERT:
 			log_info(logger_LFS, "Me llego un INSERT");
@@ -75,7 +79,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	free(mensajeDeError);
 	usleep(retardo*1000);
 
-	if (memoria_fd != NULL) {
+	if (*memoria_fd != 0) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{
 		log_info(logger_LFS, mensaje);
@@ -119,4 +123,9 @@ void actualizarCopiaDeSeguridad() {
 	char* comandoRecovery = string_from_format("rsync -az --delete %s %s", pathRaiz, pathRecovery);
 	system(comandoRecovery);
 	free(comandoRecovery);
+}
+
+void liberarMutexTabla(t_bloqueo* idYMutex) {
+	pthread_mutex_destroy(&(idYMutex->mutex));
+	free(idYMutex);
 }

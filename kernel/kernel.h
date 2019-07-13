@@ -95,7 +95,8 @@ pthread_mutex_t semMMemoriasEC;		// semaforo mutex para evitar concurrencia en l
 pthread_mutex_t semMQuantum;		// semaforo mutex para evitar concurrencia en la variable
 pthread_mutex_t semMSleepEjecucion;	// semaforo mutex para evitar concurrencia en la variable
 pthread_mutex_t semMMetadataRefresh;// semaforo mutex para evitar concurrencia en la variable
-pthread_mutex_t semMConfig			;// semaforo mutex para evitar concurrencia en la variable
+pthread_mutex_t semMConfig;			// semaforo mutex para evitar concurrencia en la variable
+pthread_mutex_t semMSleepGossiping;	// semaforo mutex para evitar concurrencia en la variable
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		// hilo que conecta a memoria
@@ -143,7 +144,6 @@ void procesarJournal(int);
 void procesarRun(t_queue*);
 int procesarAdd(char*);
 void procesarRequest(request_procesada*);
-t_paquete* reenviarRequest(consistencia, char*, int, int, char**);
 int reintentarConexion(consistencia, int, int, char**);
 void eliminarMemoria(char*, char*, char*);
 

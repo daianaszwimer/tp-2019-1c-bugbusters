@@ -1398,3 +1398,246 @@
 [INFO] 05:06:25:801 MetricasKernel/(19638:19649): Cantidad de Writes de SC: 0
 [INFO] 05:06:25:801 MetricasKernel/(19638:19649): Cantidad de Writes de SHC: 0
 [INFO] 05:06:25:801 MetricasKernel/(19638:19649): Cantidad de Writes de EC: 0
+[INFO] 03:25:48:863 MetricasKernel/(15397:15444): Read Latency de SC: -nan
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Read Latency de SHC: -nan
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Read Latency de EC: -nan
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Write Latency de SC: -nan
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Write Latency de SHC: -nan
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Write Latency de EC: -nan
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): El memory load de SC es:
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): El memory load de SHC es:
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): El memory load de EC es:
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Cantidad de Reads de SC: 0
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Cantidad de Reads de SHC: 0
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Cantidad de Reads de EC: 0
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Cantidad de Writes de SC: 0
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Cantidad de Writes de SHC: 0
+[INFO] 03:25:48:865 MetricasKernel/(15397:15444): Cantidad de Writes de EC: 0
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Read Latency de SC: -nan
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Read Latency de SHC: -nan
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Read Latency de EC: -nan
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Write Latency de SC: -nan
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Write Latency de SHC: -nan
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Write Latency de EC: -nan
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): El memory load de SC es:
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): El memory load de SHC es:
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): El memory load de EC es:
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Cantidad de Reads de SC: 0
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Cantidad de Reads de SHC: 0
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Cantidad de Reads de EC: 0
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Cantidad de Writes de SC: 0
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Cantidad de Writes de SHC: 0
+[INFO] 03:26:18:866 MetricasKernel/(15397:15444): Cantidad de Writes de EC: 0
+[INFO] 03:26:35:928 MetricasKernel/(15587:15601): Read Latency de SC: -nan
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Read Latency de SHC: -nan
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Read Latency de EC: -nan
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Write Latency de SC: -nan
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Write Latency de SHC: -nan
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Write Latency de EC: -nan
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): El memory load de SC es:
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): El memory load de SHC es:
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): El memory load de EC es:
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Cantidad de Reads de SC: 0
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Cantidad de Reads de SHC: 0
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Cantidad de Reads de EC: 0
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Cantidad de Writes de SC: 0
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Cantidad de Writes de SHC: 0
+[INFO] 03:26:35:930 MetricasKernel/(15587:15601): Cantidad de Writes de EC: 0
+[INFO] 03:27:05:930 MetricasKernel/(15587:15601): Read Latency de SC: -nan
+[INFO] 03:27:05:930 MetricasKernel/(15587:15601): Read Latency de SHC: -nan
+[INFO] 03:27:05:930 MetricasKernel/(15587:15601): Read Latency de EC: -nan
+[INFO] 03:27:05:930 MetricasKernel/(15587:15601): Write Latency de SC: -nan
+[INFO] 03:27:05:930 MetricasKernel/(15587:15601): Write Latency de SHC: -nan
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): Write Latency de EC: -nan
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): El memory load de SC es:
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): El memory load de SHC es:
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): El memory load de EC es:
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): Cantidad de Reads de SC: 0
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): Cantidad de Reads de SHC: 0
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): Cantidad de Reads de EC: 0
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): Cantidad de Writes de SC: 0
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): Cantidad de Writes de SHC: 0
+[INFO] 03:27:05:931 MetricasKernel/(15587:15601): Cantidad de Writes de EC: 0
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Read Latency de SC: -nan
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Read Latency de SHC: -nan
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Read Latency de EC: -nan
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Write Latency de SC: -nan
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Write Latency de SHC: -nan
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Write Latency de EC: -nan
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): El memory load de SC es:
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): El memory load de SHC es:
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): El memory load de EC es:
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Cantidad de Reads de SC: 0
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Cantidad de Reads de SHC: 0
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Cantidad de Reads de EC: 0
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Cantidad de Writes de SC: 0
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Cantidad de Writes de SHC: 0
+[INFO] 03:27:35:931 MetricasKernel/(15587:15601): Cantidad de Writes de EC: 0
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Read Latency de SC: -nan
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Read Latency de SHC: -nan
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Read Latency de EC: -nan
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Write Latency de SC: -nan
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Write Latency de SHC: -nan
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Write Latency de EC: 3.000000
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): El memory load de SC es:
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): El memory load de SHC es:
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): El memory load de EC es:
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 1.000000
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Cantidad de Reads de SC: 0
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Cantidad de Reads de SHC: 0
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Cantidad de Reads de EC: 0
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Cantidad de Writes de SC: 0
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Cantidad de Writes de SHC: 0
+[INFO] 03:28:31:613 MetricasKernel/(15587:15601): Cantidad de Writes de EC: 1
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Read Latency de SC: -nan
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Read Latency de SHC: -nan
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Read Latency de EC: -nan
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Write Latency de SC: -nan
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Write Latency de SHC: -nan
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Write Latency de EC: 32.000000
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): El memory load de SC es:
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): El memory load de SHC es:
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): El memory load de EC es:
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 1.000000
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Cantidad de Reads de SC: 0
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Cantidad de Reads de SHC: 0
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Cantidad de Reads de EC: 0
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Cantidad de Writes de SC: 0
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Cantidad de Writes de SHC: 0
+[INFO] 03:29:03:523 MetricasKernel/(15587:15601): Cantidad de Writes de EC: 1
+[INFO] 03:45:20:636 MetricasKernel/(15587:15601): Read Latency de SC: -nan
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Read Latency de SHC: -nan
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Read Latency de EC: -nan
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Write Latency de SC: -nan
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Write Latency de SHC: -nan
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Write Latency de EC: -nan
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): El memory load de SC es:
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): El memory load de SHC es:
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): El memory load de EC es:
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Cantidad de Reads de SC: 0
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Cantidad de Reads de SHC: 0
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Cantidad de Reads de EC: 0
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Cantidad de Writes de SC: 0
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Cantidad de Writes de SHC: 0
+[INFO] 03:45:20:637 MetricasKernel/(15587:15601): Cantidad de Writes de EC: 0
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Read Latency de SC: -nan
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Read Latency de SHC: -nan
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Read Latency de EC: -nan
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Write Latency de SC: -nan
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Write Latency de SHC: -nan
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Write Latency de EC: 995.000000
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): El memory load de SC es:
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): El memory load de SHC es:
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): El memory load de EC es:
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): La cantidad de Select - Insert respecto del resto de las operaciones de la memoria 1 es 1.000000
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Cantidad de Reads de SC: 0
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Cantidad de Reads de SHC: 0
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Cantidad de Reads de EC: 0
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Cantidad de Writes de SC: 0
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Cantidad de Writes de SHC: 0
+[INFO] 03:45:50:638 MetricasKernel/(15587:15601): Cantidad de Writes de EC: 1
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): Read Latency de SC: -nan
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): Read Latency de SHC: -nan
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): Read Latency de EC: -nan
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): Write Latency de SC: -nan
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): Write Latency de SHC: -nan
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): Write Latency de EC: -nan
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): El memory load de SC es:
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): El memory load de SHC es:
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): El memory load de EC es:
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): Cantidad de Reads de SC: 0
+[INFO] 03:46:26:899 MetricasKernel/(15587:15601): Cantidad de Reads de SHC: 0
+[INFO] 03:46:26:900 MetricasKernel/(15587:15601): Cantidad de Reads de EC: 0
+[INFO] 03:46:26:900 MetricasKernel/(15587:15601): Cantidad de Writes de SC: 0
+[INFO] 03:46:26:900 MetricasKernel/(15587:15601): Cantidad de Writes de SHC: 0
+[INFO] 03:46:26:900 MetricasKernel/(15587:15601): Cantidad de Writes de EC: 0
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Read Latency de SC: -nan
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Read Latency de SHC: -nan
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Read Latency de EC: -nan
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Write Latency de SC: -nan
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Write Latency de SHC: -nan
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Write Latency de EC: -nan
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): El memory load de SC es:
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): El memory load de SHC es:
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): El memory load de EC es:
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Cantidad de Reads de SC: 0
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Cantidad de Reads de SHC: 0
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Cantidad de Reads de EC: 0
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Cantidad de Writes de SC: 0
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Cantidad de Writes de SHC: 0
+[INFO] 03:46:58:832 MetricasKernel/(15587:15601): Cantidad de Writes de EC: 0
+[INFO] 04:42:15:460 MetricasKernel/(25960:25975): Read Latency de SC: -nan
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Read Latency de SHC: -nan
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Read Latency de EC: -nan
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Write Latency de SC: -nan
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Write Latency de SHC: -nan
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Write Latency de EC: -nan
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): El memory load de SC es:
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): El memory load de SHC es:
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): El memory load de EC es:
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Cantidad de Reads de SC: 0
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Cantidad de Reads de SHC: 0
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Cantidad de Reads de EC: 0
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Cantidad de Writes de SC: 0
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Cantidad de Writes de SHC: 0
+[INFO] 04:42:15:464 MetricasKernel/(25960:25975): Cantidad de Writes de EC: 0
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Read Latency de SC: -nan
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Read Latency de SHC: -nan
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Read Latency de EC: -nan
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Write Latency de SC: -nan
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Write Latency de SHC: -nan
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Write Latency de EC: -nan
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): El memory load de SC es:
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): El memory load de SHC es:
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): El memory load de EC es:
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Cantidad de Reads de SC: 0
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Cantidad de Reads de SHC: 0
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Cantidad de Reads de EC: 0
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Cantidad de Writes de SC: 0
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Cantidad de Writes de SHC: 0
+[INFO] 04:42:45:465 MetricasKernel/(25960:25975): Cantidad de Writes de EC: 0
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Read Latency de SC: -nan
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Read Latency de SHC: -nan
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Read Latency de EC: -nan
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Write Latency de SC: -nan
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Write Latency de SHC: -nan
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Write Latency de EC: -nan
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): El memory load de SC es:
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): El memory load de SHC es:
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): El memory load de EC es:
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Cantidad de Reads de SC: 0
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Cantidad de Reads de SHC: 0
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Cantidad de Reads de EC: 0
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Cantidad de Writes de SC: 0
+[INFO] 04:43:15:465 MetricasKernel/(25960:25975): Cantidad de Writes de SHC: 0
+[INFO] 04:43:15:466 MetricasKernel/(25960:25975): Cantidad de Writes de EC: 0
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Read Latency de SC: -nan
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Read Latency de SHC: -nan
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Read Latency de EC: -nan
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Write Latency de SC: -nan
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Write Latency de SHC: -nan
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Write Latency de EC: -nan
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): El memory load de SC es:
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): El memory load de SHC es:
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): El memory load de EC es:
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Cantidad de Reads de SC: 0
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Cantidad de Reads de SHC: 0
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Cantidad de Reads de EC: 0
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Cantidad de Writes de SC: 0
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Cantidad de Writes de SHC: 0
+[INFO] 04:43:46:122 MetricasKernel/(25960:25975): Cantidad de Writes de EC: 0
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Read Latency de SC: -nan
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Read Latency de SHC: -nan
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Read Latency de EC: -nan
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Write Latency de SC: -nan
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Write Latency de SHC: -nan
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Write Latency de EC: -nan
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): El memory load de SC es:
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): El memory load de SHC es:
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): El memory load de EC es:
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Cantidad de Reads de SC: 0
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Cantidad de Reads de SHC: 0
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Cantidad de Reads de EC: 0
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Cantidad de Writes de SC: 0
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Cantidad de Writes de SHC: 0
+[INFO] 04:44:21:662 MetricasKernel/(25960:25975): Cantidad de Writes de EC: 0
