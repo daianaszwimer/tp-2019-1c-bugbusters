@@ -130,9 +130,6 @@ void crearFSMetadata(char* pathBitmap, char* pathFileMetadata){
 	char* numeroDeBloques = readline("Ingrese numero de bloques: ");
 	char* magicNumber = readline("Ingrese magic number: ");
 
-	if(!string_equals_ignore_case(magicNumber, "xd")){
-		for(int i = 0; i < 15 ; i++)free(magicNumber);
-	}
 	config_set_value(configMetadata, "BLOCK_SIZE", tamanioDeBloque);
 	config_set_value(configMetadata, "BLOCKS", numeroDeBloques);
 	config_set_value(configMetadata, "MAGIC_NUMBER", magicNumber);
