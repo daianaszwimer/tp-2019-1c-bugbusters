@@ -2629,3 +2629,114 @@ p�0.0.1 8002
 [INFO] 20:20:05:532 Memoria/(6191:6191): INICIO DE MEMORIA
 [INFO] 20:20:05:537 Memoria/(6191:6200): Memoria lista para recibir al kernel
 [INFO] 20:20:05:544 Memoria/(6191:6203): Vamos a leer de consola
+[INFO] 02:48:59:658 Memoria/(10576:10576): SE CONECTO CON LFS
+[INFO] 02:48:59:661 Memoria/(10576:10576): Recibi de LFS TAMAÑO_VALUE: 15
+[INFO] 02:48:59:661 Memoria/(10576:10576): INICIO DE MEMORIA
+[INFO] 02:48:59:668 Memoria/(10576:10594): Memoria lista para recibir al kernel
+[INFO] 02:48:59:689 Memoria/(10576:10598): Vamos a leer de consola
+[INFO] 02:49:17:284 Memoria/(10576:10598): entre a interpretarr request
+[DEBUG] 02:49:17:284 Memoria/(10576:10598): Me llego un INSERT
+[INFO] 02:49:17:285 Memoria/(10576:10598): La request: INSERT SOL 1 "SOL1" se ha realizado con exito
+[INFO] 02:49:24:708 Memoria/(10576:10598): entre a interpretarr request
+[DEBUG] 02:49:24:708 Memoria/(10576:10598): Me llego un INSERT
+[INFO] 02:49:24:716 Memoria/(10576:10598): La request: INSERT SOL 2 "SOL2" se ha realizado con exito
+[INFO] 02:49:56:333 Memoria/(10576:10598): entre a interpretarr request
+[DEBUG] 02:49:56:334 Memoria/(10576:10598): Me llego un INSERT
+[INFO] 02:49:56:337 Memoria/(10576:10598): Debe ejecutars eel algoritmo de reemplazo
+[INFO] 02:50:41:324 Memoria/(10576:10596): --- JOURNAL AUTOMATICO ---
+[INFO] 02:50:50:615 Memoria/(10576:10596): Le enviamos a LFS: INSERT SOL 1 "SOL1"
+[INFO] 02:51:32:35 Memoria/(10576:10596): Le enviamos a LFS: INSERT SOL 2 "SOL2"
+[INFO] 02:51:33:707 Memoria/(10576:10596): La request: JOURNAL  Se ha realizado el JOURNAL con exito
+[INFO] 02:52:46:498 Memoria/(10576:10596): --- JOURNAL AUTOMATICO ---
+[INFO] 02:52:46:498 Memoria/(10576:10596): La request: JOURNAL  NO habia nada que impactar e LFS.JOURNAL se realizo con exito
+[INFO] 02:52:55:252 Memoria/(10576:10598): La request: INSERT LUNA 1 "LUNA1" NO ha podido realizarse.La memoria se encuentra FULL
+[INFO] 02:53:56:498 Memoria/(10576:10596): --- JOURNAL AUTOMATICO ---
+[INFO] 02:53:56:498 Memoria/(10576:10596): La request: JOURNAL  NO habia nada que impactar e LFS.JOURNAL se realizo con exito
+[INFO] 02:55:06:499 Memoria/(10576:10596): --- JOURNAL AUTOMATICO ---
+[INFO] 02:55:06:499 Memoria/(10576:10596): La request: JOURNAL  NO habia nada que impactar e LFS.JOURNAL se realizo con exito
+[INFO] 02:56:16:500 Memoria/(10576:10596): --- JOURNAL AUTOMATICO ---
+[INFO] 02:56:16:500 Memoria/(10576:10596): La request: JOURNAL  NO habia nada que impactar e LFS.JOURNAL se realizo con exito
+[INFO] 02:56:42:869 Memoria/(10576:10598): entre a interpretarr request
+[DEBUG] 02:56:42:869 Memoria/(10576:10598): Me llego un SELECT
+[INFO] 02:56:42:869 Memoria/(10576:10598): ME LO TIENE QUE DECIR LFS
+[INFO] 02:56:42:877 Memoria/(10576:10598): La respuesta a la request: SELECT PLANETAS 1 es:  PLANETAS1 
+[INFO] 02:57:26:500 Memoria/(10576:10596): --- JOURNAL AUTOMATICO ---
+[INFO] 02:57:26:500 Memoria/(10576:10596): La request: JOURNAL  NO habia nada que impactar e LFS.JOURNAL se realizo con exito
+[ERROR] 02:57:32:497 Memoria/(10576:10598): Comando invalido
+[INFO] 02:57:55:748 Memoria/(10576:10598): entre a interpretarr request
+[DEBUG] 02:57:55:748 Memoria/(10576:10598): Me llego un SELECT
+[INFO] 02:57:55:749 Memoria/(10576:10598): ME LO TIENE QUE DECIR LFS
+[INFO] 02:57:55:752 Memoria/(10576:10598): La respuesta a la request: SELECT PLANETAS 2 es:  PLANETAS 
+[INFO] 02:58:04:704 Memoria/(10576:10598): entre a interpretarr request
+[DEBUG] 02:58:04:704 Memoria/(10576:10598): Me llego un SELECT
+[INFO] 02:58:04:705 Memoria/(10576:10598): ME LO TIENE QUE DECIR LFS
+[INFO] 02:58:04:707 Memoria/(10576:10598): La respuesta a la request: SELECT LUNA 1 es:  LUNA1 
+[INFO] 02:58:27:540 Memoria/(10576:10598): entre a interpretarr request
+[DEBUG] 02:58:27:540 Memoria/(10576:10598): Me llego un SELECT
+[INFO] 02:58:27:544 Memoria/(10576:10598): ME LO TIENE QUE DECIR LFS
+[INFO] 03:02:41:476 Memoria/(10576:10596): --- JOURNAL AUTOMATICO ---
+[INFO] 03:02:41:477 Memoria/(10576:10596): La request: JOURNAL  NO habia nada que impactar e LFS.JOURNAL se realizo con exito
+[INFO] 03:03:28:447 Memoria/(12383:12383): SE CONECTO CON LFS
+[INFO] 03:03:28:447 Memoria/(12383:12383): Recibi de LFS TAMAÑO_VALUE: 15
+[INFO] 03:03:28:447 Memoria/(12383:12383): INICIO DE MEMORIA
+[INFO] 03:03:28:457 Memoria/(12383:12399): Memoria lista para recibir al kernel
+[INFO] 03:03:28:477 Memoria/(12383:12403): Vamos a leer de consola
+[INFO] 03:04:44:11 Memoria/(12383:12403): entre a interpretarr request
+[DEBUG] 03:04:44:11 Memoria/(12383:12403): Me llego un SELECT
+[INFO] 03:04:44:14 Memoria/(12383:12403): ME LO TIENE QUE DECIR LFS
+[INFO] 03:04:44:15 Memoria/(12383:12403): La respuesta a la request: SELECT ESTRELLA 1 es:  ESTRELLA1 
+[INFO] 03:04:50:572 Memoria/(12383:12403): entre a interpretarr request
+[DEBUG] 03:04:50:572 Memoria/(12383:12403): Me llego un SELECT
+[INFO] 03:04:50:574 Memoria/(12383:12403): ME LO TIENE QUE DECIR LFS
+[INFO] 03:04:50:575 Memoria/(12383:12403): La respuesta a la request: SELECT ESTRELLA 2 es:  ESTRELLA2 
+[INFO] 03:05:53:638 Memoria/(12383:12403): entre a interpretarr request
+[DEBUG] 03:05:53:639 Memoria/(12383:12403): Me llego un SELECT
+[INFO] 03:05:53:640 Memoria/(12383:12403): ME LO TIENE QUE DECIR LFS
+[INFO] 03:12:40:879 Memoria/(12383:12403): La respuesta a la request: SELECT PLANETAS 1 es:  PLANETAS1 
+[INFO] 03:13:27:470 Memoria/(12383:12403): entre a interpretarr request
+[DEBUG] 03:13:27:470 Memoria/(12383:12403): Me llego un INSERT
+[INFO] 03:13:27:472 Memoria/(12383:12403): Debe ejecutars eel algoritmo de reemplazo
+[INFO] 03:14:39:132 Memoria/(12383:12403): La request: INSERT ESTRELLA 3 "ESTRELLA3" se ha realizado con exito
+[INFO] 03:15:52:454 Memoria/(12383:12403): entre a interpretarr request
+[DEBUG] 03:15:52:455 Memoria/(12383:12403): Me llego un INSERT
+[INFO] 03:15:52:455 Memoria/(12383:12403): Debe ejecutars eel algoritmo de reemplazo
+[INFO] 03:18:29:663 Memoria/(12383:12403): La request: INSERT ESTRELLA 4 "ESTRELLA4" se ha realizado con exito
+[INFO] 03:20:06:134 Memoria/(12383:12403): entre a interpretarr request
+[DEBUG] 03:20:06:134 Memoria/(12383:12403): Me llego un INSERT
+[INFO] 03:20:06:140 Memoria/(12383:12403): Debe ejecutars eel algoritmo de reemplazo
+[INFO] 03:20:12:525 Memoria/(12383:12403): La request: INSERT PLANETA 4 "PLANETA4" NO ha podido realizarse.La memoria se encuentra FULL
+[DEBUG] 03:20:25:965 Memoria/(12383:12399): Paso por select
+[DEBUG] 03:20:25:966 Memoria/(12383:12399): Paso por select
+[WARNING] 03:20:25:966 Memoria/(12383:12399): formatee 8001 127.0.0.1 1
+[DEBUG] 03:20:25:966 Memoria/(12383:12399): Paso por select
+[INFO] 03:20:25:966 Memoria/(12383:12399): Desconectando al socket 7
+[DEBUG] 03:20:35:378 Memoria/(12383:12399): Paso por select
+[DEBUG] 03:20:35:378 Memoria/(12383:12399): Paso por select
+[INFO] 03:20:35:378 Memoria/(12383:12399): entre a interpretarr request
+[DEBUG] 03:20:35:378 Memoria/(12383:12399): Me llego un DESCRIBE
+[INFO] 03:20:35:392 Memoria/(12383:12399): AZUL SC 3 300000;ESTRELLA EC 2 20000;ANIMALS EC 2 5000;BEBIDAS SC 6 10000;INTERNET EC 2 60000;MARCAS EC 4 600000;METALS EC 3 5000;POSTRES SC 3 60000;AVES SC 5 50000;COLORS SC 4 600000;CITIES SC 5 60000;STUDY EC 4 60000;OPERATIVOS SC 5 500000;LIBRARY SC 1 60000;BROWSER EC 4 60000;MAMIFEROS SC 3 60000;FRUTAS SC 2 50000;SINGERS EC 2 5000;PLANETAS EC 3 340000;MARINOS SC 1 10000;LUNA EC 3 300000;DD SC 4 4000;COUNTRIES SC 1 60000;PEOPLE EC 2 5000;TP SC 3 30000;DAIU SC 2 20000
+[DEBUG] 03:20:35:393 Memoria/(12383:12399): Paso por select
+[INFO] 03:20:35:393 Memoria/(12383:12399): Desconectando al socket 7
+[DEBUG] 03:22:06:148 Memoria/(12383:12399): Paso por select
+[DEBUG] 03:22:06:148 Memoria/(12383:12399): Paso por select
+[INFO] 03:22:06:148 Memoria/(12383:12399): entre a interpretarr request
+[DEBUG] 03:22:06:148 Memoria/(12383:12399): Me llego un INSERT
+[INFO] 03:22:06:149 Memoria/(12383:12399): 
+[DEBUG] 03:22:06:149 Memoria/(12383:12399): Paso por select
+[INFO] 03:22:06:149 Memoria/(12383:12399): Desconectando al socket 7
+[DEBUG] 03:22:34:588 Memoria/(12383:12399): Paso por select
+[DEBUG] 03:22:34:589 Memoria/(12383:12399): Paso por select
+[INFO] 03:22:34:589 Memoria/(12383:12399): entre a interpretarr request
+[DEBUG] 03:22:34:589 Memoria/(12383:12399): Me llego un INSERT
+[INFO] 03:22:34:589 Memoria/(12383:12399): Debe ejecutars eel algoritmo de reemplazo
+[INFO] 03:22:42:46 Memoria/(12383:12399): STUDY 33 "LIBRO"
+[DEBUG] 03:22:42:46 Memoria/(12383:12399): Paso por select
+[INFO] 03:22:42:47 Memoria/(12383:12399): Desconectando al socket 7
+[DEBUG] 03:23:45:311 Memoria/(12383:12399): Paso por select
+[DEBUG] 03:23:45:312 Memoria/(12383:12399): Paso por select
+[INFO] 03:23:45:312 Memoria/(12383:12399): entre a interpretarr request
+[DEBUG] 03:23:45:312 Memoria/(12383:12399): Me llego un INSERT
+[INFO] 03:23:45:312 Memoria/(12383:12399): Debe ejecutars eel algoritmo de reemplazo
+[INFO] 03:23:50:602 Memoria/(12383:12399): STUDY 5 "JJ"
+[DEBUG] 03:24:16:539 Memoria/(12383:12399): Paso por select
+[INFO] 03:24:16:539 Memoria/(12383:12399): Desconectando al socket 7
