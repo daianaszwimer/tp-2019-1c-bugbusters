@@ -1689,7 +1689,6 @@ void procesarRun(t_queue* colaRun) {
 		free(queue_pop(colaRun));
 		liberarRequestProcesada(request);
 		quantumActual++;
-		log_info(logger_KERNEL, "Pre sleep");
 		pthread_mutex_lock(&semMSleepEjecucion);
 		sleep = sleepEjecucion;
 		pthread_mutex_unlock(&semMSleepEjecucion);
