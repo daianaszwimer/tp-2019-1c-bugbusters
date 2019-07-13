@@ -1346,8 +1346,8 @@ int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom
 		if(conexionTemporanea != FAILURE) {
 			return conexionTemporanea;
 		}
-		free(numMemoria);
-		numMemoria = NULL;
+		free(*numMemoria);
+		*numMemoria = NULL;
 	}
 }
 
