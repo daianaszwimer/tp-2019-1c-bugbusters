@@ -102,11 +102,10 @@ pthread_mutex_t semMMemoriasLevantadas;	// semaforo mutex para evitar concurrenc
 pthread_mutex_t semMJOURNAL;
 
 pthread_mutex_t semMConfig;				// semaforo mutex iNotify
-pthread_mutex_t semMJournal;			// semaforo mutex iNotify
+pthread_mutex_t semMSleepJournal;			// semaforo mutex iNotify
 pthread_mutex_t semMGossiping;			// semaforo mutex iNotify
 pthread_mutex_t semMFS;					// semaforo mutex iNotify
 pthread_mutex_t semMMem;				// semaforo mutex iNotify
-
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes

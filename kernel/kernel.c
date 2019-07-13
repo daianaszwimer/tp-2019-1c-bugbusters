@@ -156,7 +156,6 @@ void hacerGossiping(void) {
 	t_gossiping* gossiping;
 	int sleep;
 	// data de la mem ppal
-// agregar
 	char* numeroPpal = strdup("");
 	// data de la memoria a la que estoy conectada
 	char* ipActual = strdup(ipPpal);
@@ -1525,6 +1524,9 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
 		respuesta = SUCCESS;
 		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+	} else if(respuesta == TABLA_EXISTE && codigo == CREATE) {
+		respuesta = SUCCESS;
+		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta la tabla ya existía", mensaje);
 	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}

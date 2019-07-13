@@ -49,7 +49,7 @@ int main(void) {
 	pthread_mutex_init(&semMMemoriasLevantadas, NULL);
 	pthread_mutex_init(&semMConfig, NULL);
 	pthread_mutex_init(&semMGossiping, NULL);
-	pthread_mutex_init(&semMJournal, NULL);
+	pthread_mutex_init(&semMSleepJournal, NULL);
 	pthread_mutex_init(&semMMem, NULL);
 	pthread_mutex_init(&semMFS, NULL);
 	pthread_mutex_init(&semMJOURNAL, NULL);
@@ -169,9 +169,9 @@ void escucharCambiosEnConfig(void) {
 				pthread_mutex_lock(&semMGossiping);
 				retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
 				pthread_mutex_unlock(&semMGossiping);
-				pthread_mutex_lock(&semMJournal);
+				pthread_mutex_lock(&semMSleepJournal);
 				retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
-				pthread_mutex_unlock(&semMJournal);
+				pthread_mutex_unlock(&semMSleepJournal);
 				pthread_mutex_lock(&semMFS);
 				retardoFS = config_get_int_value(config, "RETARDO_FS");
 				pthread_mutex_unlock(&semMFS);
@@ -386,14 +386,14 @@ void leerDeConsola(void){
 		}
 		pthread_mutex_lock(&semMJOURNAL);
 		if(flagJOURNAL==1){
-			pthread_mutex_unlock(&semMMem);
-
+			pthread_mutex_unlock(&semMJOURNAL);
 			t_paquete* paqueteJournal=(t_paquete*)malloc(sizeof(t_paquete));
 			paqueteJournal->palabraReservada=JOURNALTIME;
 			paqueteJournal->request=strdup("NO es posible interpretar la request, se esta haciendo JOURNAL. Vueva a mandarla al finalizar el journal");
 			paqueteJournal->tamanio=strlen(paqueteJournal->request);
 			mostrarResultadoPorConsola(JOURNAL,JOURNALTIME,mensaje,paqueteJournal);
 		}else{
+			pthread_mutex_unlock(&semMJOURNAL);
 			validarRequest(mensaje);
 		}
 
@@ -573,7 +573,7 @@ void escucharMultiplesClientes() {
 void interpretarRequest(int palabraReservada,char* request,t_caller caller, int indiceKernel) {
 	pthread_mutex_lock(&semMJOURNAL);
 	if(flagJOURNAL==1){
-		pthread_mutex_unlock(&semMMem);
+		pthread_mutex_unlock(&semMJOURNAL);
 
 		t_paquete* paqueteJournal=(t_paquete*)malloc(sizeof(t_paquete));
 		paqueteJournal->palabraReservada=JOURNALTIME;
@@ -581,6 +581,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 		paqueteJournal->tamanio=strlen(paqueteJournal->request);
 		enviarAlDestinatarioCorrecto(JOURNAL,JOURNALTIME,request,paqueteJournal,caller,indiceKernel);
 	}else{
+		pthread_mutex_unlock(&semMJOURNAL);
 		consistencia consistenciaMemoria;
 		if(caller== ANOTHER_COMPONENT){
 			consistenciaMemoria = palabraReservada;
@@ -1713,7 +1714,7 @@ void liberarMemoria(){
 	pthread_mutex_destroy(&semMMemoriasLevantadas);
 	pthread_mutex_destroy(&semMConfig);
 	pthread_mutex_destroy(&semMGossiping);
-	pthread_mutex_destroy(&semMJournal);
+	pthread_mutex_destroy(&semMSleepJournal);
 	pthread_mutex_destroy(&semMFS);
 	pthread_mutex_destroy(&semMMem);
 	pthread_mutex_destroy(&semMJOURNAL);
@@ -2058,9 +2059,9 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 void hacerJournal(void){
 	int tiempoJournal;
 	while(1){
-		pthread_mutex_lock(&semMJournal);
+		pthread_mutex_lock(&semMSleepJournal);
 		tiempoJournal = retardoJournal;
-		pthread_mutex_unlock(&semMJournal);
+		pthread_mutex_unlock(&semMSleepJournal);
 		usleep(tiempoJournal*1000);
 		log_info(logger_MEMORIA, "--- JOURNAL AUTOMATICO ---");
 		procesarJournal(JOURNAL, "JOURNAL",CONSOLE,-1);
