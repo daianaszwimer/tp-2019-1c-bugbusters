@@ -64,9 +64,9 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			hiloTabla->nombreTabla = strdup(nombreTabla);
 			hiloTabla->finalizarCompactacion = 0;
 			hiloTabla->cosasABloquear = list_create();
+			list_add(hiloTabla->cosasABloquear, idYMutexPropio);
 
 			pthread_mutex_lock(&mutexTablasParaCompactaciones);
-			list_add(hiloTabla->cosasABloquear, idYMutexPropio);
 			list_add(tablasParaCompactaciones, hiloTabla);
 			pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 
@@ -205,8 +205,9 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje, int fd){
 
 		pthread_mutex_lock(&mutexTablasParaCompactaciones);
 		t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*)encontrarTabla);
-		t_bloqueo* idYMutexEncontrado = list_find(tablaEncontrada->cosasABloquear, (void*)encontrarMutexCorrespondiente);
 		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
+		t_bloqueo* idYMutexEncontrado = list_find(tablaEncontrada->cosasABloquear, (void*)encontrarMutexCorrespondiente);
 
 		pthread_mutex_lock(&(idYMutexEncontrado->mutex));
 		t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);

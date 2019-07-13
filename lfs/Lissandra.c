@@ -117,9 +117,9 @@ void inicializacionLissandraFileSystem(){
 				hiloTabla->nombreTabla = strdup(tabla->d_name);
 				hiloTabla->finalizarCompactacion = 0;
 				hiloTabla->cosasABloquear = list_create();
+				list_add(hiloTabla->cosasABloquear, idYMutexPropio);
 
 				pthread_mutex_lock(&mutexTablasParaCompactaciones);
-				list_add(hiloTabla->cosasABloquear, idYMutexPropio);
 				list_add(tablasParaCompactaciones, hiloTabla);
 				pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 
