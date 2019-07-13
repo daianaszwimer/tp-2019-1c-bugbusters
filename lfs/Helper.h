@@ -64,6 +64,7 @@ typedef struct{
 
 t_log* logger_LFS;
 t_config* config;
+t_config* configRecovery;
 t_config *configMetadata;
 t_bitarray* bitarray;
 t_memtable* memtable;
@@ -88,7 +89,7 @@ int obtenerBloqueDisponible();
 void vaciarTabla(t_tabla*);
 void liberarMutexTabla(t_bloqueo*);
 void interpretarRequest(cod_request, char*, int*);
-void actualizarCopiaDeSeguridad();
+void crearOActualizarCopiaDeSeguridad();
 
 // SEMAFOROS
 pthread_mutex_t mutexMemtable;
@@ -98,6 +99,7 @@ pthread_mutex_t mutexRetardo;
 pthread_mutex_t mutexTiempoDump;
 pthread_mutex_t mutexBitmap;
 pthread_mutex_t mutexMemorias;
+pthread_mutex_t mutexRecovery;
 
 //VARIABLES CONFIG
 int retardo;

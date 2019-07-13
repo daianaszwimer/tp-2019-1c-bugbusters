@@ -21,7 +21,12 @@ void* hiloCompactacion(void* arg) {
 			log_info(logger_LFS, "Hilo de compactacion de %s terminado", pathTabla);
 			break;
 		}
-		config_set_value(config, "1");
+
+		pthread_mutex_lock(&mutexRecovery);
+		config_set_value(configRecovery, "RECOVERY", "1");
+		config_save(configRecovery);
+		pthread_mutex_unlock(&mutexRecovery);
+
 		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
 		log_info(logger_LFS, infoComienzoCompactacion);
 		free(infoComienzoCompactacion);
@@ -29,12 +34,13 @@ void* hiloCompactacion(void* arg) {
 		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
 		log_info(logger_LFS, infoTerminoCompactacion);
 		free(infoTerminoCompactacion);
-<<<<<<< HEAD
-		config_set_value(config, "0");
-		actualizarCopiaDeSeguridad();
-		usleep(tiempoEntreCompactaciones*1000);
-=======
->>>>>>> master
+
+		pthread_mutex_lock(&mutexRecovery);
+		config_set_value(configRecovery, "RECOVERY", "0");
+		config_save(configRecovery);
+		crearOActualizarCopiaDeSeguridad();
+		pthread_mutex_unlock(&mutexRecovery);
+
 	}
 	free(pathTabla);
 	return NULL;
@@ -246,6 +252,8 @@ void renombrarTmp_a_TmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR* 
 			char* pathTmp = string_from_format("%s/%s", pathTabla, archivoDeLaTabla->d_name);
 			char* pathTmpC = string_from_format("%s/%s%c", pathTabla, archivoDeLaTabla->d_name, 'c');
 			int resultadoDeRenombrar = rename(pathTmp, pathTmpC);
+			log_info(logger_LFS, "Mande el sleep");
+			sleep(60);
 			if (resultadoDeRenombrar != 0) {
 				log_error(logger_LFS, "No se pudo renombrar el temporal");
 			}

@@ -119,7 +119,7 @@ void vaciarTabla(t_tabla *tabla) {
     free(tabla);
 }
 
-void actualizarCopiaDeSeguridad() {
+void crearOActualizarCopiaDeSeguridad() {
 	char* comandoRecovery = string_from_format("rsync -az --delete %s %s", pathRaiz, pathRecovery);
 	system(comandoRecovery);
 	free(comandoRecovery);

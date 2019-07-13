@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
 
 	pathConfig = argv[1];
 	inicializacionLissandraFileSystem();
-	crearCopiaDeSeguridad();
+	crearOActualizarCopiaDeSeguridad();
 
 	if(!pthread_create(&hiloDeInotify, NULL, (void*)escucharCambiosEnConfig, NULL)){
 		log_info(logger_LFS, "Hilo de inotify creado");
@@ -58,7 +58,9 @@ void inicializacionLissandraFileSystem(){
 		config = config_create("/home/utnso/tp-2019-1c-bugbusters/lfs/LissandraFileSystem.config");
 	}
 
-	if(config == NULL){
+	configRecovery = config_create("/home/utnso/tp-2019-1c-bugbusters/lfs/Recovery.config");
+
+	if(config == NULL || configRecovery == NULL){
 		log_error(logger_LFS, "Error al leer archivo de configuracion");
 		log_info(logger_LFS, "Finalizando Lissandra File System");
 		exit(EXIT_FAILURE);
@@ -73,6 +75,7 @@ void inicializacionLissandraFileSystem(){
 	tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
 	tamanioValue = config_get_int_value(config, "TAMAÑO_VALUE");
 
+	pthread_mutex_init(&mutexRecovery, NULL);
 	pathRaiz = strdup(puntoDeMontaje);
 	pathTablas = string_from_format("%sTablas", pathRaiz);
 	pathMetadata = string_from_format("%sMetadata", pathRaiz);
@@ -92,10 +95,28 @@ void inicializacionLissandraFileSystem(){
 
 	free(pathFileMetadata);
 
+	char* pathAlReves = string_reverse(pathRaiz);
+	pathAlReves++;
+	char** pathSinUltimaCarpetaAlReves = string_n_split(pathAlReves, 2, "/");
+	char* path = string_reverse(pathSinUltimaCarpetaAlReves[1]);
+	liberarArrayDeChar(pathSinUltimaCarpetaAlReves);
+	pathRecovery = string_from_format("%s/Recovery/", path);
+
+	if(config_get_int_value(configRecovery, "RECOVERY")) {
+		char* borrarDir = string_from_format("rm -rf %s", pathRaiz);
+		system(borrarDir);
+		free(borrarDir);
+		rename(pathRecovery, pathRaiz);
+		config_set_value(configRecovery, "RECOVERY", "0");
+		config_save(configRecovery);
+		log_error(logger_LFS, "----------------Lissandra File System finalizo en una compactacion o un dump--------------");
+		log_debug(logger_LFS, "----------------Lissandra File System recuperado--------------");
+	} else {
+		log_info(logger_LFS, "----------------Lissandra File System inicializado correctamente--------------");
+	}
+
 	levantarFS(pathBitmap);
 	free(pathBitmap);
-
-	log_info(logger_LFS, "----------------Lissandra File System inicializado correctamente--------------");
 }
 
 void crearFS(char* pathBitmap, char* pathFileMetadata) {
@@ -230,18 +251,6 @@ void levantarFS(char* pathBitmap){
 	}
 }
 
-void crearCopiaDeSeguridad() {
-	char* pathAlReves = string_reverse(pathRaiz);
-	pathAlReves++;
-	char** pathSinUltimaCarpetaAlReves = string_n_split(pathAlReves, 2, "/");
-	char* path = string_reverse(pathSinUltimaCarpetaAlReves[1]);
-	liberarArrayDeChar(pathSinUltimaCarpetaAlReves);
-	pathRecovery = string_from_format("%s/Recovery/", path);
-	char* comandoRecovery = string_from_format("rsync -az --delete %s %s", pathRaiz, pathRecovery);
-	system(comandoRecovery);
-	free(comandoRecovery);
-}
-
 void liberarMemoriaLFS(){
 	void liberarRecursos(t_hiloTabla* tabla){
 		void liberarRequest(t_request* request){
@@ -272,6 +281,7 @@ void liberarMemoriaLFS(){
 	free(pathMetadata);
 	free(pathBloques);
 	free(pathRaiz);
+	free(pathRecovery);
 	pthread_mutex_lock(&mutexMemtable);
 	list_destroy_and_destroy_elements(memtable->tablas, (void*) vaciarTabla);
 	free(memtable);
@@ -289,7 +299,9 @@ void liberarMemoriaLFS(){
 	pthread_mutex_destroy(&mutexTiempoDump);
 	pthread_mutex_destroy(&mutexBitmap);
 	pthread_mutex_destroy(&mutexMemorias);
+	pthread_mutex_destroy(&mutexRecovery);
 
+	config_destroy(configRecovery);
 	config_destroy(configMetadata);
 	config_destroy(config);
 }

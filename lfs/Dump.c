@@ -30,12 +30,15 @@ void* hiloDump(void* args) {
 		tiempo_dump = tiempoDump;
 		pthread_mutex_unlock(&mutexTiempoDump);
 		usleep(tiempo_dump*1000);
-<<<<<<< HEAD
-		config_set_value(config, "1");
+
+		pthread_mutex_lock(&mutexRecovery);
+		config_set_value(configRecovery, "RECOVERY", "1");
+		config_save(configRecovery);
+		pthread_mutex_unlock(&mutexRecovery);
 		log_info(logger_LFS, "Dump iniciado");
-=======
+
 		//log_info(logger_LFS, "Dump iniciado");
->>>>>>> master
+
 		errorNo resultado = dumpear();
 		switch(resultado) {
 			case ERROR_CREANDO_ARCHIVO:
@@ -43,8 +46,13 @@ void* hiloDump(void* args) {
 				break;
 			case SUCCESS:
 				log_info(logger_LFS, "Dump exitoso");
-				config_set_value(config, "0");
-				actualizarCopiaDeSeguridad();
+
+				pthread_mutex_lock(&mutexRecovery);
+				config_set_value(configRecovery, "RECOVERY", "0");
+				config_save(configRecovery);
+				crearOActualizarCopiaDeSeguridad();
+				pthread_mutex_unlock(&mutexRecovery);
+
 				break;
 			default: break;
 		}

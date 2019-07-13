@@ -646,3 +646,20 @@
 [INFO] 08:26:49:858 Lfs/(20922:20932): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
 [INFO] 08:26:49:862 Lfs/(20922:20933): Hilo de procesar requests de TABLA3
 [INFO] 08:26:49:862 Lfs/(20922:20933): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 10:28:11:250 Lfs/(24969:24969): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 10:44:14:881 Lfs/(25469:25469): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 11:07:12:197 Lfs/(26032:26032): ----------------Inicializacion de Lissandra File System--------------
+[ERROR] 11:07:12:238 Lfs/(26032:26032): ----------------Lissandra File System finalizo en una compactacion o un dump--------------
+[DEBUG] 11:07:12:240 Lfs/(26032:26032): ----------------Lissandra File System recuperado--------------
+[INFO] 11:08:00:595 Lfs/(26090:26090): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 11:08:00:595 Lfs/(26090:26090): File System no detectado
+[INFO] 11:08:16:14 Lfs/(26090:26090): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 11:10:42:328 Lfs/(26171:26171): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 11:36:21:52 Lfs/(26865:26865): ----------------Inicializacion de Lissandra File System--------------
+[ERROR] 11:36:21:99 Lfs/(26865:26865): ----------------Lissandra File System finalizo en una compactacion o un dump--------------
+[DEBUG] 11:36:21:102 Lfs/(26865:26865): ----------------Lissandra File System recuperado--------------
+[INFO] 11:39:01:410 Lfs/(26865:26865): Hilo de inotify creado
+[INFO] 11:39:02:374 Lfs/(26865:26917): Lissandra lista para recibir Memorias
+[INFO] 11:39:02:375 Lfs/(26865:26865): Hilo de recibir memorias creado
+[INFO] 11:39:03:460 Lfs/(26865:26865): Hilo de Dump iniciado
+[INFO] 11:39:04:545 Lfs/(26865:26865): Hilo de consola creado
