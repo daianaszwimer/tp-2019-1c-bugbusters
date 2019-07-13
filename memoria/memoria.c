@@ -847,7 +847,9 @@ void unlockSemSegmento(char* pathSegmento){
 	 	 case(ANOTHER_COMPONENT):
 	 		log_info(logger_MEMORIA, valorAEnviar->request);
 			enviar(codResultado, valorAEnviar->request, indiceKernel);
-	 	 	break;
+			eliminar_paquete(valorAEnviar);
+			valorAEnviar=NULL;
+			break;
 	 	 case(CONSOLE):
 	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
 	 	 	eliminar_paquete(valorAEnviar);
@@ -1075,11 +1077,13 @@ void unlockSemSegmento(char* pathSegmento){
  					modificarElem(&elementoAInsertar,nuevoTimestamp,nuevaKey,nuevoValor,SINMODIFICAR);
 
  					tablaBuscada = encontrarSegmento(tabla);
- 					lockSemSegmento(tabla);
- 					list_add(tablaBuscada->tablaDePagina,elementoAInsertar);//crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp,SINMODIFICAR));
- 					unlockSemSegmento(tabla);
- 					free(tabla);
- 					tabla=NULL;
+ 					if(tablaBuscada!=NULL){
+ 						lockSemSegmento(tabla);
+ 						list_add(tablaBuscada->tablaDePagina,elementoAInsertar);//crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp,SINMODIFICAR));
+ 						unlockSemSegmento(tabla);
+ 					}else{
+ 						//TODO nose si hace falta
+ 					}
 
  					memoriaSuficiente= SUCCESS;
  				} else if (tipoError == SEGMENTOINEXISTENTE) {
@@ -1110,9 +1114,13 @@ void unlockSemSegmento(char* pathSegmento){
 
  				usleep(retardoMem*1000);
 
- 				lockSemSegmento(tabla);
-				list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp,SINMODIFICAR));
-				unlockSemSegmento(tabla);
+				if(tablaBuscada!=NULL){
+					lockSemSegmento(tabla);
+					list_add(tablaBuscada->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey, nuevoValor,nuevoTimestamp,SINMODIFICAR));
+					unlockSemSegmento(tabla);
+				}else{
+					//TODO nose si hace falta
+				}
 
 				memoriaSuficiente = SUCCESS;
 
@@ -1651,6 +1659,7 @@ void liberarEstructurasMemoria(){
  * 	-> :: void
  * 	VALGRIND :: NO */
 void eliminarUnSegmento(t_segmento* segmento){
+
 	removerSem(segmento->path);
 	free(segmento->path);
 	segmento->path=NULL;
@@ -1728,7 +1737,6 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
 void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int indiceKernel){
 	t_paquete* describeLFS=intercambiarConFileSystem(codRequest,request, caller, indiceKernel);
 	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,indiceKernel);
-
 }
 
 
@@ -1762,9 +1770,6 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 		usleep(retardoMem*1000);
 
 		if(segmentosEnCache!= NULL){
-//			lockSemSegmento(segmentosEnCache->path);
-//			eliminarUnSegmento(segmentosEnCache);
-//			unlockSemSegmento(segmentosEnCache->path);
 
 			pthread_mutex_lock(&semMTablaSegmentos);
 			list_remove_and_destroy_by_condition(tablaDeSegmentos->segmentos,(void*)encontrarTabla,(void*)eliminarUnSegmento);
@@ -1792,22 +1797,26 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas* elemVictima){
 	int desvinculacion=NUESTRO_ERROR;
 	int i=0,j=0;
+
+	t_segmento* seg;
 	pthread_mutex_lock(&semMTablaSegmentos);
 
 	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
-		t_segmento* seg=list_get(tablaDeSegmentos->segmentos,i);
-
+		seg=list_get(tablaDeSegmentos->segmentos,i);
 		pthread_mutex_unlock(&semMTablaSegmentos);
 
+		lockSemSegmento(seg->path);
 		while(list_get(seg->tablaDePagina,j)!=NULL){
 			t_elemTablaDePaginas* elem =list_get(seg->tablaDePagina,j);
 			if(elem->numeroDePag == elemVictima->numeroDePag){
+
 				int indice= encontrarIndice(elemVictima,seg);
 				list_remove(seg->tablaDePagina,indice);
 				desvinculacion=SUCCESS;
 			}
 			j++;
 		}
+		unlockSemSegmento(seg->path);
 		pthread_mutex_lock(&semMTablaSegmentos);
 		i++;
 		j=0;
@@ -1850,23 +1859,28 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
  * 	VALGRIND :: NO*/
  t_elemTablaDePaginas* correrAlgoritmoLRU() {
 	int i=0, j= 0;
+	pthread_mutex_lock(&semMMem);
+	int retardoMem=retardoMemPrincipal;
+	pthread_mutex_unlock(&semMMem);
 
 	t_list* elemSinModificar=list_create();
+	t_segmento* segmento;
 
 	pthread_mutex_lock(&semMTablaSegmentos);
 	while(list_get(tablaDeSegmentos->segmentos,j)!=NULL){
-		t_segmento* segmento=list_get(tablaDeSegmentos->segmentos,j);
+		segmento=list_get(tablaDeSegmentos->segmentos,j);
 		pthread_mutex_unlock(&semMTablaSegmentos);
+		lockSemSegmento(segmento->path);
 		while (list_get(segmento->tablaDePagina, i) != NULL) {
 			t_elemTablaDePaginas* elemenetoTablaDePag =list_get(segmento->tablaDePagina, i);
 			if (elemenetoTablaDePag->modificado == SINMODIFICAR) {
-				pthread_mutex_lock(&semMMem);
-				int retardoMem=retardoMemPrincipal;
-				pthread_mutex_unlock(&semMMem);
+
 				usleep(retardoMem*1000);
 				list_add(elemSinModificar, elemenetoTablaDePag);
 			}
 			i++;
+		unlockSemSegmento(segmento->path);
+
 		}
 		j++;
 		i=0;
@@ -1878,10 +1892,14 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 	t_elemTablaDePaginas* elemVictimaLRU;
 
 	if (!list_is_empty(elemSinModificar)) {
+		lockSemSegmento(segmento->path);
 		list_sort(elemSinModificar, (void*) menorTimestamp);
 		elemVictimaLRU= list_get(elemSinModificar,0);
 		int desvinculacion=desvincularVictimaDeSuSegmento(elemVictimaLRU);
+		unlockSemSegmento(segmento->path);
+		pthread_mutex_lock(&semMBitarray);
 		bitarray_clean_bit(bitarray,elemVictimaLRU->numeroDePag);
+		pthread_mutex_unlock(&semMBitarray);
 
 	} else {
 		elemVictimaLRU=NULL;
@@ -1914,16 +1932,19 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	t_list* resultadosJournal= list_create();
 	t_int* resultadoAux = malloc(sizeof(t_int*));
 	int i=0,j=0;
+	pthread_mutex_lock(&semMMem);
+	int retardoMem = retardoMemPrincipal;
+	pthread_mutex_unlock(&semMMem);
+
 	pthread_mutex_lock(&semMTablaSegmentos);
 	while(list_get(tablaDeSegmentos->segmentos,i)!=NULL){
 		t_segmento* segmento=list_get(tablaDeSegmentos->segmentos,i);
 		pthread_mutex_unlock(&semMTablaSegmentos);
+		lockSemSegmento(segmento->path);
 		while(list_get(segmento->tablaDePagina,j)!=NULL){
 			t_elemTablaDePaginas* elemPagina = list_get(segmento->tablaDePagina,j);
 			if(elemPagina->modificado == MODIFICADO){
-				pthread_mutex_lock(&semMMem);
-				int retardoMem = retardoMemPrincipal;
-				pthread_mutex_unlock(&semMMem);
+
 				usleep(retardoMem*1000);
 				char* requestAEnviar= strdup("");
 				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
@@ -1942,6 +1963,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 				}
 			j++;
 		}
+		unlockSemSegmento(segmento->path);
 		i++;
 		j=0;
 		pthread_mutex_lock(&semMTablaSegmentos);
@@ -1949,7 +1971,9 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	}
 	pthread_mutex_unlock(&semMTablaSegmentos);
 
+	pthread_mutex_lock(&semMTablaSegmentos);
 	list_clean_and_destroy_elements(tablaDeSegmentos->segmentos,(void*)eliminarUnSegmento);
+	pthread_mutex_unlock(&semMTablaSegmentos);
 
 	int esJournalSUCCESS(errorNo valor){
 		if(valor == SUCCESS){
@@ -1976,7 +2000,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 		}
 	}else{
 		resultadoJournal->palabraReservada=JOURNAL;
-		resultadoJournal->request=strdup("  NO habia nada que impactar e LFS.JOURNAL se realizo con exito");
+		resultadoJournal->request=strdup("  NO habia nada que impactar en LFS.JOURNAL se realizo con exito");
 		resultadoJournal->tamanio=sizeof(resultadoJournal->request);
 		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
 
