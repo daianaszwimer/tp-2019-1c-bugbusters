@@ -1,7 +1,7 @@
 #include "Helper.h"
 
 void* hiloCompactacion(void*);
-
+int finalizarHilo(char*);
 void compactar(char*);
 
 void renombrarTmp_a_TmpC(char*, struct dirent*, DIR*);

@@ -376,7 +376,7 @@ errorNo validarInsert(char** parametros, int cantidadDeParametros, Componente co
 
 	if(error == SUCCESS){
 		char* key = parametros[1];
-		uint16_t keyConvertida = convertirKey(key);
+		int keyConvertida = convertirKey(key);
 		if(!esNumero(key)){
 			error = KEY_NO_NUMERICA;
 		} else if(keyConvertida == -1) {
