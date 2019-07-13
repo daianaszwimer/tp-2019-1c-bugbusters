@@ -25,7 +25,7 @@ endif
 all: memoria
 
 dependents:
-	-cd /home/utnso/tp-2019-1c-bugbusters/nuestro_lib/Debug && $(MAKE) clean all
+	-cd /home/utnso/tp-2019-1c-bugbusters/nuestro_lib/Debug && $(MAKE) all
 
 # Tool invocations
 memoria: $(OBJS) $(USER_OBJS) /home/utnso/tp-2019-1c-bugbusters/nuestro_lib/Debug/libnuestro_lib.so

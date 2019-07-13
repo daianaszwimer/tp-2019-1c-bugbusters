@@ -18,7 +18,7 @@
 #include <commons/bitarray.h>
 #include <math.h>
 #include <errno.h>
-
+#include <sys/inotify.h>
 
 //----------------ENUMS--------------------
 typedef enum
@@ -98,11 +98,21 @@ pthread_mutex_t semMBitarray;
 pthread_mutex_t semMTablaSegmentos;
 pthread_mutex_t semMListSemSegmentos;
 t_list* semMPorSegmento;
-pthread_mutex_t semMMemoriasLevantadas;// semaforo mutex para evitar concurrencia en la variable
+pthread_mutex_t semMDescriptores;
+pthread_mutex_t semMMemoriasLevantadas;	// semaforo mutex para evitar concurrencia en la variable
+
+pthread_mutex_t semMConfig;				// semaforo mutex iNotify
+pthread_mutex_t semMJournal;			// semaforo mutex iNotify
+pthread_mutex_t semMGossiping;			// semaforo mutex iNotify
+pthread_mutex_t semMFS;					// semaforo mutex iNotify
+pthread_mutex_t semMMem;				// semaforo mutex iNotify
+
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
-pthread_t hiloHacerGossiping			;// hilo para hacer gossiping
+pthread_t hiloHacerGossiping;			// hilo para hacer gossiping
+pthread_t hiloHacerJournal;
+pthread_t hiloCambioEnConfig;
 
 t_bitarray* bitarray;
 char* bitarrayString;
@@ -111,15 +121,21 @@ int marcosTotales;
 int marcosUtilizados=0;
 int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 int maxValue;
-int retardoGossiping, retardoFS, retardoMemPrincipal;
+int retardoGossiping, retardoJournal, retardoFS, retardoMemPrincipal;
 
 t_list* listaSemSegmentos;
+
+#define EVENT_SIZE  ( sizeof (struct inotify_event) + 24 ) //Inotify
+#define BUF_LEN     ( 1024 * EVENT_SIZE )
+int file_descriptor;
+int watch_descriptor;
 
 //------------------ --- FUNCIONES--------------------------------
 
 void conectarAFileSystem(void);
 void inicializacionDeMemoria(void);
 int obtenerIndiceMarcoDisponible();
+void escucharCambiosEnConfig(void);
 
 void hacerGossiping(void);
 void formatearMemoriasLevantadas(char**,char**,char**);
@@ -133,16 +149,17 @@ void validarRequest(char*);
 
 void escucharMultiplesClientes(void);
 void interpretarRequest(int, char*,t_caller, int);
-t_paquete* intercambiarConFileSystem(cod_request, char*);
+t_paquete* intercambiarConFileSystem(cod_request, char*, t_caller, int);
 
 void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 
 int estaEnMemoria(cod_request, char*, t_paquete**, t_elemTablaDePaginas**,char**);
 void lockSemSegmento(char*);
 void unlockSemSegmento(char* );
-void enviarAlDestinatarioCorrecto(cod_request, int, char*, t_paquete* , t_caller, int);
-void mostrarResultadoPorConsola(cod_request, int,char*,t_paquete* );
+void enviarAlDestinatarioCorrecto(int, int, char*, t_paquete* , t_caller, int);
+void mostrarResultadoPorConsola(int, int,char*,t_paquete* );
 int guardarRespuestaDeLFSaMemoria(t_paquete* ,t_erroresMemoria);
+void modificarElem(t_elemTablaDePaginas**,unsigned long long , uint16_t,char*,t_flagModificado);
 
 void procesarInsert(cod_request, char*,consistencia, t_caller,int);
 void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_caller, int,char*);
@@ -153,7 +170,7 @@ void actualizarPagina (t_marco*, char*);
 void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
 
 t_marco* crearMarcoDePagina(t_marco*,uint16_t, char*, unsigned long long);
-t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long);
+t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long,t_flagModificado);
 void crearSegmento(t_segmento*,char*);
 
 
@@ -177,11 +194,12 @@ void procesarDrop(cod_request, char* ,consistencia , t_caller , int);
 
 int desvincularVictimaDeSuSegmento(t_elemTablaDePaginas*);
 int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
-t_elemTablaDePaginas* correrAlgoritmoLRU(int*);
+t_elemTablaDePaginas* correrAlgoritmoLRU();
+int encontrarIndice(t_elemTablaDePaginas*,t_segmento* );
 
 void procesarJournal(cod_request, char*, t_caller, int);
-t_list* obtenerTablasModificadas(t_segmento*);
-int tablaDePaginaModificada(t_elemTablaDePaginas*);
+void hacerJournal(void);
+
 
 
 #endif /* MEMORIA_H_ */
