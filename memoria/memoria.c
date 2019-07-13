@@ -16,6 +16,10 @@ int main(void) {
 	pthread_mutex_init(&semMMemoriasLevantadas, NULL);
 	char** puertosSeeds = config_get_array_value(config, "PUERTO_SEEDS");
 	char** ipsSeeds = config_get_array_value(config, "IP_SEEDS");
+
+	puertoMio = strdup(config_get_string_value(config, "PUERTO"));
+	ipMia = strdup(config_get_string_value(config, "IP"));
+	numerosMio = strdup(config_get_string_value(config, "MEMORY_NUMBER"));
 	int i;
 	for(i = 0; ipsSeeds[i] != NULL; i++) {
 		config_memoria* memoriaSeed = (config_memoria*) malloc(sizeof(config_memoria));
@@ -92,9 +96,6 @@ void inicializacionDeMemoria(){
 
 void formatearMemoriasLevantadas(char** puertos, char** ips, char** numeros) {
 	// mando la data de mi config
-	char* puertoMio = config_get_string_value(config, "PUERTO");
-	char* ipMia = config_get_string_value(config, "IP");
-	char* numerosMio = config_get_string_value(config, "MEMORY_NUMBER");
 	string_append_with_format(puertos, "%s", puertoMio);
 	string_append_with_format(ips, "%s", ipMia);
 	string_append_with_format(numeros, "%s", numerosMio);
@@ -163,7 +164,7 @@ void escucharCambiosEnConfig(void) {
 		if (length < 0) {
 			log_error(logger_MEMORIA, "ERROR en iNotify");
 		} else {
-			if(config_has_property(config,"RETARDO_GOSSIPING") || config_has_property(config,"RETARDO_JOURNAL") || config_has_property(config,"RETARDO_FS") || config_has_property(config,"RETARDO_MEM")){
+			if(config_has_property(config,"RETARDO_GOSSIPING") && config_has_property(config,"RETARDO_JOURNAL") && config_has_property(config,"RETARDO_FS") && config_has_property(config,"RETARDO_MEM")){
 				pthread_mutex_lock(&semMGossiping);
 				retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
 				pthread_mutex_unlock(&semMGossiping);
@@ -196,12 +197,9 @@ void escucharCambiosEnConfig(void) {
 void hacerGossiping() {
 	int retardo;
 	int esSeed;
-	char* puertoMio = config_get_string_value(config, "PUERTO");
-	char* ipMia = config_get_string_value(config, "IP");
-	char* numerosMio = config_get_string_value(config, "MEMORY_NUMBER");
-	char* puertosQueTengo = strdup("");
-	char* ipsQueTengo = strdup("");
-	char* numerosQueTengo = strdup("");
+	char* puertosQueTengo;
+	char* ipsQueTengo;
+	char* numerosQueTengo;
 	void gossip(config_memoria* mem) {
 		mandarGossiping(mem, esSeed, puertosQueTengo, ipsQueTengo, numerosQueTengo);
 	}
@@ -305,8 +303,6 @@ void agregarMemorias(t_gossiping* gossipingRecibido) {
 	char** ips = string_split(gossipingRecibido->ips, ",");
 	char** puertos = string_split(gossipingRecibido->puertos, ",");
 	char** numeros = string_split(gossipingRecibido->numeros, ",");
-	char* puertoMio = config_get_string_value(config, "PUERTO");
-	char* ipMia = config_get_string_value(config, "IP");
 	for(i = 0; ips[i] != NULL; i++) {
 		config_memoria* memoriaNueva = (config_memoria*) malloc(sizeof(config_memoria));
 		memoriaNueva->ip = strdup(ips[i]);
@@ -466,7 +462,6 @@ void escucharMultiplesClientes() {
 		if (estadoSelect == -1) {
 			log_info(logger_MEMORIA, "Select falló porque %s", strerror(errno));
 		}
-		log_debug(logger_MEMORIA, "Paso por select");
 
 		int numDescriptor = 0;
 
@@ -533,7 +528,7 @@ void escucharMultiplesClientes() {
 							char* ipsQueTengo = strdup("");
 							char* numerosQueTengo = strdup("");
 							formatearMemoriasLevantadas(&puertosQueTengo, &ipsQueTengo, &numerosQueTengo);
-							log_warning(logger_MEMORIA, "formatee %s %s %s", puertosQueTengo, ipsQueTengo, numerosQueTengo);
+							//log_warning(logger_MEMORIA, "formatee %s %s %s", puertosQueTengo, ipsQueTengo, numerosQueTengo);
 							enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, numDescriptor);
 
 							free(puertosQueTengo);
@@ -1700,6 +1695,9 @@ void liberarMemoria(){
 	liberar_conexion(conexionLfs);
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
+	free(ipMia);
+	free(puertoMio);
+	free(numerosMio);
 }
 
 
