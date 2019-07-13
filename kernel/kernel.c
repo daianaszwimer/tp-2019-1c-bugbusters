@@ -1669,20 +1669,19 @@ void procesarRun(t_queue* colaRun) {
 	int sleep = 0;
 	//el while es fin de Q o fin de cola
 	pthread_mutex_lock(&semMQuantum);
-	while(!queue_is_empty(colaRun) && quantumActual < quantum) {
-		pthread_mutex_unlock(&semMQuantum);
+	int quantumPlanificacion = quantum;
+	pthread_mutex_unlock(&semMQuantum);
+	while(!queue_is_empty(colaRun) && quantumActual < quantumPlanificacion) {
 		request = (request_procesada*) malloc(sizeof(request_procesada));
 		request->codigo = ((request_procesada*) queue_peek(colaRun))->codigo;
 		request->request = strdup((char*)((request_procesada*)queue_peek(colaRun))->request);
 
 		if (validarRequest((char*) request->request) == TRUE) {
 			if (manejarRequest(request, TRUE) != SUCCESS) {
-				pthread_mutex_lock(&semMQuantum);
 				break;
 				//libero recursos, mato hilo, lo saco de la cola, e informo error
 			}
 		} else {
-			pthread_mutex_lock(&semMQuantum);
 			break;
 			//libero recursos, mato hilo, lo saco de la cola, e informo error
 		}
@@ -1690,14 +1689,13 @@ void procesarRun(t_queue* colaRun) {
 		free(queue_pop(colaRun));
 		liberarRequestProcesada(request);
 		quantumActual++;
+		log_info(logger_KERNEL, "Pre sleep");
 		pthread_mutex_lock(&semMSleepEjecucion);
 		sleep = sleepEjecucion;
 		pthread_mutex_unlock(&semMSleepEjecucion);
 		usleep(sleep*1000);
-		pthread_mutex_lock(&semMQuantum);
 	}
-	if (quantumActual == quantum && queue_is_empty(colaRun) == FALSE) {
-		pthread_mutex_unlock(&semMQuantum);
+	if (quantumActual == quantumPlanificacion && queue_is_empty(colaRun) == FALSE) {
 		//termino por fin de q
 		log_info(logger_KERNEL, "Vuelvo a ready");
 		request_procesada* _request = (request_procesada*)(malloc(sizeof(request_procesada)));
@@ -1708,15 +1706,12 @@ void procesarRun(t_queue* colaRun) {
 		pthread_mutex_unlock(&semMColaReady);
 		sem_post(&semRequestReady);
 	} else if (queue_is_empty(colaRun) == TRUE){
-		pthread_mutex_unlock(&semMQuantum);
 		// si estoy aca es porque ya ejecuto toda la cola
 		log_info(logger_KERNEL, "...........................................................");
 		log_info(logger_KERNEL, "Finalizó la ejecución del script");
 		log_info(logger_KERNEL, "...........................................................");
-
 		queue_destroy(colaRun);
 	} else {
-		pthread_mutex_unlock(&semMQuantum);
 		log_error(logger_KERNEL, "Se cancelo el script");
 		liberarRequestProcesada(request);
 		queue_destroy_and_destroy_elements(colaRun, (void*)liberarColaRequest);
