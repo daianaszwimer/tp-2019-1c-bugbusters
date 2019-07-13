@@ -207,12 +207,14 @@ void hacerGossiping(void) {
 		if (conexion == FAILURE) {
 			log_error(logger_KERNEL, "La mem %s no está levantada, me voy a conectar con otra memoria", numeroActual);
 		} else {
+			//todo: chequear que memoria no se haya caido
 			resultado = enviarGossiping("", "", "", conexion);
 			if (resultado == COMPONENTE_CAIDO) {
 				eliminarMemoria(puertoActual, ipActual, numeroActual);
 			} else {
-				gossiping = recibirGossiping(conexion, &resultado);
-				if (resultado == COMPONENTE_CAIDO) {
+				int resultado2;
+				gossiping = recibirGossiping(conexion, &resultado2);
+				if (resultado2 == COMPONENTE_CAIDO) {
 					eliminarMemoria(puertoActual, ipActual, numeroActual);
 				} else {
 					procesarGossiping(gossiping);
@@ -271,6 +273,7 @@ void hacerGossiping(void) {
  * 	-> :: void  */
 void procesarGossiping(t_gossiping* gossipingRecibido) {
 	size_t i = 0;
+	log_warning(logger_KERNEL, "%s --- %s ---- %s", gossipingRecibido->ips, gossipingRecibido->puertos, gossipingRecibido->numeros);
 	char** ips = string_split(gossipingRecibido->ips, ",");
 	char** puertos = string_split(gossipingRecibido->puertos, ",");
 	char** numeros = string_split(gossipingRecibido->numeros, ",");
@@ -1543,23 +1546,54 @@ void procesarJournal(int soloASHC) {
 	// si la memoria es la ppal que ya estoy conectada, no me tengo que conectar
 	void enviarJournal(config_memoria* memoriaAConectarse) {
 		int	conexionTemporanea = crearConexion(memoriaAConectarse->ip, memoriaAConectarse->puerto);
-		enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
-		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		if (conexionTemporanea == COMPONENTE_CAIDO) {
+			log_info(logger_KERNEL, "La memoria con ip %s, puerto %s y num %s se cayó", memoriaAConectarse->ip, memoriaAConectarse->puerto, memoriaAConectarse->numero);
+			eliminarMemoria(memoriaAConectarse->puerto, memoriaAConectarse->ip, memoriaAConectarse->numero);
+			return;
+		}
+		int resul1 = enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
+		if (resul1 == COMPONENTE_CAIDO) {
+			log_info(logger_KERNEL, "La memoria con ip %s, puerto %s y num %s se cayó", memoriaAConectarse->ip, memoriaAConectarse->puerto, memoriaAConectarse->numero);
+			liberar_conexion(conexionTemporanea);
+			eliminarMemoria(memoriaAConectarse->puerto, memoriaAConectarse->ip, memoriaAConectarse->numero);
+			return;
+		}
+		int resul2 = enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		if (resul2 == COMPONENTE_CAIDO) {
+			log_info(logger_KERNEL, "La memoria con ip %s, puerto %s y num %s se cayó", memoriaAConectarse->ip, memoriaAConectarse->puerto, memoriaAConectarse->numero);
+			liberar_conexion(conexionTemporanea);
+			eliminarMemoria(memoriaAConectarse->puerto, memoriaAConectarse->ip, memoriaAConectarse->numero);
+			return;
+		}
 		log_info(logger_KERNEL, "Se envió el JOURNAL a la memoria con numero %s", memoriaAConectarse->numero);
-		//todo: descomentar cuando memoria tenga journal
 		t_paquete* paqueteRecibido = recibir(conexionTemporanea);
 		int respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
 			log_info(logger_KERNEL, "La respuesta del request JOURNAL es %s", paqueteRecibido->request);
+		} else if(respuesta == COMPONENTE_CAIDO) {
+			log_info(logger_KERNEL, "La memoria con ip %s, puerto %s y num %s se cayó", memoriaAConectarse->ip, memoriaAConectarse->puerto, memoriaAConectarse->numero);
+			eliminarMemoria(memoriaAConectarse->puerto, memoriaAConectarse->ip, memoriaAConectarse->numero);
 		} else {
 			log_error(logger_KERNEL, "El request JOURNAL falló");
 		}
 		liberar_conexion(conexionTemporanea);
 		eliminar_paquete(paqueteRecibido);
 	}
-	if(soloASHC == TRUE) {
+	void journalSoloAShc(config_memoria* memoriaAConectarse) {
+		config_memoria* memAux;
+		memAux = malloc(sizeof(config_memoria));
+		memAux->ip = strdup(memoriaAConectarse->ip);
+		memAux->puerto = strdup(memoriaAConectarse->puerto);
+		memAux->numero = strdup(memoriaAConectarse->numero);
+		pthread_mutex_unlock(&semMMemoriasSHC);
+		enviarJournal(memAux);
+		liberarConfigMemoria(memAux);
 		pthread_mutex_lock(&semMMemoriasSHC);
-		list_iterate(memoriasShc, (void*)enviarJournal);
+	}
+	if(soloASHC == TRUE) {
+		// paso memorias a lista auxiliar para no bloquear
+		pthread_mutex_lock(&semMMemoriasSHC);
+		list_iterate(memoriasShc, (void*)journalSoloAShc);
 		pthread_mutex_unlock(&semMMemoriasSHC);
 	} else {
 		t_list* memoriasSinRepetir = list_create();
@@ -1570,30 +1604,36 @@ void procesarJournal(int soloASHC) {
 						string_equals_ignore_case(memoriaAgregada->numero, memoria->numero);
 			}
 			if (!list_any_satisfy(memoriasSinRepetir, (void*)existeUnaIgual)) {
-				list_add(memoriasSinRepetir, memoria);
+				config_memoria* memAux = malloc(sizeof(config_memoria));
+				memAux->ip = strdup(memoria->ip);
+				memAux->puerto = strdup(memoria->puerto);
+				memAux->numero = strdup(memoria->numero);
+				list_add(memoriasSinRepetir, memAux);
 			}
 		}
+		// cuando itero tengo que agregar listas a una lista aux porque sino se frena todo
 		// me guardo una lista con puerto e ip sii no existe en la lista
 		// porque una memoria puede tener + de 1 criterio
 		pthread_mutex_lock(&semMMemoriaSC);
 		if(memoriaSc != NULL) {
-			list_add(memoriasSinRepetir, memoriaSc);
+			config_memoria* memAux = malloc(sizeof(config_memoria));
+			memAux->ip = strdup(memoriaSc->ip);
+			memAux->puerto = strdup(memoriaSc->puerto);
+			memAux->numero = strdup(memoriaSc->numero);
+			pthread_mutex_unlock(&semMMemoriaSC);
+			list_add(memoriasSinRepetir, memAux);
+		} else {
+			pthread_mutex_unlock(&semMMemoriaSC);
 		}
-		pthread_mutex_unlock(&semMMemoriaSC);
 		pthread_mutex_lock(&semMMemoriasSHC);
 		list_iterate(memoriasShc,(void*)agregarMemoriaSinRepetir);
 		pthread_mutex_unlock(&semMMemoriasSHC);
 		pthread_mutex_lock(&semMMemoriasEC);
 		list_iterate(memoriasEc,(void*)agregarMemoriaSinRepetir);
 		pthread_mutex_unlock(&semMMemoriasEC);
-		pthread_mutex_lock(&semMMemoriaSC);
-		pthread_mutex_lock(&semMMemoriasSHC);
-		pthread_mutex_lock(&semMMemoriasEC);
+
 		list_iterate(memoriasSinRepetir, (void*)enviarJournal);
-		pthread_mutex_unlock(&semMMemoriaSC);
-		pthread_mutex_unlock(&semMMemoriasSHC);
-		pthread_mutex_unlock(&semMMemoriasEC);
-		list_destroy(memoriasSinRepetir);
+		list_destroy_and_destroy_elements(memoriasSinRepetir, (void*)liberarConfigMemoria);
 	}
 
 }
