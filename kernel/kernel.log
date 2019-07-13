@@ -741,3 +741,95 @@
 [INFO] 05:06:31:879 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
 [ERROR] 05:06:34:881 Kernel/(19638:19646): La mem 1 no está levantada, me voy a conectar con otra memoria
 [INFO] 05:06:34:881 Kernel/(19638:19646): No hay ninguna memoria levantada, me voy a conectar con la mem ppal
+[INFO] 03:25:48:851 Kernel/(15397:15397): ----------------INICIO DE KERNEL--------------
+[ERROR] 03:25:48:854 Kernel/(15397:15440): La mem ppal no está levantada
+[INFO] 03:25:48:872 Kernel/(15397:15445): Haciendo DESCRIBE automático
+[ERROR] 03:25:48:872 Kernel/(15397:15445): No puedo hacer DESCRIBE porque no hay memorias levantadas
+[INFO] 03:25:48:875 Kernel/(15397:15446): Watch vale 1
+[INFO] 03:26:35:905 Kernel/(15587:15587): ----------------INICIO DE KERNEL--------------
+[INFO] 03:26:35:918 Kernel/(15587:15598): Me llegó una nueva memoria en el gossiping, num: 1
+[INFO] 03:26:35:929 Kernel/(15587:15602): Haciendo DESCRIBE automático
+[INFO] 03:26:35:942 Kernel/(15587:15603): Watch vale 1
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla AZUL al criterio SC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla ESTRELLA al criterio EC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla ANIMALS al criterio EC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla INTERNET al criterio EC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla MARCAS al criterio EC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla METALS al criterio EC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla POSTRES al criterio SC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla AVES al criterio SC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla COLORS al criterio SC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla CITIES al criterio SC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla STUDY al criterio EC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla OPERATIVOS al criterio SC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla LIBRARY al criterio SC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla BROWSER al criterio EC
+[INFO] 03:27:00:399 Kernel/(15587:15602): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla FRUTAS al criterio SC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla SINGERS al criterio EC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla PLANETAS al criterio EC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla MARINOS al criterio SC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla LUNA al criterio EC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla DD al criterio SC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla COUNTRIES al criterio SC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla PEOPLE al criterio EC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla TP al criterio SC
+[INFO] 03:27:00:400 Kernel/(15587:15602): Agregue la tabla DAIU al criterio SC
+[ERROR] 03:27:00:400 Kernel/(15587:15602): El request DESCRIBE se ejecutó y me llegó como rta AZUL SC 3 300000;ESTRELLA EC 2 20000;ANIMALS EC 2 5000;BEBIDAS SC 6 10000;INTERNET EC 2 60000;MARCAS EC 4 600000;METALS EC 3 5000;POSTRES SC 3 60000;AVES SC 5 50000;COLORS SC 4 600000;CITIES SC 5 60000;STUDY EC 4 60000;OPERATIVOS SC 5 500000;LIBRARY SC 1 60000;BROWSER EC 4 60000;MAMIFEROS SC 3 60000;FRUTAS SC 2 50000;SINGERS EC 2 5000;PLANETAS EC 3 340000;MARINOS SC 1 10000;LUNA EC 3 300000;DD SC 4 4000;COUNTRIES SC 1 60000;PEOPLE EC 2 5000;TP SC 3 30000;DAIU SC 2 20000
+[DEBUG] 03:27:00:400 Kernel/(15587:15602): Le mande a la mem 1 el request DESCRIBE
+[INFO] 03:27:06:38 Kernel/(15587:15666): Se agregó la memoria 1 al criterio EC
+[DEBUG] 03:27:21:694 Kernel/(15587:15600): Nuevo request en exec
+[ERROR] 03:27:21:697 Kernel/(15587:15703): No sé que consistencia tiene la tabla D
+[ERROR] 03:27:21:698 Kernel/(15587:15703): No se puede resolver el request porque no tengo la metadata de la tabla
+[DEBUG] 03:27:29:851 Kernel/(15587:15600): Nuevo request en exec
+[ERROR] 03:27:29:854 Kernel/(15587:15716): No sé que consistencia tiene la tabla D
+[ERROR] 03:27:29:854 Kernel/(15587:15716): No se puede resolver el request porque no tengo la metadata de la tabla
+[DEBUG] 03:27:56:841 Kernel/(15587:15600): Nuevo request en exec
+[INFO] 03:27:59:384 Kernel/(15587:15769): El request INSERT ESTRELLA 6 "WWW" se realizó con éxito
+[DEBUG] 03:27:59:384 Kernel/(15587:15769): Le mande a la mem 1 el request INSERT ESTRELLA 6 "WWW"
+[DEBUG] 03:28:05:778 Kernel/(15587:15600): Nuevo request en exec
+[INFO] 03:28:37:138 Kernel/(15587:15783): El request INSERT ESTRELLA 1 "AAAAA" se realizó con éxito
+[DEBUG] 03:28:37:138 Kernel/(15587:15783): Le mande a la mem 1 el request INSERT ESTRELLA 1 "AAAAA"
+[DEBUG] 03:28:45:832 Kernel/(15587:15600): Nuevo request en exec
+[ERROR] 03:45:20:636 Kernel/(15587:15871): El request INSERT ESTRELLA 8 "JJJJJ" no es válido y me llegó como rta 
+[DEBUG] 03:45:20:639 Kernel/(15587:15871): Le mande a la mem 1 el request INSERT ESTRELLA 8 "JJJJJ"
+[DEBUG] 03:46:14:302 Kernel/(15587:15600): Nuevo request en exec
+[INFO] 04:42:15:444 Kernel/(25960:25960): ----------------INICIO DE KERNEL--------------
+[INFO] 04:42:15:459 Kernel/(25960:25972): Me llegó una nueva memoria en el gossiping, num: 1
+[INFO] 04:42:15:470 Kernel/(25960:25976): Haciendo DESCRIBE automático
+[INFO] 04:42:15:481 Kernel/(25960:25977): Watch vale 1
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla AZUL al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla ESTRELLA al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla ANIMALS al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla BEBIDAS al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla INTERNET al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla MARCAS al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla METALS al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla POSTRES al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla AVES al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla COLORS al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla CITIES al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla STUDY al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla OPERATIVOS al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla LIBRARY al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla BROWSER al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla MAMIFEROS al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla FRUTAS al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla SINGERS al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla PLANETAS al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla MARINOS al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla LUNA al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla DD al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla COUNTRIES al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla PEOPLE al criterio EC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla TP al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): Agregue la tabla DAIU al criterio SC
+[INFO] 04:42:18:681 Kernel/(25960:25976): El request DESCRIBE se ejecutó y me llegó como rta AZUL SC 3 300000;ESTRELLA EC 2 20000;ANIMALS EC 2 5000;BEBIDAS SC 6 10000;INTERNET EC 2 60000;MARCAS EC 4 600000;METALS EC 3 5000;POSTRES SC 3 60000;AVES SC 5 50000;COLORS SC 4 600000;CITIES SC 5 60000;STUDY EC 4 60000;OPERATIVOS SC 5 500000;LIBRARY SC 1 60000;BROWSER EC 4 60000;MAMIFEROS SC 3 60000;FRUTAS SC 2 50000;SINGERS EC 2 5000;PLANETAS EC 3 340000;MARINOS SC 1 10000;LUNA EC 3 300000;DD SC 4 4000;COUNTRIES SC 1 60000;PEOPLE EC 2 5000;TP SC 3 30000;DAIU SC 2 20000
+[DEBUG] 04:42:18:681 Kernel/(25960:25976): Le mande a la mem 1 el request DESCRIBE
+[DEBUG] 04:42:34:85 Kernel/(25960:25974): Nuevo request en exec
+[ERROR] 04:42:34:88 Kernel/(25960:26014): No se puede resolver el request porque no hay memorias asociadas al criterio EC
+[INFO] 04:42:49:486 Kernel/(25960:26043): Se agregó la memoria 1 al criterio EC
+[DEBUG] 04:43:39:650 Kernel/(25960:25974): Nuevo request en exec
+[ERROR] 04:44:34:975 Kernel/(25960:26151): El request INSERT ESTRELLA 8 "JJJ" no es válido y me llegó como rta 8 �
+[DEBUG] 04:44:34:975 Kernel/(25960:26151): Le mande a la mem 1 el request INSERT ESTRELLA 8 "JJJ"

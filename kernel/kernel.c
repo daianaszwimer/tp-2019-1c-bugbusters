@@ -49,6 +49,8 @@ void inicializarVariables() {
 	ipMemoria = strdup(config_get_string_value(config, "IP_MEMORIA"));
 	srand(numeroSeedRandom);
 	sleepGossiping = config_get_int_value(config, "SLEEP_GOSSIPING");
+	ipPpal = strdup(config_get_string_value(config, "IP_MEMORIA"));
+	puertoPpal = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
 
 	// Semáforos
 	sem_init(&semRequestNew, 0, 0);
@@ -99,6 +101,8 @@ void liberarMemoria(void) {
 	config_destroy(config);
 	free(ipMemoria);
 	free(puertoMemoria);
+	free(ipPpal);
+	free(puertoPpal);
 
 	pthread_mutex_destroy(&semMColaNew);
 	pthread_mutex_destroy(&semMColaReady);
@@ -152,10 +156,7 @@ void hacerGossiping(void) {
 	t_gossiping* gossiping;
 	int sleep;
 	// data de la mem ppal
-	pthread_mutex_lock(&semMConfig);
-	char* ipPpal = strdup(config_get_string_value(config, "IP_MEMORIA"));
-	char* puertoPpal = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
-	pthread_mutex_unlock(&semMConfig);
+// agregar
 	char* numeroPpal = strdup("");
 	// data de la memoria a la que estoy conectada
 	char* ipActual = strdup(ipPpal);
@@ -207,12 +208,14 @@ void hacerGossiping(void) {
 		if (conexion == FAILURE) {
 			log_error(logger_KERNEL, "La mem %s no está levantada, me voy a conectar con otra memoria", numeroActual);
 		} else {
+			//todo: chequear que memoria no se haya caido
 			resultado = enviarGossiping("", "", "", conexion);
 			if (resultado == COMPONENTE_CAIDO) {
 				eliminarMemoria(puertoActual, ipActual, numeroActual);
 			} else {
-				gossiping = recibirGossiping(conexion, &resultado);
-				if (resultado == COMPONENTE_CAIDO) {
+				int resultado2;
+				gossiping = recibirGossiping(conexion, &resultado2);
+				if (resultado2 == COMPONENTE_CAIDO) {
 					eliminarMemoria(puertoActual, ipActual, numeroActual);
 				} else {
 					procesarGossiping(gossiping);
@@ -252,10 +255,17 @@ void hacerGossiping(void) {
 			indice = obtenerIndiceRandom(maximo);
 			pthread_mutex_lock(&semMMemorias);
 			config_memoria* memoriaAConectar = list_get(memorias, indice);
-			ipActual = strdup(memoriaAConectar->ip);
-			puertoActual = strdup(memoriaAConectar->puerto);
-			numeroActual = strdup(memoriaAConectar->numero);
-			pthread_mutex_unlock(&semMMemorias);
+			if (memoriaAConectar != NULL) {
+				ipActual = strdup(memoriaAConectar->ip);
+				puertoActual = strdup(memoriaAConectar->puerto);
+				numeroActual = strdup(memoriaAConectar->numero);
+				pthread_mutex_unlock(&semMMemorias);
+			} else {
+				pthread_mutex_unlock(&semMMemorias);
+				ipActual = strdup(ipPpal);
+				puertoActual = strdup(puertoPpal);
+				numeroActual = strdup(numeroPpal);
+			}
 		}
 	}
 	free(ipPpal);
@@ -271,6 +281,7 @@ void hacerGossiping(void) {
  * 	-> :: void  */
 void procesarGossiping(t_gossiping* gossipingRecibido) {
 	size_t i = 0;
+	log_warning(logger_KERNEL, "%s --- %s ---- %s", gossipingRecibido->ips, gossipingRecibido->puertos, gossipingRecibido->numeros);
 	char** ips = string_split(gossipingRecibido->ips, ",");
 	char** puertos = string_split(gossipingRecibido->puertos, ",");
 	char** numeros = string_split(gossipingRecibido->numeros, ",");
@@ -290,9 +301,9 @@ void procesarGossiping(t_gossiping* gossipingRecibido) {
 		pthread_mutex_lock(&semMMemorias);
 		if (!list_any_satisfy(memorias, (void*)existeUnaIgual)) {
 			// agrego memoria si no existe en mi lista de memorias
-			log_info(logger_KERNEL, "Me llegó una nueva memoria en el gossiping, num: %s", memoriaNueva->numero);
 			list_add(memorias, memoriaNueva);
 			pthread_mutex_unlock(&semMMemorias);
+			log_info(logger_KERNEL, "Me llegó una nueva memoria en el gossiping, num: %s", memoriaNueva->numero);
 		} else {
 			pthread_mutex_unlock(&semMMemorias);
 			liberarConfigMemoria(memoriaNueva);
@@ -343,10 +354,7 @@ void planificarRequest(char* request) {
 		pthread_attr_t attr;
 		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-		// todo: hacer strdup de request?!
-		char* reqParam = strdup(request);
-		free(request);
-		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, reqParam);
+		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, request);
 		if(threadProcesar == 0){
 			pthread_attr_destroy(&attr);
 		} else {
@@ -815,6 +823,7 @@ void reservarRecursos(char* mensaje) {
 				} else {
 					request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
 					requestDividida = string_n_split(request, 2, " ");
+					// validar qye request dividida no sea null
 					cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
 					otraRequest->codigo = _codigo;
 					otraRequest->request = strdup(request);
@@ -1031,44 +1040,46 @@ void agregarTablaACriterio(char* tabla) {
 		return string_equals_ignore_case(nombreTabla, tablaActual);
 	}
 	pthread_mutex_lock(&semMTablasSC);
-	pthread_mutex_lock(&semMTablasSHC);
-	pthread_mutex_lock(&semMTablasEC);
 	if (list_find(tablasSC, (void*)esTabla) != NULL) {
 		if (tipoConsistencia != SC) {
-			hayQueAgregar = TRUE;
 			list_remove_and_destroy_by_condition(tablasSC, (void*)esTabla, (void*)liberarTabla);
-		} else {
-			free(nombreTabla);
-		}
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-	} else if (list_find(tablasSHC, (void*)esTabla) != NULL) {
-		if (tipoConsistencia != SHC) {
+			pthread_mutex_unlock(&semMTablasSC);
 			hayQueAgregar = TRUE;
-			list_remove_and_destroy_by_condition(tablasSHC, (void*)esTabla, (void*)liberarTabla);
 		} else {
+			pthread_mutex_unlock(&semMTablasSC);
 			free(nombreTabla);
 		}
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-	} else if (list_find(tablasEC, (void*)esTabla) != NULL) {
-		if (tipoConsistencia != EC) {
-			hayQueAgregar = TRUE;
-			list_remove_and_destroy_by_condition(tablasEC, (void*)esTabla, (void*)liberarTabla);
-		} else {
-			free(nombreTabla);
-		}
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
 	} else {
 		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-		hayQueAgregar = TRUE;
+		pthread_mutex_lock(&semMTablasSHC);
+		if (list_find(tablasSHC, (void*)esTabla) != NULL) {
+			if (tipoConsistencia != SHC) {
+				list_remove_and_destroy_by_condition(tablasSHC, (void*)esTabla, (void*)liberarTabla);
+				pthread_mutex_unlock(&semMTablasSHC);
+				hayQueAgregar = TRUE;
+			} else {
+				pthread_mutex_unlock(&semMTablasSHC);
+				free(nombreTabla);
+			}
+		} else {
+			pthread_mutex_unlock(&semMTablasSHC);
+			pthread_mutex_lock(&semMTablasEC);
+			if (list_find(tablasEC, (void*)esTabla) != NULL) {
+				if (tipoConsistencia != EC) {
+					list_remove_and_destroy_by_condition(tablasEC, (void*)esTabla, (void*)liberarTabla);
+					pthread_mutex_unlock(&semMTablasEC);
+					hayQueAgregar = TRUE;
+				} else {
+					pthread_mutex_unlock(&semMTablasEC);
+					free(nombreTabla);
+				}
+			} else {
+				pthread_mutex_unlock(&semMTablasEC);
+				hayQueAgregar = TRUE;
+			}
+		}
 	}
+
 	if (hayQueAgregar == TRUE) {
 		// tabla no existe en estructura o hay que agregarla en otra
 		switch(tipoConsistencia) {
@@ -1120,32 +1131,30 @@ consistencia obtenerConsistenciaTabla(char* tabla) {
 	int esTabla(char* tablaActual) {
 		return string_equals_ignore_case(tabla, tablaActual);
 	}
-	// todo: ojo con el orden de los semaforos
 	pthread_mutex_lock(&semMTablasSC);
-	pthread_mutex_lock(&semMTablasSHC);
-	pthread_mutex_lock(&semMTablasEC);
 	if (list_find(tablasSC, (void*) esTabla) != NULL) {
 		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
 		return SC;
-	} else if (list_find(tablasSHC, (void*) esTabla) != NULL) {
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-		return SHC;
-	} else if(list_find(tablasEC, (void*) esTabla) != NULL) {
-		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-		return EC;
 	} else {
 		pthread_mutex_unlock(&semMTablasSC);
-		pthread_mutex_unlock(&semMTablasSHC);
-		pthread_mutex_unlock(&semMTablasEC);
-		log_error(logger_KERNEL, "No sé que consistencia tiene la tabla %s", tabla);
-		return CONSISTENCIA_INVALIDA;
+		pthread_mutex_lock(&semMTablasSHC);
+		if (list_find(tablasSHC, (void*) esTabla) != NULL) {
+			pthread_mutex_unlock(&semMTablasSHC);
+			return SHC;
+		} else {
+			pthread_mutex_unlock(&semMTablasSHC);
+			pthread_mutex_lock(&semMTablasEC);
+			if(list_find(tablasEC, (void*) esTabla) != NULL) {
+				pthread_mutex_unlock(&semMTablasEC);
+				return EC;
+			} else {
+				pthread_mutex_unlock(&semMTablasEC);
+				log_error(logger_KERNEL, "No sé que consistencia tiene la tabla %s", tabla);
+				return CONSISTENCIA_INVALIDA;
+			}
+		}
 	}
+
 }
 
 /* encontrarMemoriaSegunConsistencia()
@@ -1462,7 +1471,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			actualizarTablas(paqueteRecibido->request);
 		}
 		if(codigo == SELECT || codigo == DESCRIBE) {
-			log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+			log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 		} else {
 			log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 		}
@@ -1473,16 +1482,25 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			free(consistenciaTablaString);
 		}
 	} else if (respuesta == MEMORIA_FULL) {
-		respuestaEnviar = enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		log_info(logger_KERNEL, "La memoria está FULL, forzando JOURNAL...");
+		char* req = strdup("JOURNAL");
+		enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
+		respuestaEnviar = enviar(NINGUNA, req, conexionTemporanea);
+		eliminar_paquete(paqueteRecibido);
+		free(req);
 		paqueteRecibido = recibir(conexionTemporanea);
 		respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
+			log_info(logger_KERNEL, "JOURNAL exitoso");
+			enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
 			enviar(consistenciaTabla, mensaje, conexionTemporanea);
+			eliminar_paquete(paqueteRecibido);
 			paqueteRecibido = recibir(conexionTemporanea);
 			respuesta = paqueteRecibido->palabraReservada;
 			if (respuesta == SUCCESS) {
-				if(codigo == SELECT) {
+				if(codigo == SELECT || codigo == DESCRIBE) {
 					log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+
 				} else {
 					log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 				}
@@ -1496,7 +1514,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 				log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 			}
 		} else {
-			log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
+			log_info(logger_KERNEL, "El JOURNAL falló");
+			//log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 		}
 	} else if (respuesta == COMPONENTE_CAIDO) {
 		// https://github.com/sisoputnfrba/foro/issues/1433#issuecomment-510293161
@@ -1505,10 +1524,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		respuesta = SUCCESS;
 	} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
 		respuesta = SUCCESS;
-		log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
-	} else if (respuesta == TABLA_EXISTE && codigo == CREATE){
-		respuesta = SUCCESS;
-		log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
@@ -1543,23 +1559,54 @@ void procesarJournal(int soloASHC) {
 	// si la memoria es la ppal que ya estoy conectada, no me tengo que conectar
 	void enviarJournal(config_memoria* memoriaAConectarse) {
 		int	conexionTemporanea = crearConexion(memoriaAConectarse->ip, memoriaAConectarse->puerto);
-		enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
-		enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		if (conexionTemporanea == COMPONENTE_CAIDO) {
+			log_info(logger_KERNEL, "La memoria con ip %s, puerto %s y num %s se cayó", memoriaAConectarse->ip, memoriaAConectarse->puerto, memoriaAConectarse->numero);
+			eliminarMemoria(memoriaAConectarse->puerto, memoriaAConectarse->ip, memoriaAConectarse->numero);
+			return;
+		}
+		int resul1 = enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
+		if (resul1 == COMPONENTE_CAIDO) {
+			log_info(logger_KERNEL, "La memoria con ip %s, puerto %s y num %s se cayó", memoriaAConectarse->ip, memoriaAConectarse->puerto, memoriaAConectarse->numero);
+			liberar_conexion(conexionTemporanea);
+			eliminarMemoria(memoriaAConectarse->puerto, memoriaAConectarse->ip, memoriaAConectarse->numero);
+			return;
+		}
+		int resul2 = enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		if (resul2 == COMPONENTE_CAIDO) {
+			log_info(logger_KERNEL, "La memoria con ip %s, puerto %s y num %s se cayó", memoriaAConectarse->ip, memoriaAConectarse->puerto, memoriaAConectarse->numero);
+			liberar_conexion(conexionTemporanea);
+			eliminarMemoria(memoriaAConectarse->puerto, memoriaAConectarse->ip, memoriaAConectarse->numero);
+			return;
+		}
 		log_info(logger_KERNEL, "Se envió el JOURNAL a la memoria con numero %s", memoriaAConectarse->numero);
-		//todo: descomentar cuando memoria tenga journal
 		t_paquete* paqueteRecibido = recibir(conexionTemporanea);
 		int respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
 			log_info(logger_KERNEL, "La respuesta del request JOURNAL es %s", paqueteRecibido->request);
+		} else if(respuesta == COMPONENTE_CAIDO) {
+			log_info(logger_KERNEL, "La memoria con ip %s, puerto %s y num %s se cayó", memoriaAConectarse->ip, memoriaAConectarse->puerto, memoriaAConectarse->numero);
+			eliminarMemoria(memoriaAConectarse->puerto, memoriaAConectarse->ip, memoriaAConectarse->numero);
 		} else {
 			log_error(logger_KERNEL, "El request JOURNAL falló");
 		}
 		liberar_conexion(conexionTemporanea);
 		eliminar_paquete(paqueteRecibido);
 	}
-	if(soloASHC == TRUE) {
+	void journalSoloAShc(config_memoria* memoriaAConectarse) {
+		config_memoria* memAux;
+		memAux = malloc(sizeof(config_memoria));
+		memAux->ip = strdup(memoriaAConectarse->ip);
+		memAux->puerto = strdup(memoriaAConectarse->puerto);
+		memAux->numero = strdup(memoriaAConectarse->numero);
+		pthread_mutex_unlock(&semMMemoriasSHC);
+		enviarJournal(memAux);
+		liberarConfigMemoria(memAux);
 		pthread_mutex_lock(&semMMemoriasSHC);
-		list_iterate(memoriasShc, (void*)enviarJournal);
+	}
+	if(soloASHC == TRUE) {
+		// paso memorias a lista auxiliar para no bloquear
+		pthread_mutex_lock(&semMMemoriasSHC);
+		list_iterate(memoriasShc, (void*)journalSoloAShc);
 		pthread_mutex_unlock(&semMMemoriasSHC);
 	} else {
 		t_list* memoriasSinRepetir = list_create();
@@ -1570,30 +1617,36 @@ void procesarJournal(int soloASHC) {
 						string_equals_ignore_case(memoriaAgregada->numero, memoria->numero);
 			}
 			if (!list_any_satisfy(memoriasSinRepetir, (void*)existeUnaIgual)) {
-				list_add(memoriasSinRepetir, memoria);
+				config_memoria* memAux = malloc(sizeof(config_memoria));
+				memAux->ip = strdup(memoria->ip);
+				memAux->puerto = strdup(memoria->puerto);
+				memAux->numero = strdup(memoria->numero);
+				list_add(memoriasSinRepetir, memAux);
 			}
 		}
+		// cuando itero tengo que agregar listas a una lista aux porque sino se frena todo
 		// me guardo una lista con puerto e ip sii no existe en la lista
 		// porque una memoria puede tener + de 1 criterio
 		pthread_mutex_lock(&semMMemoriaSC);
 		if(memoriaSc != NULL) {
-			list_add(memoriasSinRepetir, memoriaSc);
+			config_memoria* memAux = malloc(sizeof(config_memoria));
+			memAux->ip = strdup(memoriaSc->ip);
+			memAux->puerto = strdup(memoriaSc->puerto);
+			memAux->numero = strdup(memoriaSc->numero);
+			pthread_mutex_unlock(&semMMemoriaSC);
+			list_add(memoriasSinRepetir, memAux);
+		} else {
+			pthread_mutex_unlock(&semMMemoriaSC);
 		}
-		pthread_mutex_unlock(&semMMemoriaSC);
 		pthread_mutex_lock(&semMMemoriasSHC);
 		list_iterate(memoriasShc,(void*)agregarMemoriaSinRepetir);
 		pthread_mutex_unlock(&semMMemoriasSHC);
 		pthread_mutex_lock(&semMMemoriasEC);
 		list_iterate(memoriasEc,(void*)agregarMemoriaSinRepetir);
 		pthread_mutex_unlock(&semMMemoriasEC);
-		pthread_mutex_lock(&semMMemoriaSC);
-		pthread_mutex_lock(&semMMemoriasSHC);
-		pthread_mutex_lock(&semMMemoriasEC);
+
 		list_iterate(memoriasSinRepetir, (void*)enviarJournal);
-		pthread_mutex_unlock(&semMMemoriaSC);
-		pthread_mutex_unlock(&semMMemoriasSHC);
-		pthread_mutex_unlock(&semMMemoriasEC);
-		list_destroy(memoriasSinRepetir);
+		list_destroy_and_destroy_elements(memoriasSinRepetir, (void*)liberarConfigMemoria);
 	}
 
 }

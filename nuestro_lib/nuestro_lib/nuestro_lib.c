@@ -613,7 +613,7 @@ t_gossiping* recibirGossiping(int socket, int* resultado)
 {
 	t_gossiping* gossiping = malloc(sizeof(t_gossiping));
 	int rta = recv(socket, &gossiping->tamanioIps, sizeof(int), MSG_WAITALL);
-	if (rta == 0) {
+	if (rta <= 0) {
 		*resultado = COMPONENTE_CAIDO;
 		gossiping->ips = strdup("");
 		gossiping->puertos = strdup("");

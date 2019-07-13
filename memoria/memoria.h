@@ -123,6 +123,10 @@ int conexionLfs, flagTerminarHiloMultiplesClientes= 0;
 int maxValue;
 int retardoGossiping, retardoJournal, retardoFS, retardoMemPrincipal;
 
+char* puertoMio;
+char* ipMia;
+char* numerosMio;
+
 t_list* listaSemSegmentos;
 
 #define EVENT_SIZE  ( sizeof (struct inotify_event) + 24 ) //Inotify
