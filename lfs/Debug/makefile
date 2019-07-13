@@ -25,7 +25,7 @@ endif
 all: lfs
 
 dependents:
-	-cd /home/utnso/tp-2019-1c-bugbusters/nuestro_lib/Debug && $(MAKE) all
+	-cd /home/utnso/tp-2019-1c-bugbusters/nuestro_lib/Debug && $(MAKE) clean all
 
 # Tool invocations
 lfs: $(OBJS) $(USER_OBJS) /home/utnso/tp-2019-1c-bugbusters/nuestro_lib/Debug/libnuestro_lib.so

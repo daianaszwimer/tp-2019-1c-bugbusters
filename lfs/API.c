@@ -51,16 +51,39 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 	if(error == SUCCESS){
 		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) strdup(pathTabla))){
 			pthread_detach(hiloDeCompactacion);
-			//TODO mutex
+
+
+			//TODO sacar afuera lo de abajo
+			//TODO agregar los mutex de fds de memoria
+
+			t_bloqueo* idYMutexPropio = malloc(sizeof(t_bloqueo));
+			idYMutexPropio->id = 0; // 0 seria consola propia, sino son fds de memorias
+			pthread_mutex_init(&(idYMutexPropio->mutex), NULL);
+
 			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
 			hiloTabla->thread = &hiloDeCompactacion;
 			hiloTabla->nombreTabla = strdup(nombreTabla);
 			hiloTabla->finalizarCompactacion = 0;
-			hiloTabla->blocked = 0;
-			hiloTabla->requests = queue_create();
-			pthread_mutex_lock(&mutexDiegote);
-			list_add(diegote, hiloTabla);
-			pthread_mutex_unlock(&mutexDiegote);
+			hiloTabla->cosasABloquear = list_create();
+			list_add(hiloTabla->cosasABloquear, idYMutexPropio);
+
+			void agregarMemoria(t_int* memoria_fd) {
+				t_bloqueo* idYMutex = malloc(sizeof(t_bloqueo));
+				idYMutex->id = memoria_fd->valor;
+				pthread_mutex_init(&(idYMutex->mutex), NULL);
+				list_add(hiloTabla->cosasABloquear, idYMutex);
+			}
+
+			pthread_mutex_lock(&mutexMemorias);
+			list_iterate(memorias, (void*)agregarMemoria);
+			pthread_mutex_unlock(&mutexMemorias);
+
+
+
+			pthread_mutex_lock(&mutexTablasParaCompactaciones);
+			list_add(tablasParaCompactaciones, hiloTabla);
+			pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
 			log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", nombreTabla);
 		}else{
 			log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", nombreTabla);
@@ -163,10 +186,18 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 }
 
 
-errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
+errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje, int fd){
 
 	int ordenarRegistrosPorTimestamp(t_registro* registro1, t_registro* registro2){
 		return registro1->timestamp > registro2->timestamp;
+	}
+
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	int encontrarMutexCorrespondiente(t_bloqueo* idYMutex) {
+		return idYMutex->id == fd;
 	}
 
 	string_to_upper(nombreTabla);
@@ -177,7 +208,6 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 	DIR* dir = opendir(pathTabla);
 	if(dir){
 		closedir(dir);
-		//TODO validar q onda la funcion convertirKey, retorna -1 si hay error
 		int _key = convertirKey(key);
 		char* pathMetadataTabla = string_from_format("%s/Metadata.bin", pathTabla);
 		t_config* configMetadataTabla = config_create(pathMetadataTabla);
@@ -186,11 +216,21 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 		config_destroy(configMetadataTabla);
 		int particionDeEstaKey = _key % numeroDeParticiones;
 		t_list* listaDeRegistrosDeMemtable = obtenerRegistrosDeMemtable(nombreTabla, _key);
+
+		pthread_mutex_lock(&mutexTablasParaCompactaciones);
+		t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*)encontrarTabla);
+		t_bloqueo* idYMutexEncontrado = list_find(tablaEncontrada->cosasABloquear, (void*)encontrarMutexCorrespondiente);
+		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
+		pthread_mutex_lock(&(idYMutexEncontrado->mutex));
 		t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);
 		t_list* listaDeRegistrosDeParticiones = obtenerRegistrosDeParticiones(nombreTabla, particionDeEstaKey, _key);
-		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeTmp);
 		list_add_all(listaDeRegistros, listaDeRegistrosDeParticiones);
+		pthread_mutex_unlock(&(idYMutexEncontrado->mutex));
+
+		list_add_all(listaDeRegistros, listaDeRegistrosDeMemtable);
+
 		if(!list_is_empty(listaDeRegistros)){
 			list_sort(listaDeRegistros, (void*) ordenarRegistrosPorTimestamp);
 			t_registro* registro = (t_registro*)listaDeRegistros->head->data;
@@ -200,7 +240,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje){
 			error = KEY_NO_EXISTE;
 			string_append_with_format(&*mensaje, "Registro no encontrado salu3");
 		}
-		list_destroy(listaDeRegistrosDeMemtable);
+		list_destroy_and_destroy_elements(listaDeRegistrosDeMemtable, (void*)eliminarRegistro);
 		list_destroy_and_destroy_elements(listaDeRegistrosDeTmp, (void*)eliminarRegistro);
 		list_destroy_and_destroy_elements(listaDeRegistrosDeParticiones, (void*)eliminarRegistro);
 	}else{
@@ -281,7 +321,16 @@ t_list* obtenerRegistrosDeMemtable(char* nombreTabla, int key){
 	if(table == NULL){
 		listaDeRegistros = list_create();
 	}else{
-		listaDeRegistros = list_filter(table->registros, (void*) encontrarRegistro);
+		t_list* aux = list_filter(table->registros, (void*) encontrarRegistro);
+		t_registro* identidad(t_registro* registro){
+			t_registro* registroRetorno = malloc(sizeof(t_registro));
+			registroRetorno->key = registro->key;
+			registroRetorno->timestamp = registro->timestamp;
+			registroRetorno->value = strdup(registro->value);
+			return registroRetorno;
+		}
+		listaDeRegistros = list_map(aux, (void*)identidad);
+		list_destroy(aux);
 	}
 	pthread_mutex_unlock(&mutexMemtable);
 	return listaDeRegistros;
@@ -434,10 +483,10 @@ errorNo procesarDrop(char* nombreTabla){
 	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
-		pthread_mutex_lock(&mutexDiegote);
-		t_hiloTabla* tablaEncontrada = list_find(diegote, (void*)encontrarTabla);
+		pthread_mutex_lock(&mutexTablasParaCompactaciones);
+		t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*)encontrarTabla);
 		tablaEncontrada->finalizarCompactacion = 1;
-		pthread_mutex_unlock(&mutexDiegote);
+		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
 		rmdir(pathTabla);
