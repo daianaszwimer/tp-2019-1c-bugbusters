@@ -346,10 +346,7 @@ void planificarRequest(char* request) {
 		pthread_attr_t attr;
 		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-		// todo: hacer strdup de request?!
-		char* reqParam = strdup(request);
-		free(request);
-		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, reqParam);
+		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, request);
 		if(threadProcesar == 0){
 			pthread_attr_destroy(&attr);
 		} else {
@@ -818,6 +815,7 @@ void reservarRecursos(char* mensaje) {
 				} else {
 					request_procesada* otraRequest = (request_procesada*) malloc(sizeof(request_procesada));
 					requestDividida = string_n_split(request, 2, " ");
+					// validar qye request dividida no sea null
 					cod_request _codigo = obtenerCodigoPalabraReservada(requestDividida[0], KERNEL);
 					otraRequest->codigo = _codigo;
 					otraRequest->request = strdup(request);
@@ -1476,15 +1474,17 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			free(consistenciaTablaString);
 		}
 	} else if (respuesta == MEMORIA_FULL) {
+		log_info(logger_KERNEL, "La memoria esta full, mandando JOURNAL...");
 		respuestaEnviar = enviar(NINGUNA, "JOURNAL", conexionTemporanea);
 		paqueteRecibido = recibir(conexionTemporanea);
 		respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
+			log_info(logger_KERNEL, "JOURNAL exitoso");
 			enviar(consistenciaTabla, mensaje, conexionTemporanea);
 			paqueteRecibido = recibir(conexionTemporanea);
 			respuesta = paqueteRecibido->palabraReservada;
 			if (respuesta == SUCCESS) {
-				if(codigo == SELECT) {
+				if(codigo == SELECT || codigo == DESCRIBE) {
 					log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 				} else {
 					log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
@@ -1499,7 +1499,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 				log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 			}
 		} else {
-			log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
+			log_info(logger_KERNEL, "El JOURNAL falló");
+			//log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 		}
 	} else if (respuesta == COMPONENTE_CAIDO) {
 		// https://github.com/sisoputnfrba/foro/issues/1433#issuecomment-510293161
