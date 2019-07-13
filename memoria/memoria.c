@@ -52,6 +52,7 @@ int main(void) {
 	pthread_mutex_init(&semMJournal, NULL);
 	pthread_mutex_init(&semMMem, NULL);
 	pthread_mutex_init(&semMFS, NULL);
+	pthread_mutex_init(&semMJOURNAL, NULL);
 
 
 	// 	HILOS
@@ -383,7 +384,18 @@ void leerDeConsola(void){
 			free(mensaje);
 			break;
 		}
-		validarRequest(mensaje);
+		pthread_mutex_lock(&semMJOURNAL);
+		if(flagJOURNAL==1){
+			pthread_mutex_unlock(&semMMem);
+
+			t_paquete* paqueteJournal=(t_paquete*)malloc(sizeof(t_paquete));
+			paqueteJournal->palabraReservada=JOURNALTIME;
+			paqueteJournal->request=strdup("NO es posible interpretar la request, se esta haciendo JOURNAL. Vueva a mandarla al finalizar el journal");
+			paqueteJournal->tamanio=strlen(paqueteJournal->request);
+			mostrarResultadoPorConsola(JOURNAL,JOURNALTIME,mensaje,paqueteJournal);
+		}else{
+			validarRequest(mensaje);
+		}
 
 	}
 }
@@ -559,49 +571,60 @@ void escucharMultiplesClientes() {
  * 	-> :: void
  * VALGRIND:: EN PROCESO */
 void interpretarRequest(int palabraReservada,char* request,t_caller caller, int indiceKernel) {
+	pthread_mutex_lock(&semMJOURNAL);
+	if(flagJOURNAL==1){
+		pthread_mutex_unlock(&semMMem);
 
-	consistencia consistenciaMemoria;
-	if(caller== ANOTHER_COMPONENT){
-		consistenciaMemoria = palabraReservada;
+		t_paquete* paqueteJournal=(t_paquete*)malloc(sizeof(t_paquete));
+		paqueteJournal->palabraReservada=JOURNALTIME;
+		paqueteJournal->request=strdup("NO es posible interpretar la request, se esta haciendo JOURNAL. Vueva a mandarla al finalizar el journal");
+		paqueteJournal->tamanio=strlen(paqueteJournal->request);
+		enviarAlDestinatarioCorrecto(JOURNAL,JOURNALTIME,request,paqueteJournal,caller,indiceKernel);
 	}else{
-		consistenciaMemoria = EC;
-	}
-	char** requestSeparada = string_n_split(request, 2, " ");
-	int codRequest = obtenerCodigoPalabraReservada(requestSeparada[0],MEMORIA);
+		consistencia consistenciaMemoria;
+		if(caller== ANOTHER_COMPONENT){
+			consistenciaMemoria = palabraReservada;
+		}else{
+			consistenciaMemoria = EC;
+		}
+		char** requestSeparada = string_n_split(request, 2, " ");
+		int codRequest = obtenerCodigoPalabraReservada(requestSeparada[0],MEMORIA);
 
-	log_info(logger_MEMORIA,"entre a interpretarr request");
-	switch(codRequest) {
+		log_info(logger_MEMORIA,"entre a interpretarr request");
+		switch(codRequest) {
 
-		case SELECT:
-			log_debug(logger_MEMORIA, "Me llego un SELECT");
-			procesarSelect(codRequest, request,consistenciaMemoria, caller, indiceKernel);
-			break;
-		case INSERT:
-			log_debug(logger_MEMORIA, "Me llego un INSERT");
-			procesarInsert(codRequest, request,consistenciaMemoria, caller, indiceKernel);
-			break;
-		case CREATE:
-			log_debug(logger_MEMORIA, "Me llego un CREATE");
-			procesarCreate(codRequest, request,consistenciaMemoria, caller, indiceKernel);
-			break;
-		case DESCRIBE:
-			log_debug(logger_MEMORIA, "Me llego un DESCRIBE");
-			procesarDescribe(codRequest, request,caller,indiceKernel);
-			break;
-		case DROP:
-			log_debug(logger_MEMORIA, "Me llego un DROP");
-			procesarDrop(codRequest, request ,consistenciaMemoria, caller, indiceKernel);
-			break;
-		case JOURNAL:
-			log_debug(logger_MEMORIA, "Me llego un JOURNAL");
-			procesarJournal(codRequest, request, caller, indiceKernel);
-			break;
-		default:
-			log_warning(logger_MEMORIA, "No has ingresado una request valida");
-			break;
+			case SELECT:
+				log_debug(logger_MEMORIA, "Me llego un SELECT");
+				procesarSelect(codRequest, request,consistenciaMemoria, caller, indiceKernel);
+				break;
+			case INSERT:
+				log_debug(logger_MEMORIA, "Me llego un INSERT");
+				procesarInsert(codRequest, request,consistenciaMemoria, caller, indiceKernel);
+				break;
+			case CREATE:
+				log_debug(logger_MEMORIA, "Me llego un CREATE");
+				procesarCreate(codRequest, request,consistenciaMemoria, caller, indiceKernel);
+				break;
+			case DESCRIBE:
+				log_debug(logger_MEMORIA, "Me llego un DESCRIBE");
+				procesarDescribe(codRequest, request,caller,indiceKernel);
+				break;
+			case DROP:
+				log_debug(logger_MEMORIA, "Me llego un DROP");
+				procesarDrop(codRequest, request ,consistenciaMemoria, caller, indiceKernel);
+				break;
+			case JOURNAL:
+				log_debug(logger_MEMORIA, "Me llego un JOURNAL");
+				procesarJournal(codRequest, request, caller, indiceKernel);
+				break;
+			default:
+				log_warning(logger_MEMORIA, "No has ingresado una request valida");
+				break;
+		}
+		liberarArrayDeChar(requestSeparada);
+		requestSeparada=NULL;
 	}
-	liberarArrayDeChar(requestSeparada);
-	requestSeparada=NULL;
+
 }
 
 /*intercambiarConFileSystem()
@@ -1012,6 +1035,9 @@ void unlockSemSegmento(char* pathSegmento){
 
 	 	 case(JOURNAL):
 			if(codResultado == SUCCESS){
+				string_append_with_format(&error, "%s%s%s","La request: ",request,valorAEnviar->request);
+				log_info(logger_MEMORIA,error);
+			}else if (codResultado ==JOURNALTIME){
 				string_append_with_format(&error, "%s%s%s","La request: ",request,valorAEnviar->request);
 				log_info(logger_MEMORIA,error);
 			}else{
@@ -1690,6 +1716,7 @@ void liberarMemoria(){
 	pthread_mutex_destroy(&semMJournal);
 	pthread_mutex_destroy(&semMFS);
 	pthread_mutex_destroy(&semMMem);
+	pthread_mutex_destroy(&semMJOURNAL);
 
 	inotify_rm_watch(file_descriptor, watch_descriptor);	//iNotify
 	close(file_descriptor);
@@ -1929,6 +1956,12 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 
 void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int indiceKernel) {
 
+	log_info(logger_MEMORIA,"COMENZO EL JOURNAL");
+	pthread_mutex_lock(&semMJOURNAL);
+	flagJOURNAL=1;
+	pthread_mutex_unlock(&semMJOURNAL);
+	//sleep(6000);
+
 	t_list* resultadosJournal= list_create();
 	t_int* resultadoAux = malloc(sizeof(t_int*));
 	int i=0,j=0;
@@ -2008,6 +2041,11 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	list_destroy(resultadosJournal);
 	free(resultadoAux);
 	resultadoAux=NULL;
+	log_info(logger_MEMORIA,"FINALIZO EL JOURNAL");
+	pthread_mutex_lock(&semMJOURNAL);
+	flagJOURNAL=0;
+	pthread_mutex_unlock(&semMJOURNAL);
+
 }
 
 /* hacerJournal()
