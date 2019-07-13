@@ -11,6 +11,7 @@ void* hiloDump(void* args) {
 		tiempo_dump = tiempoDump;
 		pthread_mutex_unlock(&mutexTiempoDump);
 		usleep(tiempo_dump*1000);
+		config_set_value(config, "1");
 		log_info(logger_LFS, "Dump iniciado");
 		errorNo resultado = dumpear();
 		switch(resultado) {
@@ -19,6 +20,8 @@ void* hiloDump(void* args) {
 				break;
 			case SUCCESS:
 				log_info(logger_LFS, "Dump exitoso");
+				config_set_value(config, "0");
+				actualizarCopiaDeSeguridad();
 				break;
 			default: break;
 		}

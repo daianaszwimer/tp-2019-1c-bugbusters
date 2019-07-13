@@ -8,6 +8,7 @@ int main(int argc, char* argv[]) {
 
 	pathConfig = argv[1];
 	inicializacionLissandraFileSystem();
+	crearCopiaDeSeguridad();
 
 	if(!pthread_create(&hiloDeInotify, NULL, (void*)escucharCambiosEnConfig, NULL)){
 		log_info(logger_LFS, "Hilo de inotify creado");
@@ -219,6 +220,18 @@ void levantarFS(char* pathBitmap){
 	pthread_mutex_init(&mutexRetardo, NULL);
 	pthread_mutex_init(&mutexTiempoDump, NULL);
 	pthread_mutex_init(&mutexBitmap, NULL);
+}
+
+void crearCopiaDeSeguridad() {
+	char* pathAlReves = string_reverse(pathRaiz);
+	pathAlReves++;
+	char** pathSinUltimaCarpetaAlReves = string_n_split(pathAlReves, 2, "/");
+	char* path = string_reverse(pathSinUltimaCarpetaAlReves[1]);
+	liberarArrayDeChar(pathSinUltimaCarpetaAlReves);
+	pathRecovery = string_from_format("%s/Recovery/", path);
+	char* comandoRecovery = string_from_format("rsync -az --delete %s %s", pathRaiz, pathRecovery);
+	system(comandoRecovery);
+	free(comandoRecovery);
 }
 
 void liberarMemoriaLFS(){

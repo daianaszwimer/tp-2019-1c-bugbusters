@@ -20,6 +20,7 @@ int bitmapDescriptor;
 void inicializacionLissandraFileSystem();
 void crearFSMetadata(char*, char*);
 void levantarFS();
+void crearCopiaDeSeguridad();
 void crearFS(char*, char*);
 void crearBloques();
 void liberarMemoriaLFS();

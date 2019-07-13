@@ -71,6 +71,7 @@ pthread_t hiloDumpeo;
 pthread_t hiloDeCompactacion;
 pthread_t hiloDeInotify;
 
+char* pathRecovery;
 char* pathConfig;
 char* pathRaiz;
 char* pathTablas;
@@ -81,6 +82,7 @@ int blocks;
 int obtenerBloqueDisponible();
 void vaciarTabla(t_tabla*);
 void interpretarRequest(cod_request, char*, int*);
+void actualizarCopiaDeSeguridad();
 
 // SEMAFOROS
 pthread_mutex_t mutexMemtable;

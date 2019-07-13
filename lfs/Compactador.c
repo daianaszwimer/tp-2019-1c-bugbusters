@@ -20,6 +20,7 @@ void* hiloCompactacion(void* arg) {
 			log_info(logger_LFS, "Hilo de compactacion de %s terminado", pathTabla);
 			break;
 		}
+		config_set_value(config, "1");
 		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
 		log_info(logger_LFS, infoComienzoCompactacion);
 		free(infoComienzoCompactacion);
@@ -27,6 +28,8 @@ void* hiloCompactacion(void* arg) {
 		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
 		log_info(logger_LFS, infoTerminoCompactacion);
 		free(infoTerminoCompactacion);
+		config_set_value(config, "0");
+		actualizarCopiaDeSeguridad();
 		usleep(tiempoEntreCompactaciones*1000);
 	}
 	free(pathTabla);

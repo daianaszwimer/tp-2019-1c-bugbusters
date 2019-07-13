@@ -156,3 +156,556 @@
 [INFO] 20:04:54:242 Lfs/(26623:26623): Se agrego la tabla a la memtable y se agrego el registro
 [INFO] 20:06:29:408 Lfs/(26623:26623): Finalizando LFS
 >>>>>>> origin/master
+[INFO] 00:28:13:528 Lfs/(11304:11304): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 00:28:13:529 Lfs/(11304:11304): Hilo de compactacion de la tabla TABLA creado
+[INFO] 00:28:13:536 Lfs/(11304:11316): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 00:28:13:545 Lfs/(11304:11304): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 00:28:13:545 Lfs/(11304:11304): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 00:28:19:820 Lfs/(11304:11316): Hilo de procesar requests de TABLA
+[INFO] 00:28:19:820 Lfs/(11304:11317): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 00:28:19:820 Lfs/(11304:11316): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 00:28:19:825 Lfs/(11304:11317): Hilo de procesar requests de TABLA3
+[INFO] 00:28:19:825 Lfs/(11304:11317): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 00:52:50:430 Lfs/(11749:11749): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 00:52:50:441 Lfs/(11749:11749): Hilo de compactacion de la tabla TABLA creado
+[INFO] 00:52:50:441 Lfs/(11749:11760): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 00:52:50:446 Lfs/(11749:11749): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 00:52:50:449 Lfs/(11749:11749): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 00:52:51:542 Lfs/(11749:11760): Hilo de procesar requests de TABLA
+[INFO] 00:52:51:542 Lfs/(11749:11761): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 00:52:51:542 Lfs/(11749:11760): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 00:52:51:550 Lfs/(11749:11761): Hilo de procesar requests de TABLA3
+[INFO] 00:52:51:551 Lfs/(11749:11761): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 00:53:49:270 Lfs/(11814:11814): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 00:53:49:272 Lfs/(11814:11814): Hilo de compactacion de la tabla TABLA creado
+[INFO] 00:53:49:274 Lfs/(11814:11826): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 00:53:49:280 Lfs/(11814:11814): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 00:53:49:280 Lfs/(11814:11814): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 00:53:50:120 Lfs/(11814:11826): Hilo de procesar requests de TABLA
+[INFO] 00:53:50:120 Lfs/(11814:11827): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 00:53:50:120 Lfs/(11814:11826): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 00:53:50:131 Lfs/(11814:11827): Hilo de procesar requests de TABLA3
+[INFO] 00:53:50:131 Lfs/(11814:11827): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 00:54:41:832 Lfs/(11814:11827): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 00:54:41:832 Lfs/(11814:11826): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 00:54:41:836 Lfs/(11814:11827): Hilo de procesar requests de TABLA3
+[INFO] 00:54:41:836 Lfs/(11814:11826): Hilo de procesar requests de TABLA
+[INFO] 00:54:41:836 Lfs/(11814:11827): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 00:54:41:836 Lfs/(11814:11826): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 00:59:43:889 Lfs/(11922:11922): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 00:59:43:890 Lfs/(11922:11922): Hilo de compactacion de la tabla TABLA creado
+[INFO] 00:59:43:899 Lfs/(11922:11939): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 00:59:43:902 Lfs/(11922:11922): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 00:59:43:902 Lfs/(11922:11922): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 00:59:45:572 Lfs/(11922:11939): Hilo de procesar requests de TABLA
+[INFO] 00:59:45:572 Lfs/(11922:11940): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 00:59:45:572 Lfs/(11922:11939): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 00:59:45:576 Lfs/(11922:11940): Hilo de procesar requests de TABLA3
+[INFO] 00:59:45:576 Lfs/(11922:11940): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:05:52:718 Lfs/(11922:11940): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:10:50:689 Lfs/(12076:12076): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:10:50:693 Lfs/(12076:12076): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:10:50:696 Lfs/(12076:12086): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:10:50:706 Lfs/(12076:12076): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:10:50:706 Lfs/(12076:12076): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:10:51:225 Lfs/(12076:12086): Hilo de procesar requests de TABLA
+[INFO] 01:10:51:225 Lfs/(12076:12087): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:10:51:225 Lfs/(12076:12086): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:10:51:235 Lfs/(12076:12087): Hilo de procesar requests de TABLA3
+[INFO] 01:10:51:235 Lfs/(12076:12087): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:13:18:613 Lfs/(12076:12087): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:14:07:759 Lfs/(12187:12187): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:14:07:766 Lfs/(12187:12187): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:14:07:766 Lfs/(12187:12197): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:14:07:770 Lfs/(12187:12187): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:14:07:770 Lfs/(12187:12187): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:14:08:598 Lfs/(12187:12197): Hilo de procesar requests de TABLA
+[INFO] 01:14:08:598 Lfs/(12187:12198): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:14:08:598 Lfs/(12187:12197): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:14:08:605 Lfs/(12187:12198): Hilo de procesar requests de TABLA3
+[INFO] 01:14:08:606 Lfs/(12187:12198): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:17:38:381 Lfs/(12187:12197): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:17:38:382 Lfs/(12187:12198): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:18:42:459 Lfs/(12319:12319): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:18:42:461 Lfs/(12319:12319): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:18:42:464 Lfs/(12319:12329): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:18:42:469 Lfs/(12319:12319): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:18:42:469 Lfs/(12319:12319): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:18:42:914 Lfs/(12319:12329): Hilo de procesar requests de TABLA
+[INFO] 01:18:42:914 Lfs/(12319:12330): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:18:42:915 Lfs/(12319:12329): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:18:42:919 Lfs/(12319:12330): Hilo de procesar requests de TABLA3
+[INFO] 01:18:42:919 Lfs/(12319:12330): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:20:40:291 Lfs/(12442:12442): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:20:40:293 Lfs/(12442:12442): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:20:40:296 Lfs/(12442:12453): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:20:40:301 Lfs/(12442:12442): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:20:40:302 Lfs/(12442:12442): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:20:40:763 Lfs/(12442:12453): Hilo de procesar requests de TABLA
+[INFO] 01:20:40:763 Lfs/(12442:12454): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:20:40:763 Lfs/(12442:12453): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:20:40:767 Lfs/(12442:12454): Hilo de procesar requests de TABLA3
+[INFO] 01:20:40:768 Lfs/(12442:12454): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:22:18:562 Lfs/(12533:12533): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:22:18:564 Lfs/(12533:12533): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:22:18:567 Lfs/(12533:12544): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:22:18:572 Lfs/(12533:12533): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:22:18:573 Lfs/(12533:12533): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:22:18:906 Lfs/(12533:12544): Hilo de procesar requests de TABLA
+[INFO] 01:22:18:906 Lfs/(12533:12545): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:22:18:906 Lfs/(12533:12544): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:22:18:915 Lfs/(12533:12545): Hilo de procesar requests de TABLA3
+[INFO] 01:22:18:916 Lfs/(12533:12545): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:24:21:757 Lfs/(12643:12643): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:24:21:758 Lfs/(12643:12643): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:24:21:761 Lfs/(12643:12654): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:24:21:765 Lfs/(12643:12643): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:24:21:766 Lfs/(12643:12643): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:24:34:13 Lfs/(12643:12654): Hilo de procesar requests de TABLA
+[INFO] 01:24:34:14 Lfs/(12643:12655): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:24:34:14 Lfs/(12643:12654): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:24:34:18 Lfs/(12643:12655): Hilo de procesar requests de TABLA3
+[INFO] 01:24:34:18 Lfs/(12643:12655): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:25:24:323 Lfs/(12736:12736): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:25:24:324 Lfs/(12736:12736): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:25:24:326 Lfs/(12736:12747): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:25:24:330 Lfs/(12736:12736): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:25:24:330 Lfs/(12736:12736): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:25:24:681 Lfs/(12736:12747): Hilo de procesar requests de TABLA
+[INFO] 01:25:24:681 Lfs/(12736:12748): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:25:24:681 Lfs/(12736:12747): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:25:24:692 Lfs/(12736:12748): Hilo de procesar requests de TABLA3
+[INFO] 01:25:24:692 Lfs/(12736:12748): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:27:05:403 Lfs/(12837:12837): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:27:05:406 Lfs/(12837:12837): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:27:05:408 Lfs/(12837:12848): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:27:05:410 Lfs/(12837:12837): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:27:05:410 Lfs/(12837:12837): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:27:06:299 Lfs/(12837:12848): Hilo de procesar requests de TABLA
+[INFO] 01:27:06:299 Lfs/(12837:12848): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:27:06:299 Lfs/(12837:12849): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:27:06:304 Lfs/(12837:12849): Hilo de procesar requests de TABLA3
+[INFO] 01:27:06:304 Lfs/(12837:12849): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:27:57:101 Lfs/(12908:12908): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:27:57:103 Lfs/(12908:12908): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:27:57:104 Lfs/(12908:12919): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:27:57:114 Lfs/(12908:12908): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:27:57:114 Lfs/(12908:12908): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:27:57:690 Lfs/(12908:12919): Hilo de procesar requests de TABLA
+[INFO] 01:27:57:690 Lfs/(12908:12920): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:27:57:690 Lfs/(12908:12919): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:27:57:694 Lfs/(12908:12920): Hilo de procesar requests de TABLA3
+[INFO] 01:27:57:694 Lfs/(12908:12920): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:29:21:860 Lfs/(13132:13132): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:29:21:865 Lfs/(13132:13132): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:29:21:866 Lfs/(13132:13142): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:29:21:869 Lfs/(13132:13132): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:29:21:870 Lfs/(13132:13132): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:29:22:262 Lfs/(13132:13142): Hilo de procesar requests de TABLA
+[INFO] 01:29:22:262 Lfs/(13132:13143): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:29:22:262 Lfs/(13132:13142): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:29:22:266 Lfs/(13132:13143): Hilo de procesar requests de TABLA3
+[INFO] 01:29:22:267 Lfs/(13132:13143): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:30:05:810 Lfs/(13222:13222): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:30:05:816 Lfs/(13222:13222): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:30:05:816 Lfs/(13222:13232): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:30:05:819 Lfs/(13222:13222): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:30:05:820 Lfs/(13222:13222): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:30:06:186 Lfs/(13222:13232): Hilo de procesar requests de TABLA
+[INFO] 01:30:06:187 Lfs/(13222:13233): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:30:06:187 Lfs/(13222:13232): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:30:06:190 Lfs/(13222:13233): Hilo de procesar requests de TABLA3
+[INFO] 01:30:06:191 Lfs/(13222:13233): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:30:49:955 Lfs/(13321:13321): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:30:49:957 Lfs/(13321:13321): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:30:49:961 Lfs/(13321:13331): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:30:49:964 Lfs/(13321:13321): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:30:49:964 Lfs/(13321:13321): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:30:50:359 Lfs/(13321:13331): Hilo de procesar requests de TABLA
+[INFO] 01:30:50:359 Lfs/(13321:13332): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:30:50:360 Lfs/(13321:13331): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:30:50:366 Lfs/(13321:13332): Hilo de procesar requests de TABLA3
+[INFO] 01:30:50:366 Lfs/(13321:13332): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:41:26:60 Lfs/(13462:13462): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:41:26:61 Lfs/(13462:13462): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:41:26:64 Lfs/(13462:13472): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:41:26:67 Lfs/(13462:13462): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:41:26:67 Lfs/(13462:13462): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:41:27:411 Lfs/(13462:13472): Hilo de procesar requests de TABLA
+[INFO] 01:41:27:411 Lfs/(13462:13473): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:41:27:412 Lfs/(13462:13472): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:41:27:417 Lfs/(13462:13473): Hilo de procesar requests de TABLA3
+[INFO] 01:41:27:417 Lfs/(13462:13473): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:42:42:981 Lfs/(13536:13536): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:42:42:982 Lfs/(13536:13536): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:42:42:985 Lfs/(13536:13546): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:42:42:988 Lfs/(13536:13536): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:42:42:989 Lfs/(13536:13536): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:42:47:972 Lfs/(13536:13546): Hilo de procesar requests de TABLA
+[INFO] 01:42:47:972 Lfs/(13536:13547): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:42:47:972 Lfs/(13536:13546): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:42:47:976 Lfs/(13536:13547): Hilo de procesar requests de TABLA3
+[INFO] 01:42:47:977 Lfs/(13536:13547): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:44:56:899 Lfs/(13634:13634): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:44:56:900 Lfs/(13634:13634): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:44:56:907 Lfs/(13634:13644): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:44:56:911 Lfs/(13634:13634): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:44:56:911 Lfs/(13634:13634): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:44:57:550 Lfs/(13634:13644): Hilo de procesar requests de TABLA
+[INFO] 01:44:57:550 Lfs/(13634:13645): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:44:57:551 Lfs/(13634:13644): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:44:57:554 Lfs/(13634:13645): Hilo de procesar requests de TABLA3
+[INFO] 01:44:57:554 Lfs/(13634:13645): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:45:17:151 Lfs/(13692:13692): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:45:17:157 Lfs/(13692:13692): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:45:17:157 Lfs/(13692:13702): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:45:17:160 Lfs/(13692:13692): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:45:17:161 Lfs/(13692:13692): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:45:17:426 Lfs/(13692:13702): Hilo de procesar requests de TABLA
+[INFO] 01:45:17:426 Lfs/(13692:13703): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:45:17:426 Lfs/(13692:13702): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:45:17:430 Lfs/(13692:13703): Hilo de procesar requests de TABLA3
+[INFO] 01:45:17:430 Lfs/(13692:13703): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:46:59:671 Lfs/(13789:13789): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:46:59:673 Lfs/(13789:13789): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:46:59:681 Lfs/(13789:13799): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:46:59:684 Lfs/(13789:13789): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:46:59:685 Lfs/(13789:13789): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:47:00:64 Lfs/(13789:13799): Hilo de procesar requests de TABLA
+[INFO] 01:47:00:64 Lfs/(13789:13800): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:47:00:65 Lfs/(13789:13799): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:47:00:76 Lfs/(13789:13800): Hilo de procesar requests de TABLA3
+[INFO] 01:47:00:76 Lfs/(13789:13800): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:47:25:85 Lfs/(13859:13859): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:47:25:87 Lfs/(13859:13859): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:47:25:89 Lfs/(13859:13869): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:47:25:93 Lfs/(13859:13859): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:47:25:93 Lfs/(13859:13859): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:47:25:631 Lfs/(13859:13869): Hilo de procesar requests de TABLA
+[INFO] 01:47:25:631 Lfs/(13859:13870): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:47:25:632 Lfs/(13859:13869): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:47:25:635 Lfs/(13859:13870): Hilo de procesar requests de TABLA3
+[INFO] 01:47:25:636 Lfs/(13859:13870): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:48:10:465 Lfs/(13928:13928): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:48:10:467 Lfs/(13928:13928): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:48:10:469 Lfs/(13928:13938): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:48:10:472 Lfs/(13928:13928): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:48:10:473 Lfs/(13928:13928): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:48:11:91 Lfs/(13928:13938): Hilo de procesar requests de TABLA
+[INFO] 01:48:11:91 Lfs/(13928:13939): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:48:11:91 Lfs/(13928:13938): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:48:11:95 Lfs/(13928:13939): Hilo de procesar requests de TABLA3
+[INFO] 01:48:11:96 Lfs/(13928:13939): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:50:10:71 Lfs/(14023:14023): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:50:10:73 Lfs/(14023:14023): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:50:10:75 Lfs/(14023:14037): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:50:10:82 Lfs/(14023:14023): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:50:10:82 Lfs/(14023:14023): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:50:11:149 Lfs/(14023:14038): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:50:11:149 Lfs/(14023:14037): Hilo de procesar requests de TABLA
+[INFO] 01:50:11:149 Lfs/(14023:14037): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:50:11:153 Lfs/(14023:14038): Hilo de procesar requests de TABLA3
+[INFO] 01:50:11:153 Lfs/(14023:14038): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:51:44:153 Lfs/(14117:14117): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:51:44:155 Lfs/(14117:14117): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:51:44:157 Lfs/(14117:14127): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:51:44:160 Lfs/(14117:14117): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:51:44:161 Lfs/(14117:14117): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:51:44:671 Lfs/(14117:14127): Hilo de procesar requests de TABLA
+[INFO] 01:51:44:671 Lfs/(14117:14128): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:51:44:671 Lfs/(14117:14127): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:51:44:678 Lfs/(14117:14128): Hilo de procesar requests de TABLA3
+[INFO] 01:51:44:678 Lfs/(14117:14128): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:53:12:891 Lfs/(14211:14211): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:53:12:893 Lfs/(14211:14211): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:53:12:896 Lfs/(14211:14226): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:53:12:900 Lfs/(14211:14211): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:53:12:900 Lfs/(14211:14211): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:53:13:519 Lfs/(14211:14226): Hilo de procesar requests de TABLA
+[INFO] 01:53:13:519 Lfs/(14211:14227): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:53:13:520 Lfs/(14211:14226): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:53:13:523 Lfs/(14211:14227): Hilo de procesar requests de TABLA3
+[INFO] 01:53:13:524 Lfs/(14211:14227): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:54:53:115 Lfs/(14466:14466): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:54:53:116 Lfs/(14466:14466): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:54:53:120 Lfs/(14466:14498): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:54:53:124 Lfs/(14466:14466): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:54:53:124 Lfs/(14466:14466): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:54:53:768 Lfs/(14466:14498): Hilo de procesar requests de TABLA
+[INFO] 01:54:53:768 Lfs/(14466:14498): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:54:53:768 Lfs/(14466:14499): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:54:53:775 Lfs/(14466:14499): Hilo de procesar requests de TABLA3
+[INFO] 01:54:53:775 Lfs/(14466:14499): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 01:58:09:85 Lfs/(14664:14664): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 01:58:09:88 Lfs/(14664:14664): Hilo de compactacion de la tabla TABLA creado
+[INFO] 01:58:09:90 Lfs/(14664:14674): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 01:58:09:94 Lfs/(14664:14664): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 01:58:09:94 Lfs/(14664:14664): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 01:58:09:734 Lfs/(14664:14674): Hilo de procesar requests de TABLA
+[INFO] 01:58:09:734 Lfs/(14664:14675): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 01:58:09:734 Lfs/(14664:14674): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 01:58:09:737 Lfs/(14664:14675): Hilo de procesar requests de TABLA3
+[INFO] 01:58:09:738 Lfs/(14664:14675): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:04:47:736 Lfs/(14837:14837): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:04:47:737 Lfs/(14837:14837): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:04:47:740 Lfs/(14837:14851): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:04:47:744 Lfs/(14837:14837): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:04:47:744 Lfs/(14837:14837): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:04:48:105 Lfs/(14837:14851): Hilo de procesar requests de TABLA
+[INFO] 02:04:48:105 Lfs/(14837:14852): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:04:48:105 Lfs/(14837:14851): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:04:48:110 Lfs/(14837:14852): Hilo de procesar requests de TABLA3
+[INFO] 02:04:48:110 Lfs/(14837:14852): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:08:15:532 Lfs/(14964:14964): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:08:15:534 Lfs/(14964:14964): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:08:15:536 Lfs/(14964:14975): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:08:15:540 Lfs/(14964:14964): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:08:15:540 Lfs/(14964:14964): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:08:15:868 Lfs/(14964:14975): Hilo de procesar requests de TABLA
+[INFO] 02:08:15:868 Lfs/(14964:14976): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:08:15:868 Lfs/(14964:14975): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:08:15:872 Lfs/(14964:14976): Hilo de procesar requests de TABLA3
+[INFO] 02:08:15:873 Lfs/(14964:14976): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:10:49:895 Lfs/(15057:15057): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:10:49:900 Lfs/(15057:15057): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:10:49:901 Lfs/(15057:15068): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:10:49:904 Lfs/(15057:15057): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:10:49:904 Lfs/(15057:15057): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:10:50:253 Lfs/(15057:15068): Hilo de procesar requests de TABLA
+[INFO] 02:10:50:253 Lfs/(15057:15069): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:10:50:253 Lfs/(15057:15068): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:10:50:257 Lfs/(15057:15069): Hilo de procesar requests de TABLA3
+[INFO] 02:10:50:257 Lfs/(15057:15069): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:11:56:967 Lfs/(15137:15137): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:11:56:969 Lfs/(15137:15137): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:11:56:972 Lfs/(15137:15147): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:11:56:975 Lfs/(15137:15137): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:11:56:976 Lfs/(15137:15137): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:11:57:426 Lfs/(15137:15147): Hilo de procesar requests de TABLA
+[INFO] 02:11:57:426 Lfs/(15137:15148): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:11:57:427 Lfs/(15137:15147): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:11:57:432 Lfs/(15137:15148): Hilo de procesar requests de TABLA3
+[INFO] 02:11:57:432 Lfs/(15137:15148): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:12:48:883 Lfs/(15226:15226): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:12:48:889 Lfs/(15226:15226): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:12:48:890 Lfs/(15226:15239): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:12:48:893 Lfs/(15226:15226): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:12:48:893 Lfs/(15226:15226): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:12:49:563 Lfs/(15226:15239): Hilo de procesar requests de TABLA
+[INFO] 02:12:49:563 Lfs/(15226:15240): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:12:49:563 Lfs/(15226:15239): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:12:49:571 Lfs/(15226:15240): Hilo de procesar requests de TABLA3
+[INFO] 02:12:49:572 Lfs/(15226:15240): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:14:53:735 Lfs/(15347:15347): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:14:53:736 Lfs/(15347:15347): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:14:53:738 Lfs/(15347:15357): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:14:53:742 Lfs/(15347:15347): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:14:53:743 Lfs/(15347:15347): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:14:54:418 Lfs/(15347:15357): Hilo de procesar requests de TABLA
+[INFO] 02:14:54:419 Lfs/(15347:15358): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:14:54:419 Lfs/(15347:15357): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:14:54:423 Lfs/(15347:15358): Hilo de procesar requests de TABLA3
+[INFO] 02:14:54:423 Lfs/(15347:15358): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:21:56:682 Lfs/(15635:15635): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:21:56:684 Lfs/(15635:15635): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:21:56:686 Lfs/(15635:15648): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:21:56:690 Lfs/(15635:15635): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:21:56:690 Lfs/(15635:15635): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:21:57:182 Lfs/(15635:15648): Hilo de procesar requests de TABLA
+[INFO] 02:21:57:182 Lfs/(15635:15649): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:21:57:183 Lfs/(15635:15648): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:21:57:186 Lfs/(15635:15649): Hilo de procesar requests de TABLA3
+[INFO] 02:21:57:187 Lfs/(15635:15649): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:46:23:378 Lfs/(16135:16135): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:46:23:380 Lfs/(16135:16135): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:46:23:388 Lfs/(16135:16145): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:46:23:391 Lfs/(16135:16135): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:46:23:391 Lfs/(16135:16135): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:46:23:853 Lfs/(16135:16145): Hilo de procesar requests de TABLA
+[INFO] 02:46:23:853 Lfs/(16135:16146): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:46:23:854 Lfs/(16135:16145): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:46:23:858 Lfs/(16135:16146): Hilo de procesar requests de TABLA3
+[INFO] 02:46:23:858 Lfs/(16135:16146): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:47:18:928 Lfs/(16220:16220): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:47:18:930 Lfs/(16220:16220): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:47:18:932 Lfs/(16220:16230): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:47:18:935 Lfs/(16220:16220): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:47:18:935 Lfs/(16220:16220): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:47:19:354 Lfs/(16220:16230): Hilo de procesar requests de TABLA
+[INFO] 02:47:19:354 Lfs/(16220:16231): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:47:19:355 Lfs/(16220:16230): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:47:19:359 Lfs/(16220:16231): Hilo de procesar requests de TABLA3
+[INFO] 02:47:19:360 Lfs/(16220:16231): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:51:23:103 Lfs/(16338:16338): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:51:23:110 Lfs/(16338:16338): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:51:23:110 Lfs/(16338:16349): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:51:23:113 Lfs/(16338:16338): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:51:23:113 Lfs/(16338:16338): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:51:23:506 Lfs/(16338:16349): Hilo de procesar requests de TABLA
+[INFO] 02:51:23:506 Lfs/(16338:16350): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:51:23:506 Lfs/(16338:16349): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:51:23:510 Lfs/(16338:16350): Hilo de procesar requests de TABLA3
+[INFO] 02:51:23:510 Lfs/(16338:16350): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 02:52:52:489 Lfs/(16412:16412): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 02:52:52:493 Lfs/(16412:16412): Hilo de compactacion de la tabla TABLA creado
+[INFO] 02:52:52:493 Lfs/(16412:16422): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 02:52:52:498 Lfs/(16412:16412): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 02:52:52:498 Lfs/(16412:16412): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 02:52:52:952 Lfs/(16412:16422): Hilo de procesar requests de TABLA
+[INFO] 02:52:52:952 Lfs/(16412:16423): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 02:52:52:953 Lfs/(16412:16422): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 02:52:52:957 Lfs/(16412:16423): Hilo de procesar requests de TABLA3
+[INFO] 02:52:52:957 Lfs/(16412:16423): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 03:41:04:934 Lfs/(17255:17255): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 03:41:04:938 Lfs/(17255:17255): Hilo de compactacion de la tabla TABLA creado
+[INFO] 03:41:04:940 Lfs/(17255:17266): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 03:41:04:944 Lfs/(17255:17255): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 03:41:04:944 Lfs/(17255:17255): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 03:41:21:322 Lfs/(17255:17266): Hilo de procesar requests de TABLA
+[INFO] 03:41:21:322 Lfs/(17255:17267): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 03:41:21:322 Lfs/(17255:17266): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 03:41:21:326 Lfs/(17255:17267): Hilo de procesar requests de TABLA3
+[INFO] 03:41:21:326 Lfs/(17255:17267): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 03:54:48:206 Lfs/(17393:17393): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 03:54:48:217 Lfs/(17393:17393): Hilo de compactacion de la tabla TABLA creado
+[INFO] 03:54:48:218 Lfs/(17393:17404): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 03:54:48:222 Lfs/(17393:17393): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 03:54:48:222 Lfs/(17393:17393): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 03:54:48:653 Lfs/(17393:17404): Hilo de procesar requests de TABLA
+[INFO] 03:54:48:653 Lfs/(17393:17405): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 03:54:48:653 Lfs/(17393:17404): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 03:54:48:656 Lfs/(17393:17405): Hilo de procesar requests de TABLA3
+[INFO] 03:54:48:657 Lfs/(17393:17405): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 03:55:48:251 Lfs/(17481:17481): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 03:55:48:253 Lfs/(17481:17481): Hilo de compactacion de la tabla TABLA creado
+[INFO] 03:55:48:256 Lfs/(17481:17491): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 03:55:48:261 Lfs/(17481:17481): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 03:55:48:261 Lfs/(17481:17481): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 03:55:48:873 Lfs/(17481:17491): Hilo de procesar requests de TABLA
+[INFO] 03:55:48:873 Lfs/(17481:17492): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 03:55:48:874 Lfs/(17481:17491): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 03:55:48:878 Lfs/(17481:17492): Hilo de procesar requests de TABLA3
+[INFO] 03:55:48:879 Lfs/(17481:17492): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 03:57:25:729 Lfs/(17547:17547): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 03:57:25:731 Lfs/(17547:17547): Hilo de compactacion de la tabla TABLA creado
+[INFO] 03:57:25:734 Lfs/(17547:17558): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 03:57:25:741 Lfs/(17547:17547): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 03:57:25:741 Lfs/(17547:17547): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 03:57:26:148 Lfs/(17547:17558): Hilo de procesar requests de TABLA
+[INFO] 03:57:26:149 Lfs/(17547:17559): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 03:57:26:149 Lfs/(17547:17558): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 03:57:26:153 Lfs/(17547:17559): Hilo de procesar requests de TABLA3
+[INFO] 03:57:26:154 Lfs/(17547:17559): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 03:59:59:440 Lfs/(17547:17558): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 03:59:59:441 Lfs/(17547:17559): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 04:02:46:246 Lfs/(17705:17705): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 04:02:46:249 Lfs/(17705:17705): Hilo de compactacion de la tabla TABLA creado
+[INFO] 04:02:46:256 Lfs/(17705:17715): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 04:02:46:259 Lfs/(17705:17705): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 04:02:46:259 Lfs/(17705:17705): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 04:02:46:656 Lfs/(17705:17715): Hilo de procesar requests de TABLA
+[INFO] 04:02:46:656 Lfs/(17705:17716): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 04:02:46:656 Lfs/(17705:17715): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 04:02:46:660 Lfs/(17705:17716): Hilo de procesar requests de TABLA3
+[INFO] 04:02:46:661 Lfs/(17705:17716): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 04:04:25:589 Lfs/(17785:17785): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 04:04:25:593 Lfs/(17785:17785): Hilo de compactacion de la tabla TABLA creado
+[INFO] 04:04:25:594 Lfs/(17785:17798): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 04:04:25:597 Lfs/(17785:17785): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 04:04:25:598 Lfs/(17785:17785): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 04:04:35:639 Lfs/(17785:17798): Hilo de procesar requests de TABLA
+[INFO] 04:04:35:639 Lfs/(17785:17799): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 04:04:35:639 Lfs/(17785:17798): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 04:04:35:643 Lfs/(17785:17799): Hilo de procesar requests de TABLA3
+[INFO] 04:04:35:643 Lfs/(17785:17799): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 06:10:40:118 Lfs/(17785:17799): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:09:59:864 Lfs/(20016:20016): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 08:09:59:869 Lfs/(20016:20016): Hilo de compactacion de la tabla TABLA creado
+[INFO] 08:09:59:869 Lfs/(20016:20027): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 08:09:59:873 Lfs/(20016:20016): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 08:09:59:873 Lfs/(20016:20016): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 08:10:00:332 Lfs/(20016:20027): Hilo de procesar requests de TABLA
+[INFO] 08:10:00:332 Lfs/(20016:20028): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:10:00:332 Lfs/(20016:20027): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 08:10:00:345 Lfs/(20016:20028): Hilo de procesar requests de TABLA3
+[INFO] 08:10:00:345 Lfs/(20016:20028): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 08:11:42:925 Lfs/(20100:20100): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 08:11:42:927 Lfs/(20100:20100): Hilo de compactacion de la tabla TABLA creado
+[INFO] 08:11:42:930 Lfs/(20100:20115): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 08:11:42:934 Lfs/(20100:20100): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 08:11:42:934 Lfs/(20100:20100): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 08:11:43:715 Lfs/(20100:20115): Hilo de procesar requests de TABLA
+[INFO] 08:11:43:715 Lfs/(20100:20116): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:11:43:716 Lfs/(20100:20115): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 08:11:43:720 Lfs/(20100:20116): Hilo de procesar requests de TABLA3
+[INFO] 08:11:43:720 Lfs/(20100:20116): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 08:13:49:200 Lfs/(20190:20190): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 08:13:49:207 Lfs/(20190:20190): Hilo de compactacion de la tabla TABLA creado
+[INFO] 08:13:49:208 Lfs/(20190:20200): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 08:13:49:213 Lfs/(20190:20190): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 08:13:49:213 Lfs/(20190:20190): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 08:13:49:746 Lfs/(20190:20200): Hilo de procesar requests de TABLA
+[INFO] 08:13:49:746 Lfs/(20190:20201): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:13:49:746 Lfs/(20190:20200): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 08:13:49:759 Lfs/(20190:20201): Hilo de procesar requests de TABLA3
+[INFO] 08:13:49:759 Lfs/(20190:20201): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 08:15:27:726 Lfs/(20289:20289): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 08:15:27:728 Lfs/(20289:20289): Hilo de compactacion de la tabla TABLA creado
+[INFO] 08:15:27:730 Lfs/(20289:20299): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 08:15:27:734 Lfs/(20289:20289): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 08:15:27:734 Lfs/(20289:20289): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 08:15:28:264 Lfs/(20289:20299): Hilo de procesar requests de TABLA
+[INFO] 08:15:28:264 Lfs/(20289:20300): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:15:28:264 Lfs/(20289:20299): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 08:15:28:268 Lfs/(20289:20300): Hilo de procesar requests de TABLA3
+[INFO] 08:15:28:268 Lfs/(20289:20300): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 08:16:11:943 Lfs/(20376:20376): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 08:16:11:944 Lfs/(20376:20376): Hilo de compactacion de la tabla TABLA creado
+[INFO] 08:16:11:947 Lfs/(20376:20386): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 08:16:11:950 Lfs/(20376:20376): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 08:16:11:950 Lfs/(20376:20376): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 08:16:12:283 Lfs/(20376:20386): Hilo de procesar requests de TABLA
+[INFO] 08:16:12:283 Lfs/(20376:20387): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:16:12:284 Lfs/(20376:20386): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 08:16:12:297 Lfs/(20376:20387): Hilo de procesar requests de TABLA3
+[INFO] 08:16:12:297 Lfs/(20376:20387): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 08:18:08:787 Lfs/(20613:20613): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 08:18:08:789 Lfs/(20613:20613): Hilo de compactacion de la tabla TABLA creado
+[INFO] 08:18:08:791 Lfs/(20613:20623): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 08:18:08:795 Lfs/(20613:20613): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 08:18:08:795 Lfs/(20613:20613): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 08:18:09:253 Lfs/(20613:20623): Hilo de procesar requests de TABLA
+[INFO] 08:18:09:253 Lfs/(20613:20624): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:18:09:253 Lfs/(20613:20623): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 08:18:09:256 Lfs/(20613:20624): Hilo de procesar requests de TABLA3
+[INFO] 08:18:09:260 Lfs/(20613:20624): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 08:21:50:390 Lfs/(20728:20728): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 08:21:50:396 Lfs/(20728:20728): Hilo de compactacion de la tabla TABLA creado
+[INFO] 08:21:50:397 Lfs/(20728:20739): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 08:21:50:400 Lfs/(20728:20728): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 08:21:50:400 Lfs/(20728:20728): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 08:21:51:191 Lfs/(20728:20739): Hilo de procesar requests de TABLA
+[INFO] 08:21:51:192 Lfs/(20728:20740): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:21:51:192 Lfs/(20728:20739): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 08:21:51:196 Lfs/(20728:20740): Hilo de procesar requests de TABLA3
+[INFO] 08:21:51:196 Lfs/(20728:20740): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 08:22:36:109 Lfs/(20811:20811): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 08:22:36:111 Lfs/(20811:20811): Hilo de compactacion de la tabla TABLA creado
+[INFO] 08:22:36:113 Lfs/(20811:20821): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 08:22:36:117 Lfs/(20811:20811): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 08:22:36:117 Lfs/(20811:20811): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 08:22:36:537 Lfs/(20811:20821): Hilo de procesar requests de TABLA
+[INFO] 08:22:36:537 Lfs/(20811:20822): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:22:36:538 Lfs/(20811:20821): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 08:22:36:543 Lfs/(20811:20822): Hilo de procesar requests de TABLA3
+[INFO] 08:22:36:544 Lfs/(20811:20822): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
+[INFO] 08:26:49:368 Lfs/(20922:20922): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 08:26:49:369 Lfs/(20922:20922): Hilo de compactacion de la tabla TABLA creado
+[INFO] 08:26:49:372 Lfs/(20922:20932): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA
+[INFO] 08:26:49:375 Lfs/(20922:20922): Hilo de compactacion de la tabla TABLA3 creado
+[INFO] 08:26:49:375 Lfs/(20922:20922): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 08:26:49:858 Lfs/(20922:20932): Hilo de procesar requests de TABLA
+[INFO] 08:26:49:858 Lfs/(20922:20933): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
+[INFO] 08:26:49:858 Lfs/(20922:20932): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA terminada
+[INFO] 08:26:49:862 Lfs/(20922:20933): Hilo de procesar requests de TABLA3
+[INFO] 08:26:49:862 Lfs/(20922:20933): Compactacion de la tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3 terminada
