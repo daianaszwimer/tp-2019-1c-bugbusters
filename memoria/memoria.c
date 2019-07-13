@@ -1842,7 +1842,6 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
  * 	-> int :: bool-rta del algoritmo LRU
  * 	VALGRIND :: NO*/
  t_elemTablaDePaginas* correrAlgoritmoLRU() {
-	log_info(logger_MEMORIA,"Debe ejecutarse el algoritmo de reemplazo(LRU)");
 	int i=0, j= 0;
 
 	t_list* elemSinModificar=list_create();

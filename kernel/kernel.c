@@ -1463,7 +1463,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			actualizarTablas(paqueteRecibido->request);
 		}
 		if(codigo == SELECT || codigo == DESCRIBE) {
-			log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+			log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 		} else {
 			log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 		}
@@ -1474,18 +1474,25 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			free(consistenciaTablaString);
 		}
 	} else if (respuesta == MEMORIA_FULL) {
-		log_info(logger_KERNEL, "La memoria esta full, mandando JOURNAL...");
-		respuestaEnviar = enviar(NINGUNA, "JOURNAL", conexionTemporanea);
+		log_info(logger_KERNEL, "La memoria está FULL, forzando JOURNAL...");
+		char* req = strdup("JOURNAL");
+		enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
+		respuestaEnviar = enviar(NINGUNA, req, conexionTemporanea);
+		eliminar_paquete(paqueteRecibido);
+		free(req);
 		paqueteRecibido = recibir(conexionTemporanea);
 		respuesta = paqueteRecibido->palabraReservada;
 		if (respuesta == SUCCESS) {
 			log_info(logger_KERNEL, "JOURNAL exitoso");
+			enviarHandshakeMemoria(REQUEST, KERNEL, conexionTemporanea);
 			enviar(consistenciaTabla, mensaje, conexionTemporanea);
+			eliminar_paquete(paqueteRecibido);
 			paqueteRecibido = recibir(conexionTemporanea);
 			respuesta = paqueteRecibido->palabraReservada;
 			if (respuesta == SUCCESS) {
 				if(codigo == SELECT || codigo == DESCRIBE) {
 					log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+
 				} else {
 					log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 				}
@@ -1509,10 +1516,10 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		respuesta = SUCCESS;
 	} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
 		respuesta = SUCCESS;
-		log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	} else if (respuesta == TABLA_EXISTE && codigo == CREATE){
 		respuesta = SUCCESS;
-		log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
+		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
