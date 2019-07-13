@@ -707,13 +707,14 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 	char* segmentoABuscar=strdup(parametros[1]);
 	uint16_t keyABuscar= convertirKey(parametros[2]);
 
-	pthread_mutex_lock(&semMTablaSegmentos);
 
 	int hallarSegmento(t_segmento* segmento){
 		return string_equals_ignore_case(segmento->path, segmentoABuscar);
 	}
 
+	pthread_mutex_lock(&semMTablaSegmentos);
 	t_segmento* segmentoEnCache = list_find(tablaDeSegmentos->segmentos,(void*)hallarSegmento);
+
 	if(segmentoEnCache!=NULL){
 		*pathSegmento=strdup(segmentoEnCache->path);
 		pthread_mutex_unlock(&semMTablaSegmentos);
@@ -782,15 +783,17 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
  * 	-> t_tablaDePaginas* :: segmentoEncontrado
  * VALGRIND:: SI */
 t_segmento* encontrarSegmento(char* segmentoABuscar){
+	pthread_mutex_lock(&semMMem);
+	int retardoMem=retardoMemPrincipal;
+	pthread_mutex_unlock(&semMMem);
+
 	int encontrarTabla(t_segmento* segmento){
 			return string_equals_ignore_case(segmento->path, segmentoABuscar);
 	}
 	pthread_mutex_lock(&semMTablaSegmentos);
 	t_segmento* segmentoEncontrado= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
 	pthread_mutex_unlock(&semMTablaSegmentos);
-	pthread_mutex_lock(&semMMem);
-	int retardoMem=retardoMemPrincipal;
-	pthread_mutex_unlock(&semMMem);
+
 
 	usleep(retardoMem*1000);
 
@@ -1259,9 +1262,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 				if (resultadoCache == KEYINEXISTENTE) {
 					t_segmento* segmentoBuscado;
 
-					pthread_mutex_lock(&semMTablaSegmentos);
 					segmentoBuscado = encontrarSegmento(nuevaTabla);
-					pthread_mutex_unlock(&semMTablaSegmentos);
 
 					usleep(retardoMem*1000);
  					modificarElem(&elementoAInsertar,nuevoTimestamp,nuevaKey,nuevoValor,MODIFICADO);
@@ -1313,11 +1314,9 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 			}
 		}else{
 			if(resultadoCache == KEYINEXISTENTE){
-				pthread_mutex_lock(&semMTablaSegmentos);
-				t_segmento* segmentoDestino = encontrarSegmento(nuevaTabla);
-				pthread_mutex_unlock(&semMTablaSegmentos);
-
 				usleep(retardoMem*1000);
+
+				t_segmento* segmentoDestino = encontrarSegmento(nuevaTabla);
 
 				lockSemSegmento(nuevaTabla);
 				list_add(segmentoDestino->tablaDePagina,crearElementoEnTablaDePagina(index,pagLibre,nuevaKey,nuevoValor, nuevoTimestamp,MODIFICADO));
@@ -1534,6 +1533,7 @@ void create(cod_request codRequest,char* request){
 
 		char** requestSeparada = separarRequest(request);
 		t_segmento* nuevoSegmento = (t_segmento*)malloc(sizeof(t_segmento));
+
 		crearSegmento(nuevoSegmento,requestSeparada[1]);
 		pthread_mutex_lock(&semMTablaSegmentos);
 		list_add(tablaDeSegmentos->segmentos,nuevoSegmento);
@@ -1654,9 +1654,7 @@ void eliminarUnSegmento(t_segmento* segmento){
 	removerSem(segmento->path);
 	free(segmento->path);
 	segmento->path=NULL;
-	pthread_mutex_lock(&semMTablaSegmentos);
 	list_destroy_and_destroy_elements(segmento->tablaDePagina, (void*) eliminarElemTablaPagina);
-	pthread_mutex_unlock(&semMTablaSegmentos);
 	free(segmento);
 }
 
@@ -1762,8 +1760,17 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 		pthread_mutex_unlock(&semMTablaSegmentos);
 
 		usleep(retardoMem*1000);
+
 		if(segmentosEnCache!= NULL){
-			eliminarUnSegmento(segmentosEnCache);
+//			lockSemSegmento(segmentosEnCache->path);
+//			eliminarUnSegmento(segmentosEnCache);
+//			unlockSemSegmento(segmentosEnCache->path);
+
+			pthread_mutex_lock(&semMTablaSegmentos);
+			list_remove_and_destroy_by_condition(tablaDeSegmentos->segmentos,(void*)encontrarTabla,(void*)eliminarUnSegmento);
+			pthread_mutex_unlock(&semMTablaSegmentos);
+
+
 		}else{
 			log_info(logger_MEMORIA,"La %s ya no existia en MEMORIA",segmentoABuscar);
 		}
