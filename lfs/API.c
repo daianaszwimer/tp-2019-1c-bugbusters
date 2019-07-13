@@ -52,6 +52,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) strdup(pathTabla))){
 			pthread_detach(hiloDeCompactacion);
 
+
 			//TODO sacar afuera lo de abajo
 			//TODO agregar los mutex de fds de memoria
 
@@ -65,6 +66,19 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 			hiloTabla->finalizarCompactacion = 0;
 			hiloTabla->cosasABloquear = list_create();
 			list_add(hiloTabla->cosasABloquear, idYMutexPropio);
+
+			void agregarMemoria(t_int* memoria_fd) {
+				t_bloqueo* idYMutex = malloc(sizeof(t_bloqueo));
+				idYMutex->id = memoria_fd->valor;
+				pthread_mutex_init(&(idYMutex->mutex), NULL);
+				list_add(hiloTabla->cosasABloquear, idYMutex);
+			}
+
+			pthread_mutex_lock(&mutexMemorias);
+			list_iterate(memorias, (void*)agregarMemoria);
+			pthread_mutex_unlock(&mutexMemorias);
+
+
 
 			pthread_mutex_lock(&mutexTablasParaCompactaciones);
 			list_add(tablasParaCompactaciones, hiloTabla);
@@ -205,9 +219,8 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje, int fd){
 
 		pthread_mutex_lock(&mutexTablasParaCompactaciones);
 		t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*)encontrarTabla);
-		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
-
 		t_bloqueo* idYMutexEncontrado = list_find(tablaEncontrada->cosasABloquear, (void*)encontrarMutexCorrespondiente);
+		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 
 		pthread_mutex_lock(&(idYMutexEncontrado->mutex));
 		t_list* listaDeRegistrosDeTmp = obtenerRegistrosDeTmp(nombreTabla, _key);

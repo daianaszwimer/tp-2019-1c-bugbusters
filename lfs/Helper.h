@@ -68,6 +68,7 @@ t_config *configMetadata;
 t_bitarray* bitarray;
 t_memtable* memtable;
 t_list* tablasParaCompactaciones; // lista que tiene las tablas para las compactaciones
+t_list* memorias; //lista que tiene memorias levantadas
 
 pthread_t hiloLeerDeConsola;
 pthread_t hiloRecibirMemorias;
@@ -94,6 +95,7 @@ pthread_mutex_t mutexConfig;
 pthread_mutex_t mutexRetardo;
 pthread_mutex_t mutexTiempoDump;
 pthread_mutex_t mutexBitmap;
+pthread_mutex_t mutexMemorias;
 
 //VARIABLES CONFIG
 int retardo;

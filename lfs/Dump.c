@@ -6,12 +6,31 @@
  * Return: void* */
 void* hiloDump(void* args) {
 	int tiempo_dump;
+
+	t_int* fd = malloc(sizeof(t_int));
+	fd->valor = 2;
+
+	pthread_mutex_lock(&mutexMemorias);
+	list_add(memorias, fd);
+	pthread_mutex_unlock(&mutexMemorias);
+
+	void agregarMemoria(t_hiloTabla* hiloTabla) {
+		t_bloqueo* idYMutex = malloc(sizeof(t_bloqueo));
+		idYMutex->id = 2;
+		pthread_mutex_init(&(idYMutex->mutex), NULL);
+		list_add(hiloTabla->cosasABloquear, idYMutex);
+	}
+
+	pthread_mutex_lock(&mutexTablasParaCompactaciones);
+	list_iterate(tablasParaCompactaciones, (void*)agregarMemoria);
+	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
 	while(1) {
 		pthread_mutex_lock(&mutexTiempoDump);
 		tiempo_dump = tiempoDump;
 		pthread_mutex_unlock(&mutexTiempoDump);
 		usleep(tiempo_dump*1000);
-		log_info(logger_LFS, "Dump iniciado");
+		//log_info(logger_LFS, "Dump iniciado");
 		errorNo resultado = dumpear();
 		switch(resultado) {
 			case ERROR_CREANDO_ARCHIVO:

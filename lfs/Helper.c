@@ -79,7 +79,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	free(mensajeDeError);
 	usleep(retardo*1000);
 
-	if (memoria_fd != NULL) {
+	if (*memoria_fd != 0) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{
 		log_info(logger_LFS, mensaje);
