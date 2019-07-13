@@ -1527,6 +1527,8 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	} else if(respuesta == TABLA_EXISTE && codigo == CREATE) {
 		respuesta = SUCCESS;
 		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta la tabla ya existía", mensaje);
+	} else if(respuesta == JOURNALTIME) {
+		log_info(logger_KERNEL, "La memoria %s dice: %s", paqueteRecibido->request);
 	} else {
 		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
 	}
