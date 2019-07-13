@@ -13,7 +13,11 @@ int main(void) {
 	retardoMemPrincipal =config_get_int_value(config, "RETARDO_MEM");
 	memoriasLevantadas = list_create();
 	memoriasSeeds = list_create();
+
+	ipFS = strdup(config_get_string_value(config, "IP_FS"));
+	puertoFS = strdup(config_get_string_value(config, "PUERTO_FS"));
 	pthread_mutex_init(&semMMemoriasLevantadas, NULL);
+	pthread_mutex_init(&semMConexionLFS, NULL);
 	char** puertosSeeds = config_get_array_value(config, "PUERTO_SEEDS");
 	char** ipsSeeds = config_get_array_value(config, "IP_SEEDS");
 
@@ -429,17 +433,21 @@ void validarRequest(char* mensaje){
  * 	-> :: void
  * VALGRIND:: SI */
 void conectarAFileSystem() {
-	//TODO MUTEX EN CONFIG
-	pthread_mutex_lock(&semMConfig);
+	pthread_mutex_lock(&semMConexionLFS);
 	conexionLfs = crearConexion(
-			config_get_string_value(config, "IP_FS"),
-			config_get_string_value(config, "PUERTO_FS"));
-	pthread_mutex_unlock(&semMConfig);
-	handshakeLFS = recibirHandshakeLFS(conexionLfs);
-	maxValue= handshakeLFS->tamanioValue;
-	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
-	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
-	free(handshakeLFS);
+			ipFS,
+			puertoFS);
+	if (conexionLfs == COMPONENTE_CAIDO) {
+		pthread_mutex_unlock(&semMConexionLFS);
+		log_error(logger_MEMORIA, "No me pude conectar con LFS!");
+	} else {
+		pthread_mutex_unlock(&semMConexionLFS);
+		handshakeLFS = recibirHandshakeLFS(conexionLfs);
+		maxValue= handshakeLFS->tamanioValue;
+		log_info(logger_MEMORIA, "SE CONECTO CON LFS");
+		log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
+		free(handshakeLFS);
+	}
 }
 
 
@@ -615,16 +623,60 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
  * 	-> paqueteRecibido:: char*
  * VALGRIND:: NO */
 int intercambiarConFileSystem(cod_request palabraReservada, char* request,t_paquete** paqueteRecibido, t_caller caller, int indiceKernel){
-	int resultadoLFS = enviar(palabraReservada, request, conexionLfs);
-	if(resultadoLFS == COMPONENTE_CAIDO){
-		return FAILURE;
-	}else{
-		pthread_mutex_lock(&semMFS);
-		int retardoFileSystem=retardoFS;
-		pthread_mutex_unlock(&semMFS);
-		usleep(retardoFileSystem*1000);
-		paqueteRecibido = recibir(conexionLfs);
-		return SUCCESS;
+	pthread_mutex_lock(&semMConexionLFS);
+	int conexionAux = conexionLfs;
+	pthread_mutex_unlock(&semMConexionLFS);
+	if (conexionAux == COMPONENTE_CAIDO) {
+		pthread_mutex_lock(&semMConexionLFS);
+		conexionLfs = crearConexion(
+				ipFS,
+				puertoFS);
+		pthread_mutex_unlock(&semMConexionLFS);
+		t_handshake_lfs* handshakeLFS2 = recibirHandshakeLFS(conexionLfs);
+		free(handshakeLFS2);
+		pthread_mutex_lock(&semMConexionLFS);
+		conexionAux = conexionLfs;
+		pthread_mutex_unlock(&semMConexionLFS);
+		if (conexionAux == COMPONENTE_CAIDO) {
+			return FAILURE;
+		}
+		int resultadoLFS = enviar(palabraReservada, request, conexionAux);
+		if(resultadoLFS == COMPONENTE_CAIDO) {
+			liberar_conexion(conexionAux);
+			pthread_mutex_lock(&semMConexionLFS);
+			conexionLfs = COMPONENTE_CAIDO;
+			pthread_mutex_unlock(&semMConexionLFS);
+			return FAILURE;
+		} else {
+			log_info(logger_MEMORIA, "SE CONECTO CON LFS");
+			pthread_mutex_lock(&semMFS);
+			int retardoFileSystem=retardoFS;
+			pthread_mutex_unlock(&semMFS);
+			usleep(retardoFileSystem*1000);
+			*paqueteRecibido = recibir(conexionAux);
+			return SUCCESS;
+		}
+	} else {
+		int resultadoLFS = enviar(palabraReservada, request, conexionAux);
+		if(resultadoLFS == COMPONENTE_CAIDO) {
+			liberar_conexion(conexionAux);
+			pthread_mutex_lock(&semMConexionLFS);
+			conexionLfs = COMPONENTE_CAIDO;
+			pthread_mutex_unlock(&semMConexionLFS);
+			return FAILURE;
+		} else {
+			pthread_mutex_lock(&semMFS);
+			int retardoFileSystem=retardoFS;
+			pthread_mutex_unlock(&semMFS);
+			usleep(retardoFileSystem*1000);
+			*paqueteRecibido = recibir(conexionAux);
+			if ((*paqueteRecibido)->palabraReservada == COMPONENTE_CAIDO) {
+				pthread_mutex_lock(&semMConexionLFS);
+				conexionLfs = COMPONENTE_CAIDO;
+				pthread_mutex_unlock(&semMConexionLFS);
+			}
+			return SUCCESS;
+		}
 	}
 }
 
@@ -647,7 +699,7 @@ int intercambiarConFileSystem(cod_request palabraReservada, char* request,t_paqu
  * VALGRIND:: NO */
 void procesarSelect(cod_request palabraReservada, char* request,consistencia consistenciaMemoria,t_caller caller, int indiceKernel) {
 
-	t_paquete* valorDeLFS = (t_paquete*) malloc(sizeof(t_paquete));
+	t_paquete* valorDeLFS;
 	t_elemTablaDePaginas* elementoEncontrado;
 	char* pathSegmento=strdup("");
 
@@ -663,16 +715,15 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 			actualizarTimestamp(elementoEncontrado->marco);
 			unlockSemSegmento(pathSegmento);
 			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, indiceKernel);
-
-
 		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 			resultadoLFS = intercambiarConFileSystem(palabraReservada,request,&valorDeLFS, caller, indiceKernel);
 
-			if(resultadoLFS == -1){
+			if(resultadoLFS == -1 || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
+				valorDeLFS = malloc(sizeof(t_paquete));
 				valorDeLFS->request=strdup("FALLO CONEXION LFS");
 				valorDeLFS->tamanio=(sizeof(valorDeLFS->request));
-				rtaGuardarEnMemoria =guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
+				//rtaGuardarEnMemoria =guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
 				enviarAlDestinatarioCorrecto(COMPONENTE_CAIDO, COMPONENTE_CAIDO,request, valorDeLFS,caller,indiceKernel);
 			}else{
 				if(rtaGuardarEnMemoria == MEMORIA_FULL){
@@ -690,7 +741,8 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
 		int resultadoLFS = intercambiarConFileSystem(palabraReservada,request,&valorDeLFS, caller, indiceKernel);
-		if(resultadoCache == -2){
+		if(resultadoLFS == FAILURE || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
+			valorDeLFS = malloc(sizeof(t_paquete));
 			valorDeLFS->request=strdup("FALLO CONEXION LFS");
 			valorDeLFS->tamanio=(sizeof(valorDeLFS->request));
 			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
@@ -959,7 +1011,7 @@ void unlockSemSegmento(char* pathSegmento){
 				liberarArrayDeChar(requestSeparada);
 				requestSeparada=NULL;
 			}else{
-				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse, TABLA INEXISTENTE");
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no ha podido realizarse, TABLA INEXISTENTE");
 				log_info(logger_MEMORIA,error);
 				free(respuesta);
 				respuesta=NULL;
@@ -985,7 +1037,7 @@ void unlockSemSegmento(char* pathSegmento){
 	 			requestSeparada=NULL;
 
 			}else{
-				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no ha podido realizarse");
 				log_info(logger_MEMORIA,error);
 	 			free(respuesta);
 	 			respuesta=NULL;
@@ -1001,7 +1053,7 @@ void unlockSemSegmento(char* pathSegmento){
 				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,error);
 	 		}else{
-				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no ha podido realizarse");
 				log_info(logger_MEMORIA,error);
 	 		}
 			free(respuesta);
@@ -1017,7 +1069,7 @@ void unlockSemSegmento(char* pathSegmento){
 				string_append_with_format(&error, "%s%s%s","La request: ",request," se ha realizado con exito");
 				log_info(logger_MEMORIA,error);
 			}else{
-				string_append_with_format(&error, "%s%s%s","La request: ",request," no a podido realizarse");
+				string_append_with_format(&error, "%s%s%s","La request: ",request," no ha podido realizarse");
 				log_info(logger_MEMORIA,error);
 			}
 			free(respuesta);
@@ -1218,9 +1270,10 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			free(pathSegmento);
 			pathSegmento=NULL;
 			t_paquete* insertALFS;
-			int resultadoLFS =  intercambiarConFileSystem(palabraReservada,request,&insertALFS, caller, indiceKernel);
+			int resultadoLFS =  intercambiarConFileSystem(palabraReservada,request, &insertALFS, caller, indiceKernel);
 
-			if(resultadoLFS == -1){
+			if(resultadoLFS == -1 || insertALFS->palabraReservada == COMPONENTE_CAIDO){
+				insertALFS = malloc(sizeof(t_paquete));
 				insertALFS->request=strdup("FALLO CONEXION LFS");
 				insertALFS->tamanio=(sizeof(insertALFS->request));
 				enviarAlDestinatarioCorrecto(COMPONENTE_CAIDO, COMPONENTE_CAIDO,request, insertALFS,caller,indiceKernel);
@@ -1537,9 +1590,10 @@ void crearSegmento(t_segmento* nuevoSegmento,char* pathNuevoSegmento){
  * 	VALGRIND :: NO*/
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel){
 	t_paquete* valorDeLFS = (t_paquete*) malloc(sizeof(t_paquete));
-	int resultadoLFS = intercambiarConFileSystem(codRequest,request,&valorDeLFS, caller, indiceKernel);
+	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &valorDeLFS, caller, indiceKernel);
 
-	if(resultadoLFS == -1){
+	if(resultadoLFS == -1 || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
+		valorDeLFS = malloc(sizeof(t_paquete));
 		valorDeLFS->request=strdup("FALLO CONEXION LFS");
 		valorDeLFS->tamanio=(sizeof(valorDeLFS->request));
 		enviarAlDestinatarioCorrecto(COMPONENTE_CAIDO, COMPONENTE_CAIDO,request, valorDeLFS,caller,indiceKernel);
@@ -1722,6 +1776,7 @@ void liberarMemoria(){
 	pthread_mutex_destroy(&semMJournal);
 	pthread_mutex_destroy(&semMFS);
 	pthread_mutex_destroy(&semMMem);
+	pthread_mutex_destroy(&semMConexionLFS);
 
 	inotify_rm_watch(file_descriptor, watch_descriptor);	//iNotify
 	close(file_descriptor);
@@ -1768,7 +1823,12 @@ void eliminarMarco(t_elemTablaDePaginas* elem,t_marco* marcoAEliminar){
  * 	VALGRIND :: NO*/
 void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int indiceKernel){
 	t_paquete* describeLFS;
-	int resultadoLFS = intercambiarConFileSystem(codRequest,request,&describeLFS, caller, indiceKernel);
+	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &describeLFS, caller, indiceKernel);
+	if (resultadoLFS == FAILURE || describeLFS->palabraReservada == COMPONENTE_CAIDO) {
+		describeLFS = malloc(sizeof(t_paquete));
+		codRequest = FAILURE;
+		describeLFS->request = strdup("FALLO CONEXION CON LFS");
+	}
 	enviarAlDestinatarioCorrecto(codRequest,describeLFS->palabraReservada,request,describeLFS,caller,indiceKernel);
 
 }
@@ -1792,31 +1852,39 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	pthread_mutex_lock(&semMMem);
 	int retardoMem=retardoMemPrincipal;
 	pthread_mutex_unlock(&semMMem);
-	int resultadoLFS = intercambiarConFileSystem(codRequest,request,&valorDeLFS, caller, indiceKernel);
-	if(consistencia == EC || caller == CONSOLE){
-		int encontrarTabla(t_segmento* segmento){
-			return string_equals_ignore_case(segmento->path, segmentoABuscar);
-		}
-		pthread_mutex_lock(&semMTablaSegmentos);
-		t_segmento* segmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
-		pthread_mutex_unlock(&semMTablaSegmentos);
-
-		usleep(retardoMem*1000);
-
-		if(segmentosEnCache!= NULL){
-//			lockSemSegmento(segmentosEnCache->path);
-//			eliminarUnSegmento(segmentosEnCache);
-//			unlockSemSegmento(segmentosEnCache->path);
-
+	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &valorDeLFS, caller, indiceKernel);
+	if (resultadoLFS == FAILURE || valorDeLFS->palabraReservada == COMPONENTE_CAIDO) {
+		valorDeLFS = malloc(sizeof(t_paquete));
+		codRequest = FAILURE;
+		valorDeLFS->palabraReservada = FAILURE;
+		valorDeLFS->request = strdup("FALLO CONEXION CON LFS");
+	} else {
+		if(consistencia == EC || caller == CONSOLE){
+			int encontrarTabla(t_segmento* segmento){
+				return string_equals_ignore_case(segmento->path, segmentoABuscar);
+			}
 			pthread_mutex_lock(&semMTablaSegmentos);
-			list_remove_and_destroy_by_condition(tablaDeSegmentos->segmentos,(void*)encontrarTabla,(void*)eliminarUnSegmento);
+			t_segmento* segmentosEnCache= list_find(tablaDeSegmentos->segmentos,(void*)encontrarTabla);
 			pthread_mutex_unlock(&semMTablaSegmentos);
 
+			usleep(retardoMem*1000);
 
-		}else{
-			log_info(logger_MEMORIA,"La %s ya no existia en MEMORIA",segmentoABuscar);
+			if(segmentosEnCache!= NULL){
+	//			lockSemSegmento(segmentosEnCache->path);
+	//			eliminarUnSegmento(segmentosEnCache);
+	//			unlockSemSegmento(segmentosEnCache->path);
+
+				pthread_mutex_lock(&semMTablaSegmentos);
+				list_remove_and_destroy_by_condition(tablaDeSegmentos->segmentos,(void*)encontrarTabla,(void*)eliminarUnSegmento);
+				pthread_mutex_unlock(&semMTablaSegmentos);
+
+
+			}else{
+				log_info(logger_MEMORIA,"La %s ya no existia en MEMORIA",segmentoABuscar);
+			}
 		}
 	}
+
 	enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,indiceKernel);
 
 	liberarArrayDeChar(requestSeparada);
@@ -1971,7 +2039,12 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
 
 				t_paquete* insertJournalLFS;
-				int resultadoLFS = intercambiarConFileSystem(INSERT,requestAEnviar,&insertJournalLFS, caller, indiceKernel);
+				int resultadoLFS = intercambiarConFileSystem(INSERT,requestAEnviar, &insertJournalLFS, caller, indiceKernel);
+				if (resultadoLFS == FAILURE || insertJournalLFS->palabraReservada == COMPONENTE_CAIDO) {
+					insertJournalLFS = malloc(sizeof(t_paquete));
+					insertJournalLFS->palabraReservada = FAILURE;
+					insertJournalLFS->request = strdup("FALLO CONEXION CON LFS");
+				}
 				log_info(logger_MEMORIA,"Le enviamos a LFS: %s", requestAEnviar);
 
 				if(insertJournalLFS->palabraReservada==SUCCESS ){

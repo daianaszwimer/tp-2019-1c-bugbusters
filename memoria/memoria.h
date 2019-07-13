@@ -106,6 +106,7 @@ pthread_mutex_t semMJournal;			// semaforo mutex iNotify
 pthread_mutex_t semMGossiping;			// semaforo mutex iNotify
 pthread_mutex_t semMFS;					// semaforo mutex iNotify
 pthread_mutex_t semMMem;				// semaforo mutex iNotify
+pthread_mutex_t semMConexionLFS;				// semaforo mutex
 
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
@@ -126,6 +127,8 @@ int retardoGossiping, retardoJournal, retardoFS, retardoMemPrincipal;
 char* puertoMio;
 char* ipMia;
 char* numerosMio;
+char* puertoFS;
+char* ipFS;
 
 t_list* listaSemSegmentos;
 
