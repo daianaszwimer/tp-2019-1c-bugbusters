@@ -5,7 +5,11 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	errorNo errorNo = SUCCESS;
 	char* mensaje = strdup("");
 	if(memoria_fd != NULL){
-		log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
+		if(!(*memoria_fd)) {
+			log_info(logger_LFS, "Request de la consola de lfs");
+		} else {
+			log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
+		}
 	}
 	switch (palabraReservada){
 		case SELECT:

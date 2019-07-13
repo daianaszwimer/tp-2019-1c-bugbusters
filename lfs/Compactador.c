@@ -206,6 +206,9 @@ void setBlockTo(char* nombreTabla, int value){
 		pthread_mutex_lock(&mutexTablasParaCompactaciones);
 	}
 	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+	if(!strcmp(nombreTabla,"TABLA")) {
+			sleep(60);
+		}
 
 
 	/*pthread_mutex_lock(&mutexTablasParaCompactaciones);

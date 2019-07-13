@@ -317,6 +317,7 @@ void* recibirMemorias(void* arg) {
 					t_bloqueo* idYMutex = malloc(sizeof(t_bloqueo));
 					idYMutex->id = memoria_fd;
 					pthread_mutex_init(&(idYMutex->mutex), NULL);
+					list_add(tablasParaCompactaciones, idYMutex);
 				}
 
 				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
