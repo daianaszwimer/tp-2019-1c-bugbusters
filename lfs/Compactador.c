@@ -16,18 +16,18 @@ void* hiloCompactacion(void* arg) {
 	config_destroy(configMetadataTabla);
 
 	while(1) {
+		usleep(tiempoEntreCompactaciones*1000);
 		if(finalizarHilo(pathTabla)){
 			log_info(logger_LFS, "Hilo de compactacion de %s terminado", pathTabla);
 			break;
 		}
-		//char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
-		//log_info(logger_LFS, infoComienzoCompactacion);
-		//free(infoComienzoCompactacion);
+		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
+		log_info(logger_LFS, infoComienzoCompactacion);
+		free(infoComienzoCompactacion);
 		compactar(pathTabla);
-		//char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
-		//log_info(logger_LFS, infoTerminoCompactacion);
-		//free(infoTerminoCompactacion);
-		usleep(tiempoEntreCompactaciones*1000);
+		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
+		log_info(logger_LFS, infoTerminoCompactacion);
+		free(infoTerminoCompactacion);
 	}
 	free(pathTabla);
 	return NULL;
@@ -208,7 +208,7 @@ void setBlockTo(char* nombreTabla, int value){
 	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 	if(!strcmp(nombreTabla,"TABLA") && value) {
 		log_debug(logger_LFS, "Entro a bloquear TABLA");
-		sleep(10);
+		//sleep(10); is checked? not really
 	}
 	if(!strcmp(nombreTabla,"TABLA") && !value) {
 		log_debug(logger_LFS, "TABLA desbloquea3");
