@@ -325,8 +325,7 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 				for (int j = 0; registros[j] != NULL; j++) {
 					char** registroSeparado = string_split(registros[j], ";");
 					tRegistro = (t_registro*) malloc(sizeof(t_registro));
-					convertirTimestamp(registroSeparado[0],
-							&(tRegistro->timestamp));
+					convertirTimestamp(registroSeparado[0], &(tRegistro->timestamp));
 					tRegistro->key = convertirKey(registroSeparado[1]);
 					tRegistro->value = strdup(registroSeparado[2]);
 
@@ -341,15 +340,13 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 						list_add(particiones, particionAAgregar);
 					}
 
-					t_registro* registroEncontrado = list_find(registrosDeTmpC,
-							(void*) tieneMismaKey);
+					t_registro* registroEncontrado = list_find(registrosDeTmpC,	(void*) tieneMismaKey);
 					if (registroEncontrado != NULL) {
-						if (tRegistro->timestamp
-								> registroEncontrado->timestamp) {
-							list_remove_and_destroy_by_condition(
-									registrosDeTmpC, (void*) tieneMismaKey,
-									(void*) eliminarRegistro);
+						if (tRegistro->timestamp > registroEncontrado->timestamp) {
+							list_remove_and_destroy_by_condition(registrosDeTmpC, (void*) tieneMismaKey, (void*) eliminarRegistro);
 							list_add(registrosDeTmpC, tRegistro);
+						} else {
+							eliminarRegistro(tRegistro);
 						}
 					} else {
 						list_add(registrosDeTmpC, tRegistro);
