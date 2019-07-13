@@ -133,6 +133,7 @@ void compactar(char* pathTabla) {
 
 	setBlockTo(nombreTabla, 1);
 	// Renombramos los tmp a tmpc
+	sleep(1);
 	renombrarTmp_a_TmpC(pathTabla, archivoDeLaTabla, tabla);
 
 	setBlockTo(nombreTabla, 0);
@@ -153,7 +154,7 @@ void compactar(char* pathTabla) {
 		// TODO: Bloquear tabla
 		setBlockTo(nombreTabla, 1);
 		//sleep(20); //sirve para simular una compactacion larga
-
+		sleep(3);
 		// Liberamos los bloques que contienen el archivo “.tmpc” y los que contienen el archivo “.bin”
 		liberarBloquesDeTmpCyParticiones(pathTabla, archivoDeLaTabla, tabla, particiones);
 
@@ -408,6 +409,7 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, int tama
 						string_append_with_format(&datosDeLasParticiones, "%s", datosALeer);
 						munmap(datosALeer, tamanioBloque);
 					}
+					close(fd);
 				}
 			}
 

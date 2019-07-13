@@ -240,7 +240,7 @@ errorNo procesarSelect(char* nombreTabla, char* key, char** mensaje, int fd){
 			error = KEY_NO_EXISTE;
 			string_append_with_format(&*mensaje, "Registro no encontrado salu3");
 		}
-		list_destroy(listaDeRegistrosDeMemtable);
+		list_destroy_and_destroy_elements(listaDeRegistrosDeMemtable, (void*)eliminarRegistro);
 		list_destroy_and_destroy_elements(listaDeRegistrosDeTmp, (void*)eliminarRegistro);
 		list_destroy_and_destroy_elements(listaDeRegistrosDeParticiones, (void*)eliminarRegistro);
 	}else{
@@ -321,7 +321,16 @@ t_list* obtenerRegistrosDeMemtable(char* nombreTabla, int key){
 	if(table == NULL){
 		listaDeRegistros = list_create();
 	}else{
-		listaDeRegistros = list_filter(table->registros, (void*) encontrarRegistro);
+		t_list* aux = list_filter(table->registros, (void*) encontrarRegistro);
+		t_registro* identidad(t_registro* registro){
+			t_registro* registroRetorno = malloc(sizeof(t_registro));
+			registroRetorno->key = registro->key;
+			registroRetorno->timestamp = registro->timestamp;
+			registroRetorno->value = strdup(registro->value);
+			return registroRetorno;
+		}
+		listaDeRegistros = list_map(aux, (void*)identidad);
+		list_destroy(aux);
 	}
 	pthread_mutex_unlock(&mutexMemtable);
 	return listaDeRegistros;
