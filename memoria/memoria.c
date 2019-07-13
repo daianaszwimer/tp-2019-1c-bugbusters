@@ -1213,6 +1213,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,indiceKernel,pathSegmento);
 			free(pathSegmento);
 			pathSegmento=NULL;
+
 		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
 			free(pathSegmento);
 			pathSegmento=NULL;
@@ -1226,12 +1227,11 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			}else{
 				if(insertALFS->palabraReservada== EXIT_SUCCESS){
 					enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,indiceKernel);
-
 				}else{
 					enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller,indiceKernel);
-
 				}
 			}
+
 		}else{
 			free(pathSegmento);
 			pathSegmento=NULL;
@@ -1536,7 +1536,7 @@ void crearSegmento(t_segmento* nuevoSegmento,char* pathNuevoSegmento){
  * 	-> void ::
  * 	VALGRIND :: NO*/
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel){
-	t_paquete* valorDeLFS;
+	t_paquete* valorDeLFS = (t_paquete*) malloc(sizeof(t_paquete));
 	int resultadoLFS = intercambiarConFileSystem(codRequest,request,&valorDeLFS, caller, indiceKernel);
 
 	if(resultadoLFS == -1){
@@ -1547,7 +1547,7 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 		if(consistencia == EC || caller == CONSOLE){
 			create(codRequest, request);
 		}
-		enviarAlDestinatarioCorrecto(codRequest,valorDeLFS->palabraReservada,request, valorDeLFS, caller,indiceKernel);
+		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,indiceKernel);
 	}
 }
 
