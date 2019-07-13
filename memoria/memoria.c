@@ -21,7 +21,7 @@ int main(void) {
 	ipMia = strdup(config_get_string_value(config, "IP"));
 	numerosMio = strdup(config_get_string_value(config, "MEMORY_NUMBER"));
 	int i;
-	for(i = 0; ipsSeeds[i] != NULL; i++) {
+	for(i = 0; (ipsSeeds[i] != NULL && puertosSeeds[i] != NULL); i++) {
 		config_memoria* memoriaSeed = (config_memoria*) malloc(sizeof(config_memoria));
 		memoriaSeed->ip = strdup(ipsSeeds[i]);
 		memoriaSeed->puerto = strdup(puertosSeeds[i]);

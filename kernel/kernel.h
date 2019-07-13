@@ -79,6 +79,9 @@ t_list* cargaMemoriaEC;
 int file_descriptor;
 int watch_descriptor;
 
+char* ipPpal;
+char* puertoPpal;
+
 sem_t semRequestNew;				// semaforo para planificar requests en new
 pthread_mutex_t semMColaNew;		// semafoto mutex para cola de new
 sem_t semRequestReady;				// semaforo para planificar requests en ready
