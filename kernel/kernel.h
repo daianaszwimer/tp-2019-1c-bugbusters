@@ -95,7 +95,8 @@ pthread_mutex_t semMMemoriasEC;		// semaforo mutex para evitar concurrencia en l
 pthread_mutex_t semMQuantum;		// semaforo mutex para evitar concurrencia en la variable
 pthread_mutex_t semMSleepEjecucion;	// semaforo mutex para evitar concurrencia en la variable
 pthread_mutex_t semMMetadataRefresh;// semaforo mutex para evitar concurrencia en la variable
-pthread_mutex_t semMConfig			;// semaforo mutex para evitar concurrencia en la variable
+pthread_mutex_t semMConfig;			// semaforo mutex para evitar concurrencia en la variable
+pthread_mutex_t semMSleepGossiping;	// semaforo mutex para evitar concurrencia en la variable
 
 pthread_t hiloLeerDeConsola;		// hilo que lee de consola
 pthread_t hiloConectarAMemoria;		// hilo que conecta a memoria
