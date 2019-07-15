@@ -147,7 +147,7 @@ void procesarJournal(int);
 void procesarRun(t_queue*);
 int procesarAdd(char*);
 void procesarRequest(request_procesada*);
-int reintentarConexion(consistencia, int, int, char**);
+int reintentarConexion(consistencia, int, int, char**, char**, char**);
 void eliminarMemoria(char*, char*, char*);
 
 #endif /* KERNEL_H_*/

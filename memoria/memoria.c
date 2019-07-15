@@ -30,6 +30,9 @@ int main(void) {
 		// y se en gossiping
 		list_add(memoriasSeeds, memoriaSeed);
 	}
+	if (i == 0) {
+		log_info(logger_MEMORIA, "No tengo seeds :(");
+	}
 	liberarArrayDeChar(puertosSeeds);
 	liberarArrayDeChar(ipsSeeds);
 
@@ -279,8 +282,16 @@ void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed, char* puertosQ
 		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
 		return;
 	}
-	int estadoHandshake = enviarHandshakeMemoria(GOSSIPING, MEMORIA, conexionTemporaneaSeed);
+
+	int estadoHandshake = enviarHandshake(MEMORIA, conexionTemporaneaSeed);
 	if (estadoHandshake == COMPONENTE_CAIDO) {
+		liberar_conexion(conexionTemporaneaSeed);
+		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
+		return;
+	}
+
+	int estadoOperacion = enviarTipoOperacion(GOSSIPING, conexionTemporaneaSeed);
+	if (estadoOperacion == COMPONENTE_CAIDO) {
 		liberar_conexion(conexionTemporaneaSeed);
 		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
 		return;
@@ -493,9 +504,8 @@ void escucharMultiplesClientes() {
 					}
 				} else {
 					int codigoOperacion = 0;
-					t_handshake_memoria* handshake = recibirHandshakeMemoria(numDescriptor, &codigoOperacion);
-					if (codigoOperacion == COMPONENTE_CAIDO ||
-							(handshake->tipoComponente != KERNEL && handshake->tipoComponente != MEMORIA)) {
+					t_handshake* handshake = recibirHandshake(numDescriptor, &codigoOperacion);
+					if (codigoOperacion == COMPONENTE_CAIDO) {
 						// si fallo el recibir o no es una memoria o kernel
 						close(numDescriptor);
 						log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
@@ -504,7 +514,29 @@ void escucharMultiplesClientes() {
 						free(handshake);
 						continue;
 					}
-					if (handshake->tipoRol == REQUEST) {
+					if (handshake->tipoComponente == KERNEL || handshake->tipoComponente == MEMORIA) {
+						// hacer cambios en gossiping tmb
+						enviarRtaHandshake(CONEXION_EXITOSA, numDescriptor);
+					} else {
+						enviarRtaHandshake(CONEXION_INVALIDA, numDescriptor);
+						close(numDescriptor);
+						log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
+						FD_CLR(numDescriptor, &descriptoresDeInteres);
+						numDescriptor++;
+						free(handshake);
+						continue;
+					}
+					int rtaOperacion;
+					t_operacion* operacionARealizar = recibirOperacion(numDescriptor, &rtaOperacion);
+					if (rtaOperacion == COMPONENTE_CAIDO) {
+						close(numDescriptor);
+						log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
+						FD_CLR(numDescriptor, &descriptoresDeInteres);
+						numDescriptor++;
+						free(operacionARealizar);
+						continue;
+					}
+					if (operacionARealizar->tipo_rol == REQUEST) {
 						paqueteRecibido = recibir(numDescriptor); // Recibo de ese cliente en particular
 						codigoOperacion = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
@@ -515,7 +547,6 @@ void escucharMultiplesClientes() {
 							log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
 							eliminar_paquete(paqueteRecibido);
 							paqueteRecibido=NULL;
-							free(handshake);
 							numDescriptor++;
 							continue;
 						}
@@ -523,7 +554,7 @@ void escucharMultiplesClientes() {
 						interpretarRequest(codigoOperacion,request, ANOTHER_COMPONENT, numDescriptor);
 						//eliminar_paquete(paqueteRecibido);
 						//paqueteRecibido=NULL;
-					} else if (handshake->tipoRol == GOSSIPING) {
+					} else if (operacionARealizar->tipo_rol == GOSSIPING) {
 						t_gossiping* gossipingRecibido = recibirGossiping(numDescriptor, &codigoOperacion);
 						agregarMemorias(gossipingRecibido);
 						if (codigoOperacion == COMPONENTE_CAIDO) {
@@ -532,7 +563,6 @@ void escucharMultiplesClientes() {
 							FD_CLR(numDescriptor, &descriptoresDeInteres);
 							log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
 							liberarHandshakeMemoria(gossipingRecibido);
-							free(handshake);
 							numDescriptor++;
 							continue;
 						}
@@ -551,6 +581,7 @@ void escucharMultiplesClientes() {
 						//enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, numDescriptor);
 						liberarHandshakeMemoria(gossipingRecibido);
 					}
+					free(operacionARealizar);
 					free(handshake);
 				}
 			}

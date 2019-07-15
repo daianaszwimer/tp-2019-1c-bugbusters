@@ -76,6 +76,11 @@ typedef enum
 	JOURNALTIME = -10103
 } errorNo;
 
+typedef enum {
+	CONEXION_EXITOSA,
+	CONEXION_INVALIDA = -6
+} rta_handshake;
+
 typedef enum
 {
 	SELECT,
@@ -99,6 +104,16 @@ typedef struct
 
 typedef struct
 {
+	rta_handshake rta;
+} t_handshake_rta;
+
+typedef struct
+{
+	rol tipo_rol;
+} t_operacion;
+
+typedef struct
+{
 	int tamanioIps;
 	char* ips;
 	int tamanioPuertos;
@@ -115,8 +130,7 @@ typedef struct
 typedef struct
 {
 	Componente tipoComponente;
-	rol tipoRol;
-} t_handshake_memoria;
+} t_handshake;
 
 typedef enum
 {
@@ -161,18 +175,22 @@ int esperar_cliente(int);
 t_paquete* recibir(int);
 t_gossiping* recibirGossiping(int, int*);
 t_handshake_lfs* recibirHandshakeLFS(int);
-t_handshake_memoria* recibirHandshakeMemoria(int, int*);
-
+t_handshake* recibirHandshake(int, int*);
+t_operacion* recibirOperacion(int, int*);
 ////cliente
 
 void* serializar_gossiping(t_gossiping*, int);
 void* serializar_handshake_lfs(t_handshake_lfs*, int);
 void* serializar_paquete(t_paquete* , int);
-void* serializar_handshake_memoria(t_handshake_memoria*, int);
+void* serializar_handshake(t_handshake*, int);
+void* serializar_handshake_operacion(t_operacion*, int);
 int enviar(cod_request, char*, int);
 int enviarGossiping(char*, char*, char*, int);
 void enviarHandshakeLFS(int, int);
-int enviarHandshakeMemoria(rol, Componente, int);
+int enviarHandshake(Componente, int);
+int enviarTipoOperacion(rol, int);
+int enviarRtaHandshake(rta_handshake, int);
+t_handshake_rta* recibirRtaHandshake(int, int*);
 void eliminar_paquete(t_paquete*);
 void liberar_conexion(int);
 void liberarArrayDeChar(char**);
