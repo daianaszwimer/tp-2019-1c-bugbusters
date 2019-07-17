@@ -302,11 +302,16 @@ t_list* leerDeTodosLosTmpC(char* pathTabla, struct dirent* archivoDeLaTabla, DIR
 						perror("Error");
 					} else {
 						if (i == cantidadDeBloques - 1) {
-							datosALeer = mmap(NULL, size % tamanioBloque,
-									PROT_READ, MAP_SHARED, fd, 0);
+							int sizeToRead = size % tamanioBloque;
+							sizeToRead =  size % tamanioBloque == 0 ? tamanioBloque : size % tamanioBloque;
+							datosALeer = mmap(NULL, sizeToRead, PROT_READ, MAP_SHARED, fd, 0);
+							if(datosALeer == -1){
+								perror("error en mmap");
+								log_error(logger_LFS, "error en mmap de compactador");
+							}
 							string_append_with_format(&datosDelTmpC, "%s",
 									datosALeer);
-							munmap(datosALeer, size % tamanioBloque);
+							munmap(datosALeer, sizeToRead);
 						} else {
 							datosALeer = mmap(NULL, tamanioBloque, PROT_READ,
 									MAP_SHARED, fd, 0);
@@ -398,9 +403,15 @@ t_list* leerDeTodasLasParticiones(char* pathTabla, t_list* particiones, int tama
 					perror("Error");
 				} else {
 					if (i == cantidadDeBloques - 1) {
-						datosALeer = mmap(NULL, size % tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
+						int sizeToRead = size % tamanioBloque;
+						sizeToRead =  size % tamanioBloque == 0 ? tamanioBloque : size % tamanioBloque;
+						datosALeer = mmap(NULL, sizeToRead, PROT_READ, MAP_SHARED, fd, 0);
+						if(datosALeer == -1){
+							perror("error en mmap");
+							log_error(logger_LFS, "error en mmap de select");
+						}
 						string_append_with_format(&datosDeLasParticiones, "%s", datosALeer);
-						munmap(datosALeer, size % tamanioBloque);
+						munmap(datosALeer, sizeToRead);
 					} else {
 						datosALeer = mmap(NULL, tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
 						string_append_with_format(&datosDeLasParticiones, "%s", datosALeer);

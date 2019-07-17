@@ -268,7 +268,10 @@ t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
 			if(string_ends_with(file->d_name, ".tmp")){
 				pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
 				t_config* file = config_create(pathFile);
-				char** bloques = config_get_array_value(file, "BLOCKS");
+				char* bloquesString = config_get_string_value(file, "BLOCKS");
+				bloquesString++;
+				bloquesString[strlen(bloquesString) -1] = 0;
+				char** bloques = string_split(bloquesString, ",");
 				int size = config_get_int_value(file, "SIZE");
 				listaDeRegistrosEnBloques = buscarEnBloques(bloques, size, key);
 				list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
@@ -292,7 +295,10 @@ t_list* obtenerRegistrosDeParticiones(char* nombreTabla, int particion, int key)
 	if(tabla){
 		char* pathParticion = string_from_format("%s/%i.bin", pathTabla, particion);
 		t_config* file = config_create(pathParticion);
-		char** bloques = config_get_array_value(file, "BLOCKS");
+		char* bloquesString = config_get_string_value(file, "BLOCKS");
+		bloquesString++;
+		bloquesString[strlen(bloquesString) -1] = 0;
+		char** bloques = string_split(bloquesString, ",");
 		int size = config_get_int_value(file, "SIZE");
 		listaDeRegistrosEnBloques = buscarEnBloques(bloques, size, key);
 		list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
@@ -369,11 +375,21 @@ t_list* buscarEnBloques(char** bloques, int size, int key){
 				perror("Error");
 			} else {
 				if (i == cantidadDeBloques - 1) {
-					datosALeer = mmap(NULL, size % tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
+					int sizeToRead = size % tamanioBloque;
+					sizeToRead =  size % tamanioBloque == 0 ? tamanioBloque : size % tamanioBloque;
+					datosALeer = mmap(NULL, sizeToRead, PROT_READ, MAP_SHARED, fd, 0);
+					if(datosALeer == -1){
+						perror("error en mmap");
+						log_error(logger_LFS, "error en mmap de select");
+					}
 					string_append_with_format(&datos, "%s", datosALeer);
-					munmap(datosALeer, size % tamanioBloque);
+					munmap(datosALeer, sizeToRead);
 				} else {
 					datosALeer = mmap(NULL, tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
+					if(datosALeer == -1){
+						perror("error en mmap");
+						log_error(logger_LFS, "error en mmap");
+					}
 					string_append_with_format(&datos, "%s", datosALeer);
 					munmap(datosALeer, tamanioBloque);
 				}
@@ -511,7 +527,10 @@ void borrarArchivosYLiberarBloques(DIR* tabla, char* pathTabla){
 		if(string_ends_with(file->d_name, ".bin") || string_ends_with(file->d_name, ".tmp")) {
 			pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
 			t_config* file = config_create(pathFile);
-			char** bloques = config_get_array_value(file, "BLOCKS");
+			char* bloquesString = config_get_string_value(file, "BLOCKS");
+			bloquesString++;
+			bloquesString[strlen(bloquesString) -1] = 0;
+			char** bloques = string_split(bloquesString, ",");
 			int i = 0;
 			while (bloques[i] != NULL) {
 				char* pathBloque = string_from_format("%s/%s.bin", pathBloques, bloques[i]);
