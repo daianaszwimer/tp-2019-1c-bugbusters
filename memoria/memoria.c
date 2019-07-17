@@ -1221,27 +1221,36 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 		t_elemTablaDePaginas* elementoEncontrado= NULL;
 		char** requestSeparada = separarRequest(request);
 		char* pathSegmento=strdup("");
+		if(caller == ANOTHER_COMPONENT && validarValue(request,requestSeparada[3],maxValue,logger_MEMORIA) == NUESTRO_ERROR){
+			log_warning(logger_MEMORIA,"Ingrese un valor menor que:  %d", maxValue);
+			t_paquete* insertALFS=(t_paquete*)malloc(sizeof(t_paquete));
+			insertALFS->palabraReservada=palabraReservada;
+			insertALFS->request=strdup("Request invalida, se esta superando el maximo");
+			insertALFS->tamanio=sizeof(insertALFS->request);
+			enviarAlDestinatarioCorrecto(palabraReservada,VALUE_INVALIDO,request,insertALFS,caller,indiceKernel);
 
-		if(consistenciaMemoria == EC || caller == CONSOLE){
-			int resultadoCache= estaEnMemoria(palabraReservada, request,NULL,&elementoEncontrado,&pathSegmento);
-			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,indiceKernel,pathSegmento);
-			free(pathSegmento);
-			pathSegmento=NULL;
-		}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
-			free(pathSegmento);
-			pathSegmento=NULL;
-			t_paquete* insertALFS =  intercambiarConFileSystem(palabraReservada,request, caller, indiceKernel);
-			if(insertALFS->palabraReservada== EXIT_SUCCESS){
-				enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,indiceKernel);
-
-			}else{
-				enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller,indiceKernel);
-
-			}
 		}else{
-			free(pathSegmento);
-			pathSegmento=NULL;
-			log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
+			if(consistenciaMemoria == EC || caller == CONSOLE){
+				int resultadoCache= estaEnMemoria(palabraReservada, request,NULL,&elementoEncontrado,&pathSegmento);
+				insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,indiceKernel,pathSegmento);
+				free(pathSegmento);
+				pathSegmento=NULL;
+			}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
+				free(pathSegmento);
+				pathSegmento=NULL;
+				t_paquete* insertALFS =  intercambiarConFileSystem(palabraReservada,request, caller, indiceKernel);
+				if(insertALFS->palabraReservada== EXIT_SUCCESS){
+					enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,indiceKernel);
+
+				}else{
+					enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller,indiceKernel);
+
+				}
+			}else{
+				free(pathSegmento);
+				pathSegmento=NULL;
+				log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
+			}
 		}
 
 		liberarArrayDeChar(requestSeparada);
