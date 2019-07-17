@@ -419,7 +419,9 @@ void validarRequest(char* mensaje){
 	int mensajeValido = validarMensaje(mensaje, MEMORIA, &mensajeDeError);
 	int palabraReservada = obtenerCodigoPalabraReservada(request[0],MEMORIA);
 	if(mensajeValido == SUCCESS){
-		if(!(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],maxValue,logger_MEMORIA) == NUESTRO_ERROR)){
+		if(palabraReservada == INSERT && validarValue(mensaje,requestSeparada[3],maxValue,logger_MEMORIA) == NUESTRO_ERROR){
+			log_warning(logger_MEMORIA,"Ingrese un valor menor que:  %d", maxValue);
+		}else{
 			interpretarRequest(palabraReservada, mensaje, CONSOLE,-1);
 		}
 	}else{
