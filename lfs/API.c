@@ -49,6 +49,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 	}
 
 	if(error == SUCCESS){
+		pthread_t hiloDeCompactacion;
 		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) strdup(pathTabla))){
 			pthread_detach(hiloDeCompactacion);
 

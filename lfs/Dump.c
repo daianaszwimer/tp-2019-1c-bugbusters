@@ -34,10 +34,10 @@ void* hiloDump(void* args) {
 		errorNo resultado = dumpear();
 		switch(resultado) {
 			case ERROR_CREANDO_ARCHIVO:
-				log_info(logger_LFS, "Error creando archivo temporal");
+				//log_info(logger_LFS, "Error creando archivo temporal");
 				break;
 			case SUCCESS:
-				log_info(logger_LFS, "Dump exitoso");
+				//log_info(logger_LFS, "Dump exitoso");
 				break;
 			default: break;
 		}

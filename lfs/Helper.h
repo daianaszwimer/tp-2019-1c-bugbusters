@@ -73,7 +73,6 @@ t_list* memorias; //lista que tiene memorias levantadas
 pthread_t hiloLeerDeConsola;
 pthread_t hiloRecibirMemorias;
 pthread_t hiloDumpeo;
-pthread_t hiloDeCompactacion;
 pthread_t hiloDeInotify;
 
 char* pathConfig;

@@ -21,13 +21,13 @@ void* hiloCompactacion(void* arg) {
 			log_info(logger_LFS, "Hilo de compactacion de %s terminado", pathTabla);
 			break;
 		}
-		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
-		log_info(logger_LFS, infoComienzoCompactacion);
-		free(infoComienzoCompactacion);
-		compactar(pathTabla);
-		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
-		log_info(logger_LFS, infoTerminoCompactacion);
-		free(infoTerminoCompactacion);
+//		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
+//		log_info(logger_LFS, infoComienzoCompactacion);
+//		free(infoComienzoCompactacion);
+//		compactar(pathTabla);
+//		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
+//		log_info(logger_LFS, infoTerminoCompactacion);
+//		free(infoTerminoCompactacion);
 	}
 	free(pathTabla);
 	return NULL;
@@ -131,12 +131,18 @@ void compactar(char* pathTabla) {
 	nombreTabla = string_reverse(aux[0]);
 	liberarArrayDeChar(aux);
 
+	long long inicioDeBloqueo;
+	long long finDeBloqueo;
+
+	inicioDeBloqueo = current_timestamp();
 	setBlockTo(nombreTabla, 1);
 	// Renombramos los tmp a tmpc
 	//sleep(1); para ver como funca la tabla bloqueada
 	renombrarTmp_a_TmpC(pathTabla, archivoDeLaTabla, tabla);
 
 	setBlockTo(nombreTabla, 0);
+	finDeBloqueo = current_timestamp();
+	log_debug(logger_LFS, "Tabla %s bloqueada durante %llu milisegundos", nombreTabla, finDeBloqueo - inicioDeBloqueo);
 
 	// Leemos todos los registros de los temporales a compactar y los guardamos en una lista
 	t_list* registrosDeTmpC = leerDeTodosLosTmpC(pathTabla, archivoDeLaTabla, tabla, particiones, numeroDeParticiones, tamanioBloque);
@@ -151,7 +157,19 @@ void compactar(char* pathTabla) {
 		// (filtrando por timestamp mas alto en caso de que hayan keys repetidas)
 		t_list* registrosAEscribir = list_map(registrosDeTmpC, (void*) obtenerTimestampMasAltoSiExiste);
 
+		int estaEnTmpC(t_registro* registro){
+			int tieneMismaKey(t_registro* registroBuscado) {
+				return registro->key == registroBuscado->key;
+			}
+			return list_find(registrosAEscribir, (void*) tieneMismaKey) != NULL;
+		}
+
+		list_remove_and_destroy_by_condition(registrosDeParticiones, (void*)estaEnTmpC, (void*) eliminarRegistro);
+
+		list_add_all(registrosAEscribir, registrosDeParticiones);
+
 		// TODO: Bloquear tabla
+		inicioDeBloqueo = current_timestamp();
 		setBlockTo(nombreTabla, 1);
 		//sleep(20); //sirve para simular una compactacion larga
 		//sleep(3); para ver como funca la tabla bloqueada
@@ -162,9 +180,10 @@ void compactar(char* pathTabla) {
 		guardarDatosNuevos(pathTabla, registrosAEscribir, particiones, tamanioBloque, numeroDeParticiones);
 
 		setBlockTo(nombreTabla, 0);
-		// TODO: Desbloquear la tabla y dejar un registro de cuanto tiempo estuvo bloqueada la tabla para realizar esta operatoria
+		finDeBloqueo = current_timestamp();
+		log_debug(logger_LFS, "Tabla %s bloqueada durante %llu milisegundos", nombreTabla, finDeBloqueo - inicioDeBloqueo);
 
-		list_destroy_and_destroy_elements(registrosDeParticiones, (void*) eliminarRegistro);
+		// TODO: Desbloquear la tabla y dejar un registro de cuanto tiempo estuvo bloqueada la tabla para realizar esta operatoria
 		list_destroy_and_destroy_elements(registrosAEscribir, (void*) eliminarRegistro);
 	}
 	free(nombreTabla);
@@ -616,4 +635,12 @@ void eliminarParticion(t_int* particionAEliminar) {
 void eliminarRegistro(t_registro* registroAEliminar) {
 	free(registroAEliminar->value);
 	free(registroAEliminar);
+}
+
+long long current_timestamp() {
+    struct timeval te;
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    // printf("milliseconds: %lld\n", milliseconds);
+    return milliseconds;
 }
