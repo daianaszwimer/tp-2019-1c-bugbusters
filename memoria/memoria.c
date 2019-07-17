@@ -521,8 +521,8 @@ void escucharMultiplesClientes() {
 						}
 						printf("El codigo que recibi es: %i \n", codigoOperacion);
 						interpretarRequest(codigoOperacion,request, ANOTHER_COMPONENT, numDescriptor);
-						//eliminar_paquete(paqueteRecibido);
-						//paqueteRecibido=NULL;
+						eliminar_paquete(paqueteRecibido);
+						paqueteRecibido=NULL;
 					} else if (handshake->tipoRol == GOSSIPING) {
 						t_gossiping* gossipingRecibido = recibirGossiping(numDescriptor, &codigoOperacion);
 						agregarMemorias(gossipingRecibido);
