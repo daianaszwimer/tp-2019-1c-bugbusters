@@ -169,7 +169,7 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 			pthread_mutex_lock(&mutexMemtable);
 			t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
 			if (tabla == NULL) {
-				log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
+				//log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
 				tabla = (t_tabla*) malloc(sizeof(t_tabla));
 				tabla->nombreTabla = strdup(nombreTabla);
 				tabla->registros = list_create();
@@ -456,7 +456,9 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 			}
 
 			closedir (dir);
-			(*mensaje)[strlen(*mensaje) - 1] = 0;
+			if(!string_is_empty(*mensaje)) {
+				(*mensaje)[strlen(*mensaje) - 1] = 0; // para sacar el ultimo punto y coma
+			}
 		} else {
 			perror("Error al abrir directorio de tablas");
 		}

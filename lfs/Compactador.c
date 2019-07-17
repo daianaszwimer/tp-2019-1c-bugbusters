@@ -24,7 +24,7 @@ void* hiloCompactacion(void* arg) {
 //		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
 //		log_info(logger_LFS, infoComienzoCompactacion);
 //		free(infoComienzoCompactacion);
-//		compactar(pathTabla);
+		compactar(pathTabla);
 //		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
 //		log_info(logger_LFS, infoTerminoCompactacion);
 //		free(infoTerminoCompactacion);
@@ -167,6 +167,7 @@ void compactar(char* pathTabla) {
 		list_remove_and_destroy_by_condition(registrosDeParticiones, (void*)estaEnTmpC, (void*) eliminarRegistro);
 
 		list_add_all(registrosAEscribir, registrosDeParticiones);
+		list_destroy(registrosDeParticiones);
 
 		// TODO: Bloquear tabla
 		inicioDeBloqueo = current_timestamp();
