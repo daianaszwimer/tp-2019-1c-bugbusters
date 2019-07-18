@@ -2023,7 +2023,6 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	pthread_mutex_lock(&semMKERNEL);
 	pthread_mutex_lock(&semMCONSOLA);
 
-	log_info(logger_MEMORIA,"COMENZO EL JOURNAL");
 	pthread_mutex_lock(&semMJOURNAL);
 	flagJOURNAL=1;
 	pthread_mutex_unlock(&semMJOURNAL);
@@ -2108,7 +2107,6 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	list_destroy(resultadosJournal);
 	free(resultadoAux);
 	resultadoAux=NULL;
-	log_info(logger_MEMORIA,"FINALIZO EL JOURNAL");
 	pthread_mutex_lock(&semMJOURNAL);
 	flagJOURNAL=0;
 	pthread_mutex_unlock(&semMJOURNAL);
@@ -2132,8 +2130,10 @@ void hacerJournal(void){
 		tiempoJournal = retardoJournal;
 		pthread_mutex_unlock(&semMSleepJournal);
 		usleep(tiempoJournal*1000);
-		log_info(logger_MEMORIA, "--- JOURNAL AUTOMATICO ---");
+		log_info(logger_MEMORIA,"-----------COMENZO EL JOURNAL-----------------");
 		procesarJournal(JOURNAL, "JOURNAL",CONSOLE,-1);
+		log_info(logger_MEMORIA,"----------FINALIZO EL JOURNAL------------------");
+
 
 	}
 }
