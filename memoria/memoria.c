@@ -55,6 +55,7 @@ int main(void) {
 	pthread_mutex_init(&semMJOURNAL, NULL);
 	pthread_mutex_init(&semMCONSOLA, NULL);
 	pthread_mutex_init(&semMKERNEL, NULL);
+
 	// 	HILOS
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
 	pthread_create(&hiloHacerGossiping, NULL, (void*)hacerGossiping, NULL);
@@ -599,23 +600,73 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 
 			case SELECT:
 				log_debug(logger_MEMORIA, "Me llego un SELECT");
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_lock(&semMKERNEL);
+				}else{
+					pthread_mutex_lock(&semMCONSOLA);
+				}
 				procesarSelect(codRequest, request,consistenciaMemoria, caller, indiceKernel);
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_unlock(&semMKERNEL);
+				}else{
+					pthread_mutex_unlock(&semMCONSOLA);
+				}
 				break;
 			case INSERT:
 				log_debug(logger_MEMORIA, "Me llego un INSERT");
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_lock(&semMKERNEL);
+				}else{
+					pthread_mutex_lock(&semMCONSOLA);
+				}
 				procesarInsert(codRequest, request,consistenciaMemoria, caller, indiceKernel);
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_unlock(&semMKERNEL);
+				}else{
+					pthread_mutex_unlock(&semMCONSOLA);
+				}
 				break;
 			case CREATE:
 				log_debug(logger_MEMORIA, "Me llego un CREATE");
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_lock(&semMKERNEL);
+				}else{
+					pthread_mutex_lock(&semMCONSOLA);
+				}
 				procesarCreate(codRequest, request,consistenciaMemoria, caller, indiceKernel);
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_unlock(&semMKERNEL);
+				}else{
+					pthread_mutex_unlock(&semMCONSOLA);
+				}
 				break;
 			case DESCRIBE:
 				log_debug(logger_MEMORIA, "Me llego un DESCRIBE");
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_lock(&semMKERNEL);
+				}else{
+					pthread_mutex_lock(&semMCONSOLA);
+				}
 				procesarDescribe(codRequest, request,caller,indiceKernel);
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_unlock(&semMKERNEL);
+				}else{
+					pthread_mutex_unlock(&semMCONSOLA);
+				}
 				break;
 			case DROP:
 				log_debug(logger_MEMORIA, "Me llego un DROP");
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_lock(&semMKERNEL);
+				}else{
+					pthread_mutex_lock(&semMCONSOLA);
+				}
 				procesarDrop(codRequest, request ,consistenciaMemoria, caller, indiceKernel);
+				if(caller== ANOTHER_COMPONENT){
+					pthread_mutex_unlock(&semMKERNEL);
+				}else{
+					pthread_mutex_unlock(&semMCONSOLA);
+				}
 				break;
 			case JOURNAL:
 				log_debug(logger_MEMORIA, "Me llego un JOURNAL");
@@ -1969,6 +2020,9 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 
 void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int indiceKernel) {
 
+	pthread_mutex_lock(&semMKERNEL);
+	pthread_mutex_lock(&semMCONSOLA);
+
 	log_info(logger_MEMORIA,"COMENZO EL JOURNAL");
 	pthread_mutex_lock(&semMJOURNAL);
 	flagJOURNAL=1;
@@ -2059,6 +2113,9 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	flagJOURNAL=0;
 	pthread_mutex_unlock(&semMJOURNAL);
 
+	pthread_mutex_unlock(&semMKERNEL);
+	pthread_mutex_unlock(&semMCONSOLA);
+
 }
 
 /* hacerJournal()
@@ -2081,35 +2138,35 @@ void hacerJournal(void){
 	}
 }
 
-void lockTodosLosSeg(){
-	int i=0;
-	pthread_mutex_lock(&semMListSemSegmentos);
-	while(list_get(semMPorSegmento,i)!=NULL){
-		t_semSegmento* semSeg=list_get(semMPorSegmento,i);
-		pthread_mutex_unlock(&semMListSemSegmentos);
-
-		pthread_mutex_lock(semSeg->sem);
-
-		pthread_mutex_lock(&semMListSemSegmentos);
-	}
-	pthread_mutex_unlock(&semMListSemSegmentos);
-
-}
-
-void unLockTodosLosSeg(){
-	int i=0;
-	pthread_mutex_lock(&semMListSemSegmentos);
-	while(list_get(semMPorSegmento,i)!=NULL){
-		t_semSegmento* semSeg=list_get(semMPorSegmento,i);
-		pthread_mutex_unlock(&semMListSemSegmentos);
-
-		pthread_mutex_unlock(semSeg->sem);
-
-		pthread_mutex_lock(&semMListSemSegmentos);
-	}
-	pthread_mutex_unlock(&semMListSemSegmentos);
-
-}
+//void lockTodosLosSeg(){
+//	int i=0;
+//	pthread_mutex_lock(&semMListSemSegmentos);
+//	while(list_get(semMPorSegmento,i)!=NULL){
+//		t_semSegmento* semSeg=list_get(semMPorSegmento,i);
+//		pthread_mutex_unlock(&semMListSemSegmentos);
+//
+//		pthread_mutex_lock(semSeg->sem);
+//
+//		pthread_mutex_lock(&semMListSemSegmentos);
+//	}
+//	pthread_mutex_unlock(&semMListSemSegmentos);
+//
+//}
+//
+//void unLockTodosLosSeg(){
+//	int i=0;
+//	pthread_mutex_lock(&semMListSemSegmentos);
+//	while(list_get(semMPorSegmento,i)!=NULL){
+//		t_semSegmento* semSeg=list_get(semMPorSegmento,i);
+//		pthread_mutex_unlock(&semMListSemSegmentos);
+//
+//		pthread_mutex_unlock(semSeg->sem);
+//
+//		pthread_mutex_lock(&semMListSemSegmentos);
+//	}
+//	pthread_mutex_unlock(&semMListSemSegmentos);
+//
+//}
 
 
 
