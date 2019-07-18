@@ -53,8 +53,8 @@ int main(void) {
 	pthread_mutex_init(&semMMem, NULL);
 	pthread_mutex_init(&semMFS, NULL);
 	pthread_mutex_init(&semMJOURNAL, NULL);
-
-
+	pthread_mutex_init(&semMCONSOLA, NULL);
+	pthread_mutex_init(&semMKERNEL, NULL);
 	// 	HILOS
 	pthread_create(&hiloEscucharMultiplesClientes, NULL, (void*)escucharMultiplesClientes, NULL);
 	pthread_create(&hiloHacerGossiping, NULL, (void*)hacerGossiping, NULL);
@@ -1732,6 +1732,8 @@ void liberarMemoria(){
 	pthread_mutex_destroy(&semMFS);
 	pthread_mutex_destroy(&semMMem);
 	pthread_mutex_destroy(&semMJOURNAL);
+	pthread_mutex_destroy(&semMCONSOLA, NULL);
+	pthread_mutex_destroy(&semMKERNEL, NULL);
 
 	inotify_rm_watch(file_descriptor, watch_descriptor);	//iNotify
 	close(file_descriptor);
@@ -2074,8 +2076,41 @@ void hacerJournal(void){
 		pthread_mutex_unlock(&semMSleepJournal);
 		usleep(tiempoJournal*1000);
 		log_info(logger_MEMORIA, "--- JOURNAL AUTOMATICO ---");
-		//procesarJournal(JOURNAL, "JOURNAL",CONSOLE,-1);
+		procesarJournal(JOURNAL, "JOURNAL",CONSOLE,-1);
 
 	}
 }
+
+void lockTodosLosSeg(){
+	int i=0;
+	pthread_mutex_lock(&semMListSemSegmentos);
+	while(list_get(semMPorSegmento,i)!=NULL){
+		t_semSegmento* semSeg=list_get(semMPorSegmento,i);
+		pthread_mutex_unlock(&semMListSemSegmentos);
+
+		pthread_mutex_lock(semSeg->sem);
+
+		pthread_mutex_lock(&semMListSemSegmentos);
+	}
+	pthread_mutex_unlock(&semMListSemSegmentos);
+
+}
+
+void unLockTodosLosSeg(){
+	int i=0;
+	pthread_mutex_lock(&semMListSemSegmentos);
+	while(list_get(semMPorSegmento,i)!=NULL){
+		t_semSegmento* semSeg=list_get(semMPorSegmento,i);
+		pthread_mutex_unlock(&semMListSemSegmentos);
+
+		pthread_mutex_unlock(semSeg->sem);
+
+		pthread_mutex_lock(&semMListSemSegmentos);
+	}
+	pthread_mutex_unlock(&semMListSemSegmentos);
+
+}
+
+
+
 
