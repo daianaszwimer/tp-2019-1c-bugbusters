@@ -1783,8 +1783,8 @@ void liberarMemoria(){
 	pthread_mutex_destroy(&semMFS);
 	pthread_mutex_destroy(&semMMem);
 	pthread_mutex_destroy(&semMJOURNAL);
-	pthread_mutex_destroy(&semMCONSOLA, NULL);
-	pthread_mutex_destroy(&semMKERNEL, NULL);
+	pthread_mutex_destroy(&semMCONSOLA);
+	pthread_mutex_destroy(&semMKERNEL);
 
 	inotify_rm_watch(file_descriptor, watch_descriptor);	//iNotify
 	close(file_descriptor);
