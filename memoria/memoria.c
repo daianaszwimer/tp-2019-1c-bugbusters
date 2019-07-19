@@ -2030,6 +2030,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	t_list* resultadosJournal= list_create();
 	t_int* resultadoAux = malloc(sizeof(t_int*));
 	int i=0,j=0;
+	char* requestAEnviar;
 	pthread_mutex_lock(&semMMem);
 	int retardoMem = retardoMemPrincipal;
 	pthread_mutex_unlock(&semMMem);
@@ -2044,11 +2045,14 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 			if(elemPagina->modificado == MODIFICADO){
 
 				usleep(retardoMem*1000);
-				char* requestAEnviar= strdup("");
+				requestAEnviar= strdup("");
 				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
 
 				t_paquete* insertJournalLFS = intercambiarConFileSystem(INSERT,requestAEnviar, caller, indiceKernel);
 				log_info(logger_MEMORIA,"Le enviamos a LFS: %s", requestAEnviar);
+
+				free(requestAEnviar);
+				requestAEnviar=NULL;
 
 				if(insertJournalLFS->palabraReservada==SUCCESS ){
 					resultadoAux->valor=SUCCESS;
@@ -2106,6 +2110,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	list_destroy(resultadosJournal);
 	free(resultadoAux);
 	resultadoAux=NULL;
+
 
 	flagJOURNAL=0;
 
