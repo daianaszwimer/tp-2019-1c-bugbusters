@@ -324,6 +324,10 @@ void leerDeConsola(void){
 	while (1) {
 		mensaje = readline(">");
 		if (!strcmp(mensaje, "\0")) {
+			free(mensaje);
+			continue;
+		}
+		if(string_equals_ignore_case(mensaje, "EXIT")) {
 			pthread_cancel(hiloConectarAMemoria);
 			pthread_cancel(hiloPlanificarNew);
 			pthread_cancel(hiloPlanificarExec);

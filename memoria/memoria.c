@@ -389,6 +389,10 @@ void leerDeConsola(void){
 	while (1) {
 		mensaje = readline(">");
 		if (!strcmp(mensaje, "\0")) {
+			free(mensaje);
+			continue;
+		}
+		if (string_equals_ignore_case(mensaje, "EXIT")) {
 			pthread_cancel(hiloEscucharMultiplesClientes);
 			pthread_cancel(hiloCambioEnConfig);
 			pthread_cancel(hiloHacerGossiping);
