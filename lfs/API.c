@@ -428,7 +428,11 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 		string_to_upper(nombreTabla);
 		pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
 		char* metadata = obtenerMetadata(pathTabla);
-		string_append_with_format(&*mensaje, "%s %s", nombreTabla, metadata);
+		if (string_is_empty(metadata)) {
+			error = TABLA_NO_EXISTE;
+		} else {
+			string_append_with_format(&*mensaje, "%s %s", nombreTabla, metadata);
+		}
 		free(metadata);
 		free(pathTabla);
 	}else{
