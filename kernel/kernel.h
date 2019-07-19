@@ -57,26 +57,26 @@ t_list* tablasSHC;
 t_list* tablasEC;
 
 // variables de metricas
-double tiempoSelectSC = 0.0;
-double tiempoInsertSC = 0.0;
-int cantidadSelectSC = 0;
-int cantidadInsertSC = 0;
-int cantidadSelectSCTotal = 0;
-int cantidadInsertSCTotal = 0;
+unsigned long long tiempoSelectSC;
+unsigned long long tiempoInsertSC;
+int cantidadSelectSC;
+int cantidadInsertSC;
+int cantidadSelectSCTotal;
+int cantidadInsertSCTotal;
 t_list* cargaMemoriaSC;
-double tiempoSelectSHC = 0.0;
-double tiempoInsertSHC = 0.0;
-int cantidadSelectSHC = 0;
-int cantidadInsertSHC = 0;
-int cantidadSelectSHCTotal = 0;
-int cantidadInsertSHCTotal = 0;
+unsigned long long tiempoSelectSHC;
+unsigned long long tiempoInsertSHC;
+int cantidadSelectSHC;
+int cantidadInsertSHC;
+int cantidadSelectSHCTotal;
+int cantidadInsertSHCTotal;
 t_list* cargaMemoriaSHC;
-double tiempoSelectEC = 0.0;
-double tiempoInsertEC = 0.0;
-int cantidadSelectEC = 0;
-int cantidadInsertEC = 0;
-int cantidadSelectECTotal = 0;
-int cantidadInsertECTotal = 0;
+unsigned long long tiempoSelectEC;
+unsigned long long tiempoInsertEC;
+int cantidadSelectEC;
+int cantidadInsertEC;
+int cantidadSelectECTotal;
+int cantidadInsertECTotal;
 t_list* cargaMemoriaEC;
 
 // Variables para inotify
@@ -127,7 +127,7 @@ void hacerDescribe(void);
 void loguearMetricas(void);
 void informarMetricas(int);
 void liberarEstadisticaMemoria(estadisticaMemoria*);
-void aumentarContadores(char*, cod_request, double, consistencia);
+void aumentarContadores(char*, cod_request, unsigned long long, consistencia);
 void escucharCambiosEnConfig(void);
 int conectarseAMemoria(rol, char*, char*, char*);
 // planificar requests
@@ -156,5 +156,7 @@ void procesarRequest(request_procesada*);
 int reintentarConexion(consistencia, int, int, char**, char**, char**);
 void eliminarMemoria(char*, char*, char*);
 int mandarHandshake(rol, char*, char*, char*, int);
+char* traducirMensajeError(int);
+double valorPostaMetrica(unsigned long long, int);
 
 #endif /* KERNEL_H_*/

@@ -88,6 +88,27 @@ void inicializarVariables() {
 	cargaMemoriaSC = list_create();
 	cargaMemoriaSHC = list_create();
 	cargaMemoriaEC = list_create();
+
+	tiempoSelectEC = 0;
+	tiempoInsertEC = 0;
+	cantidadSelectEC = 0;
+	cantidadInsertEC = 0;
+	cantidadSelectECTotal = 0;
+	cantidadInsertECTotal = 0;
+
+	tiempoSelectSHC = 0;
+	tiempoInsertSHC = 0;
+	cantidadSelectSHC = 0;
+	cantidadInsertSHC = 0;
+	cantidadSelectSHCTotal = 0;
+	cantidadInsertSHCTotal = 0;
+
+	tiempoSelectSC = 0;
+	tiempoInsertSC = 0;
+	cantidadSelectSC = 0;
+	cantidadInsertSC = 0;
+	cantidadSelectSCTotal = 0;
+	cantidadInsertSCTotal = 0;
 }
 
 /* liberarMemoria()
@@ -486,22 +507,29 @@ void loguearMetricas(void) {
 		informarMetricas(FALSE);
 		// limpio variables para empezar a contar de nuevo
 		pthread_mutex_lock(&semMMetricas);
-		tiempoSelectSC = 0.0;
-		tiempoInsertSC = 0.0;
+		tiempoSelectSC = 0;
+		tiempoInsertSC = 0;
 		cantidadSelectSC = 0;
 		cantidadInsertSC = 0;
-		tiempoSelectSHC = 0.0;
-		tiempoInsertSHC = 0.0;
+		tiempoSelectSHC = 0;
+		tiempoInsertSHC = 0;
 		cantidadSelectSHC = 0;
 		cantidadInsertSHC = 0;
 		// https://github.com/sisoputnfrba/foro/issues/1434#issuecomment-510291991
-		tiempoSelectEC = 0.0;
-		tiempoInsertEC = 0.0;
+		tiempoSelectEC = 0;
+		tiempoInsertEC = 0;
 		cantidadSelectEC = 0;
 		cantidadInsertEC = 0;
 		pthread_mutex_unlock(&semMMetricas);
 		sleep(30);
 	}
+}
+
+double valorPostaMetrica(unsigned long long tiempo, int cantidad) {
+	if (cantidad == 0) {
+		return 0;
+	}
+	return (double)tiempo/cantidad;
 }
 
 /* informarMetricas()
@@ -514,12 +542,12 @@ void loguearMetricas(void) {
 void informarMetricas(int mostrarPorConsola) {
 	// si es vacio no mostrar basura
 	pthread_mutex_lock(&semMMetricas);
-	double readLatencySC = tiempoSelectSC/cantidadSelectSC;
-	double readLatencySHC = tiempoSelectSHC/cantidadSelectSHC;
-	double readLatencyEC = tiempoSelectEC/cantidadSelectEC;
-	double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
-	double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
-	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
+	double readLatencySC = valorPostaMetrica(tiempoSelectSC,cantidadSelectSC);
+	double readLatencySHC = valorPostaMetrica(tiempoSelectSHC,cantidadSelectSHC);
+	double readLatencyEC = valorPostaMetrica(tiempoSelectEC,cantidadSelectEC);
+	double writeLatencySC = valorPostaMetrica(tiempoInsertSC,cantidadInsertSC);
+	double writeLatencySHC = valorPostaMetrica(tiempoInsertSHC,cantidadInsertSHC);
+	double writeLatencyEC = valorPostaMetrica(tiempoInsertEC,cantidadInsertEC);
 	int cantidadTotalSelectInsert = cantidadSelectSCTotal + cantidadSelectSHCTotal + cantidadSelectECTotal + cantidadInsertSCTotal + cantidadInsertSHCTotal + cantidadInsertECTotal;
 	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
 		// https://github.com/sisoputnfrba/foro/issues/1419
@@ -613,7 +641,7 @@ void liberarConfigMemoria(config_memoria* configALiberar) {
  * Descripcion: aumenta las variables para las métricas.
  * Return:
  * 	-> :: void  */
-void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidadTiempo, consistencia consistenciaRequest) {
+void aumentarContadores(char* numeroMemoria, cod_request codigo, unsigned long long cantidadTiempo, consistencia consistenciaRequest) {
 	estadisticaMemoria* memoriaCorrespondiente;
 		int encontrarTabla(estadisticaMemoria* memoria) {
 			//todo: ver si sigue rompiendo en la memoria
@@ -1406,9 +1434,9 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 		return FAILURE;
 	}
 	pthread_mutex_unlock(&semMMemorias);
-	clock_t begin,end;
+	unsigned long long begin,end;
 	if (codigo == SELECT || codigo == INSERT) {
-		begin = clock();
+		begin = obtenerHoraActual();
 	}
 	t_paquete* paqueteRecibido;
 	int respuesta;
@@ -1587,16 +1615,14 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	} else if(respuesta == TABLA_EXISTE && codigo == CREATE) {
 		respuesta = SUCCESS;
 		log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta la tabla ya existía", mensaje);
-	} else if(respuesta == JOURNALTIME) {
-		// todo: borrar cuando se haga cambio en memoria
-		respuesta = SUCCESS;
-		log_info(logger_KERNEL, "La memoria %s dice: %s", numMemoria, paqueteRecibido->request);
 	} else {
-		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
+		char* msjError = traducirMensajeError(respuesta);
+		log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, msjError);
+		free(msjError);
 	}
 	if (codigo == SELECT || codigo == INSERT) {
-		end = clock();
-		double time_spent = (double)(end - begin) * 1000.0/ CLOCKS_PER_SEC;
+		end = obtenerHoraActual();
+		unsigned long long time_spent = end - begin;
 		aumentarContadores(numMemoria, codigo, time_spent, consistenciaTabla);
 	}
 	log_debug(logger_KERNEL, "Le mande a la mem %s el request %s", numMemoria, mensaje);
@@ -1610,6 +1636,19 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	ip = NULL;
 	puerto = NULL;
 	return respuesta;
+}
+
+
+char* traducirMensajeError(int respuesta) {
+	char* msj;
+	if (respuesta == TABLA_NO_EXISTE) {
+		msj = strdup("La tabla no existe");
+	} else if (respuesta == KEY_MUY_GRANDE){
+		msj = strdup("La key es muy grande");
+	} else {
+		msj = strdup("");
+	}
+	return msj;
 }
 
 /* procesarJournal()

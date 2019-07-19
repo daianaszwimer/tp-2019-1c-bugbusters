@@ -567,7 +567,6 @@ void escucharMultiplesClientes() {
 						continue;
 					}
 					if (operacionARealizar->tipo_rol == REQUEST) {
-
 						paqueteRecibido = recibir(numDescriptor); // Recibo de ese cliente en particular
 						codigoOperacion = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
@@ -2179,7 +2178,6 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	}else{
 		log_info(logger_MEMORIA,"-----------COMENZO EL JOURNAL-----------------");
 	}
-	sleep(10);
 
 	t_list* listResultadosJournal= list_create();
 	t_int* resultadoAux = malloc(sizeof(t_int*));
