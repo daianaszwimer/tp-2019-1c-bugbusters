@@ -201,6 +201,7 @@ void levantarFS(char* pathBitmap){
 		while((tabla = readdir(tablas)) != NULL){
 			if(strcmp(tabla->d_name, ".") == 0 || strcmp(tabla->d_name, "..") == 0) continue;
 			char* pathTabla = string_from_format("%s/%s", pathTablas, (char*) tabla->d_name);
+			pthread_t hiloDeCompactacion;
 			if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
 				pthread_detach(hiloDeCompactacion);
 
@@ -403,7 +404,7 @@ void* conectarConMemoria(void* arg) {
 			close(memoria_fd);
 			break;
 		}
-		log_info(logger_LFS, "Request: %s de la memoria %i",paqueteRecibido->request, memoria_fd);
+		//log_info(logger_LFS, "Request: %s de la memoria %i",paqueteRecibido->request, memoria_fd);
 		char** requestSeparada = separarRequest(paqueteRecibido->request);
 
 		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);

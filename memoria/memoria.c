@@ -1535,7 +1535,7 @@ void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* nue
  * 	VALGRIND :: SI*/
 t_marco* crearMarcoDePagina(t_marco* pagina,uint16_t nuevaKey, char* nuevoValue, unsigned long long timesTamp){
 	pagina->key= nuevaKey;
-	memcpy(pagina->value,nuevoValue,strlen(nuevoValue));
+	memcpy(pagina->value,nuevoValue,strlen(nuevoValue) + 1);
 	pagina->timestamp= timesTamp;
 	return pagina;
 }
@@ -1972,24 +1972,20 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 				list_add(elemSinModificar, elemenetoTablaDePag);
 			}
 			i++;
-		unlockSemSegmento(segmento->path);
-
 		}
+		unlockSemSegmento(segmento->path);
 		j++;
 		i=0;
 		pthread_mutex_lock(&semMTablaSegmentos);
 
 	}
 	pthread_mutex_unlock(&semMTablaSegmentos);
-
 	t_elemTablaDePaginas* elemVictimaLRU;
 
 	if (!list_is_empty(elemSinModificar)) {
-		lockSemSegmento(segmento->path);
 		list_sort(elemSinModificar, (void*) menorTimestamp);
 		elemVictimaLRU= list_get(elemSinModificar,0);
 		int desvinculacion=desvincularVictimaDeSuSegmento(elemVictimaLRU);
-		unlockSemSegmento(segmento->path);
 		pthread_mutex_lock(&semMBitarray);
 		bitarray_clean_bit(bitarray,elemVictimaLRU->numeroDePag);
 		pthread_mutex_unlock(&semMBitarray);
@@ -2129,7 +2125,7 @@ void hacerJournal(void){
 		pthread_mutex_unlock(&semMSleepJournal);
 		usleep(tiempoJournal*1000);
 		log_info(logger_MEMORIA, "--- JOURNAL AUTOMATICO ---");
-		procesarJournal(JOURNAL, "JOURNAL",CONSOLE,-1);
+		//procesarJournal(JOURNAL, "JOURNAL",CONSOLE,-1);
 
 	}
 }

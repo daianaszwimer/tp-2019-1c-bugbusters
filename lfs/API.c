@@ -49,6 +49,7 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 	}
 
 	if(error == SUCCESS){
+		pthread_t hiloDeCompactacion;
 		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) strdup(pathTabla))){
 			pthread_detach(hiloDeCompactacion);
 
@@ -168,7 +169,7 @@ errorNo procesarInsert(char* nombreTabla, uint16_t key, char* value, unsigned lo
 			pthread_mutex_lock(&mutexMemtable);
 			t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
 			if (tabla == NULL) {
-				log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
+				//log_info(logger_LFS, "Se agrego la tabla a la memtable y se agrego el registro");
 				tabla = (t_tabla*) malloc(sizeof(t_tabla));
 				tabla->nombreTabla = strdup(nombreTabla);
 				tabla->registros = list_create();
@@ -268,7 +269,10 @@ t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
 			if(string_ends_with(file->d_name, ".tmp")){
 				pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
 				t_config* file = config_create(pathFile);
-				char** bloques = config_get_array_value(file, "BLOCKS");
+				char* bloquesString = config_get_string_value(file, "BLOCKS");
+				bloquesString++;
+				bloquesString[strlen(bloquesString) -1] = 0;
+				char** bloques = string_split(bloquesString, ",");
 				int size = config_get_int_value(file, "SIZE");
 				listaDeRegistrosEnBloques = buscarEnBloques(bloques, size, key);
 				list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
@@ -292,7 +296,10 @@ t_list* obtenerRegistrosDeParticiones(char* nombreTabla, int particion, int key)
 	if(tabla){
 		char* pathParticion = string_from_format("%s/%i.bin", pathTabla, particion);
 		t_config* file = config_create(pathParticion);
-		char** bloques = config_get_array_value(file, "BLOCKS");
+		char* bloquesString = config_get_string_value(file, "BLOCKS");
+		bloquesString++;
+		bloquesString[strlen(bloquesString) -1] = 0;
+		char** bloques = string_split(bloquesString, ",");
 		int size = config_get_int_value(file, "SIZE");
 		listaDeRegistrosEnBloques = buscarEnBloques(bloques, size, key);
 		list_add_all(listaDeRegistros, listaDeRegistrosEnBloques);
@@ -369,11 +376,21 @@ t_list* buscarEnBloques(char** bloques, int size, int key){
 				perror("Error");
 			} else {
 				if (i == cantidadDeBloques - 1) {
-					datosALeer = mmap(NULL, size % tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
+					int sizeToRead = size % tamanioBloque;
+					sizeToRead =  size % tamanioBloque == 0 ? tamanioBloque : size % tamanioBloque;
+					datosALeer = mmap(NULL, sizeToRead, PROT_READ, MAP_SHARED, fd, 0);
+					if(datosALeer == -1){
+						perror("error en mmap");
+						log_error(logger_LFS, "error en mmap de select");
+					}
 					string_append_with_format(&datos, "%s", datosALeer);
-					munmap(datosALeer, size % tamanioBloque);
+					munmap(datosALeer, sizeToRead);
 				} else {
 					datosALeer = mmap(NULL, tamanioBloque, PROT_READ, MAP_SHARED, fd, 0);
+					if(datosALeer == -1){
+						perror("error en mmap");
+						log_error(logger_LFS, "error en mmap");
+					}
 					string_append_with_format(&datos, "%s", datosALeer);
 					munmap(datosALeer, tamanioBloque);
 				}
@@ -439,7 +456,9 @@ errorNo procesarDescribe(char* nombreTabla, char** mensaje){
 			}
 
 			closedir (dir);
-			(*mensaje)[strlen(*mensaje) - 1] = 0;
+			if(!string_is_empty(*mensaje)) {
+				(*mensaje)[strlen(*mensaje) - 1] = 0; // para sacar el ultimo punto y coma
+			}
 		} else {
 			perror("Error al abrir directorio de tablas");
 		}
@@ -511,7 +530,10 @@ void borrarArchivosYLiberarBloques(DIR* tabla, char* pathTabla){
 		if(string_ends_with(file->d_name, ".bin") || string_ends_with(file->d_name, ".tmp")) {
 			pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
 			t_config* file = config_create(pathFile);
-			char** bloques = config_get_array_value(file, "BLOCKS");
+			char* bloquesString = config_get_string_value(file, "BLOCKS");
+			bloquesString++;
+			bloquesString[strlen(bloquesString) -1] = 0;
+			char** bloques = string_split(bloquesString, ",");
 			int i = 0;
 			while (bloques[i] != NULL) {
 				char* pathBloque = string_from_format("%s/%s.bin", pathBloques, bloques[i]);

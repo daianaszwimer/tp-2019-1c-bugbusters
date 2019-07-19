@@ -4,22 +4,22 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	char** requestSeparada = separarRequest(request);
 	errorNo errorNo = SUCCESS;
 	char* mensaje = strdup("");
-	if(memoria_fd != NULL){
-		if(!(*memoria_fd)) {
-			log_info(logger_LFS, "Request de la consola de lfs");
-		} else {
-			log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
-		}
-	}
+//	if(memoria_fd != NULL){
+//		if(!(*memoria_fd)) {
+//			log_info(logger_LFS, "Request de la consola de lfs");
+//		} else {
+//			log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
+//		}
+//	}
 	switch (palabraReservada){
 		case SELECT:
-			log_info(logger_LFS, "Me llego un SELECT");
+			//log_info(logger_LFS, "Me llego un SELECT");
 			errorNo = procesarSelect(requestSeparada[1], requestSeparada[2], &mensaje, *memoria_fd);
 			break;
 		case INSERT:
-			log_info(logger_LFS, "Me llego un INSERT");
-			unsigned long long timestamp;
+			//log_info(logger_LFS, "Me llego un INSERT");
 			if(longitudDeArrayDeStrings(requestSeparada) == 5) { //4 parametros + INSERT
+				unsigned long long timestamp;
 				convertirTimestamp(requestSeparada[4], &timestamp);
 				errorNo = procesarInsert(requestSeparada[1], convertirKey(requestSeparada[2]), requestSeparada[3], timestamp);
 			} else {
@@ -27,7 +27,7 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			}
 			break;
 		case CREATE:
-			log_info(logger_LFS, "Me llego un CREATE");
+			//log_info(logger_LFS, "Me llego un CREATE");
 			errorNo = procesarCreate(requestSeparada[1], requestSeparada[2], requestSeparada[3], requestSeparada[4]);
 			break;
 		case DESCRIBE:
@@ -36,12 +36,11 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 			}else{
 				errorNo = procesarDescribe(NULL, &mensaje);
 			}
-
-			log_info(logger_LFS, "Me llego un DESCRIBE");
+			//log_info(logger_LFS, "Me llego un DESCRIBE");
 			break;
 		case DROP:
 			errorNo = procesarDrop(requestSeparada[1]);
-			log_info(logger_LFS, "Me llego un DROP");
+			//log_info(logger_LFS, "Me llego un DROP");
 			break;
 		default:
 			break;
@@ -50,30 +49,29 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	char* mensajeDeError;
 	switch(errorNo){
 		case SUCCESS:
-			mensajeDeError=strdup("Request ejecutada correctamente");
+			mensajeDeError= strdup("");
 			break;
 		case TABLA_EXISTE:
 			mensajeDeError = string_from_format("La tabla %s ya existe", requestSeparada[1]);
-			log_error(logger_LFS, mensajeDeError);
 			break;
 		case ERROR_CREANDO_ARCHIVO:
 			mensajeDeError = string_from_format("Error al crear un archivo de la tabla %s", requestSeparada[1]);
-			log_error(logger_LFS, mensajeDeError);
 			break;
 		case TABLA_NO_EXISTE:
 			mensajeDeError = string_from_format("La tabla %s no existe", requestSeparada[1]);
-			log_error(logger_LFS, mensajeDeError);
 			break;
 		case KEY_NO_EXISTE:
 			mensajeDeError = string_from_format("La KEY %s no existe", requestSeparada[2]);
-			log_info(logger_LFS, mensajeDeError);
 			break;
 		case VALUE_INVALIDO:
 			mensajeDeError = string_from_format("El VALUE %s supera el tamanio maximo establecido en LFS", requestSeparada[3]);
-			log_info(logger_LFS, mensajeDeError);
 			break;
 		default:
 			break;
+	}
+
+	if(!string_is_empty(mensajeDeError)){
+		log_error(logger_LFS, mensajeDeError);
 	}
 
 	free(mensajeDeError);
@@ -82,12 +80,17 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	if (*memoria_fd != 0) {
 		enviar(errorNo, mensaje, *memoria_fd);
 	}else{
-		log_info(logger_LFS, mensaje);
+		if(errorNo == SUCCESS){
+			if(!string_is_empty(mensaje)){
+				log_info(logger_LFS, mensaje);
+			}else{
+				log_info(logger_LFS, "Request ejecutada correctamente");
+			}
+		}
 	}
 
 	liberarArrayDeChar(requestSeparada);
 	free(mensaje);
-	log_info(logger_LFS, "---------------------------------------");
 }
 
 int obtenerBloqueDisponible() {
