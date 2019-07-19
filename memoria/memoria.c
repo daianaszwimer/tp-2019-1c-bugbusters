@@ -567,7 +567,7 @@ void escucharMultiplesClientes() {
 
 						codigoOperacion = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
-						printf("Del fd %i \n", numDescriptor); // Muestro por pantalla el fd del cliente del que recibi el mensaje
+						log_info(logger_MEMORIA, "Del fd num: %d", numDescriptor);
 						if (codigoOperacion == COMPONENTE_CAIDO) {
 							close(numDescriptor);
 							FD_CLR(numDescriptor, &descriptoresDeInteres);
@@ -577,7 +577,7 @@ void escucharMultiplesClientes() {
 							numDescriptor++;
 							continue;
 						}
-						printf("El codigo que recibi es: %i \n", codigoOperacion);
+						log_info(logger_MEMORIA, "El codigo que recibi es: %d", codigoOperacion);
 						interpretarRequest(codigoOperacion,request, ANOTHER_COMPONENT, numDescriptor);
 						//eliminar_paquete(paqueteRecibido);
 						//paqueteRecibido=NULL;

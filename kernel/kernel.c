@@ -349,12 +349,8 @@ void planificarRequest(char* request) {
 	if (codigo == ADD || codigo == METRICS) {
 		// https://github.com/sisoputnfrba/foro/issues/1382
 		pthread_t hiloRequest;
-		pthread_attr_t attr;
-		pthread_attr_init(&attr);
-		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-		int threadProcesar = pthread_create(&hiloRequest, &attr, (void*)procesarRequestSinPlanificar, request);
-		if(threadProcesar == 0){
-			pthread_attr_destroy(&attr);
+		if(!pthread_create(&hiloRequest, NULL, (void*)procesarRequestSinPlanificar, request)){
+			pthread_detach(hiloRequest);
 		} else {
 			log_error(logger_KERNEL, "Hubo un error al crear el hilo que ejecuta la request");
 		}
@@ -918,7 +914,7 @@ void procesarRequest(request_procesada* request) {
 int validarRequest(char* mensaje) {
 	char* mensajeError;
 	char* req = strdup(mensaje);
-	if(validarMensaje(mensaje, KERNEL, &mensajeError) == SUCCESS){
+	if(validarMensaje(req, KERNEL, &mensajeError) == SUCCESS){
 		free(req);
 		return TRUE;
 	}else{
