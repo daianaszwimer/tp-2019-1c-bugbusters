@@ -1254,7 +1254,6 @@ void unlockSemSegmento(char* pathSegmento){
  int guardarRespuestaDeLFSaMemoria(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
 	 int memoriaSuficiente=SUCCESS;
  	if(nuevoPaquete->palabraReservada == SUCCESS){
- 		log_info(logger_MEMORIA,"ENTRO A DONDE NO DEBIA");
 		pthread_mutex_lock(&semMMem);
  		int retardoMem=retardoMemPrincipal;
 		pthread_mutex_unlock(&semMMem);
@@ -1472,7 +1471,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 
 	if(resultadoCache == EXIT_SUCCESS){ // es decir que EXISTE SEGMENTO y EXISTE KEY
 		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor);
+		actualizarElementoEnTablaDePagina(elementoEncontrado,nuevoValor, nuevoTimestamp);
 		unlockSemSegmento(pathSegmento);
 		paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
 		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, paqueteAEnviar,caller, indiceKernel);
@@ -1624,8 +1623,8 @@ void actualizarTimestamp(t_marco* marco){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: SI*/
-void actualizarPagina (t_marco* marco, char* nuevoValue){
-	marco->timestamp =  obtenerHoraActual();
+void actualizarPagina (t_marco* marco, char* nuevoValue, unsigned long long tiempo){
+	marco->timestamp =  tiempo;
 	//strcpy(marco->value,'/0');
 	strcpy(marco->value,nuevoValue);
 }
@@ -1639,12 +1638,12 @@ void actualizarPagina (t_marco* marco, char* nuevoValue){
  * Return:
  * 	-> void ::
  * 	VALGRIND :: SI*/
-void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* nuevoValor){
+void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas* elemento, char* nuevoValor, unsigned long long tiempo){
 	pthread_mutex_lock(&semMMem);
 	int retardoMem=retardoMemPrincipal;
 	pthread_mutex_unlock(&semMMem);
 	usleep(retardoMem*1000);
-	actualizarPagina(elemento->marco,nuevoValor);
+	actualizarPagina(elemento->marco,nuevoValor, tiempo);
 	elemento->modificado = MODIFICADO;
 }
 

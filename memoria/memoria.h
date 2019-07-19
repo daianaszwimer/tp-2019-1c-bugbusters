@@ -182,8 +182,8 @@ void insertar(int resultadoCache,cod_request,char*,t_elemTablaDePaginas* ,t_call
 t_paquete* armarPaqueteDeRtaAEnviar(char*);
 
 void actualizarTimestamp(t_marco*);
-void actualizarPagina (t_marco*, char*);
-void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char* );
+void actualizarPagina (t_marco*, char*, unsigned long long);
+void actualizarElementoEnTablaDePagina(t_elemTablaDePaginas*, char*, unsigned long long );
 
 t_marco* crearMarcoDePagina(t_marco*,uint16_t, char*, unsigned long long);
 t_elemTablaDePaginas* crearElementoEnTablaDePagina(int id,t_marco* ,uint16_t, char*,unsigned long long,t_flagModificado);
