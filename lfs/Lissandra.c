@@ -289,6 +289,10 @@ void* leerDeConsola(void* arg) {
 	while (1) {
 		mensaje = readline(">");
 		if (!(strncmp(mensaje, "", 1) != 0)) {
+			free(mensaje);
+			break;
+		}
+		if (string_equals_ignore_case(mensaje, "EXIT")) {
 			pthread_cancel(hiloRecibirMemorias);
 			pthread_cancel(hiloDumpeo);
 			pthread_cancel(hiloDeInotify);
