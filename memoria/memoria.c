@@ -386,16 +386,13 @@ void leerDeConsola(void){
 			free(mensaje);
 			break;
 		}
-		pthread_mutex_lock(&semMJOURNAL);
 		if(flagJOURNAL==1){
-			pthread_mutex_unlock(&semMJOURNAL);
 			t_paquete* paqueteJournal=(t_paquete*)malloc(sizeof(t_paquete));
 			paqueteJournal->palabraReservada=JOURNALTIME;
 			paqueteJournal->request=strdup("NO es posible interpretar la request, se esta haciendo JOURNAL. Vueva a mandarla al finalizar el journal");
 			paqueteJournal->tamanio=strlen(paqueteJournal->request);
 			mostrarResultadoPorConsola(JOURNAL,JOURNALTIME,mensaje,paqueteJournal);
 		}else{
-			pthread_mutex_unlock(&semMJOURNAL);
 			validarRequest(mensaje);
 		}
 
@@ -509,6 +506,7 @@ void escucharMultiplesClientes() {
 					}
 					if (handshake->tipoRol == REQUEST) {
 						paqueteRecibido = recibir(numDescriptor); // Recibo de ese cliente en particular
+						pthread_mutex_lock(&semMJOURNAL);
 						codigoOperacion = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
 						printf("Del fd %i \n", numDescriptor); // Muestro por pantalla el fd del cliente del que recibi el mensaje
@@ -524,6 +522,7 @@ void escucharMultiplesClientes() {
 						}
 						printf("El codigo que recibi es: %i \n", codigoOperacion);
 						interpretarRequest(codigoOperacion,request, ANOTHER_COMPONENT, numDescriptor);
+						pthread_mutex_unlock(&semMJOURNAL);
 						eliminar_paquete(paqueteRecibido);
 						paqueteRecibido=NULL;
 					} else if (handshake->tipoRol == GOSSIPING) {
@@ -575,17 +574,14 @@ void escucharMultiplesClientes() {
  * 	-> :: void
  * VALGRIND:: EN PROCESO */
 void interpretarRequest(int palabraReservada,char* request,t_caller caller, int indiceKernel) {
-	pthread_mutex_lock(&semMJOURNAL);
-	if(flagJOURNAL==1){
-		pthread_mutex_unlock(&semMJOURNAL);
 
+	if(flagJOURNAL==1){
 		t_paquete* paqueteJournal=(t_paquete*)malloc(sizeof(t_paquete));
 		paqueteJournal->palabraReservada=JOURNALTIME;
 		paqueteJournal->request=strdup("NO es posible interpretar la request, se esta haciendo JOURNAL. Vueva a mandarla al finalizar el journal");
 		paqueteJournal->tamanio=strlen(paqueteJournal->request);
 		enviarAlDestinatarioCorrecto(JOURNAL,JOURNALTIME,request,paqueteJournal,caller,indiceKernel);
 	}else{
-		pthread_mutex_unlock(&semMJOURNAL);
 		consistencia consistenciaMemoria;
 		if(caller== ANOTHER_COMPONENT){
 			consistenciaMemoria = palabraReservada;
@@ -2029,10 +2025,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 		log_info(logger_MEMORIA,"-----------COMENZO EL JOURNAL-----------------");
 	}
 
-	pthread_mutex_lock(&semMJOURNAL);
 	flagJOURNAL=1;
-	pthread_mutex_unlock(&semMJOURNAL);
-	//sleep(6000);
 
 	t_list* resultadosJournal= list_create();
 	t_int* resultadoAux = malloc(sizeof(t_int*));
@@ -2113,9 +2106,8 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	list_destroy(resultadosJournal);
 	free(resultadoAux);
 	resultadoAux=NULL;
-	pthread_mutex_lock(&semMJOURNAL);
+
 	flagJOURNAL=0;
-	pthread_mutex_unlock(&semMJOURNAL);
 
 	if(tipoJournal == AUTOMATICO){
 		log_info(logger_MEMORIA,"-----------FIN EL JOURNAL AUTOMATICO-----------------");
