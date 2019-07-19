@@ -670,7 +670,7 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 				break;
 			case JOURNAL:
 				log_debug(logger_MEMORIA, "Me llego un JOURNAL");
-				procesarJournal(codRequest, request, caller, indiceKernel);
+				procesarJournal(codRequest, request, caller, indiceKernel,MY_REQUEST);
 				break;
 			default:
 				log_warning(logger_MEMORIA, "No has ingresado una request valida");
@@ -2018,10 +2018,16 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
  //	OK 	El Journal manual por medio de la API que dispone el Kernel.
  //		Bloquear: Salvo CREATE/DESCRIBE
 
-void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int indiceKernel) {
+void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int indiceKernel,t_tipoJournal tipoJournal) {
 
 	pthread_mutex_lock(&semMKERNEL);
 	pthread_mutex_lock(&semMCONSOLA);
+
+	if(tipoJournal == AUTOMATICO){
+		log_info(logger_MEMORIA,"-----------COMENZO EL JOURNAL AUTOMATICO-----------------");
+	}else{
+		log_info(logger_MEMORIA,"-----------COMENZO EL JOURNAL-----------------");
+	}
 
 	pthread_mutex_lock(&semMJOURNAL);
 	flagJOURNAL=1;
@@ -2111,6 +2117,11 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	flagJOURNAL=0;
 	pthread_mutex_unlock(&semMJOURNAL);
 
+	if(tipoJournal == AUTOMATICO){
+		log_info(logger_MEMORIA,"-----------FIN EL JOURNAL AUTOMATICO-----------------");
+	}else{
+		log_info(logger_MEMORIA,"-----------FIN EL JOURNAL-----------------");
+	}
 	pthread_mutex_unlock(&semMKERNEL);
 	pthread_mutex_unlock(&semMCONSOLA);
 
@@ -2130,10 +2141,7 @@ void hacerJournal(void){
 		tiempoJournal = retardoJournal;
 		pthread_mutex_unlock(&semMSleepJournal);
 		usleep(tiempoJournal*1000);
-		log_info(logger_MEMORIA,"-----------COMENZO EL JOURNAL-----------------");
-		procesarJournal(JOURNAL, "JOURNAL",CONSOLE,-1);
-		log_info(logger_MEMORIA,"----------FINALIZO EL JOURNAL------------------");
-
+		procesarJournal(JOURNAL, "JOURNAL",CONSOLE,-1,AUTOMATICO);
 
 	}
 }

@@ -35,6 +35,11 @@ typedef enum
 	LRU = -10102,
 } t_erroresMemoria;
 
+typedef enum
+{
+	AUTOMATICO,
+	MY_REQUEST
+} t_tipoJournal;
 //-----------------STRUCTS------------------
 
 typedef struct{
@@ -205,7 +210,7 @@ int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
 t_elemTablaDePaginas* correrAlgoritmoLRU();
 int encontrarIndice(t_elemTablaDePaginas*,t_segmento* );
 
-void procesarJournal(cod_request, char*, t_caller, int);
+void procesarJournal(cod_request, char*, t_caller, int,t_tipoJournal);
 void hacerJournal(void);
 
 

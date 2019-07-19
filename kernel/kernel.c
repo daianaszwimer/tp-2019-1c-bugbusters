@@ -1232,10 +1232,10 @@ unsigned int obtenerIndiceHash(int key, int maximo) {
 	} else {
 		unsigned int valorHash = 0;
 		unsigned int j = (key + 3) % 5 + maximo;
-		for (int i = 0; i < j; i++) {
-			valorHash += (key << j);
-		}
-		return valorHash % maximo;
+		//for (int i = 0; i < j; i++) {
+		//	valorHash += (key << j);
+		//}
+		return (valorHash + j) % maximo;
 	}
 }
 
