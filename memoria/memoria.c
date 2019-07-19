@@ -1410,6 +1410,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 				free(pathSegmento);
 				pathSegmento=NULL;
 				t_paquete* insertALFS;
+				string_append_with_format("%s%s%llu",&request," ",obtenerHoraActual());
 				int resultadoLFS =  intercambiarConFileSystem(palabraReservada,request, &insertALFS, caller, indiceKernel);
 
 				if(resultadoLFS == -1 || insertALFS->palabraReservada == COMPONENTE_CAIDO){
@@ -2202,7 +2203,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 
 				usleep(retardoMem*1000);
 				requestAEnviar= strdup("");
-				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"');
+				string_append_with_format(&requestAEnviar,"%s%s%s%s%d%s%c%s%c%s%llu","INSERT"," ",segmento->path," ",elemPagina->marco->key," ",'"',elemPagina->marco->value,'"'," ",elemPagina->marco->timestamp);
 
 				t_paquete* insertJournalLFS;
 				int resultadoLFS = intercambiarConFileSystem(INSERT,requestAEnviar, &insertJournalLFS, caller, indiceKernel);
