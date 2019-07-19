@@ -337,7 +337,31 @@ void* recibirMemorias(void* arg) {
 				}
 
 				char* mensaje = string_from_format("Se conecto la memoria %d", memoria_fd);
-				enviarHandshakeLFS(tamanioValue, memoria_fd);
+				int codigoOperacion = 0;
+				t_handshake* handshake = recibirHandshake(memoria_fd, &codigoOperacion);
+				if (codigoOperacion == COMPONENTE_CAIDO) {
+					log_debug(logger_LFS, "Se desconecto la memoria %i", memoria_fd);
+					free(handshake);
+					close(memoria_fd);
+					continue;
+				}
+				if (handshake->tipoComponente == MEMORIA) {
+					codigoOperacion = enviarRtaHandshake(CONEXION_EXITOSA, memoria_fd);
+				} else {
+					enviarRtaHandshake(CONEXION_INVALIDA, memoria_fd);
+					log_debug(logger_LFS, "Se desconecto la memoria %i", memoria_fd);
+					free(handshake);
+					close(memoria_fd);
+					continue;
+				}
+				if (codigoOperacion == COMPONENTE_CAIDO) {
+					log_debug(logger_LFS, "Se desconecto la memoria %i", memoria_fd);
+					free(handshake);
+					close(memoria_fd);
+					continue;
+				}
+				free(handshake);
+				enviarValueLFS(tamanioValue, memoria_fd);
 				pthread_mutex_lock(&mutexTablasParaCompactaciones);
 				list_iterate(tablasParaCompactaciones, (void*)agregarMemoria);
 				pthread_mutex_unlock(&mutexTablasParaCompactaciones);

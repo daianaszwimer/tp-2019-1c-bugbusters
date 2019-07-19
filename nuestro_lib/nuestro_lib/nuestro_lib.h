@@ -78,7 +78,7 @@ typedef enum
 
 typedef enum {
 	CONEXION_EXITOSA,
-	CONEXION_INVALIDA = -6
+	CONEXION_INVALIDA = 6
 } rta_handshake;
 
 typedef enum
@@ -120,6 +120,7 @@ typedef struct
 	char* puertos;
 	int tamanioNumeros;
 	char* numeros;
+	int esDeKernel;
 } t_gossiping;
 
 typedef struct
@@ -174,7 +175,7 @@ int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
 t_paquete* recibir(int);
 t_gossiping* recibirGossiping(int, int*);
-t_handshake_lfs* recibirHandshakeLFS(int);
+t_handshake_lfs* recibirValueLFS(int);
 t_handshake* recibirHandshake(int, int*);
 t_operacion* recibirOperacion(int, int*);
 ////cliente
@@ -185,8 +186,8 @@ void* serializar_paquete(t_paquete* , int);
 void* serializar_handshake(t_handshake*, int);
 void* serializar_handshake_operacion(t_operacion*, int);
 int enviar(cod_request, char*, int);
-int enviarGossiping(char*, char*, char*, int);
-void enviarHandshakeLFS(int, int);
+int enviarGossiping(char*, char*, char*, int, int);
+void enviarValueLFS(int, int);
 int enviarHandshake(Componente, int);
 int enviarTipoOperacion(rol, int);
 int enviarRtaHandshake(rta_handshake, int);

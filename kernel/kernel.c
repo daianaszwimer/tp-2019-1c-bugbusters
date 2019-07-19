@@ -171,7 +171,7 @@ void hacerGossiping(void) {
 	if (conexion == FAILURE) {
 		log_error(logger_KERNEL, "La mem ppal no está levantada");
 	} else {
-		resultado = enviarGossiping("", "", "", conexion);
+		resultado = enviarGossiping("", "", "", 1, conexion);
 		if (resultado == COMPONENTE_CAIDO) {
 			log_error(logger_KERNEL, "La mem ppal no está levantada");
 			eliminarMemoria(puertoActual, ipActual, numeroActual);
@@ -207,8 +207,7 @@ void hacerGossiping(void) {
 		if (conexion == FAILURE) {
 			log_error(logger_KERNEL, "La mem %s no está levantada, me voy a conectar con otra memoria", numeroActual);
 		} else {
-			//todo: chequear que memoria no se haya caido
-			resultado = enviarGossiping("", "", "", conexion);
+			resultado = enviarGossiping("", "", "", 1, conexion);
 			if (resultado == COMPONENTE_CAIDO) {
 				eliminarMemoria(puertoActual, ipActual, numeroActual);
 			} else {

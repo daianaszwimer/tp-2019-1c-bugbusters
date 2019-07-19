@@ -297,7 +297,7 @@ void mandarGossiping(config_memoria* memoriaSeed, int vaASerSeed, char* puertosQ
 		return;
 	}
 
-	int estadoEnviar = enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, conexionTemporaneaSeed);
+	int estadoEnviar = enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, 0, conexionTemporaneaSeed);
 	if (estadoEnviar == COMPONENTE_CAIDO) {
 		liberar_conexion(conexionTemporaneaSeed);
 		eliminarMemoria(memoriaSeed->puerto, memoriaSeed->ip);
@@ -457,7 +457,22 @@ void conectarAFileSystem() {
 	conexionLfs = crearConexion(
 			config_get_string_value(config, "IP_FS"),
 			config_get_string_value(config, "PUERTO_FS"));
-	handshakeLFS = recibirHandshakeLFS(conexionLfs);
+	int rta = enviarHandshake(MEMORIA, conexionLfs);
+	if (rta == COMPONENTE_CAIDO) {
+		log_error(logger_MEMORIA, "No está levantado el FS");
+		liberar_conexion(conexionLfs);
+		conexionLfs = COMPONENTE_CAIDO;
+		return;
+	}
+
+	t_handshake_rta* handshake_rta = recibirRtaHandshake(conexionLfs, &rta);
+	if (handshake_rta->rta == CONEXION_INVALIDA) {
+		log_error(logger_MEMORIA, "Este tipo de conexión no es válida");
+		liberar_conexion(conexionLfs);
+		conexionLfs = COMPONENTE_CAIDO;
+		return;
+	}
+	handshakeLFS = recibirValueLFS(conexionLfs);
 	maxValue= handshakeLFS->tamanioValue;
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
@@ -503,6 +518,7 @@ void escucharMultiplesClientes() {
 						descriptorMayor	 = descriptorCliente;
 					}
 				} else {
+					// handshake se puede sacar de aca???
 					int codigoOperacion = 0;
 					t_handshake* handshake = recibirHandshake(numDescriptor, &codigoOperacion);
 					if (codigoOperacion == COMPONENTE_CAIDO) {
@@ -516,9 +532,18 @@ void escucharMultiplesClientes() {
 					}
 					if (handshake->tipoComponente == KERNEL || handshake->tipoComponente == MEMORIA) {
 						// hacer cambios en gossiping tmb
-						enviarRtaHandshake(CONEXION_EXITOSA, numDescriptor);
+						codigoOperacion = enviarRtaHandshake(CONEXION_EXITOSA, numDescriptor);
 					} else {
 						enviarRtaHandshake(CONEXION_INVALIDA, numDescriptor);
+						close(numDescriptor);
+						log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
+						FD_CLR(numDescriptor, &descriptoresDeInteres);
+						numDescriptor++;
+						free(handshake);
+						continue;
+					}
+					if (codigoOperacion == COMPONENTE_CAIDO) {
+						// si fallo el recibir o no es una memoria o kernel
 						close(numDescriptor);
 						log_info(logger_MEMORIA, "Desconectando al socket %d", numDescriptor);
 						FD_CLR(numDescriptor, &descriptoresDeInteres);
@@ -537,7 +562,9 @@ void escucharMultiplesClientes() {
 						continue;
 					}
 					if (operacionARealizar->tipo_rol == REQUEST) {
+
 						paqueteRecibido = recibir(numDescriptor); // Recibo de ese cliente en particular
+
 						codigoOperacion = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
 						printf("Del fd %i \n", numDescriptor); // Muestro por pantalla el fd del cliente del que recibi el mensaje
@@ -566,13 +593,13 @@ void escucharMultiplesClientes() {
 							numDescriptor++;
 							continue;
 						}
-						if (handshake->tipoComponente == KERNEL) {
+						if (gossipingRecibido->esDeKernel) {
 							char* puertosQueTengo = strdup("");
 							char* ipsQueTengo = strdup("");
 							char* numerosQueTengo = strdup("");
 							formatearMemoriasLevantadas(&puertosQueTengo, &ipsQueTengo, &numerosQueTengo);
 							//log_warning(logger_MEMORIA, "formatee %s %s %s", puertosQueTengo, ipsQueTengo, numerosQueTengo);
-							enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, numDescriptor);
+							enviarGossiping(puertosQueTengo, ipsQueTengo, numerosQueTengo, 0, numDescriptor);
 
 							free(puertosQueTengo);
 							free(ipsQueTengo);
@@ -901,12 +928,16 @@ void unlockSemSegmento(char* pathSegmento){
  * VALGRIND:: NO*/
  void enviarAlDestinatarioCorrecto(int palabraReservada,int codResultado,char* request,t_paquete* valorAEnviar,t_caller caller, int indiceKernel){
 	 char *errorDefault= strdup("");
+	 int status;
 	 switch(caller){
 	 	 case(ANOTHER_COMPONENT):
 	 		log_info(logger_MEMORIA, valorAEnviar->request);
-			enviar(codResultado, valorAEnviar->request, indiceKernel);
+			status = enviar(codResultado, valorAEnviar->request, indiceKernel);
 			eliminar_paquete(valorAEnviar);
 			valorAEnviar=NULL;
+			if (status == COMPONENTE_CAIDO) {
+				log_error(logger_MEMORIA, "Se cayó Kernel y no le puedo mandar la rta");
+			}
 			break;
 	 	 case(CONSOLE):
 	 		mostrarResultadoPorConsola(palabraReservada, codResultado,request, valorAEnviar);
