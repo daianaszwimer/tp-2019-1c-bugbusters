@@ -290,7 +290,7 @@ void* leerDeConsola(void* arg) {
 		mensaje = readline(">");
 		if (!(strncmp(mensaje, "", 1) != 0)) {
 			free(mensaje);
-			break;
+			continue;
 		}
 		if (string_equals_ignore_case(mensaje, "EXIT")) {
 			pthread_cancel(hiloRecibirMemorias);

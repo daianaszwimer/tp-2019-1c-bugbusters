@@ -2179,7 +2179,6 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	}else{
 		log_info(logger_MEMORIA,"-----------COMENZO EL JOURNAL-----------------");
 	}
-	sleep(10);
 
 	t_list* listResultadosJournal= list_create();
 	t_int* resultadoAux = malloc(sizeof(t_int*));
