@@ -4,13 +4,6 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	char** requestSeparada = separarRequest(request);
 	errorNo errorNo = SUCCESS;
 	char* mensaje = strdup("");
-//	if(memoria_fd != NULL){
-//		if(!(*memoria_fd)) {
-//			log_info(logger_LFS, "Request de la consola de lfs");
-//		} else {
-//			log_info(logger_LFS, "Request de la memoria %i", *memoria_fd);
-//		}
-//	}
 	switch (palabraReservada){
 		case SELECT:
 			//log_info(logger_LFS, "Me llego un SELECT");
@@ -77,15 +70,15 @@ void interpretarRequest(cod_request palabraReservada, char* request, int* memori
 	free(mensajeDeError);
 	usleep(retardo*1000);
 
-	if (*memoria_fd != 0) {
+	if (*memoria_fd != 0) { //request de memoria
 		enviar(errorNo, mensaje, *memoria_fd);
-	}else{
-		if(errorNo == SUCCESS){
-			if(!string_is_empty(mensaje)){
-				log_info(logger_LFS, mensaje);
-			}else{
-				log_info(logger_LFS, "Request ejecutada correctamente");
-			}
+	}
+
+	if(errorNo == SUCCESS){
+		if(!string_is_empty(mensaje)){
+			log_info(logger_LFS, mensaje);
+		}else{
+			log_info(logger_LFS, "Request ejecutada correctamente, la respuesta es vacia");
 		}
 	}
 

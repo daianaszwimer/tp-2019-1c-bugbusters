@@ -14,21 +14,33 @@ void* hiloCompactacion(void* arg) {
 	int tiempoEntreCompactaciones = config_get_int_value(configMetadataTabla, "COMPACTION_TIME");
 	free(pathMetadataTabla);
 	config_destroy(configMetadataTabla);
+	char* nombreTabla = string_reverse(pathTabla);
+	char** aux = string_split(nombreTabla, "/");
+	free(nombreTabla);
+	nombreTabla = string_reverse(aux[0]);
+	liberarArrayDeChar(aux);
+
+	int encontrarTabla(t_hiloTabla* tabla) {
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
+
+	pthread_mutex_lock(&mutexTablasParaCompactaciones);
+	t_hiloTabla* hiloTabla = list_find(tablasParaCompactaciones, (void*) encontrarTabla);
+	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
 
 	while(1) {
 		usleep(tiempoEntreCompactaciones*1000);
+
+		pthread_mutex_lock(&(hiloTabla->mutex));
 		if(finalizarHilo(pathTabla)){
 			log_info(logger_LFS, "Hilo de compactacion de %s terminado", pathTabla);
 			break;
 		}
-//		char* infoComienzoCompactacion = string_from_format("Compactando tabla: %s", pathTabla);
-//		log_info(logger_LFS, infoComienzoCompactacion);
-//		free(infoComienzoCompactacion);
 		compactar(pathTabla);
-//		char* infoTerminoCompactacion = string_from_format("Compactacion de la tabla: %s terminada", pathTabla);
-//		log_info(logger_LFS, infoTerminoCompactacion);
-//		free(infoTerminoCompactacion);
+		pthread_mutex_unlock(&(hiloTabla->mutex));
 	}
+	free(nombreTabla);
 	free(pathTabla);
 	return NULL;
 }
@@ -53,6 +65,7 @@ int finalizarHilo(char* pathTabla){
 	void liberarRecursos(t_hiloTabla* tabla){
 		list_destroy_and_destroy_elements(tabla->cosasABloquear, (void*)liberarMutexTabla);
 		free(tabla->nombreTabla);
+
 		free(tabla);
 	}
 
@@ -131,18 +144,19 @@ void compactar(char* pathTabla) {
 	nombreTabla = string_reverse(aux[0]);
 	liberarArrayDeChar(aux);
 
-	long long inicioDeBloqueo;
-	long long finDeBloqueo;
+	unsigned long long inicioDeBloqueo;
+	unsigned long long finDeBloqueo;
+	unsigned long long tiempoBloqueo;
 
-	inicioDeBloqueo = current_timestamp();
+	inicioDeBloqueo = obtenerHoraActual();
 	setBlockTo(nombreTabla, 1);
 	// Renombramos los tmp a tmpc
 	//sleep(1); para ver como funca la tabla bloqueada
 	renombrarTmp_a_TmpC(pathTabla, archivoDeLaTabla, tabla);
 
 	setBlockTo(nombreTabla, 0);
-	finDeBloqueo = current_timestamp();
-	log_debug(logger_LFS, "Tabla %s bloqueada durante %llu milisegundos", nombreTabla, finDeBloqueo - inicioDeBloqueo);
+	finDeBloqueo = obtenerHoraActual();
+	tiempoBloqueo = finDeBloqueo - inicioDeBloqueo;
 
 	// Leemos todos los registros de los temporales a compactar y los guardamos en una lista
 	t_list* registrosDeTmpC = leerDeTodosLosTmpC(pathTabla, archivoDeLaTabla, tabla, particiones, numeroDeParticiones, tamanioBloque);
@@ -170,7 +184,7 @@ void compactar(char* pathTabla) {
 		list_destroy(registrosDeParticiones);
 
 		// TODO: Bloquear tabla
-		inicioDeBloqueo = current_timestamp();
+		inicioDeBloqueo = obtenerHoraActual();
 		setBlockTo(nombreTabla, 1);
 		//sleep(20); //sirve para simular una compactacion larga
 		//sleep(3); para ver como funca la tabla bloqueada
@@ -181,9 +195,12 @@ void compactar(char* pathTabla) {
 		guardarDatosNuevos(pathTabla, registrosAEscribir, particiones, tamanioBloque, numeroDeParticiones);
 
 		setBlockTo(nombreTabla, 0);
-		finDeBloqueo = current_timestamp();
-		log_debug(logger_LFS, "Tabla %s bloqueada durante %llu milisegundos", nombreTabla, finDeBloqueo - inicioDeBloqueo);
+		finDeBloqueo = obtenerHoraActual();
 
+		tiempoBloqueo += finDeBloqueo - inicioDeBloqueo;
+		if(tiempoBloqueo > 0){
+			log_debug(logger_LFS, "Tabla %s bloqueada durante %llu milisegundos", nombreTabla, tiempoBloqueo);
+		}
 		// TODO: Desbloquear la tabla y dejar un registro de cuanto tiempo estuvo bloqueada la tabla para realizar esta operatoria
 		list_destroy_and_destroy_elements(registrosAEscribir, (void*) eliminarRegistro);
 	}
@@ -227,22 +244,6 @@ void setBlockTo(char* nombreTabla, int value){
 		pthread_mutex_lock(&mutexTablasParaCompactaciones);
 	}
 	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
-	if(!strcmp(nombreTabla,"TABLA") && value) {
-		log_debug(logger_LFS, "Entro a bloquear TABLA");
-		//sleep(10); is checked? not really
-	}
-	if(!strcmp(nombreTabla,"TABLA") && !value) {
-		log_debug(logger_LFS, "TABLA desbloquea3");
-	}
-
-
-	/*pthread_mutex_lock(&mutexTablasParaCompactaciones);
-	t_hiloTabla* tabla = list_find(tablasParaCompactaciones, (void*) encontrarTabla);
-	if (tabla != NULL) {
-		list_iterate(tabla->cosasABloquear, (void*) bloquearODesbloquearTodosLosMutex);
-	}
-	pthread_mutex_unlock(&mutexTablasParaCompactaciones);*/
-
 }
 
 /* renombrarTmp_a_TmpC()
@@ -636,12 +637,4 @@ void eliminarParticion(t_int* particionAEliminar) {
 void eliminarRegistro(t_registro* registroAEliminar) {
 	free(registroAEliminar->value);
 	free(registroAEliminar);
-}
-
-long long current_timestamp() {
-    struct timeval te;
-    gettimeofday(&te, NULL); // get current time
-    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
-    // printf("milliseconds: %lld\n", milliseconds);
-    return milliseconds;
 }
