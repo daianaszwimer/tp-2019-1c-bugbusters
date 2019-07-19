@@ -582,8 +582,6 @@ void escucharMultiplesClientes() {
 						}
 						log_info(logger_MEMORIA, "El codigo que recibi es: %d", codigoOperacion);
 						interpretarRequest(codigoOperacion,request, ANOTHER_COMPONENT, numDescriptor);
-						eliminar_paquete(paqueteRecibido);
-						paqueteRecibido=NULL;
 					} else if (operacionARealizar->tipo_rol == GOSSIPING) {
 						t_gossiping* gossipingRecibido = recibirGossiping(numDescriptor, &codigoOperacion);
 						agregarMemorias(gossipingRecibido);
@@ -1410,7 +1408,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 				free(pathSegmento);
 				pathSegmento=NULL;
 				t_paquete* insertALFS;
-				string_append_with_format(&request,"%s%s%llu"," ",obtenerHoraActual());
+				string_append_with_format(&request,"%s%llu"," ",obtenerHoraActual());
 				int resultadoLFS =  intercambiarConFileSystem(palabraReservada,request, &insertALFS, caller, indiceKernel);
 
 				if(resultadoLFS == -1 || insertALFS->palabraReservada == COMPONENTE_CAIDO){
