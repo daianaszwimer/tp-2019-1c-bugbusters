@@ -35,6 +35,11 @@ typedef enum
 	LRU = -10102,
 } t_erroresMemoria;
 
+typedef enum
+{
+	AUTOMATICO,
+	MY_REQUEST
+} t_tipoJournal;
 //-----------------STRUCTS------------------
 
 typedef struct{
@@ -100,12 +105,16 @@ t_list* semMPorSegmento;
 pthread_mutex_t semMDescriptores;
 pthread_mutex_t semMMemoriasLevantadas;	// semaforo mutex para evitar concurrencia en la variable
 pthread_mutex_t semMJOURNAL;
+pthread_mutex_t semMCONSOLA;				// semaforo mutex iNotify
+pthread_mutex_t semMKERNEL;				// semaforo mutex iNotify
 
 pthread_mutex_t semMConfig;				// semaforo mutex iNotify
 pthread_mutex_t semMSleepJournal;			// semaforo mutex iNotify
 pthread_mutex_t semMGossiping;			// semaforo mutex iNotify
 pthread_mutex_t semMFS;					// semaforo mutex iNotify
 pthread_mutex_t semMMem;				// semaforo mutex iNotify
+pthread_mutex_t semMConexionLFS;				// semaforo mutex
+
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
 pthread_t hiloEscucharMultiplesClientes;// hilo para escuchar clientes
@@ -127,6 +136,8 @@ int flagJOURNAL=0;
 char* puertoMio;
 char* ipMia;
 char* numerosMio;
+char* puertoFS;
+char* ipFS;
 
 t_list* listaSemSegmentos;
 
@@ -154,7 +165,7 @@ void validarRequest(char*);
 
 void escucharMultiplesClientes(void);
 void interpretarRequest(int, char*,t_caller, int);
-t_paquete* intercambiarConFileSystem(cod_request, char*, t_caller, int);
+int intercambiarConFileSystem(cod_request, char*,t_paquete**, t_caller, int);
 
 void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 
@@ -202,7 +213,7 @@ int menorTimestamp(t_elemTablaDePaginas*,t_elemTablaDePaginas*);
 t_elemTablaDePaginas* correrAlgoritmoLRU();
 int encontrarIndice(t_elemTablaDePaginas*,t_segmento* );
 
-void procesarJournal(cod_request, char*, t_caller, int);
+void procesarJournal(cod_request, char*, t_caller, int,t_tipoJournal);
 void hacerJournal(void);
 
 

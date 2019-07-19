@@ -944,12 +944,12 @@ int maximo(t_list* descriptores, int descriptorServidor, int numeroDeClientes) {
  * Return:
  * 	->  char* :: valor  */
 int validarValue(char* request,char* value, int tamMaximo,t_log* logger) {
-	if((sizeof(value))<=tamMaximo){
+	if((strlen(value))<=tamMaximo){
 		return EXIT_SUCCESS;
 	}
 	char* mensajeError= strdup("");
 	string_append_with_format(&mensajeError,"%s%s%s%i","No es posible realizar la request: ",request," dado a que el value ingresado supera el tamanio maximo ",tamMaximo);
-	log_info(logger,mensajeError);
+	log_warning(logger,mensajeError);
 	free(mensajeError);
 	return NUESTRO_ERROR;
 }
