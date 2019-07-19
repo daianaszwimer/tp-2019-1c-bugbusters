@@ -62,79 +62,44 @@ void iterator(char* value) {
  * */
 // TODO: que funcione bien cuando hay comillas
 char** separarRequest(char* text) {
-	char** requestSeparada= NULL;
+	char** requestSeparada;
 	if(string_contains(text, "\"")){
 		requestSeparada=string_split(text,"\"");
 
 		char** primeraParte = string_split(requestSeparada[0], " ");
+		int cantidadDeParamteros = longitudDeArrayDeStrings(primeraParte) + 1;
+		if(requestSeparada[2] != NULL) {
+			cantidadDeParamteros++;
+		}
 
-		int i;
-		for(i = 0; primeraParte[i] != NULL; i++);
+		char** requestADevolver = malloc(sizeof(char*) * (cantidadDeParamteros + 1));
 
-		primeraParte = realloc(primeraParte, sizeof(char*) * 5);
-		primeraParte[i] = strdup(requestSeparada[1]);
+		int i = 0;
+		while(primeraParte[i] != NULL){
+			i++;
+			requestADevolver[i-1] = strdup(primeraParte[i-1]);
+		}
+
+		i++;
+		requestADevolver[i-1] = strdup(requestSeparada[1]);
 
 		if(requestSeparada[2] != NULL){
 			i++;
-			primeraParte = realloc(primeraParte, sizeof(char*) * 6);
-			primeraParte[i] = strdup(requestSeparada[2]);
+			char* willy = strdup(requestSeparada[2]);
+			string_trim_left(&willy);
+			requestADevolver[i-1] = strdup(willy);
+			free(willy);
 		}
+		i++;
+		requestADevolver[i-1] = NULL;
 
-		primeraParte[i+1] = NULL;
+		liberarArrayDeChar(primeraParte);
 		liberarArrayDeChar(requestSeparada);
-		return primeraParte;
+		return requestADevolver;
 	}else{
 		requestSeparada=string_split(text," ");
 		return requestSeparada;
 	}
-
-
-//	char **substrings = NULL;
-//	int size = 0;
-//
-//	char *text_to_iterate = string_duplicate(text);
-//
-//	char *next = text_to_iterate;
-//	char *str = text_to_iterate;
-//	int freeToken = 0;
-//	char* token;
-//
-//	while(next[0] != '\0') {
-//		token = strtok_r(str, " ", &next);
-//		if(token == NULL) {
-//			break;
-//		}
-//		if(*token == '"'){ //Si la palabra arranca con comillas, hay que agarrar todas las palabras hasta las siguientes comillas
-//			token++; //Esto borra las primeras comillas del token
-//			if(token[strlen(token)-1] == '"' && string_contains(token, " ")){
-//				char* restOfToken = strtok_r(str, "\"", &next);
-//				if(restOfToken != NULL){ //En el caso de que solo haya una palabra entre comillas, la siguiente vez lo que obtiene la funcion strtok es NULL, asi que solo concatenamos si es distinto de NULL
-//					token = string_from_format("%s %s", token, restOfToken);
-//					freeToken = 1; // Dado que string_from_format hace un malloc adentro, despues vamos a tener que liberar el token.
-//				}
-//			}
-//
-//			if(token[strlen(token)-1] == '"'){ //por ultimo si el ultimo caracter son comillas, lo removemos
-//				token[strlen(token)-1] = 0;
-//			}
-//		}
-//
-//		str = NULL;
-//		size++;
-//		substrings = realloc(substrings, sizeof(char*) * size);
-//		substrings[size - 1] = string_duplicate(token);
-//		if(freeToken) {
-//			free(token);
-//			freeToken = 0;
-//		}
-//	}
-//
-//	size++;
-//	substrings = realloc(substrings, sizeof(char*) * size);
-//	substrings[size - 1] = NULL;
-//
-//	free(text_to_iterate);
-//	return substrings;
 }
 
 
