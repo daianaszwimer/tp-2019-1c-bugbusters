@@ -490,25 +490,15 @@ void loguearMetricas(void) {
 		tiempoInsertSC = 0.0;
 		cantidadSelectSC = 0;
 		cantidadInsertSC = 0;
-		if (list_size(cargaMemoriaSC) > 0) {
-			list_clean_and_destroy_elements(cargaMemoriaSC, (void*)liberarEstadisticaMemoria);
-		}
 		tiempoSelectSHC = 0.0;
 		tiempoInsertSHC = 0.0;
 		cantidadSelectSHC = 0;
 		cantidadInsertSHC = 0;
-		if (list_size(cargaMemoriaSHC) > 0) {
-			list_clean_and_destroy_elements(cargaMemoriaSHC, (void*)liberarEstadisticaMemoria);
-		}
 		// https://github.com/sisoputnfrba/foro/issues/1434#issuecomment-510291991
-		// todo: memory load es en total o 30secs? https://github.com/sisoputnfrba/foro/issues/1434#issuecomment-510291991
 		tiempoSelectEC = 0.0;
 		tiempoInsertEC = 0.0;
 		cantidadSelectEC = 0;
 		cantidadInsertEC = 0;
-		if (list_size(cargaMemoriaEC) > 0) {
-			list_clean_and_destroy_elements(cargaMemoriaEC, (void*)liberarEstadisticaMemoria);
-		}
 		pthread_mutex_unlock(&semMMetricas);
 		sleep(30);
 	}
@@ -530,7 +520,7 @@ void informarMetricas(int mostrarPorConsola) {
 	double writeLatencySC = tiempoInsertSC/cantidadInsertSC;
 	double writeLatencySHC = tiempoInsertSHC/cantidadInsertSHC;
 	double writeLatencyEC = tiempoInsertEC/cantidadInsertEC;
-	int cantidadTotalSelectInsert = cantidadSelectSC + cantidadSelectSHC + cantidadSelectEC + cantidadInsertSC + cantidadInsertSHC + cantidadInsertEC;
+	int cantidadTotalSelectInsert = cantidadSelectSCTotal + cantidadSelectSHCTotal + cantidadSelectECTotal + cantidadInsertSCTotal + cantidadInsertSHCTotal + cantidadInsertECTotal;
 	void mostrarCargaMemoria(estadisticaMemoria* estadisticaAMostrar) {
 		// https://github.com/sisoputnfrba/foro/issues/1419
 		double estadistica = (double)estadisticaAMostrar->cantidadSelectInsert / (double)cantidadTotalSelectInsert;
@@ -676,14 +666,17 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 				case SC:
 					tiempoSelectSC+=cantidadTiempo;
 					cantidadSelectSC++;
+					cantidadSelectSCTotal++;
 					break;
 				case SHC:
 					tiempoSelectSHC+=cantidadTiempo;
 					cantidadSelectSHC++;
+					cantidadSelectSHCTotal++;
 					break;
 				case EC:
 					tiempoSelectEC+=cantidadTiempo;
 					cantidadSelectEC++;
+					cantidadSelectECTotal++;
 					break;
 				default:
 					break;
@@ -693,14 +686,17 @@ void aumentarContadores(char* numeroMemoria, cod_request codigo, double cantidad
 			case SC:
 				tiempoInsertSC+=cantidadTiempo;
 				cantidadInsertSC++;
+				cantidadInsertSCTotal++;
 				break;
 			case SHC:
 				tiempoInsertSHC+=cantidadTiempo;
 				cantidadInsertSHC++;
+				cantidadInsertSHCTotal++;
 				break;
 			case EC:
 				tiempoInsertEC+=cantidadTiempo;
 				cantidadInsertEC++;
+				cantidadInsertECTotal++;
 				break;
 			default:
 				break;
@@ -922,6 +918,7 @@ int validarRequest(char* mensaje) {
 		free(req);
 		return TRUE;
 	}else{
+		free(req);
 		log_error(logger_KERNEL, "%s. Request que generó error: %s", mensajeError, mensaje);
 		return FALSE;
 	}

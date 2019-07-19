@@ -61,16 +61,22 @@ double tiempoSelectSC = 0.0;
 double tiempoInsertSC = 0.0;
 int cantidadSelectSC = 0;
 int cantidadInsertSC = 0;
+int cantidadSelectSCTotal = 0;
+int cantidadInsertSCTotal = 0;
 t_list* cargaMemoriaSC;
 double tiempoSelectSHC = 0.0;
 double tiempoInsertSHC = 0.0;
 int cantidadSelectSHC = 0;
 int cantidadInsertSHC = 0;
+int cantidadSelectSHCTotal = 0;
+int cantidadInsertSHCTotal = 0;
 t_list* cargaMemoriaSHC;
 double tiempoSelectEC = 0.0;
 double tiempoInsertEC = 0.0;
 int cantidadSelectEC = 0;
 int cantidadInsertEC = 0;
+int cantidadSelectECTotal = 0;
+int cantidadInsertECTotal = 0;
 t_list* cargaMemoriaEC;
 
 // Variables para inotify
