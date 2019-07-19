@@ -1537,7 +1537,6 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 	eliminar_paquete(paqueteRecibido);
 	liberarArrayDeChar(parametros);
 	if (codigo == SELECT || codigo == INSERT) {
-		sleep(1);
 		end = clock();
 		double time_spent = (double)(end - begin) * 1000.0/ CLOCKS_PER_SEC;
 		aumentarContadores(numMemoria, codigo, time_spent, consistenciaTabla);
