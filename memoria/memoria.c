@@ -6,7 +6,7 @@ int main(void) {
 
 	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
-	logger_MEMORIA = log_create("memoria.log", "Memoria", 0, LOG_LEVEL_DEBUG);
+	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
 	retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
 	retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
 	retardoFS = config_get_int_value(config, "RETARDO_FS");
