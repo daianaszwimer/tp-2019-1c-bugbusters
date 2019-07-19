@@ -747,7 +747,7 @@ int intercambiarConFileSystem(cod_request palabraReservada, char* request,t_paqu
 				ipFS,
 				puertoFS);
 		pthread_mutex_unlock(&semMConexionLFS);
-		t_handshake_lfs* handshakeLFS2 = recibirHandshakeLFS(conexionLfs);
+		t_handshake_lfs* handshakeLFS2 = recibirValueLFS(conexionLfs);
 		free(handshakeLFS2);
 		pthread_mutex_lock(&semMConexionLFS);
 		conexionAux = conexionLfs;
