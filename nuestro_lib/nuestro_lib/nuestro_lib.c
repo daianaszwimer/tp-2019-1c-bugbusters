@@ -79,11 +79,14 @@ char** separarRequest(char* text) {
 		}
 		if(*token == '"'){ //Si la palabra arranca con comillas, hay que agarrar todas las palabras hasta las siguientes comillas
 			token++; //Esto borra las primeras comillas del token
-			char* restOfToken = strtok_r(str, "\"", &next);
-			if(restOfToken != NULL){ //En el caso de que solo haya una palabra entre comillas, la siguiente vez lo que obtiene la funcion strtok es NULL, asi que solo concatenamos si es distinto de NULL
-				token = string_from_format("%s %s", token, restOfToken);
-				freeToken = 1; // Dado que string_from_format hace un malloc adentro, despues vamos a tener que liberar el token.
+			if(token[strlen(token)-1] == '"' && string_contains(token, " ")){
+				char* restOfToken = strtok_r(str, "\"", &next);
+				if(restOfToken != NULL){ //En el caso de que solo haya una palabra entre comillas, la siguiente vez lo que obtiene la funcion strtok es NULL, asi que solo concatenamos si es distinto de NULL
+					token = string_from_format("%s %s", token, restOfToken);
+					freeToken = 1; // Dado que string_from_format hace un malloc adentro, despues vamos a tener que liberar el token.
+				}
 			}
+
 			if(token[strlen(token)-1] == '"'){ //por ultimo si el ultimo caracter son comillas, lo removemos
 				token[strlen(token)-1] = 0;
 			}
