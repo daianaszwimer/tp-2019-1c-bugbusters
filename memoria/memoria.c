@@ -452,31 +452,32 @@ void validarRequest(char* mensaje){
  * 	-> :: void
  * VALGRIND:: SI */
 void conectarAFileSystem() {
-	pthread_mutex_lock(&semMConexionLFS);
-	conexionLfs = crearConexion(
+	int conexion = crearConexion(
 			ipFS,
 			puertoFS);
+	pthread_mutex_lock(&semMConexionLFS);
+	conexionLfs = conexion;
 	pthread_mutex_unlock(&semMConexionLFS);
-	int rta = enviarHandshake(MEMORIA, conexionLfs);
+	int rta = enviarHandshake(MEMORIA, conexion);
 	if (rta == COMPONENTE_CAIDO) {
 		log_error(logger_MEMORIA, "No está levantado el FS");
-		liberar_conexion(conexionLfs);
-		conexionLfs = COMPONENTE_CAIDO;
-		return;
-	}
-
-	t_handshake_rta* handshake_rta = recibirRtaHandshake(conexionLfs, &rta);
-	if (handshake_rta->rta == CONEXION_INVALIDA) {
-		log_error(logger_MEMORIA, "Este tipo de conexión no es válida");
+		liberar_conexion(conexion);
 		pthread_mutex_lock(&semMConexionLFS);
-		liberar_conexion(conexionLfs);
 		conexionLfs = COMPONENTE_CAIDO;
 		pthread_mutex_unlock(&semMConexionLFS);
 		return;
 	}
-	pthread_mutex_lock(&semMConexionLFS);
-	handshakeLFS = recibirValueLFS(conexionLfs);
-	pthread_mutex_unlock(&semMConexionLFS);
+
+	t_handshake_rta* handshake_rta = recibirRtaHandshake(conexion, &rta);
+	if (handshake_rta->rta == CONEXION_INVALIDA) {
+		log_error(logger_MEMORIA, "Este tipo de conexión no es válida");
+		liberar_conexion(conexion);
+		pthread_mutex_lock(&semMConexionLFS);
+		conexionLfs = COMPONENTE_CAIDO;
+		pthread_mutex_unlock(&semMConexionLFS);
+		return;
+	}
+	handshakeLFS = recibirValueLFS(conexion);
 	maxValue= handshakeLFS->tamanioValue;
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
