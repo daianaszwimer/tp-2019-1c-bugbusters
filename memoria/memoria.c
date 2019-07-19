@@ -386,15 +386,7 @@ void leerDeConsola(void){
 			free(mensaje);
 			break;
 		}
-		if(flagJOURNAL==1){
-			t_paquete* paqueteJournal=(t_paquete*)malloc(sizeof(t_paquete));
-			paqueteJournal->palabraReservada=JOURNALTIME;
-			paqueteJournal->request=strdup("NO es posible interpretar la request, se esta haciendo JOURNAL. Vueva a mandarla al finalizar el journal");
-			paqueteJournal->tamanio=strlen(paqueteJournal->request);
-			mostrarResultadoPorConsola(JOURNAL,JOURNALTIME,mensaje,paqueteJournal);
-		}else{
-			validarRequest(mensaje);
-		}
+		validarRequest(mensaje);
 
 	}
 }
@@ -506,7 +498,7 @@ void escucharMultiplesClientes() {
 					}
 					if (handshake->tipoRol == REQUEST) {
 						paqueteRecibido = recibir(numDescriptor); // Recibo de ese cliente en particular
-						pthread_mutex_lock(&semMJOURNAL);
+						//pthread_mutex_lock(&semMJOURNAL);
 						codigoOperacion = paqueteRecibido->palabraReservada;
 						char* request = paqueteRecibido->request;
 						printf("Del fd %i \n", numDescriptor); // Muestro por pantalla el fd del cliente del que recibi el mensaje
@@ -522,7 +514,7 @@ void escucharMultiplesClientes() {
 						}
 						printf("El codigo que recibi es: %i \n", codigoOperacion);
 						interpretarRequest(codigoOperacion,request, ANOTHER_COMPONENT, numDescriptor);
-						pthread_mutex_unlock(&semMJOURNAL);
+						//pthread_mutex_unlock(&semMJOURNAL);
 						eliminar_paquete(paqueteRecibido);
 						paqueteRecibido=NULL;
 					} else if (handshake->tipoRol == GOSSIPING) {
@@ -575,13 +567,6 @@ void escucharMultiplesClientes() {
  * VALGRIND:: EN PROCESO */
 void interpretarRequest(int palabraReservada,char* request,t_caller caller, int indiceKernel) {
 
-	if(flagJOURNAL==1){
-		t_paquete* paqueteJournal=(t_paquete*)malloc(sizeof(t_paquete));
-		paqueteJournal->palabraReservada=JOURNALTIME;
-		paqueteJournal->request=strdup("NO es posible interpretar la request, se esta haciendo JOURNAL. Vueva a mandarla al finalizar el journal");
-		paqueteJournal->tamanio=strlen(paqueteJournal->request);
-		enviarAlDestinatarioCorrecto(JOURNAL,JOURNALTIME,request,paqueteJournal,caller,indiceKernel);
-	}else{
 		consistencia consistenciaMemoria;
 		if(caller== ANOTHER_COMPONENT){
 			consistenciaMemoria = palabraReservada;
@@ -671,10 +656,9 @@ void interpretarRequest(int palabraReservada,char* request,t_caller caller, int 
 			default:
 				log_warning(logger_MEMORIA, "No has ingresado una request valida");
 				break;
-		}
+	}
 		liberarArrayDeChar(requestSeparada);
 		requestSeparada=NULL;
-	}
 
 }
 
@@ -962,9 +946,9 @@ void unlockSemSegmento(char* pathSegmento){
 
 	 	 case(SELECT):	{
 	 		char** valorAEnviarSeparado=separarRequest(valorAEnviar->request);
-	 		valorEncontrado = valorAEnviarSeparado[2];
 
 	 		if(codResultado == SUCCESS){
+		 		valorEncontrado = strdup(valorAEnviarSeparado[2]);
 				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
 				log_info(logger_MEMORIA,respuesta);
 	 		}else{
@@ -1087,7 +1071,7 @@ void unlockSemSegmento(char* pathSegmento){
 	 	 	break;
 
 	 	 case(JOURNAL):
-			if(codResultado == SUCCESS){
+			if(codResultado == TRUE){
 				string_append_with_format(&error, "%s%s%s","La request: ",request,valorAEnviar->request);
 				log_info(logger_MEMORIA,error);
 			}else if (codResultado ==JOURNALTIME){
@@ -1133,8 +1117,9 @@ void unlockSemSegmento(char* pathSegmento){
    * 	-> :: void
    * VALGRIND:: NO*/
  int guardarRespuestaDeLFSaMemoria(t_paquete* nuevoPaquete,t_erroresMemoria tipoError){
-	 int memoriaSuficiente;
+	 int memoriaSuficiente=SUCCESS;
  	if(nuevoPaquete->palabraReservada == SUCCESS){
+ 		log_info(logger_MEMORIA,"ENTRO A DONDE NO DEBIA");
 		pthread_mutex_lock(&semMMem);
  		int retardoMem=retardoMemPrincipal;
 		pthread_mutex_unlock(&semMMem);
@@ -1275,7 +1260,8 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			insertALFS->request=strdup("Request invalida, se esta superando el maximo");
 			insertALFS->tamanio=sizeof(insertALFS->request);
 			enviarAlDestinatarioCorrecto(palabraReservada,VALUE_INVALIDO,request,insertALFS,caller,indiceKernel);
-
+			free(pathSegmento);
+			pathSegmento=NULL;
 		}else{
 			if(consistenciaMemoria == EC || caller == CONSOLE){
 				int resultadoCache= estaEnMemoria(palabraReservada, request,NULL,&elementoEncontrado,&pathSegmento);
@@ -2016,21 +2002,24 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 
 void procesarJournal(cod_request palabraReservada, char* request, t_caller caller, int indiceKernel,t_tipoJournal tipoJournal) {
 
+
 	pthread_mutex_lock(&semMKERNEL);
 	pthread_mutex_lock(&semMCONSOLA);
+	pthread_mutex_lock(&semMJOURNAL);
+
 
 	if(tipoJournal == AUTOMATICO){
 		log_info(logger_MEMORIA,"-----------COMENZO EL JOURNAL AUTOMATICO-----------------");
 	}else{
 		log_info(logger_MEMORIA,"-----------COMENZO EL JOURNAL-----------------");
 	}
+	sleep(10);
 
-	flagJOURNAL=1;
-
-	t_list* resultadosJournal= list_create();
+	t_list* listResultadosJournal= list_create();
 	t_int* resultadoAux = malloc(sizeof(t_int*));
 	int i=0,j=0;
 	char* requestAEnviar;
+	requestAEnviar= NULL;
 	pthread_mutex_lock(&semMMem);
 	int retardoMem = retardoMemPrincipal;
 	pthread_mutex_unlock(&semMMem);
@@ -2056,13 +2045,13 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 
 				if(insertJournalLFS->palabraReservada==SUCCESS ){
 					resultadoAux->valor=SUCCESS;
-					list_add(resultadosJournal,resultadoAux);
 				}else{
-					resultadoAux->valor=CONSISTENCIA_NO_VALIDA;
-					list_add(resultadosJournal,resultadoAux);
+					resultadoAux->valor=NUESTRO_ERROR;
 				}
+				list_add(listResultadosJournal,resultadoAux);
 
-				}
+				eliminar_paquete(insertJournalLFS);
+			}
 			j++;
 		}
 		unlockSemSegmento(segmento->path);
@@ -2077,18 +2066,18 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	list_clean_and_destroy_elements(tablaDeSegmentos->segmentos,(void*)eliminarUnSegmento);
 	pthread_mutex_unlock(&semMTablaSegmentos);
 
-	int esJournalSUCCESS(errorNo valor){
-		if(valor == SUCCESS){
+	int esJournalSUCCESS(t_int* valor){
+		if(valor->valor == SUCCESS){
 			return TRUE;
 		}else{
 			return FALSE;
 		}
 	}
 	t_paquete* resultadoJournal= (t_paquete*)malloc(sizeof(t_paquete));
-	if(!list_is_empty(resultadosJournal)){
-		int resultadoControl = list_all_satisfy(resultadosJournal, (void*) esJournalSUCCESS);
+	if(tipoJournal == MY_REQUEST){
+		int resultadoControl = list_all_satisfy(listResultadosJournal, (void*) esJournalSUCCESS);
 
-		if(resultadoControl == SUCCESS){
+		if(resultadoControl == TRUE || list_is_empty(listResultadosJournal)){
 			resultadoJournal->palabraReservada=JOURNAL;
 			resultadoJournal->request=strdup("  Se ha realizado el JOURNAL con exito");
 			resultadoJournal->tamanio=sizeof(resultadoJournal->request);
@@ -2107,12 +2096,11 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 		enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,resultadoJournal,caller, indiceKernel);
 
 	}
-	list_destroy(resultadosJournal);
+	list_destroy(listResultadosJournal);
 	free(resultadoAux);
 	resultadoAux=NULL;
-
-
-	flagJOURNAL=0;
+	free(requestAEnviar);
+	requestAEnviar=NULL;
 
 	if(tipoJournal == AUTOMATICO){
 		log_info(logger_MEMORIA,"-----------FIN EL JOURNAL AUTOMATICO-----------------");
@@ -2121,6 +2109,8 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	}
 	pthread_mutex_unlock(&semMKERNEL);
 	pthread_mutex_unlock(&semMCONSOLA);
+	pthread_mutex_unlock(&semMJOURNAL);
+
 
 }
 
