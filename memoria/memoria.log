@@ -2740,3 +2740,113 @@ pｵ0.0.1 8002
 [INFO] 03:23:50:602 Memoria/(12383:12399): STUDY 5 "JJ"
 [DEBUG] 03:24:16:539 Memoria/(12383:12399): Paso por select
 [INFO] 03:24:16:539 Memoria/(12383:12399): Desconectando al socket 7
+[INFO] 17:56:51:8 Memoria/(6853:6853): SE CONECTO CON LFS
+[INFO] 17:56:52:23 Memoria/(6853:6853): Recibi de LFS TAMAﾃ前_VALUE: 15
+[INFO] 17:56:52:25 Memoria/(6853:6853): INICIO DE MEMORIA
+[INFO] 17:56:52:72 Memoria/(6853:6866): Memoria lista para recibir al kernel
+[INFO] 17:56:52:116 Memoria/(6853:6870): Vamos a leer de consola
+[INFO] 17:56:57:521 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:57:07:524 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:57:11:279 Memoria/(6853:6866): entre a interpretarr request
+[DEBUG] 17:57:11:281 Memoria/(6853:6866): Me llego un DESCRIBE
+[INFO] 17:57:11:292 Memoria/(6853:6866): MARINOS SC 1 10000
+[INFO] 17:57:11:299 Memoria/(6853:6866): Desconectando al socket 7
+[ERROR] 17:57:13:250 Memoria/(6853:6870): Comando invalido
+[INFO] 17:57:17:527 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:57:24:365 Memoria/(6853:6870): entre a interpretarr request
+[DEBUG] 17:57:24:369 Memoria/(6853:6870): Me llego un INSERT
+[INFO] 17:57:24:371 Memoria/(6853:6870): La request: INSERT G 1 "Asdfghjfdghfdghjfghjkfghjc" se ha realizado con exito
+[INFO] 17:57:26:302 Memoria/(6853:6866): entre a interpretarr request
+[DEBUG] 17:57:26:302 Memoria/(6853:6866): Me llego un DESCRIBE
+[INFO] 17:57:26:304 Memoria/(6853:6866): MARINOS SC 1 10000
+[INFO] 17:57:26:304 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:57:27:531 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:57:37:543 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:57:41:306 Memoria/(6853:6866): entre a interpretarr request
+[DEBUG] 17:57:41:309 Memoria/(6853:6866): Me llego un DESCRIBE
+[INFO] 17:57:41:310 Memoria/(6853:6866): MARINOS SC 1 10000
+[INFO] 17:57:41:311 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:57:47:545 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:57:52:88 Memoria/(6853:6868): --- JOURNAL AUTOMATICO ---
+[INFO] 17:57:52:607 Memoria/(6853:6870): entre a interpretarr request
+[DEBUG] 17:57:52:610 Memoria/(6853:6870): Me llego un INSERT
+[INFO] 17:57:52:611 Memoria/(6853:6870): LO ENCONTRE EN CACHEE!
+[INFO] 17:57:52:612 Memoria/(6853:6870): La request: INSERT G 1 "AS" se ha realizado con exito
+[INFO] 17:57:56:323 Memoria/(6853:6866): entre a interpretarr request
+[DEBUG] 17:57:56:324 Memoria/(6853:6866): Me llego un DESCRIBE
+[INFO] 17:57:56:325 Memoria/(6853:6866): MARINOS SC 1 10000
+[INFO] 17:57:56:326 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:57:57:547 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:58:07:548 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:58:11:327 Memoria/(6853:6866): entre a interpretarr request
+[DEBUG] 17:58:11:329 Memoria/(6853:6866): Me llego un DESCRIBE
+[INFO] 17:58:11:330 Memoria/(6853:6866): MARINOS SC 1 10000
+[INFO] 17:58:11:331 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:58:17:552 Memoria/(6853:6866): Desconectando al socket 7
+[INFO] 17:59:24:350 Memoria/(6947:6947): SE CONECTO CON LFS
+[INFO] 17:59:24:351 Memoria/(6947:6947): Recibi de LFS TAMAﾃ前_VALUE: 15
+[INFO] 17:59:24:351 Memoria/(6947:6947): INICIO DE MEMORIA
+[INFO] 17:59:24:366 Memoria/(6947:6960): Memoria lista para recibir al kernel
+[INFO] 17:59:31:517 Memoria/(6947:6965): Vamos a leer de consola
+[INFO] 18:01:25:824 Memoria/(6947:6963): --- JOURNAL AUTOMATICO ---
+[INFO] 18:01:51:633 Memoria/(6947:6965): entre a interpretarr request
+[DEBUG] 18:01:51:637 Memoria/(6947:6965): Me llego un INSERT
+[INFO] 18:01:51:644 Memoria/(6947:6965): La request: INSERT F 1 "ASDFGHFGDFGHZZXXFFDGF" se ha realizado con exito
+[INFO] 18:03:02:242 Memoria/(6947:6963): --- JOURNAL AUTOMATICO ---
+[INFO] 18:04:46:284 Memoria/(6947:6963): --- JOURNAL AUTOMATICO ---
+[INFO] 18:40:52:484 Memoria/(8340:8340): SE CONECTO CON LFS
+[INFO] 18:40:52:562 Memoria/(8340:8340): Recibi de LFS TAMAﾃ前_VALUE: 15
+[INFO] 18:40:52:563 Memoria/(8340:8340): INICIO DE MEMORIA
+[INFO] 18:40:52:573 Memoria/(8340:8354): Memoria lista para recibir al kernel
+[INFO] 18:42:19:847 Memoria/(8340:8354): Desconectando al socket 7
+[INFO] 18:42:19:847 Memoria/(8340:8358): --- JOURNAL AUTOMATICO ---
+[INFO] 18:42:19:849 Memoria/(8340:8360): Vamos a leer de consola
+[INFO] 18:42:35:352 Memoria/(8340:8354): entre a interpretarr request
+[DEBUG] 18:42:35:352 Memoria/(8340:8354): Me llego un CREATE
+[INFO] 18:42:35:477 Memoria/(8340:8354): NO EXISTE EL SEGMENTO
+[INFO] 18:42:35:482 Memoria/(8340:8354): 
+[INFO] 18:42:35:483 Memoria/(8340:8354): Desconectando al socket 7
+[INFO] 18:43:06:395 Memoria/(8340:8354): entre a interpretarr request
+[DEBUG] 18:43:06:395 Memoria/(8340:8354): Me llego un CREATE
+[INFO] 18:43:06:549 Memoria/(8340:8354): NO EXISTE EL SEGMENTO
+[INFO] 18:43:06:550 Memoria/(8340:8354): 
+[INFO] 18:43:06:552 Memoria/(8340:8354): Desconectando al socket 7
+[INFO] 18:43:14:947 Memoria/(8340:8354): entre a interpretarr request
+[DEBUG] 18:43:14:949 Memoria/(8340:8354): Me llego un INSERT
+[WARNING] 18:43:14:949 Memoria/(8340:8354): No es posible realizar la request: INSERT Y 1 "VDHUKBWHUF ODKBFHOVUBFUE OBDHDOUSC" dado a que el value ingresado supera el tamanio maximo 15
+[WARNING] 18:43:14:949 Memoria/(8340:8354): Ingrese un valor menor que:  15
+[INFO] 18:43:14:950 Memoria/(8340:8354): Request invalida, se esta superando el maximo
+[INFO] 18:43:14:954 Memoria/(8340:8354): Desconectando al socket 7
+[INFO] 18:43:19:849 Memoria/(8340:8358): --- JOURNAL AUTOMATICO ---
+[INFO] 18:44:19:851 Memoria/(8340:8358): --- JOURNAL AUTOMATICO ---
+[INFO] 18:45:19:855 Memoria/(8340:8358): --- JOURNAL AUTOMATICO ---
+[INFO] 18:46:19:858 Memoria/(8340:8358): --- JOURNAL AUTOMATICO ---
+[INFO] 18:47:19:860 Memoria/(8340:8358): --- JOURNAL AUTOMATICO ---
+[INFO] 18:48:19:866 Memoria/(8340:8358): --- JOURNAL AUTOMATICO ---
+[INFO] 18:49:19:870 Memoria/(8340:8358): --- JOURNAL AUTOMATICO ---
+[INFO] 18:50:19:883 Memoria/(8340:8358): --- JOURNAL AUTOMATICO ---
+[INFO] 00:41:43:612 Memoria/(12115:12115): SE CONECTO CON LFS
+[INFO] 00:41:43:719 Memoria/(12115:12115): Recibi de LFS TAMAﾃ前_VALUE: 60
+[INFO] 00:41:43:719 Memoria/(12115:12115): INICIO DE MEMORIA
+[INFO] 00:41:43:736 Memoria/(12115:12130): Memoria lista para recibir al kernel
+[INFO] 00:41:43:757 Memoria/(12115:12134): Vamos a leer de consola
+[INFO] 00:41:50:557 Memoria/(12115:12134): entre a interpretarr request
+[DEBUG] 00:41:50:558 Memoria/(12115:12134): Me llego un SELECT
+[INFO] 00:42:16:590 Memoria/(12115:12134): ME LO TIENE QUE DECIR LFS
+[INFO] 01:03:55:748 Memoria/(12934:12934): SE CONECTO CON LFS
+[INFO] 01:03:55:806 Memoria/(12934:12934): Recibi de LFS TAMAﾃ前_VALUE: 60
+[INFO] 01:03:55:806 Memoria/(12934:12934): INICIO DE MEMORIA
+[INFO] 01:03:55:823 Memoria/(12934:12951): Memoria lista para recibir al kernel
+[INFO] 01:03:55:833 Memoria/(12934:12955): Vamos a leer de consola
+[INFO] 01:04:03:111 Memoria/(12934:12955): entre a interpretarr request
+[DEBUG] 01:04:03:111 Memoria/(12934:12955): Me llego un SELECT
+[INFO] 01:04:32:189 Memoria/(12934:12955): ME LO TIENE QUE DECIR LFS
+[INFO] 01:12:52:979 Memoria/(13784:13784): SE CONECTO CON LFS
+[INFO] 01:12:52:994 Memoria/(13784:13784): Recibi de LFS TAMAﾃ前_VALUE: 60
+[INFO] 01:12:52:994 Memoria/(13784:13784): INICIO DE MEMORIA
+[INFO] 01:12:52:997 Memoria/(13784:13799): Memoria lista para recibir al kernel
+[INFO] 01:12:53:17 Memoria/(13784:13803): Vamos a leer de consola
+[INFO] 01:12:58:948 Memoria/(13784:13803): entre a interpretarr request
+[DEBUG] 01:12:58:948 Memoria/(13784:13803): Me llego un SELECT
+[INFO] 01:13:11:662 Memoria/(13784:13803): ME LO TIENE QUE DECIR LFS
+[INFO] 01:14:03:953 Memoria/(13784:13803): La respuesta a: SELECT T 4 no es valida, TABLA INEXISTENTE

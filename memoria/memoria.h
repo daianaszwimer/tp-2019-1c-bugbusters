@@ -113,6 +113,7 @@ pthread_mutex_t semMSleepJournal;			// semaforo mutex iNotify
 pthread_mutex_t semMGossiping;			// semaforo mutex iNotify
 pthread_mutex_t semMFS;					// semaforo mutex iNotify
 pthread_mutex_t semMMem;				// semaforo mutex iNotify
+pthread_mutex_t semMConexionLFS;				// semaforo mutex
 
 
 pthread_t hiloLeerDeConsola;			// hilo que lee de consola
@@ -135,6 +136,8 @@ int flagJOURNAL=0;
 char* puertoMio;
 char* ipMia;
 char* numerosMio;
+char* puertoFS;
+char* ipFS;
 
 t_list* listaSemSegmentos;
 
@@ -162,7 +165,7 @@ void validarRequest(char*);
 
 void escucharMultiplesClientes(void);
 void interpretarRequest(int, char*,t_caller, int);
-t_paquete* intercambiarConFileSystem(cod_request, char*, t_caller, int);
+int intercambiarConFileSystem(cod_request, char*,t_paquete**, t_caller, int);
 
 void procesarSelect(cod_request,char*,consistencia, t_caller, int);
 
