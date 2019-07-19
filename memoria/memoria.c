@@ -2146,36 +2146,3 @@ void hacerJournal(void){
 	}
 }
 
-//void lockTodosLosSeg(){
-//	int i=0;
-//	pthread_mutex_lock(&semMListSemSegmentos);
-//	while(list_get(semMPorSegmento,i)!=NULL){
-//		t_semSegmento* semSeg=list_get(semMPorSegmento,i);
-//		pthread_mutex_unlock(&semMListSemSegmentos);
-//
-//		pthread_mutex_lock(semSeg->sem);
-//
-//		pthread_mutex_lock(&semMListSemSegmentos);
-//	}
-//	pthread_mutex_unlock(&semMListSemSegmentos);
-//
-//}
-//
-//void unLockTodosLosSeg(){
-//	int i=0;
-//	pthread_mutex_lock(&semMListSemSegmentos);
-//	while(list_get(semMPorSegmento,i)!=NULL){
-//		t_semSegmento* semSeg=list_get(semMPorSegmento,i);
-//		pthread_mutex_unlock(&semMListSemSegmentos);
-//
-//		pthread_mutex_unlock(semSeg->sem);
-//
-//		pthread_mutex_lock(&semMListSemSegmentos);
-//	}
-//	pthread_mutex_unlock(&semMListSemSegmentos);
-//
-//}
-
-
-
-
