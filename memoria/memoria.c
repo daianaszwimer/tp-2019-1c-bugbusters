@@ -1410,7 +1410,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 				free(pathSegmento);
 				pathSegmento=NULL;
 				t_paquete* insertALFS;
-				string_append_with_format("%s%s%llu",request," ",obtenerHoraActual());
+				string_append_with_format("%s%s%llu",&request," ",obtenerHoraActual());
 				int resultadoLFS =  intercambiarConFileSystem(palabraReservada,request, &insertALFS, caller, indiceKernel);
 
 				if(resultadoLFS == -1 || insertALFS->palabraReservada == COMPONENTE_CAIDO){
