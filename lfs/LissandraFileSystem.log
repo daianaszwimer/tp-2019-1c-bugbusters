@@ -357,3 +357,31 @@
 [INFO] 20:47:18:934 Lfs/(7169:7185): Compactando tabla: /home/utnso/lissandra-checkpoint/Tablas/TABLA3
 [INFO] 20:47:47:963 Lfs/(7169:7188): Dump iniciado
 [INFO] 20:47:47:963 Lfs/(7169:7188): Dump exitoso
+[INFO] 04:29:17:39 Lfs/(5674:5674): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 04:29:17:42 Lfs/(5674:5674): File System no detectado
+[INFO] 04:39:30:691 Lfs/(5674:5674): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 04:39:30:696 Lfs/(5674:5674): Hilo de inotify creado
+[INFO] 04:39:30:697 Lfs/(5674:5674): Hilo de recibir memorias creado
+[INFO] 04:39:30:698 Lfs/(5674:5783): Lissandra lista para recibir Memorias
+[INFO] 04:39:30:699 Lfs/(5674:5674): Hilo de Dump iniciado
+[INFO] 04:39:30:702 Lfs/(5674:5674): Hilo de consola creado
+[INFO] 04:40:08:685 Lfs/(5674:5785): Hilo de compactacion de la tabla TABLA creado
+[INFO] 04:40:08:686 Lfs/(5674:5785): Request ejecutada correctamente, la respuesta es vacia
+[INFO] 05:06:16:87 Lfs/(6448:6448): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 05:06:16:91 Lfs/(6448:6448): Hilo de compactacion de la tabla TABLA creado
+[INFO] 05:06:16:91 Lfs/(6448:6448): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 05:06:16:94 Lfs/(6448:6448): Hilo de inotify creado
+[INFO] 05:06:16:96 Lfs/(6448:6448): Hilo de recibir memorias creado
+[INFO] 05:06:16:97 Lfs/(6448:6463): Lissandra lista para recibir Memorias
+[INFO] 05:06:16:99 Lfs/(6448:6448): Hilo de Dump iniciado
+[INFO] 05:06:16:101 Lfs/(6448:6448): Hilo de consola creado
+[INFO] 05:07:13:200 Lfs/(6597:6597): ----------------Inicializacion de Lissandra File System--------------
+[INFO] 05:07:13:205 Lfs/(6597:6597): Hilo de compactacion de la tabla TABLA creado
+[INFO] 05:07:13:205 Lfs/(6597:6597): ----------------Lissandra File System inicializado correctamente--------------
+[INFO] 05:07:13:216 Lfs/(6597:6597): Hilo de inotify creado
+[INFO] 05:07:13:221 Lfs/(6597:6597): Hilo de recibir memorias creado
+[INFO] 05:07:13:222 Lfs/(6597:6612): Lissandra lista para recibir Memorias
+[INFO] 05:07:13:229 Lfs/(6597:6597): Hilo de Dump iniciado
+[INFO] 05:07:13:237 Lfs/(6597:6597): Hilo de consola creado
+[INFO] 05:09:00:343 Lfs/(6597:6614): Request ejecutada correctamente, la respuesta es vacia
+[INFO] 05:09:02:802 Lfs/(6597:6613): Realice un dump con exito
