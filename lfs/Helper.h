@@ -47,6 +47,7 @@ typedef struct{
 	char* nombreTabla;
 	int finalizarCompactacion;
 	t_list* cosasABloquear;
+	pthread_mutex_t mutex;
 } t_hiloTabla;
 
 typedef struct {

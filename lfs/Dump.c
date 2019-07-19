@@ -30,14 +30,13 @@ void* hiloDump(void* args) {
 		tiempo_dump = tiempoDump;
 		pthread_mutex_unlock(&mutexTiempoDump);
 		usleep(tiempo_dump*1000);
-		//log_info(logger_LFS, "Dump iniciado");
 		errorNo resultado = dumpear();
 		switch(resultado) {
 			case ERROR_CREANDO_ARCHIVO:
-				//log_info(logger_LFS, "Error creando archivo temporal");
+				log_error(logger_LFS, "Error sobre el dump");
 				break;
 			case SUCCESS:
-				//log_info(logger_LFS, "Dump exitoso");
+				log_info(logger_LFS, "Realice un dump con exito");
 				break;
 			default: break;
 		}
@@ -65,12 +64,31 @@ errorNo dumpear() {
 	config_destroy(configMetadata);
 	// Refactor list_iterate
 	pthread_mutex_lock(&mutexMemtable);
+	if(!memtable->tablas->elements_count){
+		error = ERROR_WILLY;
+	}
 	for(int i = 0; list_get(memtable->tablas,i) != NULL; i++) { // Recorro las tablas de la memtable
 		tabla = list_get(memtable->tablas,i);
 		char* pathTabla = string_from_format("%sTablas/%s", pathRaiz, tabla->nombreTabla);
 		DIR *dir = opendir(pathTabla);
 		if(dir) { // Verificamos que exista la tabla (por si hubo un DROP en el medio)
 			int numeroTemporal = 0;
+
+			int encontrarTabla(t_hiloTabla* tabla2) { //IS CHECKED >:v
+				return string_equals_ignore_case(tabla2->nombreTabla, tabla->nombreTabla);
+			}
+
+			int esDump(t_bloqueo* idYMutex){ //busca el dump en dicha tabla y lo bloquea
+				return idYMutex->id == 2;
+			}
+
+
+			pthread_mutex_lock(&mutexTablasParaCompactaciones);
+			t_hiloTabla* hiloTabla = list_find(tablasParaCompactaciones, (void*) encontrarTabla);
+			t_bloqueo* idYMutex = list_find(hiloTabla->cosasABloquear, (void*) esDump);
+			pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+			pthread_mutex_lock(&(idYMutex->mutex));
+
 			do { // Nos fijamos que numero de temporal crear
 				pathTmp = string_from_format("%s/%d.tmp", pathTabla, numeroTemporal);
 				fileTmp = fopen(pathTmp, "r");
@@ -133,6 +151,7 @@ errorNo dumpear() {
 				free(datosADumpear);
 				fclose(fileTmp);
 			}
+			pthread_mutex_unlock(&(idYMutex->mutex));
 			closedir(dir);
 		}
 	}
