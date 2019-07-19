@@ -15,5 +15,3 @@ void* procesarRequests(void*);
 
 void eliminarParticion(t_int*);
 void eliminarRegistro(t_registro*);
-
-long long current_timestamp();

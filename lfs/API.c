@@ -50,41 +50,40 @@ errorNo procesarCreate(char* nombreTabla, char* tipoDeConsistencia,	char* numero
 
 	if(error == SUCCESS){
 		pthread_t hiloDeCompactacion;
+
+
+
+		t_bloqueo* idYMutexPropio = malloc(sizeof(t_bloqueo));
+		idYMutexPropio->id = 0; // 0 seria consola propia, sino son fds de memorias
+		pthread_mutex_init(&(idYMutexPropio->mutex), NULL);
+
+		t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
+		hiloTabla->thread = &hiloDeCompactacion;
+		hiloTabla->nombreTabla = strdup(nombreTabla);
+		hiloTabla->finalizarCompactacion = 0;
+		hiloTabla->cosasABloquear = list_create();
+		pthread_mutex_init(&(hiloTabla->mutex), NULL);
+		list_add(hiloTabla->cosasABloquear, idYMutexPropio);
+
+		void agregarMemoria(t_int* memoria_fd) {
+			t_bloqueo* idYMutex = malloc(sizeof(t_bloqueo));
+			idYMutex->id = memoria_fd->valor;
+			pthread_mutex_init(&(idYMutex->mutex), NULL);
+			list_add(hiloTabla->cosasABloquear, idYMutex);
+		}
+
+		pthread_mutex_lock(&mutexMemorias);
+		list_iterate(memorias, (void*)agregarMemoria);
+		pthread_mutex_unlock(&mutexMemorias);
+
+		pthread_mutex_lock(&mutexTablasParaCompactaciones);
+		list_add(tablasParaCompactaciones, hiloTabla);
+		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
+
+
 		if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) strdup(pathTabla))){
 			pthread_detach(hiloDeCompactacion);
-
-
-			//TODO sacar afuera lo de abajo
-			//TODO agregar los mutex de fds de memoria
-
-			t_bloqueo* idYMutexPropio = malloc(sizeof(t_bloqueo));
-			idYMutexPropio->id = 0; // 0 seria consola propia, sino son fds de memorias
-			pthread_mutex_init(&(idYMutexPropio->mutex), NULL);
-
-			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
-			hiloTabla->thread = &hiloDeCompactacion;
-			hiloTabla->nombreTabla = strdup(nombreTabla);
-			hiloTabla->finalizarCompactacion = 0;
-			hiloTabla->cosasABloquear = list_create();
-			list_add(hiloTabla->cosasABloquear, idYMutexPropio);
-
-			void agregarMemoria(t_int* memoria_fd) {
-				t_bloqueo* idYMutex = malloc(sizeof(t_bloqueo));
-				idYMutex->id = memoria_fd->valor;
-				pthread_mutex_init(&(idYMutex->mutex), NULL);
-				list_add(hiloTabla->cosasABloquear, idYMutex);
-			}
-
-			pthread_mutex_lock(&mutexMemorias);
-			list_iterate(memorias, (void*)agregarMemoria);
-			pthread_mutex_unlock(&mutexMemorias);
-
-
-
-			pthread_mutex_lock(&mutexTablasParaCompactaciones);
-			list_add(tablasParaCompactaciones, hiloTabla);
-			pthread_mutex_unlock(&mutexTablasParaCompactaciones);
-
 			log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", nombreTabla);
 		}else{
 			log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", nombreTabla);
@@ -266,7 +265,7 @@ t_list* obtenerRegistrosDeTmp(char* nombreTabla, int key){
 			//ignora . y ..
 			if(strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0) continue;
 
-			if(string_ends_with(file->d_name, ".tmp")){
+			if(string_ends_with(file->d_name, ".tmp") || string_ends_with(file->d_name, ".tmpc")){
 				pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
 				t_config* file = config_create(pathFile);
 				char* bloquesString = config_get_string_value(file, "BLOCKS");
@@ -497,21 +496,37 @@ errorNo procesarDrop(char* nombreTabla){
 	int encontrarTabla(t_hiloTabla* tabla) {
 		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
 	}
+	int encontrarTablaMemtable(t_tabla* tabla){
+		return string_equals_ignore_case(tabla->nombreTabla, nombreTabla);
+	}
 
 	errorNo error = SUCCESS;
 	char* pathTabla = string_from_format("%s/%s", pathTablas, nombreTabla);
+	pthread_mutex_lock(&mutexTablasParaCompactaciones);
+	t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*)encontrarTabla);
+	pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+	if(tablaEncontrada != NULL){
+		pthread_mutex_lock(&(tablaEncontrada->mutex));
+	}
 	DIR* tabla = opendir(pathTabla);
 	if(tabla){
-		pthread_mutex_lock(&mutexTablasParaCompactaciones);
-		t_hiloTabla* tablaEncontrada = list_find(tablasParaCompactaciones, (void*)encontrarTabla);
-		tablaEncontrada->finalizarCompactacion = 1;
-		pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 		borrarArchivosYLiberarBloques(tabla, pathTabla);
 		closedir(tabla);
 		rmdir(pathTabla);
+		tablaEncontrada->finalizarCompactacion = 1;
+		pthread_mutex_lock(&mutexMemtable);
+		t_tabla* tabla = list_find(memtable->tablas, (void*) encontrarTabla);
+		if(tabla != NULL){
+			vaciarTabla(tabla);
+		}
+		pthread_mutex_unlock(&mutexMemtable);
 	}else{
 		error = TABLA_NO_EXISTE;
 	}
+	if(tablaEncontrada != NULL){
+		pthread_mutex_unlock(&(tablaEncontrada->mutex));
+	}
+
 	free(pathTabla);
 
 	return error;
@@ -527,7 +542,7 @@ void borrarArchivosYLiberarBloques(DIR* tabla, char* pathTabla){
 		//ignora . y ..
 		if(strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0) continue;
 
-		if(string_ends_with(file->d_name, ".bin") || string_ends_with(file->d_name, ".tmp")) {
+		if(string_ends_with(file->d_name, ".bin") || string_ends_with(file->d_name, ".tmp") || string_ends_with(file->d_name, ".tmpc")) {
 			pathFile = string_from_format("%s/%s", pathTabla, file->d_name);
 			t_config* file = config_create(pathFile);
 			char* bloquesString = config_get_string_value(file, "BLOCKS");

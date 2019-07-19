@@ -202,26 +202,26 @@ void levantarFS(char* pathBitmap){
 			if(strcmp(tabla->d_name, ".") == 0 || strcmp(tabla->d_name, "..") == 0) continue;
 			char* pathTabla = string_from_format("%s/%s", pathTablas, (char*) tabla->d_name);
 			pthread_t hiloDeCompactacion;
+
+			t_bloqueo* idYMutexPropio = malloc(sizeof(t_bloqueo));
+			idYMutexPropio->id = 0; // 0 seria consola propia, sino son fds de memorias
+			pthread_mutex_init(&(idYMutexPropio->mutex), NULL);
+
+
+			t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
+			hiloTabla->thread = &hiloDeCompactacion;
+			hiloTabla->nombreTabla = strdup(tabla->d_name);
+			hiloTabla->finalizarCompactacion = 0;
+			hiloTabla->cosasABloquear = list_create();
+			pthread_mutex_init(&(hiloTabla->mutex), NULL);
+			list_add(hiloTabla->cosasABloquear, idYMutexPropio);
+
+			pthread_mutex_lock(&mutexTablasParaCompactaciones);
+			list_add(tablasParaCompactaciones, hiloTabla);
+			pthread_mutex_unlock(&mutexTablasParaCompactaciones);
 			if(!pthread_create(&hiloDeCompactacion, NULL, (void*) hiloCompactacion, (void*) pathTabla)){
 				pthread_detach(hiloDeCompactacion);
-
-				t_bloqueo* idYMutexPropio = malloc(sizeof(t_bloqueo));
-				idYMutexPropio->id = 0; // 0 seria consola propia, sino son fds de memorias
-				pthread_mutex_init(&(idYMutexPropio->mutex), NULL);
-
-				t_hiloTabla* hiloTabla = malloc(sizeof(t_hiloTabla));
-				hiloTabla->thread = &hiloDeCompactacion;
-				hiloTabla->nombreTabla = strdup(tabla->d_name);
-				hiloTabla->finalizarCompactacion = 0;
-				hiloTabla->cosasABloquear = list_create();
-				list_add(hiloTabla->cosasABloquear, idYMutexPropio);
-
-				pthread_mutex_lock(&mutexTablasParaCompactaciones);
-				list_add(tablasParaCompactaciones, hiloTabla);
-				pthread_mutex_unlock(&mutexTablasParaCompactaciones);
-
 				log_info(logger_LFS, "Hilo de compactacion de la tabla %s creado", tabla->d_name);
-				pthread_detach(hiloDeCompactacion);
 			}else{
 				log_error(logger_LFS, "Error al crear hilo de compactacion de la tabla %s", tabla->d_name);
 			}
@@ -238,6 +238,7 @@ void liberarMemoriaLFS(){
 		}
 		list_destroy_and_destroy_elements(tabla->cosasABloquear, (void*)liberarMutexTabla);
 		free(tabla->nombreTabla);
+		pthread_mutex_destroy(&(tabla->mutex));
 		free(tabla);
 	}
 
@@ -380,7 +381,7 @@ void* conectarConMemoria(void* arg) {
 			close(memoria_fd);
 			break;
 		}
-		//log_info(logger_LFS, "Request: %s de la memoria %i",paqueteRecibido->request, memoria_fd);
+		log_info(logger_LFS, "Request: %s de la memoria %i",paqueteRecibido->request, memoria_fd);
 		char** requestSeparada = separarRequest(paqueteRecibido->request);
 
 		interpretarRequest(palabraReservada, paqueteRecibido->request, &memoria_fd);
