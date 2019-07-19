@@ -6,7 +6,7 @@ int main(void) {
 
 	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
-	logger_MEMORIA = log_create("memoria.log", "Memoria", 1, LOG_LEVEL_DEBUG);
+	logger_MEMORIA = log_create("memoria.log", "Memoria", 0, LOG_LEVEL_DEBUG);
 	retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
 	retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
 	retardoFS = config_get_int_value(config, "RETARDO_FS");
@@ -1410,7 +1410,7 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 				free(pathSegmento);
 				pathSegmento=NULL;
 				t_paquete* insertALFS;
-				string_append_with_format("%s%s%llu",&request," ",obtenerHoraActual());
+				string_append_with_format(&request,"%s%s%llu"," ",obtenerHoraActual());
 				int resultadoLFS =  intercambiarConFileSystem(palabraReservada,request, &insertALFS, caller, indiceKernel);
 
 				if(resultadoLFS == -1 || insertALFS->palabraReservada == COMPONENTE_CAIDO){

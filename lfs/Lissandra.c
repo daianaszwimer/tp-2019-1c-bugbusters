@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 
 
 void inicializacionLissandraFileSystem(){
-	logger_LFS = log_create("LissandraFileSystem.log", "Lfs", 1, LOG_LEVEL_DEBUG);
+	logger_LFS = log_create("LissandraFileSystem.log", "Lfs", 0, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------Inicializacion de Lissandra File System--------------");
 
 	if(pathConfig != NULL){
