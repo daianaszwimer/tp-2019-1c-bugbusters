@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
 	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 
 	if(argv[2] != NULL){
-		logger_MEMORIA = log_create(argv[2], "Memoria", 1,LOG_LEVEL_DEBUG);
+		logger_MEMORIA = log_create(argv[2], "Memoria", 0,LOG_LEVEL_DEBUG);
 	}else{
 		printf("Path de log incorrecto, finalizando memoria\n");
 		exit(EXIT_FAILURE);
