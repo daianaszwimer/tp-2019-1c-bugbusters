@@ -830,7 +830,6 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 	t_paquete* valorDeLFS;
 	t_elemTablaDePaginas* elementoEncontrado;
 	char* pathSegmento;
-
 	int resultadoCache;
 	int resultadoLFS;
 	int rtaGuardarEnMemoria;
@@ -901,6 +900,7 @@ int estaEnMemoria(cod_request palabraReservada, char* request,t_paquete** valorE
 		*pathSegmento=strdup(segmentoEnCache->path);
 		pthread_mutex_unlock(&semMTablaSegmentos);
 	}else{
+		*pathSegmento=strdup("");
 		pthread_mutex_unlock(&semMTablaSegmentos);
 	}
 	usleep(retardoMem*1000);
@@ -2177,7 +2177,10 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 				free(requestAEnviar);
 				requestAEnviar=NULL;
 
-				if(insertJournalLFS->palabraReservada==SUCCESS ){
+				if(insertJournalLFS->palabraReservada==SUCCESS){
+					resultadoAux->valor=SUCCESS;
+				}else if( insertJournalLFS->palabraReservada==TABLA_NO_EXISTE){
+					log_info(logger_MEMORIA,"AVISO DE JOURNAL:la tabla de la request %s no existe",insertJournalLFS->request);
 					resultadoAux->valor=SUCCESS;
 				}else{
 					resultadoAux->valor=NUESTRO_ERROR;
@@ -2201,7 +2204,7 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 	pthread_mutex_unlock(&semMTablaSegmentos);
 
 	int esJournalSUCCESS(t_int* valor){
-		if(valor->valor == SUCCESS){
+		if(valor->valor == SUCCESS||valor->valor == TABLA_NO_EXISTE){
 			return TRUE;
 		}else{
 			return FALSE;
