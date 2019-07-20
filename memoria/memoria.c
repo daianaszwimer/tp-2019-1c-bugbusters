@@ -482,6 +482,7 @@ void conectarAFileSystem() {
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
 	free(handshakeLFS);
+	free(handshake_rta);
 }
 
 
@@ -764,6 +765,8 @@ int intercambiarConFileSystem(cod_request palabraReservada, char* request,t_paqu
 		}
 		t_handshake_lfs* handshakeLFS2 = recibirValueLFS(conexionAux);
 		free(handshakeLFS2);
+		free(handshake_rta);
+
 		if (conexionAux == COMPONENTE_CAIDO) {
 			return FAILURE;
 		}
@@ -1080,6 +1083,7 @@ void unlockSemSegmento(char* pathSegmento){
 		 		valorEncontrado = strdup(valorAEnviarSeparado[2]);
 				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
 				log_info(logger_MEMORIA,respuesta);
+				free(valorEncontrado);
 	 		}else{
 	 			switch(codResultado){
 					case(KEY_NO_EXISTE):
