@@ -5,8 +5,28 @@
  * 1. Char*: Path del config
  * */
 int main(int argc, char* argv[]) {
+	logger_LFS = log_create("LissandraFileSystem.log", "Lfs", 0, LOG_LEVEL_DEBUG);
+	log_info(logger_LFS, "----------------Inicializacion de Lissandra File System--------------");
 
-	pathConfig = argv[1];
+	if(argv[1] != NULL){
+		config = config_create(argv[1]);
+	}else{
+		log_error(logger_LFS, "Error al levantar archivo de configuracion, finalizando Lissandra File System");
+		exit(EXIT_FAILURE);
+	}
+
+	if(config == NULL){
+		log_error(logger_LFS, "Error al leer archivo de configuracion, finalizando Lissandra File System");
+		exit(EXIT_FAILURE);
+	}
+	if(!config_has_property(config, "PUNTO_MONTAJE")){
+		log_error(logger_LFS, "Key \"PUNTO_MONTAJE\" no encontrada en config");
+		log_info(logger_LFS, "Finalizando Lissandra File System");
+		exit(EXIT_FAILURE);
+	}
+
+
+
 	inicializacionLissandraFileSystem();
 
 	if(!pthread_create(&hiloDeInotify, NULL, (void*)escucharCambiosEnConfig, NULL)){
@@ -47,26 +67,6 @@ int main(int argc, char* argv[]) {
 
 
 void inicializacionLissandraFileSystem(){
-	logger_LFS = log_create("LissandraFileSystem.log", "Lfs", 0, LOG_LEVEL_DEBUG);
-	log_info(logger_LFS, "----------------Inicializacion de Lissandra File System--------------");
-
-	if(pathConfig != NULL){
-		config = config_create(pathConfig);
-	}else{
-
-		config = config_create("/home/utnso/tp-2019-1c-bugbusters/lfs/LissandraFileSystem.config");
-	}
-
-	if(config == NULL){
-		log_error(logger_LFS, "Error al leer archivo de configuracion");
-		log_info(logger_LFS, "Finalizando Lissandra File System");
-		exit(EXIT_FAILURE);
-	}
-	if(!config_has_property(config, "PUNTO_MONTAJE")){
-		log_error(logger_LFS, "Key \"PUNTO_MONTAJE\" no encontrada en config");
-		log_info(logger_LFS, "Finalizando Lissandra File System");
-		exit(EXIT_FAILURE);
-	}
 	char* puntoDeMontaje = config_get_string_value(config, "PUNTO_MONTAJE");
 	retardo = config_get_int_value(config, "RETARDO");
 	tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
