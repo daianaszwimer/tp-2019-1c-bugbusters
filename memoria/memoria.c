@@ -873,7 +873,6 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		resultadoLFS = intercambiarConFileSystem(palabraReservada,request,&valorDeLFS, caller, indiceKernel);
 
 		if(resultadoLFS == -1 || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
-			free(valorDeLFS->request);
 			valorDeLFS->request=strdup("FALLO CONEXION LFS");
 			enviarAlDestinatarioCorrecto(palabraReservada, LFS_CAIDO,request, valorDeLFS,caller,indiceKernel);
 		}else{
@@ -1725,7 +1724,6 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &valorDeLFS, caller, indiceKernel);
 
 	if(resultadoLFS == -1 || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
-		free(valorDeLFS->request);
 		valorDeLFS->request=strdup("FALLO CONEXION LFS");
 		enviarAlDestinatarioCorrecto(codRequest, LFS_CAIDO,request, valorDeLFS,caller,indiceKernel);
 	}else{
@@ -1919,7 +1917,10 @@ void liberarMemoria(){
 	free(bitarrayString);
 	bitarrayString=NULL;
 	free(memoria);
-	liberar_conexion(conexionLfs);
+	if (conexionLfs != COMPONENTE_CAIDO) {
+//		log_info(logger_MEMORIA, "Liberando conexion con lfs");
+		liberar_conexion(conexionLfs);
+	}
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
 	free(ipMia);
@@ -1958,7 +1959,6 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
 	t_paquete* describeLFS;
 	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &describeLFS, caller, indiceKernel);
 	if (resultadoLFS == FAILURE || describeLFS->palabraReservada == COMPONENTE_CAIDO) {
-		free(describeLFS->request);
 		describeLFS->request = strdup("FALLO CONEXION CON LFS");
 		describeLFS->palabraReservada = LFS_CAIDO;
 	}
@@ -1986,7 +1986,6 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	pthread_mutex_unlock(&semMMem);
 	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &valorDeLFS, caller, indiceKernel);
 	if (resultadoLFS == FAILURE || valorDeLFS->palabraReservada == COMPONENTE_CAIDO) {
-		free(valorDeLFS->request);
 		valorDeLFS->palabraReservada = LFS_CAIDO;
 		valorDeLFS->request = strdup("FALLO CONEXION CON LFS");
 	} else {
@@ -2194,7 +2193,6 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 				t_paquete* insertJournalLFS;
 				int resultadoLFS = intercambiarConFileSystem(INSERT,requestAEnviar, &insertJournalLFS, caller, indiceKernel);
 				if (resultadoLFS == FAILURE || insertJournalLFS->palabraReservada == COMPONENTE_CAIDO) {
-					free(insertJournalLFS->request);
 					insertJournalLFS->palabraReservada = LFS_CAIDO;
 					insertJournalLFS->request = strdup("FALLO CONEXION CON LFS");
 				}

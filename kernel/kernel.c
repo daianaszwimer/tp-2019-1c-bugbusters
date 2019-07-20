@@ -1587,8 +1587,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			respuesta = paqueteRecibido->palabraReservada;
 			if (respuesta == SUCCESS) {
 				if(codigo == SELECT || codigo == DESCRIBE) {
-					log_error(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
-
+					log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta %s", mensaje, paqueteRecibido->request);
 				} else {
 					log_info(logger_KERNEL, "El request %s se realizó con éxito", mensaje);
 				}
@@ -1598,8 +1597,19 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 					actualizarTablas(consistenciaTablaString);
 					free(consistenciaTablaString);
 				}
+			} else if(respuesta == KEY_NO_EXISTE && codigo == SELECT) {
+				respuesta = SUCCESS;
+				log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta la key no existe", mensaje);
+			} else if(respuesta == TABLA_EXISTE && codigo == CREATE) {
+				respuesta = SUCCESS;
+				log_info(logger_KERNEL, "El request %s se ejecutó y me llegó como rta la tabla ya existía", mensaje);
+			} else if (respuesta == LFS_CAIDO) {
+				respuesta = SUCCESS;
+				log_info(logger_KERNEL, "El request %s no se ejecutó porque se cayó LFS", mensaje);
 			} else {
-				log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, paqueteRecibido->request);
+				char* msjError = traducirMensajeError(respuesta);
+				log_error(logger_KERNEL, "El request %s no es válido y me llegó como rta %s", mensaje, msjError);
+				free(msjError);
 			}
 		} else {
 			log_info(logger_KERNEL, "El JOURNAL falló");
