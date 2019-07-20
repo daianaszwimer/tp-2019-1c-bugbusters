@@ -6,13 +6,15 @@ cd
 git clone https://github.com/sisoputnfrba/so-commons-library.git
 # tambien se puede hacer make install sino
 cd so-commons-library
-make clean
-make
+make uninstall
+make install
 cd
 #su "$SUDO_USER" -c cp so-commons-library/src/build/libcommons.so /usr/lib
 cp so-commons-library/src/build/libcommons.so /usr/lib
 cd
-cd tp-2019-1c-bugbusters/nuestro_lib/Debug
+cd tp-2019-1c-bugbusters
+git checkout dev
+cd nuestro_lib/Debug
 make clean
 make all
 cd
