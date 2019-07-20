@@ -8,8 +8,9 @@ int main(int argc, char* argv[]) {
 	logger_LFS = log_create("LissandraFileSystem.log", "Lfs", 0, LOG_LEVEL_DEBUG);
 	log_info(logger_LFS, "----------------Inicializacion de Lissandra File System--------------");
 
-	if(argv[1] != NULL){
-		config = config_create(argv[1]);
+	pathConfig = argv[1];
+	if(pathConfig != NULL){
+		config = config_create(pathConfig);
 	}else{
 		log_error(logger_LFS, "Error al levantar archivo de configuracion, finalizando Lissandra File System");
 		exit(EXIT_FAILURE);
@@ -24,7 +25,6 @@ int main(int argc, char* argv[]) {
 		log_info(logger_LFS, "Finalizando Lissandra File System");
 		exit(EXIT_FAILURE);
 	}
-
 
 
 	inicializacionLissandraFileSystem();
@@ -437,20 +437,14 @@ void* escucharCambiosEnConfig(void* arg) {
 		log_error(logger_LFS, "Inotify no se pudo inicializar correctamente");
 		return NULL;
 	}
-	char* configPath;
-	if(arg != NULL){
-		configPath = (char*) arg;
-	}else{
-		configPath = "/home/utnso/tp-2019-1c-bugbusters/lfs/LissandraFileSystem.config";
-	}
 
-	watch_descriptor = inotify_add_watch(file_descriptor, configPath, IN_MODIFY);
+	watch_descriptor = inotify_add_watch(file_descriptor, pathConfig, IN_MODIFY);
 	while(1) {
 		int length = read(file_descriptor, buffer, BUF_LEN);
 		log_info(logger_LFS, "Cambio el archivo de config");
 		pthread_mutex_lock(&mutexConfig);
 		config_destroy(config);
-		config = leer_config(configPath);
+		config = leer_config(pathConfig);
 		pthread_mutex_unlock(&mutexConfig);
 		if (length < 0) {
 			log_error(logger_LFS, "Error en inotify");
@@ -480,6 +474,6 @@ void* escucharCambiosEnConfig(void* arg) {
 			log_error(logger_LFS, "Inotify no se pudo inicializar correctamente");
 		}
 
-		watch_descriptor = inotify_add_watch(file_descriptor, configPath, IN_MODIFY);
+		watch_descriptor = inotify_add_watch(file_descriptor, pathConfig, IN_MODIFY);
 	}
 }

@@ -1,8 +1,11 @@
 #include "kernel.h"
+
+char* pathConfig;
 int main(int argc, char* argv[]) {
 	logger_KERNEL = log_create("kernel.log", "Kernel", 0, LOG_LEVEL_DEBUG);
-	if(argv[1] != NULL){
-		config = config_create(argv[1]);
+	pathConfig = argv[1];
+	if(pathConfig != NULL){
+		config = config_create(pathConfig);
 	}else{
 		log_error(logger_KERNEL, "Error al levantar el archivo de configuracion, finalizando memoria");
 		exit(EXIT_FAILURE);
@@ -424,14 +427,14 @@ void escucharCambiosEnConfig(void) {
 		log_error(logger_KERNEL, "Inotify no se pudo inicializar correctamente");
 	}
 	int hayError = 0;
-	watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config", IN_MODIFY);
+	watch_descriptor = inotify_add_watch(file_descriptor, pathConfig, IN_MODIFY);
 	while(1) {
 		// log_info(logger_KERNEL, "Watch vale %d", watch_descriptor);
 		int length = read(file_descriptor, buffer, BUF_LEN);
 		log_info(logger_KERNEL, "Cambió el archivo de config");
 		pthread_mutex_lock(&semMConfig);
 		config_destroy(config);
-		config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
+		config = leer_config(pathConfig);
 		pthread_mutex_unlock(&semMConfig);
 		if (length < 0) {
 			log_error(logger_KERNEL, "Error en inotify");
@@ -483,7 +486,7 @@ void escucharCambiosEnConfig(void) {
 			log_error(logger_KERNEL, "Inotify no se pudo inicializar correctamente");
 		}
 
-		watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config", IN_MODIFY);
+		watch_descriptor = inotify_add_watch(file_descriptor, pathConfig, IN_MODIFY);
 	}
 }
 

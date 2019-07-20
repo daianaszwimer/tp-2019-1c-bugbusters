@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
+char* pathConfig;
 int main(int argc, char* argv[]) {
 
 	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
@@ -13,9 +14,9 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-
-	if(argv[1] != NULL){
-		config = leer_config(argv[1]);
+	pathConfig = argv[1];
+	if(pathConfig != NULL){
+		config = leer_config(pathConfig);
 	}else{
 		log_error(logger_MEMORIA, "Error al levantar el archivo de configuracion, finalizando memoria");
 		exit(EXIT_FAILURE);
@@ -191,13 +192,13 @@ void escucharCambiosEnConfig(void) {
 		log_error(logger_MEMORIA, "iNotify no se pudo inicializar correctamente");
 	}
 
-	watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config", IN_MODIFY);
+	watch_descriptor = inotify_add_watch(file_descriptor, pathConfig, IN_MODIFY);
 	while(1) {
 		int length = read(file_descriptor, buffer, BUF_LEN);
 		log_warning(logger_MEMORIA, "Cambió el archivo de config");
 		pthread_mutex_lock(&semMConfig);
 		config_destroy(config);
-		config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
+		config = leer_config(pathConfig);
 		pthread_mutex_unlock(&semMConfig);
 		if (length < 0) {
 			log_error(logger_MEMORIA, "ERROR en iNotify");
@@ -228,7 +229,7 @@ void escucharCambiosEnConfig(void) {
 			log_error(logger_MEMORIA, "iNotify no se pudo inicializar correctamente");
 		}
 
-		watch_descriptor = inotify_add_watch(file_descriptor, "/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config", IN_MODIFY);
+		watch_descriptor = inotify_add_watch(file_descriptor, pathConfig, IN_MODIFY);
 	}
 }
 
