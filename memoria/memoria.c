@@ -873,7 +873,6 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 		resultadoLFS = intercambiarConFileSystem(palabraReservada,request,&valorDeLFS, caller, indiceKernel);
 
 		if(resultadoLFS == -1 || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
-			free(valorDeLFS->request);
 			valorDeLFS->request=strdup("FALLO CONEXION LFS");
 			enviarAlDestinatarioCorrecto(palabraReservada, LFS_CAIDO,request, valorDeLFS,caller,indiceKernel);
 		}else{
@@ -1487,7 +1486,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
  					modificarElem(&elementoAInsertar,nuevoTimestamp,nuevaKey,nuevoValor,MODIFICADO);
 
 					lockSemSegmento(nuevaTabla);
-					list_add(segmentoBuscado->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp,MODIFICADO));
+					list_add(segmentoBuscado->tablaDePagina,elementoAInsertar);
 					unlockSemSegmento(nuevaTabla);
 
 					paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
@@ -1511,7 +1510,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 					crearSegmento(nuevoSegmento, nuevaTabla);
 
 					lockSemSegmento(nuevaTabla);
-					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp,MODIFICADO));
+					list_add(nuevoSegmento->tablaDePagina,elementoAInsertar);
 					unlockSemSegmento(nuevaTabla);
 
 					pthread_mutex_lock(&semMTablaSegmentos);
@@ -1725,7 +1724,6 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &valorDeLFS, caller, indiceKernel);
 
 	if(resultadoLFS == -1 || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
-		free(valorDeLFS->request);
 		valorDeLFS->request=strdup("FALLO CONEXION LFS");
 		enviarAlDestinatarioCorrecto(codRequest, LFS_CAIDO,request, valorDeLFS,caller,indiceKernel);
 	}else{
@@ -1919,7 +1917,10 @@ void liberarMemoria(){
 	free(bitarrayString);
 	bitarrayString=NULL;
 	free(memoria);
-	liberar_conexion(conexionLfs);
+	if (conexionLfs != COMPONENTE_CAIDO) {
+//		log_info(logger_MEMORIA, "Liberando conexion con lfs");
+		liberar_conexion(conexionLfs);
+	}
 	log_destroy(logger_MEMORIA);
 	config_destroy(config);
 	free(ipMia);
@@ -1958,7 +1959,6 @@ void procesarDescribe(cod_request codRequest, char* request,t_caller caller,int 
 	t_paquete* describeLFS;
 	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &describeLFS, caller, indiceKernel);
 	if (resultadoLFS == FAILURE || describeLFS->palabraReservada == COMPONENTE_CAIDO) {
-		free(describeLFS->request);
 		describeLFS->request = strdup("FALLO CONEXION CON LFS");
 		describeLFS->palabraReservada = LFS_CAIDO;
 	}
@@ -1986,7 +1986,6 @@ void procesarDrop(cod_request codRequest, char* request ,consistencia consistenc
 	pthread_mutex_unlock(&semMMem);
 	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &valorDeLFS, caller, indiceKernel);
 	if (resultadoLFS == FAILURE || valorDeLFS->palabraReservada == COMPONENTE_CAIDO) {
-		free(valorDeLFS->request);
 		valorDeLFS->palabraReservada = LFS_CAIDO;
 		valorDeLFS->request = strdup("FALLO CONEXION CON LFS");
 	} else {
@@ -2125,9 +2124,9 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 		list_sort(elemSinModificar, (void*) menorTimestamp);
 		elemVictimaLRU= list_get(elemSinModificar,0);
 		int desvinculacion=desvincularVictimaDeSuSegmento(elemVictimaLRU);
-		pthread_mutex_lock(&semMBitarray);
-		bitarray_clean_bit(bitarray,elemVictimaLRU->numeroDePag);
-		pthread_mutex_unlock(&semMBitarray);
+//		pthread_mutex_lock(&semMBitarray);
+//		bitarray_clean_bit(bitarray,elemVictimaLRU->numeroDePag);
+//		pthread_mutex_unlock(&semMBitarray);
 
 	} else {
 		elemVictimaLRU=NULL;
@@ -2194,7 +2193,6 @@ void procesarJournal(cod_request palabraReservada, char* request, t_caller calle
 				t_paquete* insertJournalLFS;
 				int resultadoLFS = intercambiarConFileSystem(INSERT,requestAEnviar, &insertJournalLFS, caller, indiceKernel);
 				if (resultadoLFS == FAILURE || insertJournalLFS->palabraReservada == COMPONENTE_CAIDO) {
-					free(insertJournalLFS->request);
 					insertJournalLFS->palabraReservada = LFS_CAIDO;
 					insertJournalLFS->request = strdup("FALLO CONEXION CON LFS");
 				}
