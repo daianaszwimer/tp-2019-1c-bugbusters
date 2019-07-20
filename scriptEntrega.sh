@@ -32,7 +32,7 @@ cd
 cd tp-2019-1c-bugbusters/lfs/Debug
 make clean
 make all
-echo Seteando library path...
+# echo Seteando library path...
 #  ldconfig -n directory_with_shared_libraries
 # ldd {ejecutable}
 # hay que instalar todas las dependenciassS????
