@@ -42,8 +42,19 @@ int main(void) {
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
 
-	conectarAFileSystem();
-
+	int rta = conectarAFileSystem();
+	if (rta == FAILURE) {
+		log_destroy(logger_MEMORIA);
+		config_destroy(config);
+		free(ipMia);
+		free(puertoMio);
+		free(numerosMio);
+		free(ipFS);
+		free(puertoFS);
+		list_destroy(memoriasSeeds);
+		list_destroy(memoriasLevantadas);
+		return EXIT_SUCCESS;
+	}
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 	inicializacionDeMemoria();
 	log_info(logger_MEMORIA,"INICIO DE MEMORIA");
@@ -451,7 +462,7 @@ void validarRequest(char* mensaje){
  * Return:
  * 	-> :: void
  * VALGRIND:: SI */
-void conectarAFileSystem() {
+int conectarAFileSystem() {
 	int conexion = crearConexion(
 			ipFS,
 			puertoFS);
@@ -466,7 +477,8 @@ void conectarAFileSystem() {
 		pthread_mutex_lock(&semMConexionLFS);
 		conexionLfs = COMPONENTE_CAIDO;
 		pthread_mutex_unlock(&semMConexionLFS);
-		return;
+		log_error(logger_MEMORIA, "Abortando ejecución...");
+		return FAILURE;
 	}
 	t_handshake_rta* handshake_rta = recibirRtaHandshake(conexion, &rta);
 	log_debug(logger_MEMORIA, "Recibi rta de handshake");
@@ -476,14 +488,24 @@ void conectarAFileSystem() {
 		pthread_mutex_lock(&semMConexionLFS);
 		conexionLfs = COMPONENTE_CAIDO;
 		pthread_mutex_unlock(&semMConexionLFS);
-		return;
+		free(handshake_rta);
+		log_error(logger_MEMORIA, "Abortando ejecución...");
+		return FAILURE;
 	}
 	handshakeLFS = recibirValueLFS(conexion);
 	maxValue= handshakeLFS->tamanioValue;
+	if (maxValue <= 0) {
+		free(handshakeLFS);
+		free(handshake_rta);
+		log_error(logger_MEMORIA, "Me llegó un value inválido y no me pude inicializar");
+		log_error(logger_MEMORIA, "Abortando ejecución...");
+		return FAILURE;
+	}
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
 	free(handshakeLFS);
 	free(handshake_rta);
+	return SUCCESS;
 }
 
 
