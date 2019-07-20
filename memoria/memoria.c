@@ -2,11 +2,30 @@
 #include <stdlib.h>
 #include <errno.h>
 
-int main(void) {
+int main(int argc, char* argv[]) {
 
 	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
-	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
-	logger_MEMORIA = log_create("memoria.log", "Memoria", 1,LOG_LEVEL_DEBUG);
+
+	if(argv[2] != NULL){
+		logger_MEMORIA = log_create(argv[2], "Memoria", 1,LOG_LEVEL_DEBUG);
+	}else{
+		printf("Path de log incorrecto, finalizando memoria\n");
+		exit(EXIT_FAILURE);
+	}
+
+
+	if(argv[1] != NULL){
+		config = leer_config(argv[1]);
+	}else{
+		log_error(logger_MEMORIA, "Error al levantar el archivo de configuracion, finalizando memoria");
+		exit(EXIT_FAILURE);
+	}
+
+	if(config == NULL){
+		log_error(logger_MEMORIA, "Error al leer archivo de configuracion, finalizando memoria");
+		exit(EXIT_FAILURE);
+	}
+
 	retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
 	retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
 	retardoFS = config_get_int_value(config, "RETARDO_FS");

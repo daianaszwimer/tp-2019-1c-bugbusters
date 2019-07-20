@@ -1,6 +1,18 @@
 #include "kernel.h"
+int main(int argc, char* argv[]) {
+	logger_KERNEL = log_create("kernel.log", "Kernel", 0, LOG_LEVEL_DEBUG);
+	if(argv[1] != NULL){
+		config = config_create(argv[1]);
+	}else{
+		log_error(logger_KERNEL, "Error al levantar el archivo de configuracion, finalizando memoria");
+		exit(EXIT_FAILURE);
+	}
 
-int main(void) {
+	if(config == NULL){
+		log_error(logger_KERNEL, "Error al leer archivo de configuracion, finalizando memoria");
+		exit(EXIT_FAILURE);
+	}
+
 	inicializarVariables();
 
 	log_info(logger_KERNEL, "----------------INICIO DE KERNEL--------------");
@@ -35,11 +47,9 @@ int main(void) {
  * Return:
  * 	-> :: void  */
 void inicializarVariables() {
-	logger_KERNEL = log_create("kernel.log", "Kernel", 0, LOG_LEVEL_DEBUG);
 	logger_METRICAS_KERNEL = log_create("metricas.log", "MetricasKernel", 0, LOG_LEVEL_DEBUG);
 
 	// Configs
-	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/kernel/kernel.config");
 	int multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
 	quantum = config_get_int_value(config, "QUANTUM");
 	sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
