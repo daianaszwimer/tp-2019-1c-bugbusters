@@ -148,7 +148,7 @@ int watch_descriptor;
 
 //------------------ --- FUNCIONES--------------------------------
 
-void conectarAFileSystem(void);
+int conectarAFileSystem(void);
 void inicializacionDeMemoria(void);
 int obtenerIndiceMarcoDisponible();
 void escucharCambiosEnConfig(void);

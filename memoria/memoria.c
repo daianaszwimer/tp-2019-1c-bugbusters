@@ -6,7 +6,7 @@ int main(void) {
 
 	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
-	logger_MEMORIA = log_create("memoria.log", "Memoria", 0,LOG_LEVEL_DEBUG);
+	logger_MEMORIA = log_create("memoria.log", "Memoria", 1,LOG_LEVEL_DEBUG);
 	retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
 	retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
 	retardoFS = config_get_int_value(config, "RETARDO_FS");
@@ -42,8 +42,19 @@ int main(void) {
 
 	//--------------------------------CONEXION CON LFS ---------------------------------------------------------------
 
-	conectarAFileSystem();
-
+	int rta = conectarAFileSystem();
+	if (rta == FAILURE) {
+		log_destroy(logger_MEMORIA);
+		config_destroy(config);
+		free(ipMia);
+		free(puertoMio);
+		free(numerosMio);
+		free(ipFS);
+		free(puertoFS);
+		list_destroy(memoriasSeeds);
+		list_destroy(memoriasLevantadas);
+		return EXIT_SUCCESS;
+	}
 	//--------------------------------RESERVAR MEMORIA ---------------------------------------------------------------
 	inicializacionDeMemoria();
 	log_info(logger_MEMORIA,"INICIO DE MEMORIA");
@@ -451,7 +462,7 @@ void validarRequest(char* mensaje){
  * Return:
  * 	-> :: void
  * VALGRIND:: SI */
-void conectarAFileSystem() {
+int conectarAFileSystem() {
 	int conexion = crearConexion(
 			ipFS,
 			puertoFS);
@@ -459,29 +470,42 @@ void conectarAFileSystem() {
 	conexionLfs = conexion;
 	pthread_mutex_unlock(&semMConexionLFS);
 	int rta = enviarHandshake(MEMORIA, conexion);
+	log_debug(logger_MEMORIA, "Mando handshake");
 	if (rta == COMPONENTE_CAIDO) {
 		log_error(logger_MEMORIA, "No está levantado el FS");
 		liberar_conexion(conexion);
 		pthread_mutex_lock(&semMConexionLFS);
 		conexionLfs = COMPONENTE_CAIDO;
 		pthread_mutex_unlock(&semMConexionLFS);
-		return;
+		log_error(logger_MEMORIA, "Abortando ejecución...");
+		return FAILURE;
 	}
-
 	t_handshake_rta* handshake_rta = recibirRtaHandshake(conexion, &rta);
+	log_debug(logger_MEMORIA, "Recibi rta de handshake");
 	if (handshake_rta->rta == CONEXION_INVALIDA) {
 		log_error(logger_MEMORIA, "Este tipo de conexión no es válida");
 		liberar_conexion(conexion);
 		pthread_mutex_lock(&semMConexionLFS);
 		conexionLfs = COMPONENTE_CAIDO;
 		pthread_mutex_unlock(&semMConexionLFS);
-		return;
+		free(handshake_rta);
+		log_error(logger_MEMORIA, "Abortando ejecución...");
+		return FAILURE;
 	}
 	handshakeLFS = recibirValueLFS(conexion);
 	maxValue= handshakeLFS->tamanioValue;
+	if (maxValue <= 0) {
+		free(handshakeLFS);
+		free(handshake_rta);
+		log_error(logger_MEMORIA, "Me llegó un value inválido y no me pude inicializar");
+		log_error(logger_MEMORIA, "Abortando ejecución...");
+		return FAILURE;
+	}
 	log_info(logger_MEMORIA, "SE CONECTO CON LFS");
 	log_info(logger_MEMORIA, "Recibi de LFS TAMAÑO_VALUE: %d", handshakeLFS->tamanioValue);
 	free(handshakeLFS);
+	free(handshake_rta);
+	return SUCCESS;
 }
 
 
@@ -765,6 +789,8 @@ int intercambiarConFileSystem(cod_request palabraReservada, char* request,t_paqu
 		}
 		t_handshake_lfs* handshakeLFS2 = recibirValueLFS(conexionAux);
 		free(handshakeLFS2);
+		free(handshake_rta);
+
 		if (conexionAux == COMPONENTE_CAIDO) {
 			return FAILURE;
 		}
@@ -1080,6 +1106,7 @@ void unlockSemSegmento(char* pathSegmento){
 		 		valorEncontrado = strdup(valorAEnviarSeparado[2]);
 				string_append_with_format(&respuesta, "%s%s%s%s","La respuesta a la request: ",request," es: ", valorEncontrado);
 				log_info(logger_MEMORIA,respuesta);
+				free(valorEncontrado);
 	 		}else{
 	 			switch(codResultado){
 					case(KEY_NO_EXISTE):
