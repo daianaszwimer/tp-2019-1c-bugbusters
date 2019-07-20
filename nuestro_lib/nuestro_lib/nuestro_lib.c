@@ -1,5 +1,12 @@
 #include "nuestro_lib.h"
 
+void liberarArrayDeString(char* buf[]){
+	int i=0;
+	while(buf[i]!=NULL){
+		memset(buf[i], 0, strlen(buf[i]));
+	}
+}
+
 /* convertirKey()
  * Parametros:
  * 	-> key ::  char*

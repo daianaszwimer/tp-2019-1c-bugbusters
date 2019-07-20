@@ -139,4 +139,5 @@
 			<resource resourceType="PROJECT" workspacePath="/nuestro_lib"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

@@ -75,11 +75,12 @@
 								<option id="gnu.c.link.option.paths.363522397" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nuestro_lib/Debug}&quot;"/>
 								</option>
-								<option id="gnu.c.link.option.libs.1405054732" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="nuestro_lib"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="commons"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="readline"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pthread"/>
+								<option id="gnu.c.link.option.libs.1405054732" name="Libraries (-l)" superClass="gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+									<listOptionValue builtIn="false" value="nuestro_lib"/>
+									<listOptionValue builtIn="false" value="m"/>
+									<listOptionValue builtIn="false" value="commons"/>
+									<listOptionValue builtIn="false" value="readline"/>
+									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1890744871" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -124,6 +125,9 @@
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1130481897;cdt.managedbuild.config.gnu.exe.debug.1130481897.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1970582555;cdt.managedbuild.tool.gnu.c.compiler.input.1562331356">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.349334;cdt.managedbuild.toolchain.gnu.base.349334.1608566242;cdt.managedbuild.tool.gnu.c.compiler.base.1990127849;cdt.managedbuild.tool.gnu.c.compiler.input.1259221282">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
@@ -131,6 +135,9 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1924841444;cdt.managedbuild.config.gnu.exe.debug.1924841444.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1574849654;cdt.managedbuild.tool.gnu.c.compiler.input.919284411">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="0.1967562935">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.605248677;cdt.managedbuild.config.gnu.exe.debug.605248677.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.94490217;cdt.managedbuild.tool.gnu.c.compiler.input.302593817">

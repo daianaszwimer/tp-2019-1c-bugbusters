@@ -145,6 +145,7 @@ typedef struct{
 	int valor;
 } t_int;
 
+void liberarArrayDeString(char**);
 int convertirKey(char*);
 void convertirTimestamp(char*, unsigned long long*);
 void iterator(char*);

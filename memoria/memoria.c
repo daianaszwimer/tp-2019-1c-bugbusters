@@ -829,58 +829,40 @@ void procesarSelect(cod_request palabraReservada, char* request,consistencia con
 
 	t_paquete* valorDeLFS;
 	t_elemTablaDePaginas* elementoEncontrado;
-	char* pathSegmento=strdup("");
+	char* pathSegmento;
 
 	int resultadoCache;
 	int resultadoLFS;
 	int rtaGuardarEnMemoria;
 
-	if(consistenciaMemoria == EC || caller == CONSOLE){		// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-		t_paquete* valorEncontrado;
-		resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado,&pathSegmento);
-		if(resultadoCache == EXIT_SUCCESS ) {
-			log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
-			actualizarTimestamp(elementoEncontrado->marco);
-			unlockSemSegmento(pathSegmento);
-			enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, indiceKernel);
-		} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
-			log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-			resultadoLFS = intercambiarConFileSystem(palabraReservada,request,&valorDeLFS, caller, indiceKernel);
-
-			if(resultadoLFS == -1 || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
-				valorDeLFS = malloc(sizeof(t_paquete));
-				valorDeLFS->request=strdup("FALLO CONEXION LFS");
-				//rtaGuardarEnMemoria =guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
-				enviarAlDestinatarioCorrecto(palabraReservada, LFS_CAIDO,request, valorDeLFS,caller,indiceKernel);
-			}else{
-				if(rtaGuardarEnMemoria == MEMORIA_FULL){
-					valorDeLFS->request=strdup("MEMORIA FULL.Debe realizarse JOURNAL");
-					valorDeLFS->tamanio=(sizeof(valorDeLFS->request));
-					rtaGuardarEnMemoria =guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
-					enviarAlDestinatarioCorrecto(palabraReservada,MEMORIA_FULL,request, valorDeLFS,caller,indiceKernel);
-				}else{
-					rtaGuardarEnMemoria =guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
-					enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
-				}
-			}
-		}
-
-	}else if(consistenciaMemoria==SC || consistenciaMemoria == SHC){
+	t_paquete* valorEncontrado;
+	resultadoCache= estaEnMemoria(palabraReservada, request,&valorEncontrado,&elementoEncontrado,&pathSegmento);
+	if(resultadoCache == EXIT_SUCCESS ) {
+		log_info(logger_MEMORIA, "LO ENCONTRE EN CACHEE!");
+		actualizarTimestamp(elementoEncontrado->marco);
+		unlockSemSegmento(pathSegmento);
+		enviarAlDestinatarioCorrecto(palabraReservada, SUCCESS,request, valorEncontrado,caller, indiceKernel);
+	} else {// en caso de no existir el segmento o la tabla en MEMORIA, se lo solicta a LFS
 		log_info(logger_MEMORIA,"ME LO TIENE QUE DECIR LFS");
-		int resultadoLFS = intercambiarConFileSystem(palabraReservada,request,&valorDeLFS, caller, indiceKernel);
-		if(resultadoLFS == FAILURE || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
+		resultadoLFS = intercambiarConFileSystem(palabraReservada,request,&valorDeLFS, caller, indiceKernel);
+
+		if(resultadoLFS == -1 || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
 			valorDeLFS = malloc(sizeof(t_paquete));
 			valorDeLFS->request=strdup("FALLO CONEXION LFS");
 			valorDeLFS->tamanio=(sizeof(valorDeLFS->request));
 			enviarAlDestinatarioCorrecto(palabraReservada, LFS_CAIDO,request, valorDeLFS,caller,indiceKernel);
 		}else{
-			enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
+			rtaGuardarEnMemoria =guardarRespuestaDeLFSaMemoria(valorDeLFS, resultadoCache);
+			if(rtaGuardarEnMemoria == MEMORIA_FULL){
+				valorDeLFS->request=strdup("MEMORIA FULL.Debe realizarse JOURNAL");
+				valorDeLFS->tamanio=(sizeof(valorDeLFS->request));
+				enviarAlDestinatarioCorrecto(palabraReservada,MEMORIA_FULL,request, valorDeLFS,caller,indiceKernel);
+			}else{
+				enviarAlDestinatarioCorrecto(palabraReservada, valorDeLFS->palabraReservada,request, valorDeLFS,caller,indiceKernel);
+			}
 		}
-
-	}else{
-		log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
-
 	}
+
 	free(pathSegmento);
 	pathSegmento=NULL;
 }
@@ -1399,7 +1381,7 @@ void unlockSemSegmento(char* pathSegmento){
 void procesarInsert(cod_request palabraReservada, char* request,consistencia consistenciaMemoria, t_caller caller, int indiceKernel) {
 		t_elemTablaDePaginas* elementoEncontrado= NULL;
 		char** requestSeparada = separarRequest(request);
-		char* pathSegmento=strdup("");
+
 		if(caller == ANOTHER_COMPONENT && validarValue(request,requestSeparada[3],maxValue,logger_MEMORIA) == NUESTRO_ERROR){
 			log_warning(logger_MEMORIA,"Ingrese un valor menor que:  %d", maxValue);
 			t_paquete* insertALFS=(t_paquete*)malloc(sizeof(t_paquete));
@@ -1407,40 +1389,12 @@ void procesarInsert(cod_request palabraReservada, char* request,consistencia con
 			insertALFS->request=strdup("Request invalida, se esta superando el maximo");
 			insertALFS->tamanio=sizeof(insertALFS->request);
 			enviarAlDestinatarioCorrecto(palabraReservada,VALUE_INVALIDO,request,insertALFS,caller,indiceKernel);
+		}else{
+			char* pathSegmento;
+			int resultadoCache= estaEnMemoria(palabraReservada, request,NULL,&elementoEncontrado,&pathSegmento);
+			insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,indiceKernel,pathSegmento);
 			free(pathSegmento);
 			pathSegmento=NULL;
-		}else{
-			if(consistenciaMemoria == EC || caller == CONSOLE){
-				int resultadoCache= estaEnMemoria(palabraReservada, request,NULL,&elementoEncontrado,&pathSegmento);
-				insertar(resultadoCache,palabraReservada,request,elementoEncontrado,caller,indiceKernel,pathSegmento);
-				free(pathSegmento);
-				pathSegmento=NULL;
-
-			}else if(consistenciaMemoria == SC || consistenciaMemoria == SHC){
-				free(pathSegmento);
-				pathSegmento=NULL;
-				t_paquete* insertALFS;
-				string_append_with_format(&request,"%s%llu"," ",obtenerHoraActual());
-				int resultadoLFS =  intercambiarConFileSystem(palabraReservada,request, &insertALFS, caller, indiceKernel);
-
-				if(resultadoLFS == -1 || insertALFS->palabraReservada == COMPONENTE_CAIDO){
-					insertALFS = malloc(sizeof(t_paquete));
-					insertALFS->request=strdup("FALLO CONEXION LFS");
-					insertALFS->tamanio=(sizeof(insertALFS->request));
-					enviarAlDestinatarioCorrecto(palabraReservada, LFS_CAIDO,request, insertALFS,caller,indiceKernel);
-				}else{
-					if(insertALFS->palabraReservada== EXIT_SUCCESS){
-						enviarAlDestinatarioCorrecto(palabraReservada,SUCCESS,request,insertALFS,caller,indiceKernel);
-					}else{
-						enviarAlDestinatarioCorrecto(palabraReservada,insertALFS->palabraReservada,request,insertALFS,caller,indiceKernel);
-					}
-				}
-
-			}else{
-				free(pathSegmento);
-				pathSegmento=NULL;
-				log_info(logger_MEMORIA, "NO se le ha asignado un tipo de consistencia a la memoria, por lo que no puede responder la consulta: ", request);
-			}
 		}
 		liberarArrayDeChar(requestSeparada);
 		requestSeparada=NULL;
@@ -1740,7 +1694,7 @@ void crearSegmento(t_segmento* nuevoSegmento,char* pathNuevoSegmento){
  * 	-> void ::
  * 	VALGRIND :: NO*/
 void procesarCreate(cod_request codRequest, char* request ,consistencia consistencia, t_caller caller, int indiceKernel){
-	t_paquete* valorDeLFS = (t_paquete*) malloc(sizeof(t_paquete));
+	t_paquete* valorDeLFS;
 	int resultadoLFS = intercambiarConFileSystem(codRequest,request, &valorDeLFS, caller, indiceKernel);
 
 	if(resultadoLFS == -1 || valorDeLFS->palabraReservada == COMPONENTE_CAIDO){
@@ -1749,9 +1703,7 @@ void procesarCreate(cod_request codRequest, char* request ,consistencia consiste
 		valorDeLFS->tamanio=(sizeof(valorDeLFS->request));
 		enviarAlDestinatarioCorrecto(codRequest, LFS_CAIDO,request, valorDeLFS,caller,indiceKernel);
 	}else{
-		if(consistencia == EC || caller == CONSOLE){
-			create(codRequest, request);
-		}
+		create(codRequest, request);
 		enviarAlDestinatarioCorrecto(codRequest,SUCCESS,request, valorDeLFS, caller,indiceKernel);
 	}
 }
