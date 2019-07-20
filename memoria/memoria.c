@@ -102,7 +102,7 @@ int main(void) {
 void inicializacionDeMemoria(){
 	//-------------------------------Reserva de memoria-------------------------------------------------------
 	memoria = malloc(config_get_int_value(config, "TAM_MEM"));
-	marcosTotales = 1;//floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
+	marcosTotales = floor(config_get_int_value(config, "TAM_MEM")/(int)(sizeof(uint16_t)+sizeof(unsigned long long)+maxValue));
 
 
 	//-------------------------------Creacion de structs-------------------------------------------------------
@@ -1487,7 +1487,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
  					modificarElem(&elementoAInsertar,nuevoTimestamp,nuevaKey,nuevoValor,MODIFICADO);
 
 					lockSemSegmento(nuevaTabla);
-					list_add(segmentoBuscado->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp,MODIFICADO));
+					list_add(segmentoBuscado->tablaDePagina,elementoAInsertar);
 					unlockSemSegmento(nuevaTabla);
 
 					paqueteAEnviar= armarPaqueteDeRtaAEnviar(request);
@@ -1511,7 +1511,7 @@ void insertar(int resultadoCache,cod_request palabraReservada,char* request,t_el
 					crearSegmento(nuevoSegmento, nuevaTabla);
 
 					lockSemSegmento(nuevaTabla);
-					list_add(nuevoSegmento->tablaDePagina,crearElementoEnTablaDePagina(elementoAInsertar->numeroDePag,elementoAInsertar->marco, nuevaKey,nuevoValor, nuevoTimestamp,MODIFICADO));
+					list_add(nuevoSegmento->tablaDePagina,elementoAInsertar);
 					unlockSemSegmento(nuevaTabla);
 
 					pthread_mutex_lock(&semMTablaSegmentos);
@@ -2125,9 +2125,9 @@ int encontrarIndice(t_elemTablaDePaginas* elemVictima,t_segmento* segmento){
 		list_sort(elemSinModificar, (void*) menorTimestamp);
 		elemVictimaLRU= list_get(elemSinModificar,0);
 		int desvinculacion=desvincularVictimaDeSuSegmento(elemVictimaLRU);
-		pthread_mutex_lock(&semMBitarray);
-		bitarray_clean_bit(bitarray,elemVictimaLRU->numeroDePag);
-		pthread_mutex_unlock(&semMBitarray);
+//		pthread_mutex_lock(&semMBitarray);
+//		bitarray_clean_bit(bitarray,elemVictimaLRU->numeroDePag);
+//		pthread_mutex_unlock(&semMBitarray);
 
 	} else {
 		elemVictimaLRU=NULL;
