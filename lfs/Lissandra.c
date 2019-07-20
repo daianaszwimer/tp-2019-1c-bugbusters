@@ -400,9 +400,17 @@ void* conectarConMemoria(void* arg) {
 				list_remove_and_destroy_by_condition(hiloTabla->cosasABloquear, (void*)encontrarMemoria ,(void*)liberarMutexTabla);
 			}
 
+			int esMem(t_int* unaMemoria) {
+				return unaMemoria->valor == memoria_fd;
+			}
+
 			pthread_mutex_lock(&mutexTablasParaCompactaciones);
 			list_iterate(tablasParaCompactaciones, (void*)eliminarMemoria);
 			pthread_mutex_unlock(&mutexTablasParaCompactaciones);
+
+			pthread_mutex_lock(&mutexMemorias);
+			list_remove_and_destroy_by_condition(memorias, (void*)esMem, (void*)eliminarParticion);
+			pthread_mutex_unlock(&mutexMemorias);
 
 			eliminar_paquete(paqueteRecibido);
 			log_debug(logger_LFS, "Se desconecto la memoria %i", memoria_fd);

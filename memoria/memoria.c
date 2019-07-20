@@ -6,7 +6,7 @@ int main(void) {
 
 	//--------------------------------INICIO DE MEMORIA ---------------------------------------------------------------
 	config = leer_config("/home/utnso/tp-2019-1c-bugbusters/memoria/memoria.config");
-	logger_MEMORIA = log_create("memoria.log", "Memoria", 0,LOG_LEVEL_DEBUG);
+	logger_MEMORIA = log_create("memoria.log", "Memoria", 1,LOG_LEVEL_DEBUG);
 	retardoGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
 	retardoJournal = config_get_int_value(config, "RETARDO_JOURNAL");
 	retardoFS = config_get_int_value(config, "RETARDO_FS");
@@ -459,6 +459,7 @@ void conectarAFileSystem() {
 	conexionLfs = conexion;
 	pthread_mutex_unlock(&semMConexionLFS);
 	int rta = enviarHandshake(MEMORIA, conexion);
+	log_debug(logger_MEMORIA, "Mando handshake");
 	if (rta == COMPONENTE_CAIDO) {
 		log_error(logger_MEMORIA, "No está levantado el FS");
 		liberar_conexion(conexion);
@@ -467,8 +468,8 @@ void conectarAFileSystem() {
 		pthread_mutex_unlock(&semMConexionLFS);
 		return;
 	}
-
 	t_handshake_rta* handshake_rta = recibirRtaHandshake(conexion, &rta);
+	log_debug(logger_MEMORIA, "Recibi rta de handshake");
 	if (handshake_rta->rta == CONEXION_INVALIDA) {
 		log_error(logger_MEMORIA, "Este tipo de conexión no es válida");
 		liberar_conexion(conexion);

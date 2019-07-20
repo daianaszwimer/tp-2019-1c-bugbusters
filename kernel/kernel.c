@@ -1257,8 +1257,8 @@ unsigned int obtenerIndiceHash(int key, int maximo) {
 		if (key < 0) {
 			key = key * (-1);
 		}
-		unsigned int j = (key + 3) ^ 5;
-		return ((7 << j) + key) % maximo;
+		unsigned int j = (key + 23) * 1999;
+		return j % maximo;
 	}
 }
 
@@ -1361,6 +1361,7 @@ int reintentarConexion(consistencia tipoConsistencia, int key, int memoriaRandom
 	free(*puerto);
 	*puerto = NULL;
 	while(1) {
+		log_info(logger_KERNEL, "Reintentando conectar con otra memoria");
 		// si la respuesta es distinto de componente caido hago return
 		config_memoria* memoriaCorrespondiente;
 		pthread_mutex_lock(&semMMemorias);
@@ -1486,7 +1487,7 @@ int enviarMensajeAMemoria(cod_request codigo, char* mensaje) {
 			consistenciaTabla = obtenerConsistenciaTabla(parametros[1]);
 		}
 		if (codigo == SELECT || codigo == INSERT) {
-			key = (int) parametros[2];
+			key = strtol(parametros[2],NULL,10);
 		}
 		memoriaCorrespondiente = encontrarMemoriaSegunConsistencia(consistenciaTabla, key);
 		if(memoriaCorrespondiente == NULL) {
